@@ -33,7 +33,7 @@ export function RetentionGauge({
         height={size}
         viewBox={`0 0 ${size} ${size}`}
         role="img"
-        aria-label={`Average retrievability ${label}, target ${Math.round(target * 100)}%`}
+        aria-label={`Recall now ${label}, target ${Math.round(target * 100)}%`}
       >
         <circle
           cx={size / 2}

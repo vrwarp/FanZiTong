@@ -48,6 +48,20 @@ export function countDueWithin(cards: VocabCard[], now: Date, hours: number): nu
   }).length;
 }
 
+/**
+ * Reviews that fall due between now and the end of local tomorrow — the
+ * "tomorrow" number every screen quotes (a calendar day, not a 24-hour window).
+ */
+export function countDueByTomorrow(cards: VocabCard[], now: Date): number {
+  const start = now.getTime();
+  const end = startOfDay(addDays(now, 2)).getTime();
+  return cards.filter((c) => {
+    if (c.fsrs.state === CardState.New) return false;
+    const due = new Date(c.fsrs.due).getTime();
+    return due > start && due < end;
+  }).length;
+}
+
 export const RECALL_MIN_STUDY_DAYS = 7;
 
 /** Number of distinct local days with at least one answer. */

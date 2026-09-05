@@ -18,7 +18,7 @@ import {
   readPausedSession,
   savePausedSession,
 } from '@/lib/session/pausedSession';
-import { computeStreak, countDueWithin } from '@/lib/stats/analytics';
+import { computeStreak, countDueByTomorrow } from '@/lib/stats/analytics';
 import { dayKey } from '@/lib/util/time';
 import type { RatingGrade, ReviewLog, UserSettings, VocabCard } from '@/types';
 
@@ -122,7 +122,7 @@ function StudySession({
           elapsedMs={snapshot.elapsedMs}
           streak={Math.max(1, computeStreak(logs, now))}
           remaining={snapshot.remaining + (snapshot.step ? 1 : 0)}
-          dueTomorrow={countDueWithin(engine.getCards(), now, 24)}
+          dueTomorrow={countDueByTomorrow(engine.getCards(), now)}
           weakCards={weakCards}
           onContinue={complete ? undefined : () => setPaused(false)}
           onDone={() => {

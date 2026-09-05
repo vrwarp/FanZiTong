@@ -299,7 +299,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
       <Field
         label="As heard 口語唸法"
         htmlFor="spoken"
-        hint="Only when people say it differently from the pinyin (e.g. ô-á-chian for 蚵仔煎). Used as the drill cue."
+        hint="Only when people say it differently from the pinyin (e.g. ô-á-tsian for 蚵仔煎). Used as the drill cue."
       >
         <input
           id="spoken"

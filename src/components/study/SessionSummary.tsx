@@ -13,7 +13,7 @@ export interface SessionSummaryProps {
   streak: number;
   /** Cards still queued when paused. */
   remaining?: number;
-  /** Reviews that become due within the next 24 h (to set tomorrow's appointment). */
+  /** Reviews due by the end of tomorrow (to set tomorrow's appointment). */
   dueTomorrow?: number;
   /** Cards rated Again/Hard on first sight, for one last look. */
   weakCards?: VocabCard[];
@@ -127,7 +127,7 @@ export function SessionSummary({
             data-testid="summary-next"
           >
             {dueTomorrow > 0
-              ? `Next: ${dueTomorrow} review${dueTomorrow === 1 ? '' : 's'} due within a day — do them to keep the streak.`
+              ? `Tomorrow 明天: ${dueTomorrow} review${dueTomorrow === 1 ? '' : 's'} due — do ${dueTomorrow === 1 ? 'it' : 'them'} to keep the streak.`
               : 'Come back tomorrow to keep the streak alive.'}
           </span>
         )}

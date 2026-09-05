@@ -112,7 +112,7 @@ export default function StatsPage() {
           />
         </div>
         <ul
-          className="mt-2 grid grid-cols-4 gap-1 text-xs text-stone-600 dark:text-stone-300"
+          className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs whitespace-nowrap text-stone-600 dark:text-stone-300"
           data-testid="state-distribution"
         >
           <li>

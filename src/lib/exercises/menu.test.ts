@@ -105,12 +105,12 @@ describe('buildMenuExercise', () => {
     const oyster = makeCard({
       traditional: '蚵仔煎',
       pinyin: 'kē zǎi jiān',
-      spoken: 'ô-á-chian',
+      spoken: 'ô-á-tsian',
       domain: 'food',
     });
     const ex = buildMenuExercise([oyster, food[0]], mulberry32(12))!;
     const target = ex.targets.find((t) => t.cardId === oyster.id)!;
-    expect(cueReading(target)).toBe('ô-á-chian');
+    expect(cueReading(target)).toBe('ô-á-tsian');
     expect(cueReading(ex.targets.find((t) => t.cardId === food[0].id)!)).toBe(food[0].pinyin);
   });
 

@@ -420,7 +420,7 @@ export function MenuExerciseView({
                           className="flex items-center justify-between pb-2 text-xs"
                           data-testid="menu-row-reveal"
                         >
-                          <span className="font-sans text-stone-700">
+                          <span className="min-w-0 flex-1 font-sans text-stone-700">
                             {item.spoken ? `${item.spoken} · ` : ''}
                             {item.pinyin} · {item.gloss}
                             {contrast && (
@@ -437,7 +437,7 @@ export function MenuExerciseView({
                                 e.stopPropagation();
                                 void addToDeck(item.label, item.pinyin!, item.gloss ?? '');
                               }}
-                              className="min-h-9 rounded-full border border-brand-600 px-2 font-sans font-semibold text-brand-700 disabled:opacity-60"
+                              className="ml-2 min-h-9 shrink-0 rounded-full border border-brand-600 px-2 font-sans font-semibold whitespace-nowrap text-brand-700 disabled:opacity-60"
                               data-testid="menu-add-card"
                             >
                               {added.has(item.label) ? 'In your deck ✓' : '+ Add to deck 加入'}

@@ -69,7 +69,7 @@ export default function LearnPage() {
   );
   const tomorrowLine =
     model.dueTomorrow + newTomorrow > 0
-      ? `Tomorrow 明天: ${plural(model.dueTomorrow, 'review')}${newTomorrow > 0 ? ` · up to ${newTomorrow} new` : ''} · ≈ ${tomorrowMinutes} min${model.dueTomorrow > 0 ? ' — do them to keep the streak.' : '.'}`
+      ? `Tomorrow 明天: ${plural(model.dueTomorrow, 'review')}${newTomorrow > 0 ? ` · up to ${newTomorrow} new` : ''} · ≈ ${tomorrowMinutes} min${model.dueTomorrow > 0 ? ` — do ${model.dueTomorrow === 1 ? 'it' : 'them'} to keep the streak.` : '.'}`
       : 'Come back tomorrow to keep the streak alive.';
 
   return (
@@ -237,7 +237,7 @@ export default function LearnPage() {
               {canStudy ? `≈ ${plan.estimatedMinutes} min` : 'Nothing due right now.'}
               {!canStudy &&
                 model.dueTomorrow > 0 &&
-                ` · ${model.dueTomorrow} more due within a day.`}
+                ` · ${model.dueTomorrow} more due by tomorrow.`}
               {plan.totalDueCount > plan.dueReviewCount &&
                 ` · ${plan.totalDueCount - plan.dueReviewCount} more waiting beyond today's limit`}
             </p>

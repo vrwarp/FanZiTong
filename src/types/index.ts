@@ -75,7 +75,7 @@ export interface VocabCard {
   pinyin: string;
   /**
    * How the word is actually said when the dictionary reading is not what
-   * people use (Taiwanese: 蚵仔煎 → "ô-á-chian", 肉圓 → "bah-oân"). Used as the
+   * people use (Tâi-lô: 蚵仔煎 → "ô-á-tsian", 肉圓 → "bah-uân"). Used as the
    * primary cue in drills and shown first on the reveal when present.
    */
   spoken?: string;

@@ -16,6 +16,10 @@ type SeedEntry = [string, string, string, string, string, string, string, string
 const SPOKEN: Record<string, string> = {
   蚵仔煎: 'ô-á-tsian',
   肉圓: 'bah-uân',
+  盤子: 'phân-á',
+  母湯: 'm̄-thang',
+  歸剛: 'kui-kang',
+  阿雜: 'a-tsa̍p',
 };
 
 /** Per-word notes about the accepted spelling variants. */
@@ -524,7 +528,7 @@ const SLANG: SeedEntry[] = [
   [
     '盤子',
     'pán zi',
-    'A sucker who overpays (Taiwanese phân-á)',
+    'A sucker who overpays (a chump)',
     'taiwanese',
     '這個價錢你還買，根本是盤子。',
     'Zhège jiàqián nǐ hái mǎi, gēnběn shì pánzi.',
@@ -584,7 +588,7 @@ const SLANG: SeedEntry[] = [
   [
     '母湯',
     'mǔ tāng',
-    "Don't / no way (Taiwanese m̄-thang)",
+    "Don't / no way",
     'taiwanese',
     '這樣做母湯啦，會被罵。',
     'Zhèyàng zuò mǔtāng la, huì bèi mà.',
@@ -594,7 +598,7 @@ const SLANG: SeedEntry[] = [
   [
     '歸剛',
     'guī gāng',
-    'All day long (Taiwanese kui-kang; meme 歸剛欸)',
+    'All day long (meme 歸剛欸)',
     'taiwanese|meme',
     '你歸剛都在滑手機，是不用讀書喔？',
     'Nǐ guīgāng dōu zài huá shǒujī, shì bù yòng dúshū o?',
@@ -664,7 +668,7 @@ const SLANG: SeedEntry[] = [
   [
     '阿雜',
     'ā zá',
-    'Annoyed / irritated (Taiwanese a-cha̍p)',
+    'Annoyed / irritated',
     'taiwanese',
     '今天被主管唸了一整天，超阿雜。',
     'Jīntiān bèi zhǔguǎn niàn le yī zhěng tiān, chāo āzá.',

@@ -1,0 +1,67 @@
+# 繁字通 FanZiTong — critique from the heritage learner (iter2, second look)
+
+Same person as last time: born in Taiwan, left after 2nd grade, speak like a 3rd grader, read pinyin, never learned Zhuyin. I want the 小吃店 slip, my parents' church bulletin, and my cousins' LINE/PTT threads, 15–30 minutes a day on my phone. I went through all 20 new screenshots (01–20) and checked every complaint from round 1 against what's on screen now.
+
+## (a) What got fixed
+
+Going down my round-1 list in order:
+
+1. **魯肉飯 graded as wrong (blocker) — FIXED.** The revealed card now says "Also written 魯肉飯 — common on signs and menus" (03), the vocab row shows 也寫作 魯肉飯 (14), the editor has an "Also written 常見寫法" field with "Never used as wrong answers" printed under it (15), the foil hint no longer suggests 魯, and Spot the Character offers 滷內飯 / 滷肉販 / 鹽肉飯 with no 魯 anywhere (10). This was the thing that would have made me delete the app. Thank you.
+
+2. **蛋餅 twice on the slip, red rows on a perfect order (major) — FIXED.** No duplicates on the slip (08). On the result (09) untouched look-alikes get a neutral "形近 look-alike" pill, my correct tick is green, the dish I missed (蚵仔煎) is yellow, the one I ticked by mistake (臭豆腐) is red with "Ticked by mistake: 臭豆腐" spelled out. That's exactly the grading I asked for.
+
+3. **Slang deck needs a Taiwan audit (major) — PARTLY, and I can't verify most of it.** The domain is now 流行語 everywhere (Stats 17, Settings 18, the card tag in 20). The Slang count went from 22 to 29 cards (17), so something was added, but the only slang card on any screen is still 藉口 — still tagged Slang, still "Excuse (Taiwan standard form)", and now with a new bogus line (see new finding 3). I didn't see 雷／爆雷, and I didn't see the ㄏㄏ／ㄎㄎ cards. Next round, show me the Slang filter of the vocab list.
+
+4. **Example sentence hands me its pinyin (major) — FIXED.** The 例句 shows characters + English, and the pinyin is behind a "Show reading 拼音" button on the reveal card (03, 20) and on the cloze result (13). I actually read 老闆，滷肉飯大碗一碗，加一顆滷蛋 this time.
+
+5. **Foil feedback doesn't say what I got wrong (major) — FIXED, and done well.** "不對 — look at the 2nd character", my pick and the answer side by side with 內 red and 肉 green, "內 nèi 'inside' is not 肉 ròu 'meat'", "肉 has two 人 stacked inside; 內 has one 入", then "Now tap 滷肉飯 to continue" so I physically touch the right one (11). I don't have a wrong-cloze screenshot, so I can't confirm the cloze got the same treatment.
+
+6. **Dark mode isn't dark (major) — FIXED.** 19 and 20 are actually dark, warm grey rather than black, off-white 藉口 at 100px looks crisp, and Settings has System / Light / Dark (18).
+
+7. **Order slip is a greatest-hits menu (major) — MOSTLY FIXED.** It's now one shop type (飯類 / 麵類 / 小吃, a proper 滷肉飯-麵店), prices in the 小/大 columns (滷肉飯 45/60, 牛肉麵 55/70), 內用☐ 外帶☐ 桌號 3 in the header, 蛋餅 gone, and both the cue/timer and the "0 ticked · Submit order 送單" bar are pinned so I never lose them (08, 09). Still missing: a 湯類 block (貢丸湯／蛋花湯／味噌湯 are on every real slip, and 餛飩湯 already exists in the deck since it shows up as a cloze option). The font is only half-done and two dishes on the slip are invented — both in the new findings.
+
+8. **Answer tiles in the top half (minor) — FIXED.** Tiles sit at the bottom in cloze and foil (04, 10, 12), and the recognition card says "then tap anywhere to check" (02). Side effect: a big empty middle, see the nit.
+
+9. **Numbers don't add up, Anki-speak (minor) — PARTLY.** New cards count under New only ("New 5/10", "No reviews due yet", "5 answers today" in 06); the Recall ring shows "—" until there's data (01, 06, 17); retention is explained as "80% of answers were not 'Again'"; drills are Order Slip 點菜單 / Fill the Blank 填空 / Spot the Character 辨字 (07); Settings says "Flag after N forgets"; the leech row says "forgotten 4×"; and there's a "?" next to the rating buttons once the legend goes away (20). Still there: TIME 1s on the pause screen (05) — it was 2s last time, the timer is still broken; LAPSES / LEECHES / "Average retrievability" / "LEECH INSPECTION" are still the labels on Stats (17); "graduating" appears in drill feedback (09, 13); Stability / Difficulty / lapses in the card editor (15) — that last one I can live with, it's the editor.
+
+10. **Chinese copy sounds like a textbook (minor) — FIXED.** 太強了！ on a correct cloze (13), 老闆娘：欸，你是不是點錯了？ on a bad order (09), 還剩 7 張 on the pause screen (05), and the 例句 is now 老闆，滷肉飯大碗一碗，加一顆滷蛋 — that's my sentence, and it reads like a counter, not a textbook. I paused instead of finishing, so I never saw the celebration screen and can't confirm 做得好 is gone.
+
+11. **First-open snags (minor) — FIXED.** The offline notice is folded into the "How this works" card (01), "Start your streak" instead of Day 0, "tap anywhere", and the "Again = didn't get it · Hard = got it slowly or only part of it · Good = sound and meaning came · Easy = instant, like reading a chat" line under the buttons (03). New problem with that card below.
+
+12. **Small text things (nit) — FIXED.** The blank matches the answer length (_ _ _ for 滷肉飯 in 04, _ _ for 小組 in 12), no spaces around the filled word (我們小組每週三 in 13), one consistent "Read the sentence and pick the word that fits", "All domains" fits in the dropdown (07), and vocab rows wrap to two lines (14).
+
+## (b) New findings
+
+- [major] [08-drill-menu-slip, 09-drill-menu-result, 14-vocab-list] The friend orders "kē zǎi jiān" — nobody in Taiwan has ever said that — The order-slip cue is the sound, by design, and the sound it gives me for 蚵仔煎 is a dictionary reading nobody uses. Everyone says ô-á-chian; if my parents say it in Mandarin at all it's é-á-jiān. The card even prints "(Taiwanese: ô-á-chian)" in the definition and then makes the wrong sound the headline. This is the best drill in the app doing the exact "textbook, not Taiwan" thing I opened the app to escape, and it'll repeat for 肉圓 (bah-oân), 蚵仔麵線, 甜不辣, 黑輪, 割包, 米粉湯. Suggestion: give food cards a "how it's actually said" field (Tâi-lô/POJ, or the Taiwan-Mandarin folk reading) and make THAT the drill cue and the big red line on the reveal card, with the MOE pinyin as a small secondary line. At minimum the friend should order ô-á-chian.
+
+- [major] [04-study-drill-cloze, 12-drill-cloze] "Only one option fits the grammar and the meaning" is false — In 04 the sentence is 老闆，___大碗一碗，加一顆滷蛋 and the tiles are 燙青菜 / 餛飩湯 / 鹽肉飯 / 滷肉飯. 餛飩湯大碗一碗 is a perfectly normal thing to say at that counter; if I pick it I'm marked wrong for a good sentence. In 12, 我們___每週三在弟兄家聚會 with 牧師 as a tile: 我們牧師每週三在弟兄家聚會 is a sentence I've heard in church. The whole pitch of this drill is "use your ear", so a second option my ear accepts is a grading bug, and it's the fastest way to make me stop trusting the green ticks. Suggestion: pick distractors that break the measure word or the grammar, not just the meaning: for 一碗 use 一盤／一杯／一份 foods (燙青菜, 珍珠奶茶, 蛋餅), for the church sentence use nouns that can't be the subject of 聚會 (讀經, 奉獻, 詩歌); keep exactly one visual foil (小阻 is good). And reject any distractor from the same domain with the same measure word as the answer.
+
+- [major] [20-study-revealed-dark, 03-study-revealed, 17-stats] The "Also written" note is a food template pasted on every card — 藉口 says "Also written 借口 — common on signs and menus." No sign or menu in Taiwan says 藉口, and 借口 isn't a shop-sign variant, it's the China-side spelling (and lazy typing). Last round the deck told me something false about Taiwan with 魯肉飯; this is the same class of mistake with the sign flipped. On top of that 藉口 is still filed under Slang 流行語 with "Excuse (Taiwan standard form)" as its definition, which is not a definition. Suggestion: make the variant note per-card free text (the field is already there) and stop generating the "signs and menus" suffix; for 藉口 write "You'll also see 借口 — that's the China-side spelling; Taiwan writes 藉口", move the word to a 常用字 bucket, and give it a real definition ("excuse, pretext").
+
+- [major] [08-drill-menu-slip] Invented dishes with real prices on a "real-looking" slip — 鹽肉飯 35/50 and 半肉麵 55/70 don't exist; they're look-alike foils (鹽/滷 share 鹵, 半/牛) dressed up as menu items. That turns the slip from "a real shop" into "spot the fake", and 鹽肉飯 is the same trick in three drills in one session (cloze 04, foil 10, slip 08). The confusions I actually have at a counter are between real neighbours: 牛肉麵 vs 牛肉湯麵 (costs me NT$30 every time), 滷肉飯 vs 焢肉飯 vs 肉燥飯 vs 雞肉飯, 蚵仔煎 vs 蚵仔麵線 vs 蚵嗲, 餛飩麵 vs 餛飩湯 vs 乾麵. Suggestion: on the slip, draw foils only from real dishes (use the deck plus a small "neighbour dish" list per card), and keep invented look-alikes for Spot the Character, where "one of these is fake" is the stated game.
+
+- [minor] [09-drill-menu-result, 13-drill-cloze-correct, 17-stats, 07-drills-tab] Anki-speak crept back in through the feedback lines — "Marked Good — one step closer to graduating." Graduating from what? "Already in review — schedule unchanged" contradicts the Drills tab, which promises "answers here also change when each word comes back for review". Stats still says LAPSES, LEECHES, "Average retrievability", "LEECH INSPECTION". Suggestion: "Marked Good — you'll see it again in 6d" (you already have the interval), "Already solid — a right answer here doesn't move it, a wrong one brings it back sooner", and on Stats: Forgotten / Keeps slipping 常忘的字 / "Chance you'd get it right now".
+
+- [minor] [08-drill-menu-slip, 09-drill-menu-result] The slip font is only half real — The prices and the 80/100 went serif, but 蝦仁炒飯, 鴨肉飯, 滷肉飯 are in the same sans as the rest of the app. It looks like the slip asks for 標楷體 / 新細明體 by name and nothing is bundled, so on my phone it falls back to the app font and I still never practise the 楷／明 shapes that are on every actual slip and bulletin. Suggestion: bundle a subset of an openly licensed 楷 or 明 face (the MOE's TW-Kai, or a Noto Serif TC subset) covering the food deck's characters, ship it inside the PWA so it stays offline, and use it for the slip and for the church "bulletin" if you ever build one.
+
+- [minor] [06-learn-after-session, 19-learn-dark] "How this works" never leaves — After my first session it is still the first thing on the dashboard, pushing Start Daily Session below the fold. I never tapped "Got it" because I tapped Start, which is what everyone will do. Suggestion: auto-dismiss it after the first completed session (or the first tap on Start), and put "Show intro again" in Settings.
+
+- [minor] [08-drill-menu-slip, 09-drill-menu-result] The pinned cue card eats the screen — Three pinyin lines, three English lines and the timer are all sticky at the top, the Submit bar is sticky at the bottom, and the slip gets what's left, about half the screen, for a 20-second task. Suggestion: collapse the pinned cue to one line per dish (lǔ ròu fàn 小 · niú ròu miàn 大 · ô-á-chian) with the English behind a tap, and put the timer in the header row next to "1 to go".
+
+- [minor] [03-study-revealed] "滷 lǔ +1 · 肉 ròu +2 · 飯 fàn +1" — what is +2? — The per-character chips are a good idea, but the number has no label. If it means "this character is in 2 other words you're learning", that's exactly the thing I want to see, because 肉 in 牛肉麵 and 肉圓 and 嘴邊肉 is how the shape finally sticks. Suggestion: label it ("in 2 other words") and make the chip tappable to list them.
+
+- [nit] [17-stats, 16-import-preview, 02-study-prompt-hidden, 07-drills-tab, 01-learn-first-launch, 10-drill-foil] Small text things, round 2 — The 30-day chart prints "09-05" on top of "09-06"; the import table clips the Domain column and the dropdown reads "Keep from file (unknown → custo"; "0 answered · 9 left" on "Card 1 of 10" makes me look for the missing card; Spot the Character says "Hear the word" but there's no audio, it's pinyin; the title wraps to "繁 / 字通" on first launch because the "Start your streak" pill is wide; and with the tiles at the bottom the middle of the foil and cloze screens is now a 700px void — shrink the gap or make the tiles taller. Suggestion: fix each as stated; for the void, let the cue card grow (bigger characters in the sentence) rather than leaving air.
+
+## (c) Overall
+
+Overall score: 8/10 — the thing that would have made me quit (魯肉飯) is gone, dark mode and the foil feedback are genuinely good, and the slip now reads like a counter I've stood at; what's left is content accuracy (kē zǎi jiān, invented dishes, the pasted "signs and menus" note) and one grading hole (two-answer cloze), not mechanics.
+
+Would I keep using this tomorrow, and what single thing would make me quit? Yes, I'd open it tomorrow; the one thing that would make me quit is being marked wrong for an answer that's actually right — the two-answer cloze is that, and two or three of those and I stop believing anything the grader says.
+
+## Keep doing (new this round)
+
+- "Now tap 滷肉飯 to continue" after a wrong foil pick — making me touch the right shape is better than showing it to me.
+- "Tap any dish on the slip to see how it is read — and add it to your deck" (09). That is how I'd actually build my own deck: from a real menu, one line at a time.
+- The pause screen's "One more look — tap to check: 滷肉飯" and "Next: 1 review due within a day — do them to keep the streak" — plain, and it tells me what tomorrow costs.
+- 老闆娘：欸，你是不是點錯了？ and 太強了！ — keep that voice, rotate a few more.
+- "New word: a blank is expected, just tap." — first time an app told me it's fine not to know.

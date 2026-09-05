@@ -1,0 +1,96 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang TC', 'Noto Sans TC',
+    'Microsoft JhengHei', sans-serif;
+  /* Traditional Chinese stack: Taiwan MOE glyph forms via PingFang TC / Noto Sans TC / JhengHei. */
+  --font-tc:
+    -apple-system, 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', 'Heiti TC',
+    'WenQuanYi Zen Hei', sans-serif;
+
+  --color-brand-50: #fdf2f2;
+  --color-brand-100: #fbe1e1;
+  --color-brand-200: #f6c4c4;
+  --color-brand-300: #ee9a9a;
+  --color-brand-400: #e26666;
+  --color-brand-500: #d13c3c;
+  --color-brand-600: #c1272d;
+  --color-brand-700: #9f1d24;
+  --color-brand-800: #841b21;
+  --color-brand-900: #6e1b20;
+
+  --color-cream: #fdf8f2;
+  --color-cream-2: #f7efe4;
+  --color-ink: #1c1917;
+  --color-ink-2: #292524;
+  --color-ink-3: #44403c;
+
+  --color-jade-500: #2f9e78;
+  --color-jade-600: #23805f;
+  --color-jade-700: #1b664c;
+  --color-amber-brand: #e0a22e;
+
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-cream text-ink antialiased dark:bg-ink dark:text-stone-100;
+    font-family: var(--font-sans);
+    overscroll-behavior-y: none;
+    min-height: 100dvh;
+  }
+  button,
+  [role='button'] {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+}
+
+@layer components {
+  .hanzi {
+    font-family: var(--font-tc);
+    font-feature-settings: 'locl' 1;
+    text-rendering: optimizeLegibility;
+    line-break: strict;
+  }
+  .tap-target {
+    @apply min-h-12 min-w-12;
+  }
+  .card-surface {
+    @apply rounded-card border border-stone-200/80 bg-white shadow-sm dark:border-stone-700/60 dark:bg-ink-2;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

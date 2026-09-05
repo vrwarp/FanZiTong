@@ -937,7 +937,7 @@ const ANIME: SeedEntry[] = [
     '這一季的反派設定得很有魅力。',
     'Zhè yī jì de fǎnpài shèdìng de hěn yǒu mèilì.',
     "This season's villain is written to be very charismatic.",
-    '反湃|返派|反浱',
+    '反湃|返派|反脈',
   ],
   [
     '爆雷',

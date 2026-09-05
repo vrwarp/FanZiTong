@@ -45,3 +45,11 @@ describe('alignSentenceReadings', () => {
     expect(alignSentenceReadings('老闆', '')).toBeNull();
   });
 });
+
+describe('countSyllables with an apostrophe', () => {
+  it('treats the apostrophe as a syllable boundary', () => {
+    expect(countSyllables("zuì'ài")).toBe(2);
+    expect(countSyllables("Xī'ān")).toBe(2);
+    expect(countSyllables("jīn'é")).toBe(2);
+  });
+});

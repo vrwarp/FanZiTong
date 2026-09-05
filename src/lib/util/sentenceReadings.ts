@@ -5,7 +5,16 @@ const SYLLABLE_RE = new RegExp(`^(?:[zcs]h|[bpmfdtnlgkhjqxzcsrywv])?[${VOWELS}]+
 
 /** Count the Mandarin syllables in a pinyin token such as "lǔròufàn" (→ 3). */
 export function countSyllables(token: string): number {
-  let rest = token.replace(/[^a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ']/g, '').replace(/'/g, '');
+  // The apostrophe marks a syllable boundary between vowels (zuì'ài, xī'ān):
+  // count each side on its own so the vowel run cannot swallow both.
+  return token
+    .replace(/[^a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ']/g, '')
+    .split("'")
+    .reduce((sum, part) => sum + countRun(part), 0);
+}
+
+function countRun(letters: string): number {
+  let rest = letters;
   let count = 0;
   while (rest.length > 0) {
     const m = SYLLABLE_RE.exec(rest);

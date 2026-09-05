@@ -7,9 +7,10 @@ test.describe('Learn dashboard', () => {
     await expect(page.getByRole('heading', { level: 1 })).toContainText('繁字通');
     await expect(page.getByTestId('due-summary')).toHaveText('0 reviews, 10 new cards');
     await expect(page.getByTestId('estimated-time')).toContainText('min');
-    await expect(page.getByTestId('streak-badge')).toHaveText(/Day 0/);
+    await expect(page.getByTestId('streak-badge')).toHaveText(/Start your streak/);
+    await expect(page.getByTestId('how-it-works')).toBeVisible();
     await expect(page.getByTestId('start-session')).toBeEnabled();
-    await expect(page.getByText(/cards · 0 leeches/)).toBeVisible();
+    await expect(page.getByText(/\d+ words/)).toBeVisible();
   });
 
   test('bottom navigation reaches every tab', async ({ page }) => {

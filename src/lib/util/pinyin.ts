@@ -62,12 +62,26 @@ export function containsPinyin(text: string): boolean {
   return TONE_DIACRITIC_RE.test(text) || LATIN_RE.test(text);
 }
 
-const HAN_RE = /\p{Script=Han}/u;
+/** Han characters plus Bopomofo letters, which Taiwanese internet slang uses as words (ㄏㄏ, 頗ㄏ). */
+const HAN_RE = /[\p{Script=Han}\p{Script=Bopomofo}]/u;
 export function containsHan(text: string): boolean {
   return HAN_RE.test(text);
 }
 
-/** Split a Han string into its characters (code points). */
+/** Split a string into its Han / Bopomofo characters (code points). */
 export function hanChars(text: string): string[] {
   return Array.from(text).filter((c) => HAN_RE.test(c));
+}
+
+/**
+ * Per-character readings when the pinyin has exactly one syllable per
+ * character (e.g. "lǔ ròu fàn" for 滷肉飯); otherwise null.
+ */
+export function syllablesPerCharacter(word: string, pinyin: string): string[] | null {
+  const chars = hanChars(word);
+  const syllables = pinyin
+    .trim()
+    .split(/[\s·]+/)
+    .filter(Boolean);
+  return syllables.length === chars.length && chars.length > 0 ? syllables : null;
 }

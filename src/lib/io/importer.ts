@@ -24,7 +24,11 @@ export interface ImportPreview {
  * Traditional characters (PRD Journey 2, step 4).
  */
 export function analyzeImport(rows: ImportRow[], existing: VocabCard[]): ImportPreview {
-  const existingByWord = new Map(existing.map((c) => [c.traditional, c.id] as const));
+  const existingByWord = new Map<string, string>();
+  for (const c of existing) {
+    existingByWord.set(c.traditional, c.id);
+    for (const v of c.variants ?? []) if (!existingByWord.has(v)) existingByWord.set(v, c.id);
+  }
   const existingIds = new Set(existing.map((c) => c.id));
   const seenInFile = new Set<string>();
   const previews: PreviewRow[] = [];
@@ -45,7 +49,12 @@ export function analyzeImport(rows: ImportRow[], existing: VocabCard[]): ImportP
       if (byWord || byId) {
         status = 'duplicate';
         existingId = byWord ?? byId;
-        messages.push('Already in your deck.');
+        const match = existing.find((c) => c.id === existingId);
+        messages.push(
+          match && match.traditional !== row.traditional
+            ? `Spelling variant of ${match.traditional}, already in your deck.`
+            : 'Already in your deck.',
+        );
         counts.duplicate += 1;
       } else {
         counts.new += 1;
@@ -106,6 +115,13 @@ export function materializeImport(
         exampleSentenceTranslation:
           row.exampleSentenceTranslation ?? current.exampleSentenceTranslation,
         visualFoils: row.visualFoils.length ? row.visualFoils : current.visualFoils,
+        variants: row.variants.length ? row.variants : current.variants,
+        spoken: row.spoken ?? current.spoken,
+        variantNote: row.variantNote ?? current.variantNote,
+        notes: row.notes ?? current.notes,
+        clozeDistractors: row.clozeDistractors.length
+          ? row.clozeDistractors
+          : current.clozeDistractors,
         // A backup restore carries FSRS state; a plain vocab file keeps the learner's progress.
         fsrs: row.fsrs ?? current.fsrs,
         updatedAt: nowIso,
@@ -132,6 +148,11 @@ export function materializeImport(
     if (row.exampleSentenceTranslation)
       card.exampleSentenceTranslation = row.exampleSentenceTranslation;
     if (row.visualFoils.length) card.visualFoils = row.visualFoils;
+    if (row.variants.length) card.variants = row.variants;
+    if (row.spoken) card.spoken = row.spoken;
+    if (row.variantNote) card.variantNote = row.variantNote;
+    if (row.notes) card.notes = row.notes;
+    if (row.clozeDistractors.length) card.clozeDistractors = row.clozeDistractors;
     result.toInsert.push(card);
   }
   return result;

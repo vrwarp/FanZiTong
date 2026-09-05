@@ -7,7 +7,7 @@ describe('starter deck', () => {
 
   it('covers the four PRD domains with a healthy number of cards each', () => {
     expect(cards).toHaveLength(STARTER_DECK_SIZE);
-    expect(STARTER_DECK_SIZE).toBeGreaterThanOrEqual(80);
+    expect(STARTER_DECK_SIZE).toBeGreaterThanOrEqual(90);
     for (const domain of ['food', 'church', 'slang', 'anime'] as const) {
       expect(STARTER_ENTRIES[domain].length).toBeGreaterThanOrEqual(20);
       expect(cards.filter((c) => c.domain === domain).length).toBe(STARTER_ENTRIES[domain].length);
@@ -35,8 +35,23 @@ describe('starter deck', () => {
       expect(card.exampleSentenceTranslation).toBeTruthy();
       expect(card.visualFoils!.length).toBeGreaterThanOrEqual(2);
       expect(card.visualFoils).not.toContain(card.traditional);
+      for (const v of card.variants ?? []) {
+        expect(card.visualFoils).not.toContain(v);
+        expect(v).not.toBe(card.traditional);
+      }
       expect(card.tags.length).toBeGreaterThan(0);
     }
+  });
+
+  it('marks the famous real-world spellings as variants, not foils', () => {
+    const byWord = new Map(cards.map((c) => [c.traditional, c]));
+    expect(byWord.get('滷肉飯')?.variants).toEqual(['魯肉飯']);
+    expect(byWord.get('鹹酥雞')?.variants).toEqual(['鹽酥雞']);
+    expect(byWord.get('藉口')?.variants).toEqual(['借口']);
+    expect(byWord.get('滷肉飯')?.visualFoils).not.toContain('魯肉飯');
+    expect(byWord.get('爆雷')).toBeDefined();
+    expect(byWord.get('劇透')).toBeUndefined();
+    expect(byWord.get('ㄏㄏ')?.domain).toBe('slang');
   });
 
   it('supports an injectable id factory', () => {

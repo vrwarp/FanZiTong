@@ -18,4 +18,15 @@ describe('theme', () => {
     rerender({ pref: 'light' as never });
     expect(document.documentElement.classList.contains('dark')).toBe(false);
   });
+
+  it('leaves the boot-script class alone until settings have loaded', () => {
+    document.documentElement.classList.add('dark');
+    const { rerender } = renderHook(({ pref }) => useTheme(pref), {
+      initialProps: { pref: null as 'dark' | null },
+    });
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    rerender({ pref: 'dark' });
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    document.documentElement.classList.remove('dark');
+  });
 });

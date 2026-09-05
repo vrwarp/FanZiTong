@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DailyChart } from '@/components/stats/DailyChart';
@@ -6,19 +6,29 @@ import { DomainMasteryBars } from '@/components/stats/DomainMasteryBars';
 import { RetentionGauge } from '@/components/stats/RetentionGauge';
 import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
+import { charInfo } from '@/data/charInfo';
+import { diffCharacters, expandFoil } from '@/lib/exercises/foil';
+import { hanChars, syllablesPerCharacter } from '@/lib/util/pinyin';
 import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useNow } from '@/hooks/useNow';
 import { useSettings } from '@/hooks/useSettings';
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import {
+  RECALL_MIN_STUDY_DAYS,
   averageRetrievability,
+  countStudyDays,
   dailySeries,
   domainMastery,
   findLeeches,
+  hasEnoughRecallData,
   retentionRate,
   stateDistribution,
   totalLapses,
 } from '@/lib/stats/analytics';
+import { CARD_STATE_LABELS, CARD_STATE_ZH, type VocabCard } from '@/types';
+
+/** Below this many answers a percentage is noise, so it is not shown. */
+const MIN_ANSWERS_FOR_RATE = 10;
 
 export default function StatsPage() {
   const navigate = useNavigate();
@@ -29,13 +39,16 @@ export default function StatsPage() {
 
   const model = useMemo(() => {
     const scheduler = createScheduler(settings, { enableFuzz: false });
+    const ready = hasEnoughRecallData(logs);
+    const logs30 = logs.filter(
+      (l) => now.getTime() - new Date(l.reviewTimestamp).getTime() <= 30 * 86_400_000,
+    );
     return {
-      retrievability: averageRetrievability(scheduler, cards, now),
-      retention30: retentionRate(
-        logs.filter(
-          (l) => now.getTime() - new Date(l.reviewTimestamp).getTime() <= 30 * 86_400_000,
-        ),
-      ),
+      recallDataReady: ready,
+      studyDays: countStudyDays(logs),
+      retrievability: ready ? averageRetrievability(scheduler, cards, now) : null,
+      answers30: logs30.length,
+      retention30: retentionRate(logs30),
       series: dailySeries(logs, 30, now),
       mastery: domainMastery(cards),
       leeches: findLeeches(cards, settings.leechThreshold),
@@ -48,30 +61,37 @@ export default function StatsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Stats" zh="統計" subtitle="Memory health, lapses and leeches" />
+      <PageHeader title="Stats" zh="統計" subtitle="How well the words are sticking" />
 
       <section className="card-surface flex items-center gap-4 p-4">
         <RetentionGauge value={model.retrievability} target={settings.targetRetention} />
         <div className="flex-1 text-sm">
-          <p className="font-bold">Average retrievability</p>
+          <p className="font-bold">Recall now</p>
           <p className="text-stone-500 dark:text-stone-400">
             Probability you can recall a reviewed card right now. Target{' '}
             {Math.round(settings.targetRetention * 100)}%.
           </p>
-          <p className="mt-2 font-bold">30-day retention</p>
+          {!model.recallDataReady && (
+            <p className="text-stone-500 dark:text-stone-400" data-testid="stats-recall-empty">
+              Shows after {RECALL_MIN_STUDY_DAYS} study days · {model.studyDays} so far
+            </p>
+          )}
+          <p className="mt-2 font-bold">Not-&quot;Again&quot; rate, 30 days</p>
           <p className="text-stone-500 dark:text-stone-400" data-testid="retention-30">
             {model.retention30 === null
-              ? 'No reviews yet'
-              : `${Math.round(model.retention30 * 100)}% of answers were not "Again"`}
+              ? 'No answers yet'
+              : model.answers30 < MIN_ANSWERS_FOR_RATE
+                ? `Not enough answers yet (${model.answers30}/${MIN_ANSWERS_FOR_RATE})`
+                : `${Math.round(model.retention30 * 100)}% of answers were not "Again"`}
           </p>
         </div>
       </section>
 
       <section className="grid grid-cols-3 gap-3 text-center">
-        <Tile label="Cards" value={cards.length} testId="stat-cards" />
-        <Tile label="Lapses" value={model.lapses} testId="stat-lapses" />
+        <Tile label="Words" value={cards.length} testId="stat-cards" />
+        <Tile label="Forgotten" value={model.lapses} testId="stat-lapses" />
         <Tile
-          label="Leeches"
+          label="Keep slipping"
           value={model.leeches.length}
           testId="stat-leeches"
           tone={model.leeches.length > 0 ? 'red' : undefined}
@@ -101,13 +121,25 @@ export default function StatsPage() {
           />
         </div>
         <ul
-          className="mt-2 grid grid-cols-4 gap-1 text-xs text-stone-600 dark:text-stone-300"
+          className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-xs whitespace-nowrap text-stone-600 dark:text-stone-300"
           data-testid="state-distribution"
         >
-          <li>● New {model.states.new}</li>
-          <li className="text-amber-700 dark:text-amber-300">● Learning {model.states.learning}</li>
-          <li className="text-jade-600">● Review {model.states.review}</li>
-          <li className="text-red-600">● Relearning {model.states.relearning}</li>
+          <li>
+            ● {CARD_STATE_LABELS[0]} <span lang="zh-Hant-TW">{CARD_STATE_ZH[0]}</span>{' '}
+            {model.states.new}
+          </li>
+          <li className="text-amber-700 dark:text-amber-300">
+            ● {CARD_STATE_LABELS[1]} <span lang="zh-Hant-TW">{CARD_STATE_ZH[1]}</span>{' '}
+            {model.states.learning}
+          </li>
+          <li className="text-jade-600">
+            ● {CARD_STATE_LABELS[2]} <span lang="zh-Hant-TW">{CARD_STATE_ZH[2]}</span>{' '}
+            {model.states.review}
+          </li>
+          <li className="text-red-600">
+            ● {CARD_STATE_LABELS[3]} <span lang="zh-Hant-TW">{CARD_STATE_ZH[3]}</span>{' '}
+            {model.states.relearning}
+          </li>
         </ul>
       </section>
 
@@ -126,9 +158,9 @@ export default function StatsPage() {
           Domain mastery
         </h2>
         <p className="mb-3 text-xs text-stone-500 dark:text-stone-400">
-          Cards with stability over 30 days.
+          "Solid" = you'd still read it after a month.
         </p>
-        <DomainMasteryBars mastery={model.mastery} />
+        <DomainMasteryBars mastery={model.mastery} cards={cards} />
       </section>
 
       <section className="card-surface p-4" aria-labelledby="leech-heading">
@@ -137,13 +169,15 @@ export default function StatsPage() {
             id="leech-heading"
             className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400"
           >
-            Leech inspection
+            Words that keep slipping <span lang="zh-Hant-TW">常忘的字</span>
           </h2>
-          <span className="text-xs text-stone-500">≥ {settings.leechThreshold} lapses</span>
+          <span className="shrink-0 text-xs text-stone-500">
+            forgotten ≥ {settings.leechThreshold}×
+          </span>
         </div>
         {model.leeches.length === 0 ? (
           <p className="mt-2 text-sm text-stone-500 dark:text-stone-400" data-testid="no-leeches">
-            No leeches. Keep it up!
+            Nothing keeps slipping. Keep it up!
           </p>
         ) : (
           <>
@@ -152,20 +186,7 @@ export default function StatsPage() {
               data-testid="leech-list"
             >
               {model.leeches.map((card) => (
-                <li key={card.id} className="flex items-center gap-3 py-2">
-                  <Link to={`/vocab/${card.id}`} className="flex flex-1 items-center gap-3">
-                    <Hanzi className="text-2xl font-bold text-red-600">{card.traditional}</Hanzi>
-                    <span className="min-w-0 flex-1 truncate text-sm">{card.definition}</span>
-                  </Link>
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
-                    {card.fsrs.lapses} lapses
-                  </span>
-                  {card.visualFoils && card.visualFoils.length > 0 && (
-                    <Hanzi className="hidden text-sm text-stone-500 sm:inline">
-                      vs {card.visualFoils.join(' / ')}
-                    </Hanzi>
-                  )}
-                </li>
+                <LeechRow key={card.id} card={card} />
               ))}
             </ul>
             <Button
@@ -178,12 +199,97 @@ export default function StatsPage() {
               }
               data-testid="practice-leeches"
             >
-              Practice Difficult Characters
+              Practice these words
             </Button>
           </>
         )}
       </section>
     </div>
+  );
+}
+
+/**
+ * A leech is a diagnosis of interference, so the row shows the discriminating
+ * cues that already exist: each character with its reading and gloss, the
+ * accepted spellings (so a variant is never counted as a miss), and the
+ * look-alikes it is confused with.
+ */
+function LeechRow({ card }: { card: VocabCard }) {
+  const [showReading, setShowReading] = useState(false);
+  const chars = hanChars(card.traditional);
+  const syllables = syllablesPerCharacter(card.traditional, card.pinyin);
+  const variants = (card.variants ?? []).filter(Boolean);
+  const foils = (card.visualFoils ?? []).filter(Boolean);
+  const drill = `/drills/${foils.length > 0 ? 'foil_discrimination' : 'cloze'}?count=1&cards=${card.id}`;
+  return (
+    <li className="flex flex-col gap-1 py-2" data-testid="leech-row">
+      <div className="flex items-center gap-3">
+        <Link to={`/vocab/${card.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+          <Hanzi className="text-2xl font-bold text-red-600">{card.traditional}</Hanzi>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm">{card.definition}</span>
+          </span>
+        </Link>
+        <button
+          type="button"
+          onClick={() => setShowReading((v) => !v)}
+          className="shrink-0 rounded-full border border-stone-300 px-2 py-0.5 text-xs font-semibold text-stone-600 dark:border-stone-600 dark:text-stone-300"
+          aria-expanded={showReading}
+          data-testid="leech-reading"
+        >
+          {showReading ? (card.spoken ?? card.pinyin) : 'reading'}
+        </button>
+        <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
+          forgotten {card.fsrs.lapses}×
+        </span>
+      </div>
+      <p className="text-xs text-stone-600 dark:text-stone-300" data-testid="leech-cues">
+        {chars.map((ch, i) => {
+          const info = charInfo(ch);
+          return (
+            <span key={`${ch}-${i}`} className="mr-2 inline-block">
+              <Hanzi className="font-semibold">{ch}</Hanzi>
+              {showReading && syllables?.[i] && ` ${syllables[i]}`}
+              {info && ` “${info.gloss}”`}
+            </span>
+          );
+        })}
+      </p>
+      {(variants.length > 0 || foils.length > 0) && (
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          {variants.length > 0 && (
+            <span className="mr-3">
+              <span lang="zh-Hant-TW">也寫作</span> <Hanzi>{variants.join('、')}</Hanzi>
+            </span>
+          )}
+          {foils.length > 0 && (
+            <span data-testid="leech-foils">
+              not{' '}
+              {foils.map((foil, i) => {
+                const expanded = expandFoil(card.traditional, foil) ?? foil;
+                const diff = diffCharacters(expanded, card.traditional)[0];
+                const info = diff ? charInfo(diff.picked) : null;
+                return (
+                  <span key={foil} className="mr-2 inline-block">
+                    <Hanzi>{expanded}</Hanzi>
+                    {info &&
+                      ` (${diff!.picked} ${info.pinyin}${info.gloss ? ` “${info.gloss}”` : ''}${info.tell ? ` — ${info.tell}` : ''})`}
+                    {i < foils.length - 1 ? ' ·' : ''}
+                  </span>
+                );
+              })}
+            </span>
+          )}
+        </p>
+      )}
+      <Link
+        to={drill}
+        className="self-start text-xs font-semibold text-brand-600 underline dark:text-brand-300"
+        data-testid="leech-practice"
+      >
+        Practice this word
+      </Link>
+    </li>
   );
 }
 

@@ -20,11 +20,15 @@ describe('computeDashboard', () => {
     const model = computeDashboard([due, fresh], logs, DEFAULT_SETTINGS, now);
     expect(model.plan.queue).toEqual(['due', 'fresh']);
     expect(model.streak).toBe(1);
-    expect(model.reviewsToday).toBe(1);
+    expect(model.reviewsToday).toBe(1); // legacy log without stateBefore counts as a review
     expect(model.newCardsToday).toBe(1);
     expect(model.retentionToday).toBe(0);
     expect(model.leechCount).toBe(1);
     expect(model.totalCards).toBe(2);
-    expect(model.averageRetrievability).not.toBeNull();
+    expect(model.answersToday).toBe(1);
+    // Recall needs a week of study days before it is shown.
+    expect(model.recallDataReady).toBe(false);
+    expect(model.averageRetrievability).toBeNull();
+    expect(model.doneForToday).toBe(false);
   });
 });

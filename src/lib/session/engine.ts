@@ -4,18 +4,25 @@ import { buildClozeExercise } from '@/lib/exercises/cloze';
 import type { FoilExercise } from '@/lib/exercises/foil';
 import { buildFoilExercise } from '@/lib/exercises/foil';
 import type { MenuExercise } from '@/lib/exercises/menu';
-import { buildMenuExercise } from '@/lib/exercises/menu';
+import { buildMenuExercise, companionsFor } from '@/lib/exercises/menu';
 import { fromFsrsCard, toFsrsCard, type RatingPreview } from '@/lib/fsrs/scheduler';
 import {
   DRILL_EVERY_N_CARDS,
   chooseDrillType,
+  hasClozeSentence,
   isDrillCandidate,
   shouldRequeue,
 } from '@/lib/queue/session';
 import { uuid } from '@/lib/util/id';
 import { type Rng } from '@/lib/util/random';
 import { formatInterval } from '@/lib/util/time';
-import type { ExerciseType, RatingGrade, ReviewLog, VocabCard } from '@/types';
+import {
+  CardState,
+  type ExerciseType,
+  type RatingGrade,
+  type ReviewLog,
+  type VocabCard,
+} from '@/types';
 
 export type DrillExercise = ClozeExercise | FoilExercise | MenuExercise;
 
@@ -25,6 +32,12 @@ export type SessionStep =
 export interface DrillOutcome {
   cardId: string;
   correct: boolean;
+  /**
+   * False when the answer says nothing about the target's binding (e.g. the
+   * learner read a real word correctly but it was not the one in the blank):
+   * counted as an answer, no schedule change.
+   */
+  applyRating?: boolean;
 }
 
 export interface SessionResultEntry {
@@ -33,6 +46,31 @@ export interface SessionResultEntry {
   exerciseType: ExerciseType;
   timeMs: number;
   timestamp: string;
+  /** False when the answer was recorded for the session but did not change the FSRS schedule. */
+  applied: boolean;
+}
+
+/**
+ * Drills are recognition tasks with a guess floor, so they are weaker
+ * evidence than a recall rating: a miss always counts as "Again", a hit
+ * counts as "Good" only for cards still being learned, and leaves the
+ * schedule of a card already in Review untouched.
+ */
+export function drillRatingFor(card: VocabCard, correct: boolean): RatingGrade | null {
+  if (!correct) return 1;
+  return card.fsrs.state === CardState.Review ? null : 3;
+}
+
+export function describeDrillOutcome(
+  card: VocabCard,
+  correct: boolean,
+  applyRating = true,
+): string {
+  if (!applyRating) return 'No change to its schedule — that was a reading of another word.';
+  const rating = drillRatingFor(card, correct);
+  if (rating === 1) return 'Again — it comes back sooner.';
+  if (rating === 3) return 'Good — moves it toward long-term review.';
+  return 'In review 複習中 — no change; a miss would bring it back sooner.';
 }
 
 /** What the caller must persist after an answer. */
@@ -60,6 +98,19 @@ export interface EngineOptions {
   rng?: Rng;
   /** Cache window in which the previewed schedule is reused for the actual rating. */
   previewReuseMs?: number;
+  /** Progress of a session paused earlier today, so counts and time carry on. */
+  restore?: SessionProgress;
+}
+
+/** The part of a session worth carrying across a pause (see `serialize`). */
+export interface SessionProgress {
+  answered: number;
+  results: SessionResultEntry[];
+  /** Time already spent before the pause. */
+  elapsedMs: number;
+  drilled: string[];
+  nextDrillAt: number;
+  lastDrillType?: ExerciseType;
 }
 
 export interface EngineSnapshot {
@@ -75,10 +126,17 @@ export interface EngineSnapshot {
   /** answered + current + remaining — grows when cards are re-queued. */
   total: number;
   drillsRemaining: number;
+  /** 1-based position among the session's pre-built drills (standalone mode). */
+  drillIndex: number;
+  drillTotal: number;
+  /** Missed standalone items appended once more to the end of the drill queue. */
+  requeued: number;
   results: SessionResultEntry[];
   startedAt: number;
   /** Time spent so far, frozen at completion. */
   elapsedMs: number;
+  /** How long the learner looked at the prompt before revealing (current card). */
+  revealLatencyMs: number | null;
 }
 
 /**
@@ -92,6 +150,8 @@ export class StudyEngine {
   private readonly cards = new Map<string, VocabCard>();
   private readonly queue: string[];
   private readonly drillQueue: DrillExercise[];
+  private drillTotal: number;
+  private readonly requeuedDrills = new Set<string>();
   private readonly scheduler: FSRS;
   private readonly interleave: boolean;
   private readonly requeueLearning: boolean;
@@ -102,6 +162,7 @@ export class StudyEngine {
   private status: 'active' | 'complete' = 'active';
   private step: SessionStep | null = null;
   private revealed = false;
+  private revealLatencyMs: number | null = null;
   private preview: { at: number; log: IPreview } | null = null;
   private answered = 0;
   private nextDrillAt = DRILL_EVERY_N_CARDS;
@@ -118,15 +179,37 @@ export class StudyEngine {
     for (const card of options.pool) this.cards.set(card.id, card);
     this.queue = options.queue.filter((id) => this.cards.has(id));
     this.drillQueue = [...(options.drills ?? [])];
+    this.drillTotal = this.drillQueue.length;
     this.scheduler = options.scheduler;
     this.interleave = options.interleaveDrills;
     this.requeueLearning = options.requeueLearning ?? options.interleaveDrills;
     this.now = options.now ?? (() => new Date());
     this.rng = options.rng ?? Math.random;
     this.previewReuseMs = options.previewReuseMs ?? 60_000;
-    this.startedAt = this.now().getTime();
-    this.stepStartedAt = this.startedAt;
+    const restore = options.restore;
+    // A resumed session counts from where it stopped: the clock excludes the pause.
+    this.startedAt = this.now().getTime() - (restore?.elapsedMs ?? 0);
+    this.stepStartedAt = this.now().getTime();
+    if (restore) {
+      this.answered = restore.answered;
+      this.results.push(...restore.results);
+      for (const id of restore.drilled) this.drilled.add(id);
+      this.nextDrillAt = restore.nextDrillAt;
+      this.lastDrillType = restore.lastDrillType;
+    }
     this.advance();
+  }
+
+  /** Progress to persist across a pause; pair it with `remainingCardIds()`. */
+  serialize(): SessionProgress {
+    return {
+      answered: this.answered,
+      results: [...this.results],
+      elapsedMs: this.now().getTime() - this.startedAt,
+      drilled: Array.from(this.drilled),
+      nextDrillAt: this.nextDrillAt,
+      lastDrillType: this.lastDrillType,
+    };
   }
 
   /** Subscribe to changes (external-store contract for React's useSyncExternalStore). */
@@ -151,15 +234,30 @@ export class StudyEngine {
       remaining: this.queue.length,
       total: this.answered + (this.step?.kind === 'card' ? 1 : 0) + this.queue.length,
       drillsRemaining: this.drillQueue.length,
+      drillIndex: this.drillTotal - this.drillQueue.length,
+      drillTotal: this.drillTotal,
+      requeued: this.requeuedDrills.size,
       results: [...this.results],
       startedAt: this.startedAt,
       elapsedMs: (this.completedAt ?? this.now().getTime()) - this.startedAt,
+      revealLatencyMs: this.revealLatencyMs,
     };
     return this.cached;
   };
 
+  /** Current in-memory state of every card in the pool. */
+  getCards(): VocabCard[] {
+    return Array.from(this.cards.values());
+  }
+
   getCard(id: string): VocabCard | undefined {
     return this.cards.get(id);
+  }
+
+  /** Ids of the cards still to be answered, current card first (for resume). */
+  remainingCardIds(): string[] {
+    const current = this.step?.kind === 'card' ? [this.step.cardId] : [];
+    return [...current, ...this.queue];
   }
 
   /** Flip the recognition card: compute the four scheduling previews. */
@@ -169,6 +267,7 @@ export class StudyEngine {
     const now = this.now();
     this.preview = { at: now.getTime(), log: this.scheduler.repeat(toFsrsCard(card.fsrs), now) };
     this.revealed = true;
+    this.revealLatencyMs = Math.max(0, now.getTime() - this.stepStartedAt);
     this.touch();
   }
 
@@ -185,6 +284,7 @@ export class StudyEngine {
     const persisted = this.applyRating(cardId, rating, 'rapid_recognition', now, cached?.card);
     this.answered += 1;
     this.revealed = false;
+    this.revealLatencyMs = null;
     this.preview = null;
     this.advance();
     this.touch();
@@ -198,8 +298,41 @@ export class StudyEngine {
     const now = this.now();
     const persisted: PersistedReview[] = [];
     for (const outcome of outcomes) {
-      if (!this.cards.has(outcome.cardId)) continue;
-      persisted.push(this.applyRating(outcome.cardId, outcome.correct ? 3 : 1, exerciseType, now));
+      const card = this.cards.get(outcome.cardId);
+      if (!card) continue;
+      // A companion dish the learner has never studied is only there to fill the
+      // slip: its answer is recorded, but the schedule is not touched.
+      const companion =
+        this.interleave && exerciseType === 'realia_menu' && card.fsrs.state === CardState.New;
+      const rating =
+        outcome.applyRating === false || companion ? null : drillRatingFor(card, outcome.correct);
+      if (rating === null) {
+        this.results.push({
+          cardId: card.id,
+          rating: outcome.correct ? 3 : 2,
+          exerciseType,
+          timeMs: Math.max(0, now.getTime() - this.stepStartedAt),
+          timestamp: now.toISOString(),
+          applied: false,
+        });
+        continue;
+      }
+      persisted.push(this.applyRating(card.id, rating, exerciseType, now));
+    }
+    // In a standalone drill a missed item comes back once before the end: the
+    // learner should leave having found the shape, not having been told it.
+    if (!this.interleave) {
+      const pool = Array.from(this.cards.values());
+      for (const outcome of outcomes) {
+        if (outcome.correct || outcome.applyRating === false) continue;
+        const card = this.cards.get(outcome.cardId);
+        if (!card || this.requeuedDrills.has(card.id)) continue;
+        const again = this.buildExercise(exerciseType, card, pool);
+        if (!again) continue;
+        this.requeuedDrills.add(card.id);
+        this.drillQueue.push(again);
+        this.drillTotal += 1;
+      }
     }
     this.advance();
     this.touch();
@@ -251,6 +384,7 @@ export class StudyEngine {
       exerciseType,
       reviewTimestamp: nowIso,
       timeSpentMs: Math.max(0, now.getTime() - this.stepStartedAt),
+      stateBefore: card.fsrs.state,
       stability: next.stability,
       difficulty: next.difficulty,
       scheduled_days: next.scheduled_days,
@@ -262,6 +396,7 @@ export class StudyEngine {
       exerciseType,
       timeMs: log.timeSpentMs,
       timestamp: nowIso,
+      applied: true,
     });
     if (this.requeueLearning && shouldRequeue(next.due, now) && !this.queue.includes(cardId)) {
       this.queue.push(cardId);
@@ -293,16 +428,42 @@ export class StudyEngine {
     this.completedAt = this.now().getTime();
   }
 
-  /** Build a drill for a card seen this session that is still in (re)learning or has lapsed. */
+  /**
+   * Build the interleaved drill. A cloze on a sentence revealed minutes ago is
+   * a memory of the screen, not a reading, so Fill the Blank only takes cards
+   * still being learned that are NOT part of today's session; the cards seen
+   * this session get Spot the Character or the Order Slip instead.
+   */
   private makeDrill(): DrillExercise | null {
-    const seen = Array.from(new Set(this.results.map((r) => r.cardId)));
-    const candidates = seen
-      .map((id) => this.cards.get(id)!)
-      .filter((c) => isDrillCandidate(c) && !this.drilled.has(c.id) && c.id !== this.queue[0])
-      .sort((a, b) => b.fsrs.lapses - a.fsrs.lapses);
     const pool = Array.from(this.cards.values());
+    const seenIds = new Set(this.results.map((r) => r.cardId));
+    const queued = new Set(this.queue);
+    const usable = (c: VocabCard) => isDrillCandidate(c) && !this.drilled.has(c.id);
+
+    if (this.lastDrillType !== 'cloze') {
+      const fresh = pool
+        .filter((c) => usable(c) && hasClozeSentence(c) && !seenIds.has(c.id) && !queued.has(c.id))
+        .sort((a, b) => b.fsrs.lapses - a.fsrs.lapses || a.fsrs.stability - b.fsrs.stability);
+      for (const card of fresh) {
+        const exercise = this.buildExercise('cloze', card, pool);
+        if (!exercise) continue;
+        this.drilled.add(card.id);
+        this.lastDrillType = 'cloze';
+        return exercise;
+      }
+    }
+
+    // Prefer a seen card that is not fresh in episodic memory (not in the last 3 answers).
+    const recent = new Set(this.results.slice(-3).map((r) => r.cardId));
+    const eligible = Array.from(seenIds)
+      .map((id) => this.cards.get(id)!)
+      .filter((c) => usable(c) && c.id !== this.queue[0]);
+    const candidates = [
+      ...eligible.filter((c) => !recent.has(c.id)),
+      ...eligible.filter((c) => recent.has(c.id)),
+    ].sort((a, b) => b.fsrs.lapses - a.fsrs.lapses);
     for (const card of candidates) {
-      const type = chooseDrillType(card, this.lastDrillType);
+      const type = chooseDrillType(card, this.lastDrillType, ['cloze']);
       if (!type) continue;
       const exercise = this.buildExercise(type, card, pool);
       if (!exercise) continue;
@@ -325,8 +486,7 @@ export class StudyEngine {
         return buildFoilExercise(card, pool, this.rng);
       case 'realia_menu': {
         const seenIds = new Set(this.results.map((r) => r.cardId));
-        const companions = pool
-          .filter((c) => c.domain === 'food' && c.id !== card.id)
+        const companions = companionsFor(card, pool)
           .sort((a, b) => Number(seenIds.has(b.id)) - Number(seenIds.has(a.id)))
           .slice(0, 2);
         return buildMenuExercise([card, ...companions], this.rng);
@@ -356,11 +516,24 @@ export class StudyEngine {
 export function summarizeResults(results: SessionResultEntry[]) {
   const total = results.length;
   const correct = results.filter((r) => r.rating !== 1).length;
-  const uniqueCards = new Set(results.map((r) => r.cardId)).size;
+  const firstByCard = new Map<string, SessionResultEntry>();
+  // "Words seen" are the cards whose schedule this session touched; a slip's
+  // unstudied companion dish or a cloze misread is recorded but not counted.
+  for (const r of results) {
+    if (r.applied && !firstByCard.has(r.cardId)) firstByCard.set(r.cardId, r);
+  }
+  const uniqueCards = firstByCard.size;
+  const firstTryCorrect = Array.from(firstByCard.values()).filter((r) => r.rating !== 1).length;
+  /** Cards whose first answer was Again or Hard — worth one more look. */
+  const weakCardIds = Array.from(firstByCard.values())
+    .filter((r) => r.rating <= 2)
+    .map((r) => r.cardId);
   return {
     total,
     correct,
     uniqueCards,
+    firstTryCorrect,
+    weakCardIds,
     retention: total === 0 ? null : correct / total,
   };
 }

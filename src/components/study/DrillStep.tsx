@@ -30,12 +30,20 @@ export function DrillStep({ exercise, getCard, onComplete, onSkip }: DrillStepPr
       );
     }
     case 'foil_discrimination':
-      return <FoilExerciseView key={exercise.cardId} exercise={exercise} onComplete={onComplete} />;
+      return (
+        <FoilExerciseView
+          key={exercise.cardId}
+          exercise={exercise}
+          card={getCard(exercise.cardId)}
+          onComplete={onComplete}
+        />
+      );
     case 'realia_menu':
       return (
         <MenuExerciseView
           key={exercise.cardIds.join('-')}
           exercise={exercise}
+          getCard={getCard}
           onComplete={onComplete}
         />
       );

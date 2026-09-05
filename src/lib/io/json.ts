@@ -43,6 +43,11 @@ export const importCardSchema = z.object({
   exampleSentencePinyin: z.string().optional(),
   exampleSentenceTranslation: z.string().optional(),
   visualFoils: stringList,
+  variants: stringList,
+  spoken: z.string().optional(),
+  variantNote: z.string().optional(),
+  notes: z.string().optional(),
+  clozeDistractors: stringList,
   fsrs: fsrsStateSchema.optional(),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
@@ -143,6 +148,8 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       domain,
       tags: c.tags,
       visualFoils: c.visualFoils,
+      variants: c.variants,
+      clozeDistractors: c.clozeDistractors,
       fsrs: c.fsrs as FsrsState | undefined,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
@@ -158,6 +165,9 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
     if (c.exampleSentenceTranslation?.trim()) {
       row.exampleSentenceTranslation = c.exampleSentenceTranslation.trim();
     }
+    if (c.spoken?.trim()) row.spoken = c.spoken.trim();
+    if (c.variantNote?.trim()) row.variantNote = c.variantNote.trim();
+    if (c.notes?.trim()) row.notes = c.notes.trim();
     rows.push(row);
   });
 

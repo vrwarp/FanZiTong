@@ -1,8 +1,22 @@
 import { Link } from 'react-router';
-import { DomainBadge } from '@/components/ui/Badge';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { formatRelativeDue } from '@/lib/util/time';
-import { CARD_STATE_LABELS, type CardStateValue, type VocabCard } from '@/types';
+import {
+  CARD_STATE_LABELS,
+  CARD_STATE_ZH,
+  DOMAIN_LABELS,
+  type CardStateValue,
+  type DomainCategory,
+  type VocabCard,
+} from '@/types';
+
+const DOT: Record<DomainCategory, string> = {
+  food: 'bg-orange-500',
+  church: 'bg-sky-500',
+  slang: 'bg-emerald-500',
+  anime: 'bg-fuchsia-500',
+  custom: 'bg-stone-500',
+};
 
 export function CardListItem({
   card,
@@ -31,12 +45,22 @@ export function CardListItem({
               {card.pinyin}
             </p>
           )}
-          <p className="truncate text-sm">{card.definition}</p>
+          <p className="line-clamp-2 text-sm">{card.definition}</p>
+          {card.variants && card.variants.length > 0 && (
+            <p className="text-xs text-stone-500 dark:text-stone-400">
+              也寫作 <Hanzi>{card.variants.join('、')}</Hanzi>
+            </p>
+          )}
           <p className="text-xs text-stone-500 dark:text-stone-400">
-            {state}
+            <span
+              className={`mr-1 inline-block h-2 w-2 rounded-full align-middle ${DOT[card.domain]}`}
+              title={DOMAIN_LABELS[card.domain].en}
+              aria-label={DOMAIN_LABELS[card.domain].en}
+            />
+            {state}{' '}
+            <span lang="zh-Hant-TW">{CARD_STATE_ZH[card.fsrs.state as CardStateValue]}</span>
             {card.fsrs.state !== 0 && ` · ${formatRelativeDue(new Date(card.fsrs.due), now)}`}
-            {card.fsrs.lapses > 0 &&
-              ` · ${card.fsrs.lapses} lapse${card.fsrs.lapses === 1 ? '' : 's'}`}
+            {card.fsrs.lapses > 0 && ` · forgotten ${card.fsrs.lapses}×`}
             {isLeech && (
               <span className="ml-1 rounded-full bg-red-100 px-1.5 font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
                 LEECH
@@ -44,7 +68,6 @@ export function CardListItem({
             )}
           </p>
         </div>
-        <DomainBadge domain={card.domain} className="hidden sm:inline-flex" />
       </Link>
     </li>
   );

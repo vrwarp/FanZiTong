@@ -11,7 +11,7 @@ export type DomainCategory = (typeof DOMAIN_CATEGORIES)[number];
 export const DOMAIN_LABELS: Record<DomainCategory, { en: string; zh: string; emoji: string }> = {
   food: { en: 'Food', zh: '飲食', emoji: '🍜' },
   church: { en: 'Church', zh: '教會', emoji: '⛪' },
-  slang: { en: 'Slang', zh: '俚語', emoji: '💬' },
+  slang: { en: 'Slang', zh: '流行語', emoji: '💬' },
   anime: { en: 'Anime', zh: '動漫', emoji: '🎌' },
   custom: { en: 'Custom', zh: '自訂', emoji: '📝' },
 };
@@ -34,6 +34,13 @@ export const CARD_STATE_LABELS: Record<CardStateValue, string> = {
   1: 'Learning',
   2: 'Review',
   3: 'Relearning',
+};
+/** The same four states in Chinese, so every screen uses one vocabulary. */
+export const CARD_STATE_ZH: Record<CardStateValue, string> = {
+  0: '新',
+  1: '學習中',
+  2: '複習中',
+  3: '重學',
 };
 
 export interface FsrsState {
@@ -66,6 +73,12 @@ export interface VocabCard {
   traditional: string;
   /** Tone-marked Hanyu Pinyin, e.g. "lǔ ròu fàn" */
   pinyin: string;
+  /**
+   * How the word is actually said when the dictionary reading is not what
+   * people use (Tâi-lô: 蚵仔煎 → "ô-á-tsian", 肉圓 → "bah-uân"). Used as the
+   * primary cue in drills and shown first on the reveal when present.
+   */
+  spoken?: string;
   /** English and/or vernacular definition */
   definition: string;
   domain: DomainCategory;
@@ -75,6 +88,17 @@ export interface VocabCard {
   exampleSentenceTranslation?: string;
   /** Visually confusable characters/words for discrimination drills. */
   visualFoils?: string[];
+  /**
+   * Accepted alternative spellings seen in the wild (e.g. 滷肉飯 → 魯肉飯,
+   * 鹹酥雞 → 鹽酥雞). Never used as "wrong" foils; shown as "also written".
+   */
+  variants?: string[];
+  /** Free-text note about the variants, e.g. "借口 is the China-side spelling". */
+  variantNote?: string;
+  /** A usage note or mnemonic, shown after the reveal (never on the prompt face). */
+  notes?: string;
+  /** Authored readable-but-wrong options for the cloze; the generator fills the rest. */
+  clozeDistractors?: string[];
   fsrs: FsrsState;
   createdAt: string;
   updatedAt: string;
@@ -90,11 +114,12 @@ export const RATING_LABELS: Record<RatingGrade, string> = {
 };
 
 export type ExerciseType = 'rapid_recognition' | 'cloze' | 'realia_menu' | 'foil_discrimination';
-export const EXERCISE_LABELS: Record<ExerciseType, string> = {
-  rapid_recognition: 'Rapid recognition',
-  cloze: 'Cloze',
-  realia_menu: 'Menu realia',
-  foil_discrimination: 'Foil discrimination',
+/** One plain name per exercise, used everywhere it appears. */
+export const EXERCISE_LABELS: Record<ExerciseType, { en: string; zh: string }> = {
+  rapid_recognition: { en: 'Recognition', zh: '認字' },
+  cloze: { en: 'Fill the Blank', zh: '填空' },
+  realia_menu: { en: 'Order Slip', zh: '點菜單' },
+  foil_discrimination: { en: 'Spot the Character', zh: '辨字' },
 };
 
 export interface ReviewLog {
@@ -104,6 +129,8 @@ export interface ReviewLog {
   exerciseType: ExerciseType;
   reviewTimestamp: string;
   timeSpentMs: number;
+  /** FSRS state of the card before this answer (0 New, 1 Learning, 2 Review, 3 Relearning). */
+  stateBefore?: number;
   // Snapshot of FSRS state after the review.
   stability: number;
   difficulty: number;

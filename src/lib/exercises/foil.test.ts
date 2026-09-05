@@ -1,6 +1,13 @@
 import { mulberry32 } from '@/lib/util/random';
 import { makeCard, makePool } from '@/test/factories';
-import { buildFoilExercise, expandFoil, FOIL_OPTION_COUNT, pickFoilOptions } from './foil';
+import {
+  buildFoilExercise,
+  diffCharacters,
+  expandFoil,
+  FOIL_OPTION_COUNT,
+  isVariantOf,
+  pickFoilOptions,
+} from './foil';
 
 describe('expandFoil', () => {
   it('substitutes single-character foils into the head position of a word', () => {
@@ -40,5 +47,19 @@ describe('buildFoilExercise', () => {
   it('returns null when no foil can be produced', () => {
     const card = makeCard({ visualFoils: [] });
     expect(buildFoilExercise(card, [card])).toBeNull();
+  });
+
+  it('never offers an accepted variant as a foil', () => {
+    const card = makeCard({ visualFoils: ['魯', '鹵肉飯'], variants: ['魯肉飯', '鹵肉飯'] });
+    const options = pickFoilOptions(card, pool, 3, mulberry32(7));
+    expect(options).not.toContain('魯肉飯');
+    expect(options).not.toContain('鹵肉飯');
+    expect(isVariantOf(card, '魯肉飯')).toBe(true);
+  });
+
+  it('diffs characters position by position', () => {
+    expect(diffCharacters('滷內飯', '滷肉飯')).toEqual([{ index: 1, picked: '內', correct: '肉' }]);
+    expect(diffCharacters('牧帥', '牧師')).toEqual([{ index: 1, picked: '帥', correct: '師' }]);
+    expect(diffCharacters('魯', '滷肉飯')).toEqual([]);
   });
 });

@@ -30,4 +30,21 @@ describe('settingsStore', () => {
     store.dispose();
     await repo.db.delete();
   });
+
+  it('serializes rapid successive writes so none is lost', async () => {
+    const repo = createRepository(createDatabase('settings-store-2'));
+    const store = createSettingsStore(repo);
+    store.subscribe(() => undefined);
+    await vi.waitFor(() => expect(store.isLoaded()).toBe(true));
+    const writes = [
+      store.update({ maxDailyNewCards: 4 }),
+      store.update({ pinyinRevealDelayMs: 3000 }),
+      store.update({ theme: 'dark' }),
+    ];
+    await Promise.all(writes);
+    const saved = await repo.getSettings();
+    expect(saved).toMatchObject({ maxDailyNewCards: 4, pinyinRevealDelayMs: 3000, theme: 'dark' });
+    store.dispose();
+    await repo.db.delete();
+  });
 });

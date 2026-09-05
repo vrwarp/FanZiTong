@@ -15,6 +15,7 @@ import {
   selectDrillCards,
   type DrillType,
 } from '@/lib/session/drillPlan';
+import { MENU_MAX_TARGETS } from '@/lib/exercises/menu';
 import { StudyEngine } from '@/lib/session/engine';
 import { computeStreak } from '@/lib/stats/analytics';
 import {
@@ -89,9 +90,12 @@ function DrillSession({
 }) {
   const navigate = useNavigate();
   const [engine] = useState<StudyEngine | null>(() => {
+    // For the Order Slip a "question" is one slip of up to three dishes.
+    const cardCount =
+      drillType === 'realia_menu' ? Math.min(30, options.count * MENU_MAX_TARGETS) : options.count;
     const selected = selectDrillCards(initialCards, settings, {
       type: drillType,
-      count: options.count,
+      count: cardCount,
       now: new Date(),
       domain: options.domain,
       onlyIds: options.onlyIds,
@@ -126,10 +130,14 @@ function DrillSession({
     return (
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col p-4">
         <SessionSummary
-          title={`${EXERCISE_LABELS[drillType]} drill complete`}
+          mode="complete"
+          title={`${EXERCISE_LABELS[drillType].en} done`}
           results={snapshot.results}
           elapsedMs={snapshot.elapsedMs}
-          streak={computeStreak(logs, new Date(snapshot.startedAt + snapshot.elapsedMs))}
+          streak={Math.max(
+            1,
+            computeStreak(logs, new Date(snapshot.startedAt + snapshot.elapsedMs)),
+          )}
           onDone={() => navigate('/drills')}
           doneLabel="Back to Drills"
         />
@@ -140,26 +148,28 @@ function DrillSession({
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-3 p-4 pb-6">
       <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/drills')}
-          data-testid="drill-exit"
-        >
-          ← Back
-        </Button>
         <span
           className="text-xs font-semibold text-stone-500 dark:text-stone-400"
           data-testid="drill-progress"
         >
-          {EXERCISE_LABELS[drillType]} · {snapshot.drillsRemaining} left after this
+          {EXERCISE_LABELS[drillType].en} · {snapshot.drillIndex} of {snapshot.drillTotal}
         </span>
-        <Button variant="ghost" size="sm" onClick={api.finish}>
+        <Button variant="ghost" size="sm" onClick={api.finish} data-testid="drill-exit">
           End
         </Button>
       </div>
+      <p
+        className="-mt-2 text-xs text-stone-500 dark:text-stone-400"
+        data-testid="drill-requeue-note"
+      >
+        {snapshot.requeued > 0
+          ? 'A missed word comes back before the end. '
+          : 'Miss one and it comes back before the end. '}
+        <span lang="zh-Hant-TW">錯了會再考一次</span>
+      </p>
       {snapshot.step?.kind === 'drill' && (
         <DrillStep
+          key={`drill-${snapshot.drillIndex}`}
           exercise={snapshot.step.exercise}
           getCard={(id) => engine.getCard(id)}
           onComplete={api.answerDrill}

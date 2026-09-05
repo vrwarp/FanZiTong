@@ -15,6 +15,11 @@ export const CSV_HEADERS = [
   'foils',
   'example_pinyin',
   'example_translation',
+  'variants',
+  'spoken',
+  'variant_note',
+  'cloze_distractors',
+  'notes',
 ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
@@ -49,6 +54,18 @@ const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
   example_translation: 'example_translation',
   example_sentence_translation: 'example_translation',
   translation: 'example_translation',
+  variants: 'variants',
+  variant: 'variants',
+  also_written: 'variants',
+  異體: 'variants',
+  spoken: 'spoken',
+  as_heard: 'spoken',
+  taiwanese: 'spoken',
+  variant_note: 'variant_note',
+  cloze_distractors: 'cloze_distractors',
+  distractors: 'cloze_distractors',
+  notes: 'notes',
+  note: 'notes',
 };
 
 const BOM = '\uFEFF';
@@ -120,9 +137,17 @@ export function parseCsv(text: string): ParseResult {
       domain,
       tags: splitList(record.tags),
       visualFoils: splitList(record.foils),
+      variants: splitList(record.variants),
+      clozeDistractors: splitList(record.cloze_distractors),
       warnings,
       sourceIndex,
     };
+    const spoken = (record.spoken ?? '').trim();
+    if (spoken) row.spoken = spoken;
+    const variantNote = (record.variant_note ?? '').trim();
+    if (variantNote) row.variantNote = variantNote;
+    const notes = (record.notes ?? '').trim();
+    if (notes) row.notes = notes;
     const sentence = (record.example_sentence ?? '').trim();
     if (sentence) row.exampleSentenceTraditional = sentence;
     const sentencePinyin = (record.example_pinyin ?? '').trim();
@@ -147,6 +172,11 @@ export function toCsv(cards: VocabCard[]): string {
     foils: (c.visualFoils ?? []).join('|'),
     example_pinyin: c.exampleSentencePinyin ?? '',
     example_translation: c.exampleSentenceTranslation ?? '',
+    variants: (c.variants ?? []).join('|'),
+    spoken: c.spoken ?? '',
+    variant_note: c.variantNote ?? '',
+    cloze_distractors: (c.clozeDistractors ?? []).join('|'),
+    notes: c.notes ?? '',
   }));
   const body = Papa.unparse(
     { fields: [...CSV_HEADERS], data: data.map((d) => CSV_HEADERS.map((h) => d[h])) },

@@ -128,7 +128,7 @@ export function ImportDialog({ source, existing, onClose, onImported }: ImportDi
                 onChange={(e) => setDomainOverride(e.target.value as DomainCategory | '')}
                 data-testid="import-domain"
               >
-                <option value="">Keep from file (unknown → custom)</option>
+                <option value="">As in file (else Custom)</option>
                 {DOMAIN_CATEGORIES.map((d) => (
                   <option key={d} value={d}>
                     #{d} · {DOMAIN_LABELS[d].zh}
@@ -179,7 +179,7 @@ export function ImportDialog({ source, existing, onClose, onImported }: ImportDi
           )}
 
           <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-700">
-            <table className="w-full text-left text-xs" data-testid="import-preview">
+            <table className="w-full min-w-[34rem] text-left text-xs" data-testid="import-preview">
               <thead className="bg-stone-100 dark:bg-stone-800">
                 <tr>
                   <th className="px-2 py-1.5">Traditional</th>
@@ -215,7 +215,11 @@ export function ImportDialog({ source, existing, onClose, onImported }: ImportDi
                             : 'bg-amber-200 text-amber-900',
                         )}
                       >
-                        {row.status === 'new' ? 'new' : 'duplicate'}
+                        {row.status === 'new'
+                          ? 'new'
+                          : row.status === 'duplicate-in-file'
+                            ? 'repeated in file'
+                            : 'already in deck'}
                       </span>
                       {row.messages.length > 0 && (
                         <span className="block text-stone-500" title={row.messages.join(' ')}>

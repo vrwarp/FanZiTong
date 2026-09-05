@@ -3,7 +3,7 @@ import { mulberry32 } from '@/lib/util/random';
 import { CardState, type VocabCard } from '@/types';
 import { makeCard, makePool, reviewState } from '@/test/factories';
 import { buildDrillExercises, selectDrillCards } from './drillPlan';
-import { StudyEngine, summarizeResults } from './engine';
+import { StudyEngine, drillRatingFor, summarizeResults } from './engine';
 import { DEFAULT_SETTINGS } from '@/types';
 
 const scheduler = createScheduler({ targetRetention: 0.9 }, { enableFuzz: false });
@@ -46,7 +46,8 @@ describe('StudyEngine — recognition flow', () => {
     engine.reveal();
     const revealed = engine.snapshot();
     expect(revealed.revealed).toBe(true);
-    expect(revealed.previews?.[1].intervalLabel).toBe('<10m');
+    expect(revealed.previews?.[1].intervalLabel).toMatch(/^\d+m$/);
+    expect(revealed.revealLatencyMs).not.toBeNull();
     expect(revealed.previews?.[4].scheduledDays).toBeGreaterThanOrEqual(1);
   });
 
@@ -144,7 +145,7 @@ describe('StudyEngine — recognition flow', () => {
 });
 
 describe('StudyEngine — drill interleaving', () => {
-  it('offers a contextual drill after every 5th card for a card still in learning', () => {
+  it('offers a drill after every 5th card; a card seen this session never gets the cloze', () => {
     const pool = makePool();
     const engine = engineFor(
       pool,
@@ -156,14 +157,33 @@ describe('StudyEngine — drill interleaving', () => {
     expect(s.step?.kind).toBe('drill');
     if (s.step?.kind !== 'drill') throw new Error('expected drill');
     const exercise = s.step.exercise;
-    expect(exercise.type).toBe('cloze');
-    if (exercise.type !== 'cloze') throw new Error('expected cloze');
-    expect(exercise.cardId).toBe(pool[0].id);
+    // A cloze on a sentence revealed minutes ago would test the screen, not the reading.
+    expect(exercise.type).not.toBe('cloze');
+    const cardIds = exercise.type === 'realia_menu' ? exercise.cardIds : [exercise.cardId];
+    expect(cardIds).toContain(pool[0].id);
     const reviews = engine.answerDrill([{ cardId: pool[0].id, correct: false }]);
-    expect(reviews[0].log.exerciseType).toBe('cloze');
+    expect(reviews[0].log.exerciseType).toBe(exercise.type);
     expect(reviews[0].log.rating).toBe(1);
     expect(engine.snapshot().step?.kind).toBe('card');
     expect(engine.snapshot().answered).toBe(5);
+  });
+
+  it("reserves Fill the Blank for a learning card that is not part of today's session", () => {
+    const pool = makePool();
+    const outside = pool.find((c) => c.traditional === '團契')!;
+    const learning = { ...outside, fsrs: { ...outside.fsrs, state: CardState.Learning } };
+    const rest = pool.filter((c) => c.id !== outside.id);
+    const engine = engineFor(
+      [...rest, learning],
+      rest.map((c) => c.id),
+    );
+    for (let i = 0; i < 5; i += 1) engine.rate(4);
+    const s = engine.snapshot();
+    expect(s.step?.kind).toBe('drill');
+    if (s.step?.kind !== 'drill') throw new Error('expected drill');
+    expect(s.step.exercise.type).toBe('cloze');
+    if (s.step.exercise.type !== 'cloze') throw new Error('expected cloze');
+    expect(s.step.exercise.cardId).toBe(outside.id);
   });
 
   it('does not drill when no card qualifies', () => {
@@ -231,6 +251,46 @@ describe('StudyEngine — standalone drills', () => {
   });
 });
 
+describe('StudyEngine — drill scoring (recognition ≠ recall)', () => {
+  it('rates a miss Again, a hit Good only while learning, and leaves Review cards untouched', () => {
+    const pool = makePool();
+    const reviewCard = makeCard({
+      traditional: '火鍋',
+      fsrs: reviewState(),
+      exampleSentenceTraditional: '冬天吃火鍋。',
+      visualFoils: ['火渦'],
+    });
+    const all = [...pool, reviewCard];
+    const drills = buildDrillExercises(
+      'foil_discrimination',
+      [reviewCard, pool[0]],
+      all,
+      mulberry32(9),
+    );
+    const engine = engineFor(all, [], { drills, interleaveDrills: false });
+    expect(drillRatingFor(reviewCard, true)).toBeNull();
+    expect(drillRatingFor(reviewCard, false)).toBe(1);
+    expect(drillRatingFor(pool[0], true)).toBe(3);
+    // Hit on the Review card: nothing persisted, but the answer is counted.
+    const first = engine.answerDrill([{ cardId: reviewCard.id, correct: true }]);
+    expect(first).toEqual([]);
+    expect(engine.snapshot().results.at(-1)).toMatchObject({
+      cardId: reviewCard.id,
+      applied: false,
+      rating: 3,
+    });
+    expect(engine.getCard(reviewCard.id)?.fsrs.reps).toBe(reviewCard.fsrs.reps);
+    // Miss on a new card: persisted as Again with the state before the answer recorded.
+    const second = engine.answerDrill([{ cardId: pool[0].id, correct: false }]);
+    expect(second[0].log).toMatchObject({
+      rating: 1,
+      stateBefore: 0,
+      exerciseType: 'foil_discrimination',
+    });
+    expect(engine.snapshot().results.at(-1)).toMatchObject({ applied: true, rating: 1 });
+  });
+});
+
 describe('drillPlan', () => {
   it('prioritizes lapsed and learning cards, filters by type and domain', () => {
     const pool = makePool();
@@ -292,13 +352,67 @@ describe('drillPlan', () => {
 
 describe('summarizeResults', () => {
   it('computes counts and retention', () => {
-    expect(summarizeResults([])).toEqual({ total: 0, correct: 0, uniqueCards: 0, retention: null });
+    expect(summarizeResults([])).toEqual({
+      total: 0,
+      correct: 0,
+      uniqueCards: 0,
+      firstTryCorrect: 0,
+      weakCardIds: [],
+      retention: null,
+    });
     const summary = summarizeResults([
-      { cardId: 'a', rating: 1, exerciseType: 'rapid_recognition', timeMs: 1, timestamp: 't' },
-      { cardId: 'a', rating: 3, exerciseType: 'rapid_recognition', timeMs: 1, timestamp: 't' },
-      { cardId: 'b', rating: 4, exerciseType: 'cloze', timeMs: 1, timestamp: 't' },
-      { cardId: 'c', rating: 2, exerciseType: 'cloze', timeMs: 1, timestamp: 't' },
+      {
+        cardId: 'a',
+        rating: 1,
+        exerciseType: 'rapid_recognition',
+        timeMs: 1,
+        timestamp: 't',
+        applied: true,
+      },
+      {
+        cardId: 'a',
+        rating: 3,
+        exerciseType: 'rapid_recognition',
+        timeMs: 1,
+        timestamp: 't',
+        applied: true,
+      },
+      { cardId: 'b', rating: 4, exerciseType: 'cloze', timeMs: 1, timestamp: 't', applied: true },
+      { cardId: 'c', rating: 2, exerciseType: 'cloze', timeMs: 1, timestamp: 't', applied: true },
     ]);
-    expect(summary).toEqual({ total: 4, correct: 3, uniqueCards: 3, retention: 0.75 });
+    expect(summary).toEqual({
+      total: 4,
+      correct: 3,
+      uniqueCards: 3,
+      firstTryCorrect: 2,
+      weakCardIds: ['a', 'c'],
+      retention: 0.75,
+    });
+  });
+});
+
+describe('StudyEngine — standalone drills', () => {
+  it('asks a missed item once more before the end, and no more than once', () => {
+    const pool = makePool();
+    const card = pool.find((c) => c.traditional === '團契')!;
+    const drills = buildDrillExercises('foil_discrimination', [card], pool, mulberry32(3));
+    const engine = new StudyEngine({
+      pool,
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      rng: mulberry32(1),
+    });
+    expect(engine.snapshot().drillTotal).toBe(1);
+    engine.answerDrill([{ cardId: card.id, correct: false }]);
+    let s = engine.snapshot();
+    expect(s.requeued).toBe(1);
+    expect(s.drillTotal).toBe(2);
+    expect(s.step?.kind).toBe('drill');
+    engine.answerDrill([{ cardId: card.id, correct: false }]);
+    s = engine.snapshot();
+    expect(s.requeued).toBe(1);
+    expect(s.status).toBe('complete');
   });
 });

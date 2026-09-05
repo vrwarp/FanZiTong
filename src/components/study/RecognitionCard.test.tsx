@@ -15,6 +15,7 @@ function renderCard(overrides: Partial<React.ComponentProps<typeof RecognitionCa
   const utils = render(
     <RecognitionCard
       card={card}
+      pool={[card]}
       revealed={false}
       previews={null}
       onReveal={onReveal}
@@ -36,7 +37,7 @@ describe('RecognitionCard (AC-2: no pinyin crutch)', () => {
     expect(screen.queryByTestId('definition')).not.toBeInTheDocument();
     expect(screen.getByTestId('recognition-card').textContent).not.toContain(card.pinyin);
     expect(containsPinyin(screen.getByTestId('prompt-hanzi').textContent ?? '')).toBe(false);
-    expect(screen.getByTestId('session-progress')).toHaveTextContent('Card 4/23');
+    expect(screen.getByTestId('session-progress')).toHaveTextContent('Card 4 of 23');
     expect(screen.getByTestId('rating-buttons')).toHaveAttribute('aria-hidden', 'true');
   });
 
@@ -54,7 +55,7 @@ describe('RecognitionCard (AC-2: no pinyin crutch)', () => {
     expect(screen.getByTestId('example-sentence')).toHaveTextContent(
       card.exampleSentenceTraditional!,
     );
-    expect(screen.getByTestId('interval-1')).toHaveTextContent('<10m');
+    expect(screen.getByTestId('interval-1')).toHaveTextContent(/^\d+m$/);
     expect(screen.getByTestId('rating-buttons')).not.toHaveAttribute('aria-hidden', 'true');
     await userEvent.click(screen.getByTestId('rate-3'));
     expect(onRate).toHaveBeenCalledWith(3);

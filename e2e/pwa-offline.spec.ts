@@ -50,7 +50,7 @@ test.describe('PWA (AC-4)', () => {
     await page.goto('/stats');
     await expect(page.getByTestId('stat-cards')).toBeVisible();
     await page.goto('/');
-    await expect(page.getByText(/Reviews 1\/30/)).toBeVisible();
+    await expect(page.getByTestId('today-answers')).toHaveText(/1 answer/);
     await context.setOffline(false);
   });
 });

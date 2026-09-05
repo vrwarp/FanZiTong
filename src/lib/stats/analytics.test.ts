@@ -3,6 +3,7 @@ import { makeCard, makeLog, reviewState } from '@/test/factories';
 import {
   averageRetrievability,
   computeStreak,
+  countDueByTomorrow,
   countNewCardsIntroducedToday,
   countReviewsToday,
   dailySeries,
@@ -128,5 +129,20 @@ describe('card-level diagnostics', () => {
     expect(avg).not.toBeNull();
     expect(avg!).toBeGreaterThan(0);
     expect(avg!).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('countDueByTomorrow', () => {
+  it('counts reviews due from now to the end of local tomorrow, never new cards', () => {
+    const now = new Date(2026, 8, 5, 20, 0); // 20:00 local
+    const at = (d: Date) => ({ ...makeCard({}), fsrs: { ...reviewState(), due: d.toISOString() } });
+    const cards = [
+      at(new Date(2026, 8, 5, 21, 0)), // later tonight
+      at(new Date(2026, 8, 6, 23, 30)), // tomorrow, after the 24-hour mark
+      at(new Date(2026, 8, 7, 0, 30)), // the day after: excluded
+      at(new Date(2026, 8, 5, 19, 0)), // already due: excluded
+      makeCard({}), // new: excluded
+    ];
+    expect(countDueByTomorrow(cards, now)).toBe(2);
   });
 });

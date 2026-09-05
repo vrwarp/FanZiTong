@@ -29,17 +29,19 @@ export function addDays(date: Date, days: number): Date {
 
 /**
  * Human-friendly interval label used on the FSRS rating buttons, e.g.
- * "<10m", "25m", "3h", "1d", "12d", "2mo", "1.5y".
+ * "1m", "6m", "25m", "3h", "1d", "12d", "2mo", "1.5y". Learning steps show
+ * exact minutes so Again and Hard never read the same.
  */
 export function formatInterval(from: Date, to: Date): string {
   const ms = Math.max(0, to.getTime() - from.getTime());
   const minutes = ms / MINUTE_MS;
-  if (minutes < 10) return '<10m';
-  if (minutes < 60) return `${Math.round(minutes)}m`;
+  if (minutes < 1) return '<1m';
+  // Never print "60m" or "24h": a value that rounds up to the next unit uses that unit.
+  if (Math.round(minutes) < 60) return `${Math.round(minutes)}m`;
   const hours = minutes / 60;
-  if (hours < 24) return `${Math.round(hours)}h`;
+  if (Math.round(hours) < 24) return `${Math.round(hours)}h`;
   const days = hours / 24;
-  if (days < 30) return `${Math.round(days)}d`;
+  if (days < 30) return `${Math.max(1, Math.round(days))}d`;
   const months = days / 30.437;
   if (months < 12) return `${Math.round(months)}mo`;
   const years = days / 365.25;
@@ -52,6 +54,13 @@ export function formatDuration(ms: number): string {
   const seconds = totalSeconds % 60;
   if (minutes === 0) return `${seconds}s`;
   return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
+}
+
+/** Session time for the summary: whole minutes, never a stopwatch reading. */
+export function formatSessionTime(ms: number): string {
+  const minutes = Math.round(Math.max(0, ms) / 60_000);
+  if (minutes < 1) return '< 1 min';
+  return `${minutes} min`;
 }
 
 export function formatRelativeDue(due: Date, now: Date): string {

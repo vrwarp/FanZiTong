@@ -12,6 +12,10 @@ import { downloadTextFile, timestampForFilename } from '@/lib/io/download';
 import { serializeJsonDeck, toJsonDeck } from '@/lib/io/json';
 import { cn } from '@/lib/util/cn';
 import { resetIntro } from '@/lib/util/intro';
+import { describeLastChecked, formatBuildStamp } from '@/lib/pwa/updatePolicy';
+import { useAppUpdate } from '@/pwa/appUpdateContext';
+import { resetAppCache } from '@/pwa/resetAppCache';
+import { useNow } from '@/hooks/useNow';
 import {
   DOMAIN_CATEGORIES,
   DOMAIN_LABELS,
@@ -37,6 +41,22 @@ export default function SettingsPage() {
   const [storage, setStorage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const lastBackupAt = useLiveQuery(() => repository.getMeta(META_KEYS.lastBackupAt), []);
+  const appUpdate = useAppUpdate();
+  const now = useNow();
+  const [confirmCacheReset, setConfirmCacheReset] = useState(false);
+  const checked = describeLastChecked(appUpdate.lastCheckedAt, now.getTime());
+  const updateStatusText =
+    appUpdate.status === 'update-ready'
+      ? 'A new version is ready to install.'
+      : appUpdate.status === 'checking'
+        ? 'Checking for a new version…'
+        : appUpdate.status === 'error'
+          ? `Could not reach the server — ${checked}. It will try again when you are back online.`
+          : appUpdate.status === 'unsupported'
+            ? 'This browser is not caching the app, so you always load the latest version.'
+            : appUpdate.status === 'up-to-date'
+              ? `You are on the latest version — ${checked}.`
+              : 'Not checked yet.';
 
   useEffect(() => {
     navigator.storage
@@ -59,6 +79,11 @@ export default function SettingsPage() {
       serializeJsonDeck(deck),
       'application/json',
     );
+  };
+
+  const resetCache = async () => {
+    await resetAppCache();
+    window.location.reload();
   };
 
   const resetAll = async () => {
@@ -278,10 +303,48 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section className="card-surface p-4 text-xs text-stone-500 dark:text-stone-400">
-        <p>
-          繁字通 FanZiTong v{__APP_VERSION__} · offline-first · FSRS via ts-fsrs. On iPhone use
-          Share → “Add to Home Screen”.
+      <section className="card-surface flex flex-col gap-3 p-4" aria-labelledby="about-heading">
+        <h2
+          id="about-heading"
+          className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400"
+        >
+          App version
+        </h2>
+        <p className="text-sm">
+          <span lang="zh-Hant-TW">繁字通</span> FanZiTong v{__APP_VERSION__}
+          <span className="block text-xs text-stone-500 dark:text-stone-400" data-testid="build-id">
+            {formatBuildStamp(__BUILD_ID__, __BUILD_TIME__)}
+          </span>
+        </p>
+        <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="update-status">
+          {updateStatusText}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {appUpdate.updateReady ? (
+            <Button onClick={appUpdate.applyUpdate} data-testid="install-update">
+              Install update
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={appUpdate.checkNow}
+              disabled={appUpdate.status === 'checking' || appUpdate.status === 'unsupported'}
+              data-testid="check-updates"
+            >
+              Check for updates
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => setConfirmCacheReset(true)}
+            data-testid="reset-cache"
+          >
+            Reset app cache
+          </Button>
+        </div>
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          “Reset app cache” reinstalls the app files if an update will not take. It does not touch
+          your words, review history or settings. On iPhone use Share → “Add to Home Screen”.
         </p>
       </section>
 
@@ -296,6 +359,28 @@ export default function SettingsPage() {
           );
         }}
       />
+
+      <Modal
+        open={confirmCacheReset}
+        title="Reset app cache?"
+        onClose={() => setConfirmCacheReset(false)}
+        testId="cache-reset-dialog"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmCacheReset(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void resetCache()} data-testid="confirm-cache-reset">
+              Reset cache
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm">
+          This reinstalls the app files and reloads. Your words, review history and settings stay
+          exactly as they are — nothing you have studied is lost.
+        </p>
+      </Modal>
 
       <Modal
         open={confirmReset}

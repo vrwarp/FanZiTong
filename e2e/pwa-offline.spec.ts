@@ -53,4 +53,28 @@ test.describe('PWA (AC-4)', () => {
     await expect(page.getByTestId('today-answers')).toHaveText(/1 answer/);
     await context.setOffline(false);
   });
+
+  test('Settings names the running build and can check for updates', async ({ page }) => {
+    await openApp(page, '/settings');
+    await page.waitForFunction(
+      async () => Boolean((await navigator.serviceWorker.getRegistration())?.active),
+      undefined,
+      { timeout: 30_000 },
+    );
+
+    // The package version alone is identical across deploys; the commit is what
+    // tells a learner whether their copy is current.
+    await expect(page.getByTestId('build-id')).toHaveText(/built/);
+
+    // No update is waiting on a freshly served build.
+    await expect(page.getByTestId('sw-banner')).toHaveCount(0);
+    await page.getByTestId('check-updates').click();
+    await expect(page.getByTestId('update-status')).toHaveText(/latest version/, {
+      timeout: 20_000,
+    });
+
+    // The escape hatch is offered, and says plainly that it spares the learner's words.
+    await page.getByTestId('reset-cache').click();
+    await expect(page.getByTestId('cache-reset-dialog')).toContainText('stay exactly as they are');
+  });
 });

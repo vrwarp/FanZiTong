@@ -6,6 +6,8 @@ export default defineConfig({
   plugins: [react()],
   define: {
     __APP_VERSION__: JSON.stringify('test'),
+    __BUILD_ID__: JSON.stringify('testbuild'),
+    __BUILD_TIME__: JSON.stringify('2026-09-05T00:00:00.000Z'),
   },
   resolve: {
     alias: {

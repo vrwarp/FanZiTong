@@ -99,8 +99,43 @@ Key design decisions:
 | **AC-3** Import/export    | `csv.test.ts`, `json.test.ts`, `importer.test.ts`, `ImportDialog.test.tsx`, and `e2e/vocab.spec.ts` (download contents, BOM, re-import).                                                                                                                                |
 | **AC-4** PWA offline      | `e2e/pwa-offline.spec.ts` validates the manifest, waits for the service worker, goes offline, reloads, and completes a session and navigates between routes.                                                                                                            |
 
+## Staying up to date
+
+A precached PWA can quietly serve an old build forever, so updates are made
+visible and always applicable:
+
+- **Build identity.** Every bundle carries the commit it was built from
+  (`__BUILD_ID__`, from `GITHUB_SHA` in CI or `git rev-parse` locally). The
+  package version is identical across deploys and cannot answer "is my copy
+  current?" — _Settings › App version_ shows the commit and the build date.
+- **When it checks.** A timer alone never fires on a phone, where the app is
+  backgrounded long before an hour passes. Checks run when the app returns to
+  the foreground and when connectivity comes back, throttled to one every five
+  minutes, with an hourly backstop for long-lived tabs.
+- **How it is offered.** `registerType: 'prompt'` with `skipWaiting: false`, so
+  a new worker never swaps assets under a running session. A banner offers the
+  reload; the study and drill routes sit outside the shell that renders it, so
+  a timed drill is never interrupted. Dismissing it only hides the banner —
+  _Settings_ still offers "Install update", because a waiting worker does not
+  announce itself twice.
+- **Applying it actually reloads.** The app owns the reload rather than leaving
+  it to the registration helper: with `clientsClaim` the helper's one-shot
+  controller listener is already spent, so the worker would activate while the
+  tab kept rendering the old build. It listens for `controllerchange` and
+  reloads, with a short fallback timer.
+- **Recovering from a half-updated tab.** Routes are separate chunks and
+  activation drops the old precache, so a tab open across a deploy can request
+  a chunk that no longer exists. `ChunkErrorBoundary` recognises that failure
+  and reloads once per tab (never a loop), then explains the situation instead
+  of showing a blank screen.
+- **Escape hatch.** _Settings › Reset app cache_ unregisters the worker and
+  clears the asset caches, leaving IndexedDB — the learner's words, history and
+  settings — untouched.
+
 ## Notes
 
 - `.npmrc` sets `legacy-peer-deps=true` because npm 10's resolver crashes on an optional peer (`jsdom → canvas`); the lockfile is generated in that mode, so `npm ci` must use it too.
 - Data is per browser profile. Export a backup from _Settings_ before clearing site data or switching devices.
-- Reset in _Settings_ wipes the database and reloads the starter deck.
+- Reset in _Settings_ wipes the database and reloads the starter deck. "Reset app
+  cache", next to it, is a different thing: it reinstalls the app files only and
+  never touches what you have studied.

@@ -174,30 +174,6 @@ export default function VocabPage() {
         </div>
       </div>
 
-      {cards && cards.length === 0 ? (
-        <EmptyState
-          icon="🗂️"
-          title="Your deck is empty"
-          description="Import a CSV/JSON file or load the starter deck to begin."
-          action={<Button onClick={loadStarter}>Load starter deck</Button>}
-        />
-      ) : (
-        <ul className="flex flex-col gap-2" data-testid="vocab-list">
-          {filtered.map((card) => (
-            <CardListItem
-              key={card.id}
-              card={card}
-              showPinyin={showPinyin}
-              now={now}
-              leechThreshold={settings.leechThreshold}
-            />
-          ))}
-          {filtered.length === 0 && cards && (
-            <li className="py-6 text-center text-sm text-stone-500">No cards match.</li>
-          )}
-        </ul>
-      )}
-
       <details className="card-surface px-4 py-3" data-testid="vocab-data">
         <summary className="min-h-9 cursor-pointer text-sm font-semibold">
           Import / export / starter deck
@@ -240,6 +216,30 @@ export default function VocabPage() {
           Full backups (with review history) live in Settings › Data.
         </p>
       </details>
+
+      {cards && cards.length === 0 ? (
+        <EmptyState
+          icon="🗂️"
+          title="Your deck is empty"
+          description="Import a CSV/JSON file or load the starter deck to begin."
+          action={<Button onClick={loadStarter}>Load starter deck</Button>}
+        />
+      ) : (
+        <ul className="flex flex-col gap-2" data-testid="vocab-list">
+          {filtered.map((card) => (
+            <CardListItem
+              key={card.id}
+              card={card}
+              showPinyin={showPinyin}
+              now={now}
+              leechThreshold={settings.leechThreshold}
+            />
+          ))}
+          {filtered.length === 0 && cards && (
+            <li className="py-6 text-center text-sm text-stone-500">No cards match.</li>
+          )}
+        </ul>
+      )}
 
       <ImportDialog
         source={importSource}

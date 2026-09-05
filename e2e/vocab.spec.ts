@@ -4,7 +4,11 @@ import { openApp, SAMPLE_CSV } from './helpers';
 import type { Page } from '@playwright/test';
 
 async function openDataTools(page: Page) {
-  await page.getByTestId('vocab-data').locator('summary').click();
+  const summary = page.getByTestId('vocab-data').locator('summary');
+  await summary.click();
+  const exportButton = page.getByTestId('export-json');
+  if (!(await exportButton.isVisible())) await summary.click();
+  await expect(exportButton).toBeVisible();
 }
 
 test.describe('Vocab tab: import, export, edit (Journey 2, AC-3)', () => {
@@ -79,6 +83,7 @@ test.describe('Vocab tab: import, export, edit (Journey 2, AC-3)', () => {
 
   test('re-importing an export restores every card without duplication', async ({ page }) => {
     await openApp(page, '/vocab');
+    await openDataTools(page);
     const [download] = await Promise.all([
       page.waitForEvent('download'),
       page.getByTestId('export-json').click(),

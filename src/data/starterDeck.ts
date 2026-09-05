@@ -12,6 +12,20 @@ import { uuid } from '@/lib/util/id';
  */
 type SeedEntry = [string, string, string, string, string, string, string, string, string?];
 
+/** As-heard readings for words nobody says in dictionary Mandarin. */
+const SPOKEN: Record<string, string> = {
+  蚵仔煎: 'ô-á-tsian',
+  肉圓: 'bah-uân',
+};
+
+/** Per-word notes about the accepted spelling variants. */
+const VARIANT_NOTES: Record<string, string> = {
+  藉口: '藉口 is the Taiwan standard spelling; 借口 is what most people type online.',
+  阿們: 'Protestant churches write 阿們; Catholic ones write 阿門.',
+  飯糰: 'Shops write 飯糰 or 飯團; both are common.',
+  豆干: 'Menus write 豆干 or 豆乾; both are common.',
+};
+
 export const STARTER_DECK_NAME = 'Taiwanese Heritage Vocabulary (starter)';
 
 const FOOD: SeedEntry[] = [
@@ -29,7 +43,7 @@ const FOOD: SeedEntry[] = [
   [
     '蚵仔煎',
     'kē zǎi jiān',
-    'Oyster omelette (Taiwanese: ô-á-chian)',
+    'Oyster omelette',
     'night-market',
     '夜市的蚵仔煎要淋很多甜辣醬才好吃。',
     'Yèshì de kēzǎijiān yào lín hěn duō tiánlàjiàng cái hǎochī.',
@@ -182,7 +196,7 @@ const FOOD: SeedEntry[] = [
   [
     '肉圓',
     'ròu yuán',
-    'Taiwanese meatball in translucent glutinous dough (bah-oân)',
+    'Taiwanese meatball in translucent glutinous dough',
     'night-market|snack',
     '彰化的肉圓是炸的，台南的肉圓是蒸的。',
     'Zhānghuà de ròuyuán shì zhá de, Táinán de ròuyuán shì zhēng de.',
@@ -670,7 +684,7 @@ const SLANG: SeedEntry[] = [
   [
     '藉口',
     'jiè kǒu',
-    'Excuse (everyday word; 藉 is the Taiwan standard, 借口 is also common)',
+    'Excuse, pretext',
     'colloquial|everyday|confusable',
     '他每次遲到都有一堆藉口。',
     'Tā měi cì chídào dōu yǒu yī duī jièkǒu.',
@@ -1028,6 +1042,8 @@ export function buildStarterDeck(options: BuildStarterDeckOptions = {}): VocabCa
         exampleSentenceTranslation: translation,
         visualFoils: foils.split('|').filter(Boolean),
         variants: variants ? variants.split('|').filter(Boolean) : undefined,
+        variantNote: VARIANT_NOTES[traditional],
+        spoken: SPOKEN[traditional],
         fsrs: newFsrsState(now),
         createdAt,
         updatedAt: createdAt,

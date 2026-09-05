@@ -12,6 +12,7 @@ function row(overrides: Partial<ImportRow>): ImportRow {
     tags: [],
     visualFoils: [],
     variants: [],
+    clozeDistractors: [],
     warnings: [],
     sourceIndex: 1,
     ...overrides,

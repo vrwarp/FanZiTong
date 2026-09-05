@@ -11,6 +11,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { downloadTextFile, timestampForFilename } from '@/lib/io/download';
 import { serializeJsonDeck, toJsonDeck } from '@/lib/io/json';
 import { cn } from '@/lib/util/cn';
+import { resetIntro } from '@/lib/util/intro';
 import {
   DOMAIN_CATEGORIES,
   DOMAIN_LABELS,
@@ -209,6 +210,17 @@ export default function SettingsPage() {
             </button>
           ))}
         </div>
+        <Button
+          variant="outline"
+          className="self-start"
+          onClick={() => {
+            resetIntro();
+            setNotice('The intro and the rating guide will show again.');
+          }}
+          data-testid="show-intro"
+        >
+          Show the intro again
+        </Button>
       </section>
 
       <section className="card-surface flex flex-col gap-3 p-4">

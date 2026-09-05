@@ -19,14 +19,21 @@ export async function solveDrill(page: Page, opts: { wrong?: boolean } = {}) {
   const foil = page.getByTestId('foil-exercise');
   const menu = page.getByTestId('menu-exercise');
   if (await cloze.isVisible()) {
-    const selector = `[data-testid="cloze-option"][data-correct="${opts.wrong ? 'false' : 'true'}"]`;
-    await page.locator(selector).first().click();
+    // Only the look-alike counts as a miss; a deck word that does not fit is a retry.
+    if (opts.wrong) {
+      await page.locator('[data-testid="cloze-option"][data-foil="true"]').first().click();
+      await page.getByTestId('cloze-retry').click();
+    }
+    await page.locator('[data-testid="cloze-option"][data-correct="true"]').first().click();
     await page.getByTestId('drill-continue').click();
     return 'cloze';
   }
   if (await foil.isVisible()) {
-    const selector = `[data-testid="foil-option"][data-correct="${opts.wrong ? 'false' : 'true'}"]`;
-    await page.locator(selector).first().click();
+    if (opts.wrong) {
+      await page.locator('[data-testid="foil-option"][data-correct="false"]').first().click();
+      await page.getByTestId('foil-retry').click();
+    }
+    await page.locator('[data-testid="foil-option"][data-correct="true"]').first().click();
     await page.getByTestId('drill-continue').click();
     return 'foil';
   }

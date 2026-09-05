@@ -17,6 +17,8 @@ export interface MenuFiller {
   price: number | [number, number];
   pinyin: string;
   gloss: string;
+  /** How people actually say it, when that is not the pinyin (Taiwanese readings). */
+  spoken?: string;
 }
 
 export interface MenuCategoryTemplate {
@@ -73,6 +75,12 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     defaultPrice: [45, 60],
     fillers: [
       { label: '陽春麵', price: [35, 45], pinyin: 'yáng chūn miàn', gloss: 'plain noodle soup' },
+      {
+        label: '牛肉湯麵',
+        price: [70, 85],
+        pinyin: 'niú ròu tāng miàn',
+        gloss: 'noodles in beef broth (no beef)',
+      },
       {
         label: '榨菜肉絲麵',
         price: [60, 75],
@@ -181,12 +189,37 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
         pinyin: 'dà cháng bāo xiǎo cháng',
         gloss: 'sticky-rice sausage wrap',
       },
-      { label: '碗粿', price: 40, pinyin: 'wǎn guǒ', gloss: 'savoury rice pudding' },
-      { label: '蚵仔煎', price: 70, pinyin: 'kē zǎi jiān', gloss: 'oyster omelette' },
+      {
+        label: '碗粿',
+        price: 40,
+        pinyin: 'wǎn guǒ',
+        gloss: 'savoury rice pudding',
+        spoken: 'uánn-kué',
+      },
+      {
+        label: '蚵仔煎',
+        price: 70,
+        pinyin: 'kē zǎi jiān',
+        gloss: 'oyster omelette',
+        spoken: 'ô-á-tsian',
+      },
+      {
+        label: '蚵仔麵線',
+        price: 60,
+        pinyin: 'kē zǎi miàn xiàn',
+        gloss: 'oyster vermicelli',
+        spoken: 'ô-á-mī-suànn',
+      },
       { label: '臭豆腐', price: 60, pinyin: 'chòu dòu fǔ', gloss: 'stinky tofu' },
-      { label: '肉圓', price: 50, pinyin: 'ròu yuán', gloss: 'Taiwanese meatball' },
+      {
+        label: '肉圓',
+        price: 50,
+        pinyin: 'ròu yuán',
+        gloss: 'Taiwanese meatball',
+        spoken: 'bah-uân',
+      },
       { label: '鹹酥雞', price: 70, pinyin: 'xián sū jī', gloss: 'popcorn chicken' },
-      { label: '蚵嗲', price: 45, pinyin: 'kē diē', gloss: 'oyster fritter' },
+      { label: '蚵嗲', price: 45, pinyin: 'kē diē', gloss: 'oyster fritter', spoken: 'ô-te' },
     ],
   },
   {

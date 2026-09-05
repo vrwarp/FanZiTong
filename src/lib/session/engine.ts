@@ -9,6 +9,7 @@ import { fromFsrsCard, toFsrsCard, type RatingPreview } from '@/lib/fsrs/schedul
 import {
   DRILL_EVERY_N_CARDS,
   chooseDrillType,
+  hasClozeSentence,
   isDrillCandidate,
   shouldRequeue,
 } from '@/lib/queue/session';
@@ -31,6 +32,12 @@ export type SessionStep =
 export interface DrillOutcome {
   cardId: string;
   correct: boolean;
+  /**
+   * False when the answer says nothing about the target's binding (e.g. the
+   * learner read a real word correctly but it was not the one in the blank):
+   * counted as an answer, no schedule change.
+   */
+  applyRating?: boolean;
 }
 
 export interface SessionResultEntry {
@@ -54,11 +61,16 @@ export function drillRatingFor(card: VocabCard, correct: boolean): RatingGrade |
   return card.fsrs.state === CardState.Review ? null : 3;
 }
 
-export function describeDrillOutcome(card: VocabCard, correct: boolean): string {
+export function describeDrillOutcome(
+  card: VocabCard,
+  correct: boolean,
+  applyRating = true,
+): string {
+  if (!applyRating) return 'No change to its schedule — that was a reading of another word.';
   const rating = drillRatingFor(card, correct);
-  if (rating === 1) return 'Marked Again — this word will come back sooner.';
-  if (rating === 3) return 'Marked Good — one step closer to graduating.';
-  return 'Already in review — schedule unchanged.';
+  if (rating === 1) return 'Again — it comes back sooner.';
+  if (rating === 3) return 'Good — moves it toward long-term review.';
+  return 'Already learned — no change; a miss would bring it back sooner.';
 }
 
 /** What the caller must persist after an answer. */
@@ -86,6 +98,19 @@ export interface EngineOptions {
   rng?: Rng;
   /** Cache window in which the previewed schedule is reused for the actual rating. */
   previewReuseMs?: number;
+  /** Progress of a session paused earlier today, so counts and time carry on. */
+  restore?: SessionProgress;
+}
+
+/** The part of a session worth carrying across a pause (see `serialize`). */
+export interface SessionProgress {
+  answered: number;
+  results: SessionResultEntry[];
+  /** Time already spent before the pause. */
+  elapsedMs: number;
+  drilled: string[];
+  nextDrillAt: number;
+  lastDrillType?: ExerciseType;
 }
 
 export interface EngineSnapshot {
@@ -101,6 +126,9 @@ export interface EngineSnapshot {
   /** answered + current + remaining — grows when cards are re-queued. */
   total: number;
   drillsRemaining: number;
+  /** 1-based position among the session's pre-built drills (standalone mode). */
+  drillIndex: number;
+  drillTotal: number;
   results: SessionResultEntry[];
   startedAt: number;
   /** Time spent so far, frozen at completion. */
@@ -120,6 +148,7 @@ export class StudyEngine {
   private readonly cards = new Map<string, VocabCard>();
   private readonly queue: string[];
   private readonly drillQueue: DrillExercise[];
+  private readonly drillTotal: number;
   private readonly scheduler: FSRS;
   private readonly interleave: boolean;
   private readonly requeueLearning: boolean;
@@ -147,15 +176,37 @@ export class StudyEngine {
     for (const card of options.pool) this.cards.set(card.id, card);
     this.queue = options.queue.filter((id) => this.cards.has(id));
     this.drillQueue = [...(options.drills ?? [])];
+    this.drillTotal = this.drillQueue.length;
     this.scheduler = options.scheduler;
     this.interleave = options.interleaveDrills;
     this.requeueLearning = options.requeueLearning ?? options.interleaveDrills;
     this.now = options.now ?? (() => new Date());
     this.rng = options.rng ?? Math.random;
     this.previewReuseMs = options.previewReuseMs ?? 60_000;
-    this.startedAt = this.now().getTime();
-    this.stepStartedAt = this.startedAt;
+    const restore = options.restore;
+    // A resumed session counts from where it stopped: the clock excludes the pause.
+    this.startedAt = this.now().getTime() - (restore?.elapsedMs ?? 0);
+    this.stepStartedAt = this.now().getTime();
+    if (restore) {
+      this.answered = restore.answered;
+      this.results.push(...restore.results);
+      for (const id of restore.drilled) this.drilled.add(id);
+      this.nextDrillAt = restore.nextDrillAt;
+      this.lastDrillType = restore.lastDrillType;
+    }
     this.advance();
+  }
+
+  /** Progress to persist across a pause; pair it with `remainingCardIds()`. */
+  serialize(): SessionProgress {
+    return {
+      answered: this.answered,
+      results: [...this.results],
+      elapsedMs: this.now().getTime() - this.startedAt,
+      drilled: Array.from(this.drilled),
+      nextDrillAt: this.nextDrillAt,
+      lastDrillType: this.lastDrillType,
+    };
   }
 
   /** Subscribe to changes (external-store contract for React's useSyncExternalStore). */
@@ -180,6 +231,8 @@ export class StudyEngine {
       remaining: this.queue.length,
       total: this.answered + (this.step?.kind === 'card' ? 1 : 0) + this.queue.length,
       drillsRemaining: this.drillQueue.length,
+      drillIndex: this.drillTotal - this.drillQueue.length,
+      drillTotal: this.drillTotal,
       results: [...this.results],
       startedAt: this.startedAt,
       elapsedMs: (this.completedAt ?? this.now().getTime()) - this.startedAt,
@@ -195,6 +248,12 @@ export class StudyEngine {
 
   getCard(id: string): VocabCard | undefined {
     return this.cards.get(id);
+  }
+
+  /** Ids of the cards still to be answered, current card first (for resume). */
+  remainingCardIds(): string[] {
+    const current = this.step?.kind === 'card' ? [this.step.cardId] : [];
+    return [...current, ...this.queue];
   }
 
   /** Flip the recognition card: compute the four scheduling previews. */
@@ -237,11 +296,11 @@ export class StudyEngine {
     for (const outcome of outcomes) {
       const card = this.cards.get(outcome.cardId);
       if (!card) continue;
-      const rating = drillRatingFor(card, outcome.correct);
+      const rating = outcome.applyRating === false ? null : drillRatingFor(card, outcome.correct);
       if (rating === null) {
         this.results.push({
           cardId: card.id,
-          rating: 3,
+          rating: outcome.correct ? 3 : 2,
           exerciseType,
           timeMs: Math.max(0, now.getTime() - this.stepStartedAt),
           timestamp: now.toISOString(),
@@ -345,21 +404,42 @@ export class StudyEngine {
     this.completedAt = this.now().getTime();
   }
 
-  /** Build a drill for a card seen this session that is still in (re)learning or has lapsed. */
+  /**
+   * Build the interleaved drill. A cloze on a sentence revealed minutes ago is
+   * a memory of the screen, not a reading, so Fill the Blank only takes cards
+   * still being learned that are NOT part of today's session; the cards seen
+   * this session get Spot the Character or the Order Slip instead.
+   */
   private makeDrill(): DrillExercise | null {
-    const seen = Array.from(new Set(this.results.map((r) => r.cardId)));
-    // Prefer a card that is not fresh in episodic memory (not in the last 3 answers).
+    const pool = Array.from(this.cards.values());
+    const seenIds = new Set(this.results.map((r) => r.cardId));
+    const queued = new Set(this.queue);
+    const usable = (c: VocabCard) => isDrillCandidate(c) && !this.drilled.has(c.id);
+
+    if (this.lastDrillType !== 'cloze') {
+      const fresh = pool
+        .filter((c) => usable(c) && hasClozeSentence(c) && !seenIds.has(c.id) && !queued.has(c.id))
+        .sort((a, b) => b.fsrs.lapses - a.fsrs.lapses || a.fsrs.stability - b.fsrs.stability);
+      for (const card of fresh) {
+        const exercise = this.buildExercise('cloze', card, pool);
+        if (!exercise) continue;
+        this.drilled.add(card.id);
+        this.lastDrillType = 'cloze';
+        return exercise;
+      }
+    }
+
+    // Prefer a seen card that is not fresh in episodic memory (not in the last 3 answers).
     const recent = new Set(this.results.slice(-3).map((r) => r.cardId));
-    const eligible = seen
+    const eligible = Array.from(seenIds)
       .map((id) => this.cards.get(id)!)
-      .filter((c) => isDrillCandidate(c) && !this.drilled.has(c.id) && c.id !== this.queue[0]);
+      .filter((c) => usable(c) && c.id !== this.queue[0]);
     const candidates = [
       ...eligible.filter((c) => !recent.has(c.id)),
       ...eligible.filter((c) => recent.has(c.id)),
     ].sort((a, b) => b.fsrs.lapses - a.fsrs.lapses);
-    const pool = Array.from(this.cards.values());
     for (const card of candidates) {
-      const type = chooseDrillType(card, this.lastDrillType);
+      const type = chooseDrillType(card, this.lastDrillType, ['cloze']);
       if (!type) continue;
       const exercise = this.buildExercise(type, card, pool);
       if (!exercise) continue;

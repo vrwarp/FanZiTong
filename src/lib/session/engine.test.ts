@@ -145,7 +145,7 @@ describe('StudyEngine — recognition flow', () => {
 });
 
 describe('StudyEngine — drill interleaving', () => {
-  it('offers a contextual drill after every 5th card for a card still in learning', () => {
+  it('offers a drill after every 5th card; a card seen this session never gets the cloze', () => {
     const pool = makePool();
     const engine = engineFor(
       pool,
@@ -157,14 +157,32 @@ describe('StudyEngine — drill interleaving', () => {
     expect(s.step?.kind).toBe('drill');
     if (s.step?.kind !== 'drill') throw new Error('expected drill');
     const exercise = s.step.exercise;
-    expect(exercise.type).toBe('cloze');
-    if (exercise.type !== 'cloze') throw new Error('expected cloze');
-    expect(exercise.cardId).toBe(pool[0].id);
+    // A cloze on a sentence revealed minutes ago would test the screen, not the reading.
+    expect(exercise.type).not.toBe('cloze');
+    const cardIds = exercise.type === 'realia_menu' ? exercise.cardIds : [exercise.cardId];
+    expect(cardIds).toContain(pool[0].id);
     const reviews = engine.answerDrill([{ cardId: pool[0].id, correct: false }]);
-    expect(reviews[0].log.exerciseType).toBe('cloze');
+    expect(reviews[0].log.exerciseType).toBe(exercise.type);
     expect(reviews[0].log.rating).toBe(1);
     expect(engine.snapshot().step?.kind).toBe('card');
     expect(engine.snapshot().answered).toBe(5);
+  });
+
+  it("reserves Fill the Blank for a learning card that is not part of today's session", () => {
+    const pool = makePool();
+    const outside = pool.find((c) => c.traditional === '團契')!;
+    const learning = { ...outside, fsrs: { ...outside.fsrs, state: CardState.Learning } };
+    const rest = pool.filter((c) => c.id !== outside.id);
+    const engine = engineFor(
+      [...rest, learning],
+      rest.map((c) => c.id),
+    );
+    for (let i = 0; i < 5; i += 1) engine.rate(4);
+    const s = engine.snapshot();
+    expect(s.step?.kind).toBe('drill');
+    if (s.step?.kind !== 'drill') throw new Error('expected drill');
+    expect(s.step.exercise.type).toBe('cloze');
+    expect(s.step.exercise.cardId).toBe(outside.id);
   });
 
   it('does not drill when no card qualifies', () => {

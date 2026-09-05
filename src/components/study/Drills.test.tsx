@@ -26,17 +26,40 @@ describe('ClozeExerciseView', () => {
     expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
     expect(screen.getByTestId('cloze-blank')).toHaveTextContent('＿＿');
 
-    const wrong = screen.getAllByTestId('cloze-option').find((b) => b.dataset.correct === 'false')!;
-    await userEvent.click(wrong);
-    expect(screen.getByTestId('cloze-feedback')).toHaveTextContent(card.pinyin);
+    // A real deck word that does not fit is a misreading of the sentence, not of
+    // the target: it is explained, and the learner picks again.
+    const options = screen.getAllByTestId('cloze-option');
+    const misread = options.find(
+      (b) => b.dataset.correct === 'false' && b.dataset.foil === 'false',
+    )!;
+    expect(misread).toBeDefined();
+    const misreadWord = misread.textContent!.trim();
+    await userEvent.click(misread);
+    expect(screen.getByTestId('cloze-misread')).toHaveTextContent(misreadWord);
+    expect(screen.queryByTestId('drill-outcome')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
+
+    // The look-alike foil is a miss on the target itself: contrast, then find it again.
+    const foil = options.find((b) => b.dataset.foil === 'true')!;
+    const foilText = foil.textContent!.trim();
+    await userEvent.click(foil);
     expect(screen.getByTestId('cloze-feedback')).toHaveTextContent(/不對/);
-    expect(screen.getByTestId('cloze-blank')).toHaveTextContent(wrong.textContent!.trim());
+    expect(screen.getByTestId('cloze-diff')).toHaveTextContent(/is not/);
+    expect(screen.getByTestId('cloze-blank')).toHaveTextContent(foilText);
+    expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByTestId('cloze-retry'));
+    expect(screen.getByTestId('cloze-retry-hint')).toBeInTheDocument();
+    const reshuffled = screen.getAllByTestId('cloze-option');
+    await userEvent.click(reshuffled.find((b) => b.dataset.correct === 'true')!);
+    expect(screen.getByTestId('cloze-feedback')).toHaveTextContent(card.pinyin);
     // Sentence reading stays behind a tap even in feedback; deck-word options get glosses.
     expect(screen.queryByTestId('sentence-pinyin')).not.toBeInTheDocument();
-    expect(screen.getByTestId('cloze-glosses').textContent?.length).toBeGreaterThan(0);
+    expect(screen.getAllByTestId('cloze-gloss').length).toBeGreaterThan(0);
     expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
     await userEvent.click(screen.getByTestId('drill-continue'));
-    expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: false }]);
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: false, applyRating: true },
+    ]);
   });
 
   it('marks a correct pick', async () => {
@@ -47,7 +70,25 @@ describe('ClozeExerciseView', () => {
     expect(screen.getByTestId('cloze-feedback')).toHaveTextContent(/Correct/);
     expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Good/);
     await userEvent.click(screen.getByTestId('drill-continue'));
-    expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: true }]);
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: true, applyRating: true },
+    ]);
+  });
+
+  it('leaves the schedule alone when the right word follows a misread', async () => {
+    const onComplete = vi.fn();
+    render(<ClozeExerciseView exercise={exercise} card={card} onComplete={onComplete} />);
+    const options = screen.getAllByTestId('cloze-option');
+    await userEvent.click(
+      options.find((b) => b.dataset.correct === 'false' && b.dataset.foil === 'false')!,
+    );
+    await userEvent.click(options.find((b) => b.dataset.correct === 'true')!);
+    expect(screen.getByTestId('cloze-feedback')).toHaveTextContent(/Found it/);
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/No change/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: true, applyRating: false },
+    ]);
   });
 });
 
@@ -78,9 +119,13 @@ describe('FoilExerciseView', () => {
     await userEvent.click(wrong);
     expect(screen.getByTestId('foil-feedback')).toHaveTextContent(/不對/);
     expect(screen.getByTestId('foil-diff')).toHaveTextContent(/is not/);
-    expect(screen.getByTestId('foil-confirm-hint')).toHaveTextContent(card.traditional);
     expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
-    await userEvent.click(options.find((o) => o.dataset.correct === 'true')!);
+    // The contrast is studied, then the same word is found again among reshuffled tiles.
+    await userEvent.click(screen.getByTestId('foil-retry'));
+    expect(screen.getByTestId('foil-retry-hint')).toHaveTextContent(card.pinyin);
+    const reshuffled = screen.getAllByTestId('foil-option');
+    expect(reshuffled.filter((o) => o.dataset.correct === 'true')).toHaveLength(1);
+    await userEvent.click(reshuffled.find((o) => o.dataset.correct === 'true')!);
     expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
     await userEvent.click(screen.getByTestId('drill-continue'));
     expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: false }]);
@@ -166,7 +211,7 @@ describe('SessionSummary', () => {
     expect(screen.getByTestId('summary-cards')).toHaveTextContent('2');
     expect(screen.getByTestId('summary-answers')).toHaveTextContent('3');
     expect(screen.getByTestId('summary-retention')).toHaveTextContent('1/2');
-    expect(screen.getByTestId('summary-time')).toHaveTextContent('14m 00s');
+    expect(screen.getByTestId('summary-time')).toHaveTextContent('14 min');
     expect(screen.getByTestId('summary-streak')).toHaveTextContent('Day 12');
     await userEvent.click(screen.getByTestId('summary-done'));
     expect(onDone).toHaveBeenCalled();

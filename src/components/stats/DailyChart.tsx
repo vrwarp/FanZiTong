@@ -75,7 +75,8 @@ export function DailyChart({ series }: { series: DailyPoint[] }) {
         />
       )}
       {series.map((p, i) =>
-        i % 7 === 0 || i === series.length - 1 ? (
+        // Label every week and the last day, but never two labels within four days.
+        i === series.length - 1 || (i % 7 === 0 && series.length - 1 - i >= 4) ? (
           <text
             key={`t-${p.day}`}
             x={padX + barW * i + barW / 2}

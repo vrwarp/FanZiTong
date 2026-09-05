@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { summarizeResults, type SessionResultEntry } from '@/lib/session/engine';
-import { formatDuration } from '@/lib/util/time';
+import { formatSessionTime } from '@/lib/util/time';
 import type { VocabCard } from '@/types';
 
 export interface SessionSummaryProps {
@@ -45,7 +45,7 @@ export function SessionSummary({
   const summary = summarizeResults(results);
   const [revealed, setRevealed] = useState<Set<string>>(() => new Set());
   const praise = PRAISE[summary.uniqueCards % PRAISE.length];
-  const heading = title ?? (mode === 'complete' ? 'Daily goal reached' : 'Session paused');
+  const heading = title ?? (mode === 'complete' ? 'Daily goal reached' : 'Paused');
 
   return (
     <div
@@ -58,14 +58,15 @@ export function SessionSummary({
         </p>
         <h2 className="mt-2 text-2xl font-extrabold">{heading}</h2>
         <p lang="zh-Hant-TW" className="hanzi text-lg text-stone-500 dark:text-stone-400">
-          {mode === 'complete' ? praise : `還剩 ${remaining} 張`}
+          {mode === 'complete' ? praise : `先休息一下 · 還剩 ${remaining} 張`}
         </p>
         {mode === 'paused' && (
           <p
             className="mt-1 text-sm text-stone-600 dark:text-stone-300"
             data-testid="summary-remaining"
           >
-            {remaining} card{remaining === 1 ? '' : 's'} still waiting in this session.
+            {remaining} card{remaining === 1 ? '' : 's'} left in this session — saved, even if you
+            leave.
           </p>
         )}
       </div>
@@ -82,7 +83,7 @@ export function SessionSummary({
           value={summary.uniqueCards ? `${summary.firstTryCorrect}/${summary.uniqueCards}` : '—'}
           testId="summary-retention"
         />
-        <Stat label="Time" value={formatDuration(elapsedMs)} testId="summary-time" />
+        <Stat label="Time" value={formatSessionTime(elapsedMs)} testId="summary-time" />
       </dl>
 
       {weakCards.length > 0 && (
@@ -135,7 +136,7 @@ export function SessionSummary({
       <div className="flex w-full max-w-sm flex-col gap-2">
         {mode === 'paused' && onContinue && (
           <Button size="lg" onClick={onContinue} data-testid="summary-continue">
-            Continue session
+            Continue <span lang="zh-Hant-TW">繼續</span>
           </Button>
         )}
         <Button

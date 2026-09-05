@@ -3,6 +3,7 @@ import { Hanzi } from '@/components/ui/Hanzi';
 import { formatRelativeDue } from '@/lib/util/time';
 import {
   CARD_STATE_LABELS,
+  CARD_STATE_ZH,
   DOMAIN_LABELS,
   type CardStateValue,
   type DomainCategory,
@@ -56,10 +57,10 @@ export function CardListItem({
               title={DOMAIN_LABELS[card.domain].en}
               aria-label={DOMAIN_LABELS[card.domain].en}
             />
-            {state}
+            {state}{' '}
+            <span lang="zh-Hant-TW">{CARD_STATE_ZH[card.fsrs.state as CardStateValue]}</span>
             {card.fsrs.state !== 0 && ` · ${formatRelativeDue(new Date(card.fsrs.due), now)}`}
-            {card.fsrs.lapses > 0 &&
-              ` · ${card.fsrs.lapses} lapse${card.fsrs.lapses === 1 ? '' : 's'}`}
+            {card.fsrs.lapses > 0 && ` · forgotten ${card.fsrs.lapses}×`}
             {isLeech && (
               <span className="ml-1 rounded-full bg-red-100 px-1.5 font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
                 LEECH

@@ -116,6 +116,11 @@ export function materializeImport(
           row.exampleSentenceTranslation ?? current.exampleSentenceTranslation,
         visualFoils: row.visualFoils.length ? row.visualFoils : current.visualFoils,
         variants: row.variants.length ? row.variants : current.variants,
+        spoken: row.spoken ?? current.spoken,
+        variantNote: row.variantNote ?? current.variantNote,
+        clozeDistractors: row.clozeDistractors.length
+          ? row.clozeDistractors
+          : current.clozeDistractors,
         // A backup restore carries FSRS state; a plain vocab file keeps the learner's progress.
         fsrs: row.fsrs ?? current.fsrs,
         updatedAt: nowIso,
@@ -143,6 +148,9 @@ export function materializeImport(
       card.exampleSentenceTranslation = row.exampleSentenceTranslation;
     if (row.visualFoils.length) card.visualFoils = row.visualFoils;
     if (row.variants.length) card.variants = row.variants;
+    if (row.spoken) card.spoken = row.spoken;
+    if (row.variantNote) card.variantNote = row.variantNote;
+    if (row.clozeDistractors.length) card.clozeDistractors = row.clozeDistractors;
     result.toInsert.push(card);
   }
   return result;

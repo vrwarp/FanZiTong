@@ -9,7 +9,7 @@ export interface RatingButtonsProps {
   visible: boolean;
   /** Seconds the learner needed before revealing, shown as a fluency hint. */
   latencyMs?: number | null;
-  /** Show the one-line rubric under the buttons (first few reveals). */
+  /** Show the full rubric under the buttons (first few reveals, or on demand). */
   showCoach?: boolean;
 }
 
@@ -23,7 +23,7 @@ const STYLES: Record<RatingGrade, string> = {
 
 const RATING_RUBRIC: Record<RatingGrade, string> = {
   1: "didn't get it",
-  2: 'got it slowly or only part of it',
+  2: 'slow, or only part of it',
   3: 'sound and meaning came',
   4: 'instant, like reading a chat',
 };
@@ -45,14 +45,25 @@ export function RatingButtons({
       aria-hidden={!visible}
       data-testid="rating-buttons"
     >
+      {showCoach && (
+        <p
+          className="text-[11px] leading-snug text-stone-500 dark:text-stone-400"
+          data-testid="rating-coach"
+        >
+          <b>Again</b> = {RATING_RUBRIC[1]} · <b>Hard</b> = {RATING_RUBRIC[2]} · <b>Good</b> ={' '}
+          {RATING_RUBRIC[3]} · <b>Easy</b> = {RATING_RUBRIC[4]}
+        </p>
+      )}
       <p className="flex items-baseline justify-between pr-7 text-xs font-semibold text-stone-600 dark:text-stone-300">
-        <span>How well did you know it?</span>
+        <span>
+          How well did you <em>read</em> it? <span lang="zh-Hant-TW">讀得如何？</span>
+        </span>
         {latencyMs !== null && latencyMs !== undefined && (
           <span
             data-testid="reveal-latency"
             className={cn(slow && 'text-amber-700 dark:text-amber-300')}
           >
-            took {(latencyMs / 1000).toFixed(1)}s{slow ? ' · slow? consider Hard' : ''}
+            {(latencyMs / 1000).toFixed(1)}s to answer{slow ? ' · slow? that is Hard' : ''}
           </span>
         )}
       </p>
@@ -80,13 +91,12 @@ export function RatingButtons({
           );
         })}
       </div>
-      {showCoach && (
+      {!showCoach && (
         <p
           className="text-[11px] leading-snug text-stone-500 dark:text-stone-400"
-          data-testid="rating-coach"
+          data-testid="rating-reminder"
         >
-          <b>Again</b> = {RATING_RUBRIC[1]} · <b>Hard</b> = {RATING_RUBRIC[2]} · <b>Good</b> ={' '}
-          {RATING_RUBRIC[3]} · <b>Easy</b> = {RATING_RUBRIC[4]}
+          <b>Hard</b> = {RATING_RUBRIC[2]} · rate the reading, not the word
         </p>
       )}
     </div>

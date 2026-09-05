@@ -70,8 +70,27 @@ test.describe('Daily study session (Journey 1)', () => {
     await expect(page.getByTestId('recognition-prompt')).toBeVisible();
     await page.reload();
     await page.goto('/');
-    await expect(page.getByTestId('due-summary')).toHaveText('0 reviews, 9 new cards');
+    // The dashboard remembers the session in progress and offers to pick it up.
+    await expect(page.getByTestId('today-card')).toHaveAttribute('data-state', 'resume');
+    await expect(page.getByTestId('due-summary')).toHaveText('9 cards left');
     await expect(page.getByTestId('today-answers')).toHaveText(/1 answer/);
+    await page.getByTestId('start-session').click();
+    await expect(page.getByTestId('study-status')).toHaveText(/resumed/);
+    await expect(page.getByTestId('session-progress')).toHaveText(/Card 1 of 9/);
+  });
+
+  test('"Done for today" from a paused session is honoured by the dashboard', async ({ page }) => {
+    await openApp(page);
+    await page.getByTestId('start-session').click();
+    await page.getByTestId('recognition-prompt').click();
+    await page.getByTestId('rate-3').click();
+    await page.getByTestId('study-finish').click();
+    await page.getByTestId('summary-done').click();
+    await expect(page.getByTestId('today-card')).toHaveAttribute('data-state', 'done');
+    await expect(page.getByTestId('due-summary')).toHaveText('Done for today ✓');
+    await expect(page.getByTestId('start-session')).toHaveText(/Study 9 more cards/);
+    // Starting a session is the "got it" everyone actually taps: the intro is gone.
+    await expect(page.getByTestId('how-it-works')).toHaveCount(0);
   });
 
   test('keyboard shortcuts reveal and rate', async ({ page }) => {

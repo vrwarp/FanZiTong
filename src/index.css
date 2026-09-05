@@ -1,5 +1,18 @@
 @import 'tailwindcss';
 
+/*
+ * Subset of Noto Serif TC (SIL Open Font License 1.1, see public/fonts/NotoSerifTC-OFL.txt)
+ * covering the starter deck and menu-slip characters, so the order slip is set in a
+ * 明體 face like a real 點菜單 even on devices without a Chinese serif font.
+ */
+@font-face {
+  font-family: 'Slip Serif';
+  src: url('/fonts/NotoSerifTC-slip.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -87,8 +100,8 @@
   /* Printed order slips are set in 楷體/明體; prefer those where the device has them. */
   .font-slip {
     font-family:
-      'DFKai-SB', 'BiauKai', '標楷體', 'Kaiti TC', 'PMingLiU', '新細明體', 'Noto Serif TC',
-      'Noto Serif CJK TC', 'Songti TC', serif;
+      'Slip Serif', 'DFKai-SB', 'BiauKai', '標楷體', 'Kaiti TC', 'PMingLiU', '新細明體',
+      'Noto Serif TC', 'Noto Serif CJK TC', 'Songti TC', serif;
   }
 }
 

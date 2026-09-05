@@ -35,6 +35,13 @@ export const CARD_STATE_LABELS: Record<CardStateValue, string> = {
   2: 'Review',
   3: 'Relearning',
 };
+/** The same four states in Chinese, so every screen uses one vocabulary. */
+export const CARD_STATE_ZH: Record<CardStateValue, string> = {
+  0: '新',
+  1: '學習中',
+  2: '複習中',
+  3: '重學',
+};
 
 export interface FsrsState {
   /** ISO timestamp for next scheduled review. */
@@ -66,6 +73,12 @@ export interface VocabCard {
   traditional: string;
   /** Tone-marked Hanyu Pinyin, e.g. "lǔ ròu fàn" */
   pinyin: string;
+  /**
+   * How the word is actually said when the dictionary reading is not what
+   * people use (Taiwanese: 蚵仔煎 → "ô-á-chian", 肉圓 → "bah-oân"). Used as the
+   * primary cue in drills and shown first on the reveal when present.
+   */
+  spoken?: string;
   /** English and/or vernacular definition */
   definition: string;
   domain: DomainCategory;
@@ -80,6 +93,10 @@ export interface VocabCard {
    * 鹹酥雞 → 鹽酥雞). Never used as "wrong" foils; shown as "also written".
    */
   variants?: string[];
+  /** Free-text note about the variants, e.g. "借口 is the China-side spelling". */
+  variantNote?: string;
+  /** Authored readable-but-wrong options for the cloze; the generator fills the rest. */
+  clozeDistractors?: string[];
   fsrs: FsrsState;
   createdAt: string;
   updatedAt: string;

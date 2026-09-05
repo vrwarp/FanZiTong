@@ -128,7 +128,7 @@ export function ImportDialog({ source, existing, onClose, onImported }: ImportDi
                 onChange={(e) => setDomainOverride(e.target.value as DomainCategory | '')}
                 data-testid="import-domain"
               >
-                <option value="">Keep from file (unknown → custom)</option>
+                <option value="">As in file (else Custom)</option>
                 {DOMAIN_CATEGORIES.map((d) => (
                   <option key={d} value={d}>
                     #{d} · {DOMAIN_LABELS[d].zh}

@@ -6,13 +6,20 @@ import { SessionSummary } from '@/components/study/SessionSummary';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { META_KEYS, repository } from '@/db/repository';
 import { useCards, useReviewLogs } from '@/hooks/useCards';
 import { computeDashboard } from '@/hooks/useDashboard';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import { StudyEngine, summarizeResults } from '@/lib/session/engine';
+import {
+  clearPausedSession,
+  readPausedSession,
+  savePausedSession,
+} from '@/lib/session/pausedSession';
 import { computeStreak, countDueWithin } from '@/lib/stats/analytics';
+import { dayKey } from '@/lib/util/time';
 import type { RatingGrade, ReviewLog, UserSettings, VocabCard } from '@/types';
 
 /** Journey 1: waits for the local data, then mounts the session exactly once. */
@@ -35,20 +42,38 @@ function StudySession({
 }) {
   const navigate = useNavigate();
   // The engine is created once from the data available at mount; later live
-  // updates (caused by our own writes) must not rebuild the session.
-  const [engine] = useState<StudyEngine | null>(() => {
-    const model = computeDashboard(initialCards, logs, settings, new Date());
-    if (model.plan.queue.length === 0) return null;
-    return new StudyEngine({
-      pool: initialCards,
-      queue: model.plan.queue,
-      scheduler: createScheduler(settings),
-      interleaveDrills: true,
-    });
-  });
+  // updates (caused by our own writes) must not rebuild the session. A session
+  // left earlier today is picked up where it stopped, in the same order.
+  const [engine, resumed] = useState<[StudyEngine | null, boolean]>(() => {
+    const now = new Date();
+    const known = new Set(initialCards.map((c) => c.id));
+    const paused = readPausedSession(now);
+    const saved = paused?.queue.filter((id) => known.has(id)) ?? [];
+    const queue =
+      saved.length > 0 ? saved : computeDashboard(initialCards, logs, settings, now).plan.queue;
+    if (queue.length === 0) return [null, false];
+    return [
+      new StudyEngine({
+        pool: initialCards,
+        queue,
+        scheduler: createScheduler(settings),
+        interleaveDrills: true,
+        restore: saved.length > 0 ? paused?.progress : undefined,
+      }),
+      saved.length > 0,
+    ];
+  })[0];
   const api = useStudyEngine(engine);
   const { snapshot } = api;
   const [paused, setPaused] = useState(false);
+
+  // Remember where the session stands after every answer, so leaving the app
+  // (or pausing) never loses the place; a finished session clears the note.
+  useEffect(() => {
+    if (!engine || !snapshot) return;
+    if (snapshot.status === 'complete') clearPausedSession();
+    else savePausedSession(engine.remainingCardIds(), engine.serialize());
+  }, [engine, snapshot]);
 
   // Keyboard shortcuts for desktop practice: space/enter reveal, 1-4 rate.
   useEffect(() => {
@@ -88,18 +113,23 @@ function StudySession({
 
   if (snapshot.status === 'complete' || paused) {
     const now = new Date(snapshot.startedAt + snapshot.elapsedMs);
+    const complete = snapshot.status === 'complete';
     return (
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col p-4">
         <SessionSummary
-          mode={snapshot.status === 'complete' ? 'complete' : 'paused'}
+          mode={complete ? 'complete' : 'paused'}
           results={snapshot.results}
           elapsedMs={snapshot.elapsedMs}
           streak={Math.max(1, computeStreak(logs, now))}
           remaining={snapshot.remaining + (snapshot.step ? 1 : 0)}
           dueTomorrow={countDueWithin(engine.getCards(), now, 24)}
           weakCards={weakCards}
-          onContinue={snapshot.status === 'complete' ? undefined : () => setPaused(false)}
+          onContinue={complete ? undefined : () => setPaused(false)}
           onDone={() => {
+            // "Done for today" is a decision the dashboard must honour, even
+            // when cards are still waiting.
+            clearPausedSession();
+            void repository.setMeta(META_KEYS.doneForTodayDate, dayKey(new Date()));
             api.finish();
             navigate('/');
           }}
@@ -126,7 +156,7 @@ function StudySession({
           className="text-xs font-semibold text-stone-500 dark:text-stone-400"
           data-testid="study-status"
         >
-          {snapshot.answered} answered · {snapshot.remaining} left
+          {resumed ? 'Daily session · resumed' : 'Daily session'}
         </span>
         <Button
           variant="ghost"
@@ -134,7 +164,7 @@ function StudySession({
           onClick={() => setPaused(true)}
           data-testid="study-finish"
         >
-          End session
+          Pause
         </Button>
       </div>
 
@@ -157,6 +187,7 @@ function StudySession({
           autoRevealMs={settings.pinyinRevealDelayMs}
           position={snapshot.answered + 1}
           total={snapshot.total}
+          keepsSlipping={snapshot.card.fsrs.lapses >= settings.leechThreshold}
         />
       )}
 

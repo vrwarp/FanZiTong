@@ -106,11 +106,13 @@ export function hasFoils(card: VocabCard): boolean {
 export function chooseDrillType(
   card: VocabCard,
   lastType: ExerciseType | undefined,
+  exclude: ExerciseType[] = [],
 ): Exclude<ExerciseType, 'rapid_recognition'> | null {
   const options: Exclude<ExerciseType, 'rapid_recognition'>[] = [];
-  if (hasClozeSentence(card)) options.push('cloze');
-  if (card.domain === 'food') options.push('realia_menu');
-  if (hasFoils(card)) options.push('foil_discrimination');
+  if (hasClozeSentence(card) && !exclude.includes('cloze')) options.push('cloze');
+  if (card.domain === 'food' && !exclude.includes('realia_menu')) options.push('realia_menu');
+  if (hasFoils(card) && !exclude.includes('foil_discrimination'))
+    options.push('foil_discrimination');
   if (options.length === 0) return null;
   const rotated = options.filter((t) => t !== lastType);
   return (rotated.length > 0 ? rotated : options)[0];

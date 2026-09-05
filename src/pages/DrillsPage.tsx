@@ -11,7 +11,7 @@ const DRILLS: { type: DrillType; icon: string; description: string; foodOnly?: b
     type: 'realia_menu',
     icon: '🧾',
     description:
-      'A friend orders out loud; find the dishes on a real-looking red-and-white order slip before the timer runs out.',
+      'A friend tells you what they want; find those dishes on a real-looking red-and-white order slip before the timer runs out.',
     foodOnly: true,
   },
   {
@@ -24,7 +24,7 @@ const DRILLS: { type: DrillType; icon: string; description: string; foodOnly?: b
     type: 'foil_discrimination',
     icon: '🔍',
     description:
-      'Hear the word, pick the right shape among look-alikes. Breaks the character-blur habit.',
+      'Read the sound and meaning, then pick the right characters among look-alikes. Breaks the character-blur habit.',
   },
 ];
 
@@ -38,7 +38,7 @@ export default function DrillsPage() {
       <PageHeader
         title="Drills"
         zh="練習"
-        subtitle="Extra practice — answers here also change when each word comes back for review."
+        subtitle="Extra practice. A miss brings the word back sooner; a hit only speeds up words you are still learning."
       />
 
       <div className="card-surface grid grid-cols-2 gap-3 p-4">

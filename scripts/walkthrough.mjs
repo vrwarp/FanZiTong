@@ -76,6 +76,25 @@ async function step(name, fn) {
   }
 }
 
+/** Solve whichever drill is on screen the way a careful learner would. */
+async function solveDrill() {
+  if (await tid('cloze-exercise').isVisible()) {
+    await page.locator('[data-testid="cloze-option"][data-correct="true"]').first().click();
+  } else if (await tid('foil-exercise').isVisible()) {
+    await page.locator('[data-testid="foil-option"][data-correct="true"]').first().click();
+  } else if (await tid('menu-exercise').isVisible()) {
+    const keys = ((await tid('menu-exercise').getAttribute('data-target-keys')) ?? '').split(',');
+    for (const key of keys.filter(Boolean)) {
+      await page.locator(`[data-testid="menu-checkbox"][data-key="${key}"]`).check();
+    }
+    await tid('menu-submit').click();
+  } else {
+    return false;
+  }
+  await tid('drill-continue').click();
+  return true;
+}
+
 const tid = (id) => page.getByTestId(id);
 
 // 1. First launch
@@ -110,24 +129,44 @@ await step('session', async () => {
     }
     if (drills) break;
   }
+  // Pause mid-session: the summary, then the dashboard that must remember it.
   await tid('study-finish').click();
   await tid('session-summary').waitFor();
-  await shot('05-session-summary');
+  await shot('05-session-paused');
+  await page.goto(base);
+  await tid('start-session').waitFor();
+  await shot('06-learn-resume');
+  // Resume and finish the whole session: the completed summary and the done dashboard.
+  await tid('start-session').click();
+  for (let i = 0; i < 60; i += 1) {
+    if (await tid('session-summary').isVisible()) break;
+    if (await tid('recognition-prompt').isVisible()) {
+      await page.waitForTimeout(700); // read it like a person would
+      await tid('recognition-prompt').click();
+      await tid('pinyin').waitFor();
+      await page.waitForTimeout(400);
+      await tid('rate-3').click();
+      continue;
+    }
+    if (!(await solveDrill())) await page.waitForTimeout(200);
+  }
+  await tid('session-summary').waitFor();
+  await shot('07-session-complete');
   await tid('summary-done').click();
   await tid('start-session').waitFor();
-  await shot('06-learn-after-session');
+  await shot('08-learn-after-session');
 });
 
-// 7. Drills tab
+// 9. Drills tab
 await page.goto(`${base}/drills`);
 await tid('start-drill-cloze').waitFor();
-await shot('07-drills-tab');
+await shot('09-drills-tab');
 
-// 8-9. Menu realia
+// 10-11. Menu realia: one dish missed, one wrong tick, then the graded slip
 await step('menu drill', async () => {
   await page.goto(`${base}/drills/realia_menu?count=3`);
   await tid('menu-exercise').waitFor();
-  await shot('08-drill-menu-slip', { fullPage: true });
+  await shot('10-drill-menu-slip', { fullPage: true });
   const keys = ((await tid('menu-exercise').getAttribute('data-target-keys')) ?? '').split(',');
   for (const key of keys.slice(0, keys.length - 1)) {
     await page.locator(`[data-testid="menu-checkbox"][data-key="${key}"]`).check();
@@ -135,35 +174,47 @@ await step('menu drill', async () => {
   await page.locator('[data-testid="menu-checkbox"]').last().check();
   await tid('menu-submit').click();
   await tid('drill-continue').waitFor();
-  await shot('09-drill-menu-result', { fullPage: true });
+  await page.waitForTimeout(600); // let the slip scroll the first flagged row into view
+  await shot('11-drill-menu-result', { fullPage: true });
 });
 
-// 10-11. Foil discrimination
+// 12-14. Foil discrimination: wrong pick, the contrast, the corrective retry
 await step('foil drill', async () => {
   await page.goto(`${base}/drills/foil_discrimination?count=3`);
   await tid('foil-exercise').waitFor();
-  await shot('10-drill-foil');
+  await shot('12-drill-foil');
   await page.locator('[data-testid="foil-option"][data-correct="false"]').first().click();
-  await shot('11-drill-foil-wrong');
+  await shot('13-drill-foil-wrong');
+  await tid('foil-retry').click();
+  await tid('foil-retry-hint').waitFor();
+  await shot('14-drill-foil-retry');
 });
 
-// 12-13. Cloze
+// 15-17. Cloze: prompt, a misread deck word, then the right answer
 await step('cloze drill', async () => {
   await page.goto(`${base}/drills/cloze?count=3&domain=church`);
   await tid('cloze-exercise').waitFor();
-  await shot('12-drill-cloze');
+  await shot('15-drill-cloze');
+  const misread = page.locator(
+    '[data-testid="cloze-option"][data-correct="false"][data-foil="false"]',
+  );
+  if ((await misread.count()) > 0) {
+    await misread.first().click();
+    await tid('cloze-misread').waitFor();
+    await shot('16-drill-cloze-misread');
+  }
   await page.locator('[data-testid="cloze-option"][data-correct="true"]').first().click();
-  await shot('13-drill-cloze-correct');
+  await shot('17-drill-cloze-correct');
 });
 
-// 14-16. Vocab list, editor, import preview
+// 18-20. Vocab list, editor, import preview
 await page.goto(`${base}/vocab`);
 await tid('vocab-item').first().waitFor();
-await shot('14-vocab-list');
+await shot('18-vocab-list');
 await step('editor', async () => {
   await tid('vocab-item').first().click();
   await tid('card-editor').waitFor();
-  await shot('15-card-editor', { fullPage: true });
+  await shot('19-card-editor', { fullPage: true });
 });
 await step('import', async () => {
   await page.goto(`${base}/vocab`);
@@ -173,11 +224,11 @@ await step('import', async () => {
     buffer: Buffer.from(CSV, 'utf8'),
   });
   await tid('import-dialog').waitFor();
-  await shot('16-import-preview');
+  await shot('20-import-preview');
   await page.keyboard.press('Escape');
 });
 
-// 17. Stats (after the session above + a restored leech)
+// 21. Stats (after the session above + a restored leech)
 await step('stats', async () => {
   await page.goto(`${base}/settings`);
   await tid('backup-file').setInputFiles({
@@ -191,27 +242,27 @@ await step('stats', async () => {
   await tid('settings-notice').waitFor();
   await page.goto(`${base}/stats`);
   await tid('stat-cards').waitFor();
-  await shot('17-stats', { fullPage: true });
+  await shot('21-stats', { fullPage: true });
 });
 
-// 18. Settings
+// 22. Settings
 await page.goto(`${base}/settings`);
 await tid('settings-page').waitFor();
-await shot('18-settings', { fullPage: true });
+await shot('22-settings', { fullPage: true });
 
-// 19-20. Dark mode
+// 23-24. Dark mode
 await step('dark', async () => {
   await tid('theme-dark').click();
   await page.waitForFunction(() => document.documentElement.classList.contains('dark'));
   await page.waitForTimeout(600); // let the IndexedDB write land before navigating
   await page.goto(base);
   await tid('start-session').waitFor();
-  await shot('19-learn-dark');
+  await shot('23-learn-dark');
   await page.goto(`${base}/study`);
   await tid('recognition-prompt').waitFor();
   await tid('recognition-prompt').click();
   await tid('pinyin').waitFor();
-  await shot('20-study-revealed-dark');
+  await shot('24-study-revealed-dark');
 });
 
 await browser.close();

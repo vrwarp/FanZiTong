@@ -9,15 +9,15 @@ import {
   type MenuCategoryId,
   type MenuSize,
   type ShopType,
+  type MenuFiller,
 } from '@/data/menuTemplate';
 import { hanChars } from '@/lib/util/pinyin';
 import { pick, sample, shuffle, type Rng } from '@/lib/util/random';
-import { expandFoil, isVariantOf } from './foil';
 
 export const MENU_TIME_LIMIT_MS = 20_000;
 export const MENU_MIN_TARGETS = 2;
 export const MENU_MAX_TARGETS = 3;
-export const MENU_ITEMS_PER_CATEGORY = 4;
+export const MENU_ITEMS_PER_CATEGORY = 3;
 /** Chance that a card with accepted variants is printed in its variant spelling. */
 const VARIANT_PRINT_PROBABILITY = 0.5;
 
@@ -30,13 +30,17 @@ export interface MenuItem {
   price: number | [number, number];
   /** Set when this row is one of the learner's cards. */
   cardId?: string;
-  /** Set when this row is a look-alike distractor for a target card. */
-  foilOf?: string;
+  /**
+   * Set when this real dish shares a character with an ordered dish in the same
+   * section (滷肉飯 ↔ 焢肉飯, 牛肉麵 ↔ 牛肉湯麵): the confusion a real counter offers.
+   */
+  neighbourOf?: string;
   /** The card's standard spelling when the printed label is a variant. */
   variantOf?: string;
   /** Reading and meaning, revealed only after grading (incidental learning). */
   pinyin?: string;
   gloss?: string;
+  spoken?: string;
 }
 
 export interface MenuCategory {
@@ -54,6 +58,8 @@ export interface MenuTarget {
   /** The card's standard spelling (what the learner studies). */
   standard: string;
   pinyin: string;
+  /** How the friend actually says it (Taiwanese reading when that is what people use). */
+  spoken?: string;
   definition: string;
   size?: MenuSize;
   /** Selection key the learner must tick, e.g. "item-3:小". */
@@ -129,6 +135,7 @@ export function buildMenuExercise(
       variantOf: printed === card.traditional ? undefined : card.traditional,
       pinyin: card.pinyin,
       gloss: card.definition,
+      spoken: card.spoken,
     });
     const size = template.sized ? pick([...MENU_SIZES], rng) : undefined;
     targets.push({
@@ -137,43 +144,47 @@ export function buildMenuExercise(
       label: printed,
       standard: card.traditional,
       pinyin: card.pinyin,
+      spoken: card.spoken,
       definition: card.definition,
       size,
       key: selectionKey(item.id, size),
     });
-    // Look-alike distractor — never an accepted variant of the dish.
-    const foil = shuffle(card.visualFoils ?? [], rng)
-      .map((f) => expandFoil(card.traditional, f))
-      .find((f): f is string => f !== null && !usedLabels.has(f) && !isVariantOf(card, f));
-    if (foil) {
-      addItem({
-        label: foil,
-        category,
-        sized: template.sized,
-        price: priceFor(foil, template.defaultPrice),
-        foilOf: card.id,
-      });
-    }
   });
 
-  // Render the shop's own sections plus any section a target needs.
+  // A real slip confuses you with real neighbours (焢肉飯 next to 滷肉飯, 牛肉湯麵
+  // next to 牛肉麵), never with invented look-alikes — those belong to Spot the
+  // Character. The shop's own sections are always printed, plus any section a
+  // target needs, each filled with authentic dishes of that section.
+
   const categoriesToRender: MenuCategoryId[] = [];
   for (const id of [...shop.categories, ...categoriesOfTargets]) {
     if (!categoriesToRender.includes(id)) categoriesToRender.push(id);
   }
-  // Keep the slip readable inside 20 seconds: at most four sections.
-  const trimmed = categoriesToRender.filter(
-    (id, i) => byCategory.has(id) || i < 4 - new Set(categoriesOfTargets).size,
-  );
 
-  const categories: MenuCategory[] = trimmed.map((id) => {
+  const categories: MenuCategory[] = categoriesToRender.map((id) => {
     const template = categoryTemplate(id);
     const existing = byCategory.get(id) ?? [];
-    const fillers = shuffle(
-      template.fillers.filter((f) => !usedLabels.has(f.label)),
+    const targetsHere = existing.filter((item) => item.cardId);
+    const available = template.fillers.filter((f) => !usedLabels.has(f.label));
+    // Every ordered dish gets at least one real neighbour in its section when
+    // the template has one; the rest of the section is filled at random.
+    const neighbourFor = new Map<string, string>();
+    const chosenFillers: MenuFiller[] = [];
+    for (const target of targetsHere) {
+      const candidates = available.filter(
+        (f) => !chosenFillers.includes(f) && isNeighbour(target.label, f.label),
+      );
+      const neighbour = pick(candidates, rng);
+      if (neighbour) {
+        chosenFillers.push(neighbour);
+        neighbourFor.set(neighbour.label, target.cardId!);
+      }
+    }
+    const rest = shuffle(
+      available.filter((f) => !chosenFillers.includes(f)),
       rng,
-    ).slice(0, Math.max(0, MENU_ITEMS_PER_CATEGORY - existing.length));
-    for (const filler of fillers) {
+    ).slice(0, Math.max(0, MENU_ITEMS_PER_CATEGORY - existing.length - chosenFillers.length));
+    for (const filler of [...chosenFillers, ...rest]) {
       existing.push({
         id: makeId(),
         label: filler.label,
@@ -182,6 +193,8 @@ export function buildMenuExercise(
         price: filler.price,
         pinyin: filler.pinyin,
         gloss: filler.gloss,
+        spoken: filler.spoken,
+        neighbourOf: neighbourFor.get(filler.label),
       });
       usedLabels.add(filler.label);
     }
@@ -199,46 +212,66 @@ export function buildMenuExercise(
 }
 
 export interface MenuGrade {
-  /** Per target card: true when exactly the right box was ticked and none of its look-alikes. */
+  /** cardId → read correctly: its dish ticked (any size) and no look-alike of it ticked. */
   perCard: Record<string, boolean>;
-  /** Selection keys ticked that belong to no target (or a target's wrong size / foil). */
+  /** Ticked keys that belong to no ordered dish, in any size. */
   wrongSelections: string[];
   missed: MenuTarget[];
+  /** Right dish, wrong size column: reported in the verdict, not a reading miss. */
+  sizeErrors: MenuTarget[];
   allCorrect: boolean;
 }
 
 /** Grade the learner's ticked boxes against the order. */
 export function gradeMenuExercise(exercise: MenuExercise, selected: Set<string>): MenuGrade {
   const perCard: Record<string, boolean> = {};
-  const validKeys = new Set(exercise.targets.map((t) => t.key));
   const missed: MenuTarget[] = [];
+  const sizeErrors: MenuTarget[] = [];
   const itemsById = new Map<string, MenuItem>();
   for (const category of exercise.categories) {
     for (const item of category.items) itemsById.set(item.id, item);
   }
+  const itemOf = (key: string) => itemsById.get(key.split(':')[0]);
+  const orderedItemIds = new Set(exercise.targets.map((t) => t.itemId));
+  const ticks = Array.from(selected);
 
   for (const target of exercise.targets) {
     const ticked = selected.has(target.key);
-    // Any tick on a foil of this card, or on the same item with another size, is a miss.
-    const confusable = Array.from(selected).some((key) => {
-      if (key === target.key) return false;
-      const itemId = key.split(':')[0];
-      const item = itemsById.get(itemId);
-      if (!item) return false;
-      return item.foilOf === target.cardId || item.id === target.itemId;
-    });
-    const ok = ticked && !confusable;
+    const otherSize = ticks.some((key) => key !== target.key && itemOf(key)?.id === target.itemId);
+    // Reading the dish is what is graded: a tick in the wrong size column is a
+    // slip of the pen, not a misread, so the card still counts as read.
+    const ok = ticked || otherSize;
     perCard[target.cardId] = ok;
     if (!ok) missed.push(target);
+    else if (otherSize) sizeErrors.push(target);
   }
 
-  const wrongSelections = Array.from(selected).filter((key) => !validKeys.has(key));
+  const wrongSelections = ticks.filter((key) => {
+    const item = itemOf(key);
+    return !item || !orderedItemIds.has(item.id);
+  });
   return {
     perCard,
     wrongSelections,
     missed,
-    allCorrect: missed.length === 0 && wrongSelections.length === 0,
+    sizeErrors,
+    allCorrect: missed.length === 0 && wrongSelections.length === 0 && sizeErrors.length === 0,
   };
+}
+
+/** Section suffixes every dish in the section shares; they do not make two dishes neighbours. */
+const GENERIC_DISH_CHARS = new Set(['飯', '麵', '湯', '茶', '菜']);
+
+/** Two real dishes are neighbours when they share a character beyond the section suffix. */
+export function isNeighbour(a: string, b: string): boolean {
+  if (a === b) return false;
+  const shared = new Set(Array.from(a).filter((ch) => !GENERIC_DISH_CHARS.has(ch)));
+  return Array.from(b).some((ch) => shared.has(ch));
+}
+
+/** The sound the friend says: the spoken reading when people use it, else the pinyin. */
+export function cueReading(target: Pick<MenuTarget, 'pinyin' | 'spoken'>): string {
+  return target.spoken ?? target.pinyin;
 }
 
 export function formatPrice(price: number | [number, number]): string {

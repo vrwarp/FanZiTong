@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { META_KEYS, repository } from '@/db/repository';
+import { SECONDS_PER_NEW_CARD, SECONDS_PER_REVIEW } from '@/lib/queue/session';
 import { countStudyDays } from '@/lib/stats/analytics';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { RetentionGauge } from '@/components/stats/RetentionGauge';
@@ -11,18 +12,13 @@ import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useNow } from '@/hooks/useNow';
 import { useSettings } from '@/hooks/useSettings';
+import { clearPausedSession, readPausedSession } from '@/lib/session/pausedSession';
+import { dismissIntro, readIntroDismissed } from '@/lib/util/intro';
+import { dayKey } from '@/lib/util/time';
 import { InstallPrompt } from '@/pwa/InstallPrompt';
 import { DOMAIN_CATEGORIES, DOMAIN_LABELS } from '@/types';
 
-const HOW_IT_WORKS_KEY = 'fzt-howitworks-dismissed';
-
-function readDismissed(): boolean {
-  try {
-    return localStorage.getItem(HOW_IT_WORKS_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export default function LearnPage() {
   const navigate = useNavigate();
@@ -33,7 +29,12 @@ export default function LearnPage() {
   const model = useDashboard(cards, logs, settings, now);
   const { plan } = model;
   const canStudy = plan.queue.length > 0;
-  const [howDismissed, setHowDismissed] = useState(readDismissed);
+  const [howDismissed, setHowDismissed] = useState(readIntroDismissed);
+  // A session left earlier today: the dashboard offers to pick it up, not to start over.
+  const [pausedQueue] = useState(() => readPausedSession(new Date())?.queue ?? []);
+  const resumeCount = pausedQueue.filter((id) => cards.some((c) => c.id === id)).length;
+  const doneMeta = useLiveQuery(() => repository.getMeta(META_KEYS.doneForTodayDate), []);
+  const markedDone = doneMeta === dayKey(now);
   const showReviewsBar = model.reviewsToday > 0 || plan.dueReviewCount > 0;
   const lastBackupAt = useLiveQuery(() => repository.getMeta(META_KEYS.lastBackupAt), []);
   const studyDays = countStudyDays(logs);
@@ -44,12 +45,32 @@ export default function LearnPage() {
 
   const dismissHow = () => {
     setHowDismissed(true);
-    try {
-      localStorage.setItem(HOW_IT_WORKS_KEY, '1');
-    } catch {
-      /* ignore */
-    }
+    dismissIntro();
   };
+  // Starting is the "got it" everyone actually taps.
+  const startSession = () => {
+    dismissIntro();
+    navigate('/study');
+  };
+
+  const todayState: 'resume' | 'done' | 'due' =
+    resumeCount > 0 ? 'resume' : markedDone || model.doneForToday ? 'done' : 'due';
+  const today = dayKey(now);
+  const wordsStudiedToday = new Set(
+    logs.filter((l) => dayKey(new Date(l.reviewTimestamp)) === today).map((l) => l.cardId),
+  ).size;
+  const newTomorrow = Math.min(
+    settings.maxDailyNewCards,
+    cards.filter((c) => c.fsrs.state === 0 && settings.activeDomains.includes(c.domain)).length,
+  );
+  const tomorrowMinutes = Math.max(
+    1,
+    Math.round((model.dueTomorrow * SECONDS_PER_REVIEW + newTomorrow * SECONDS_PER_NEW_CARD) / 60),
+  );
+  const tomorrowLine =
+    model.dueTomorrow + newTomorrow > 0
+      ? `Tomorrow 明天: ${plural(model.dueTomorrow, 'review')}${newTomorrow > 0 ? ` · up to ${newTomorrow} new` : ''} · ≈ ${tomorrowMinutes} min${model.dueTomorrow > 0 ? ' — do them to keep the streak.' : '.'}`
+      : 'Come back tomorrow to keep the streak alive.';
 
   return (
     <div className="flex flex-col gap-4">
@@ -63,10 +84,17 @@ export default function LearnPage() {
         })}
         action={
           <span
-            className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-sm font-bold whitespace-nowrap text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+            className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold whitespace-nowrap text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
             data-testid="streak-badge"
+            title={
+              model.streak > 0 && model.answersToday > 0
+                ? 'Today counts toward your streak'
+                : undefined
+            }
           >
-            {model.streak > 0 ? `🔥 Day ${model.streak}` : '🔥 Start your streak'}
+            {model.streak > 0
+              ? `🔥 Day ${model.streak}${model.answersToday > 0 ? ' ✓' : ''}`
+              : '🔥 Start your streak'}
           </span>
         }
       />
@@ -107,43 +135,100 @@ export default function LearnPage() {
         </section>
       )}
 
-      <section className="card-surface p-5" aria-labelledby="today-heading">
+      <section
+        className="card-surface p-5"
+        aria-labelledby="today-heading"
+        data-testid="today-card"
+        data-state={todayState}
+      >
         <h2
           id="today-heading"
           className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400"
         >
-          {model.doneForToday ? 'Today' : 'Due today'}
+          {todayState === 'resume' ? 'In progress' : todayState === 'done' ? 'Today' : 'Due today'}
         </h2>
-        {model.doneForToday ? (
+        {todayState === 'resume' && (
           <>
             <p className="mt-1 text-3xl font-extrabold" data-testid="due-summary">
-              Done for today ✓
+              {plural(resumeCount, 'card')} left
             </p>
             <p
               className="mt-1 text-sm text-stone-500 dark:text-stone-400"
               data-testid="estimated-time"
             >
-              {model.dueTomorrow > 0
-                ? `Tomorrow: ${model.dueTomorrow} review${model.dueTomorrow === 1 ? '' : 's'} due — do them to keep the streak.`
-                : 'Come back tomorrow to keep the streak alive.'}
+              Paused earlier today — pick up where you stopped.
             </p>
             <Button
               block
               size="lg"
-              variant="outline"
               className="mt-4"
-              onClick={() => navigate('/drills')}
+              onClick={startSession}
               data-testid="start-session"
             >
-              Extra practice
+              Resume session
             </Button>
+            <p className="mt-2 text-center text-sm">
+              <button
+                type="button"
+                className="font-semibold text-brand-600 underline dark:text-brand-300"
+                onClick={() => {
+                  clearPausedSession();
+                  navigate('/study');
+                }}
+                data-testid="start-fresh"
+              >
+                Start a fresh session instead
+              </button>
+            </p>
           </>
-        ) : (
+        )}
+        {todayState === 'done' && (
           <>
             <p className="mt-1 text-3xl font-extrabold" data-testid="due-summary">
-              {plan.dueReviewCount} review{plan.dueReviewCount === 1 ? '' : 's'},{' '}
-              {plan.newCardCount} new card
-              {plan.newCardCount === 1 ? '' : 's'}
+              Done for today ✓
+            </p>
+            <p
+              className="mt-1 text-sm text-stone-600 dark:text-stone-300"
+              data-testid="studied-today"
+            >
+              {plural(wordsStudiedToday, 'word')} studied today{' '}
+              <span lang="zh-Hant-TW">今天學了 {wordsStudiedToday} 個</span>
+            </p>
+            <p
+              className="mt-1 text-sm text-stone-500 dark:text-stone-400"
+              data-testid="estimated-time"
+            >
+              {tomorrowLine}
+            </p>
+            {canStudy ? (
+              <Button
+                block
+                size="lg"
+                variant="outline"
+                className="mt-4"
+                onClick={startSession}
+                data-testid="start-session"
+              >
+                Study {plural(plan.queue.length, 'more card')}
+              </Button>
+            ) : (
+              <Button
+                block
+                size="lg"
+                variant="outline"
+                className="mt-4"
+                onClick={() => navigate('/drills')}
+                data-testid="start-session"
+              >
+                Extra practice
+              </Button>
+            )}
+          </>
+        )}
+        {todayState === 'due' && (
+          <>
+            <p className="mt-1 text-3xl font-extrabold" data-testid="due-summary">
+              {plural(plan.dueReviewCount, 'review')}, {plural(plan.newCardCount, 'new card')}
             </p>
             <p
               className="mt-1 text-sm text-stone-500 dark:text-stone-400"
@@ -152,7 +237,7 @@ export default function LearnPage() {
               {canStudy ? `≈ ${plan.estimatedMinutes} min` : 'Nothing due right now.'}
               {!canStudy &&
                 model.dueTomorrow > 0 &&
-                ` Next: ${model.dueTomorrow} due within a day.`}
+                ` · ${model.dueTomorrow} more due within a day.`}
               {plan.totalDueCount > plan.dueReviewCount &&
                 ` · ${plan.totalDueCount - plan.dueReviewCount} more waiting beyond today's limit`}
             </p>
@@ -161,7 +246,7 @@ export default function LearnPage() {
               size="lg"
               className="mt-4"
               disabled={!canStudy}
-              onClick={() => navigate('/study')}
+              onClick={startSession}
               data-testid="start-session"
             >
               {canStudy ? 'Start Daily Session' : 'Nothing due'}
@@ -232,7 +317,7 @@ export default function LearnPage() {
             className="mt-2 text-xs text-stone-500 dark:text-stone-400"
             data-testid="today-answers"
           >
-            {model.answersToday} answer{model.answersToday === 1 ? '' : 's'} today
+            {plural(model.answersToday, 'answer')} today
           </p>
         </div>
         <div className="card-surface flex flex-col items-center justify-center p-4">
@@ -249,7 +334,7 @@ export default function LearnPage() {
               className="mt-1 text-center text-[11px] text-stone-500 dark:text-stone-400"
               data-testid="recall-empty"
             >
-              Shows after 7 study days
+              Shows after 7 study days · {studyDays} so far
             </p>
           )}
         </div>

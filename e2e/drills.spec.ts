@@ -27,13 +27,14 @@ test.describe('Drills tab (standalone modalities)', () => {
     await openApp(page, '/drills');
     await page.goto('/drills/foil_discrimination?count=1');
     await expect(page.getByTestId('foil-exercise')).toBeVisible({ timeout: 20_000 });
-    const answer =
-      (await page.locator('[data-testid="foil-option"][data-correct="true"]').textContent()) ?? '';
     const wrong = page.locator('[data-testid="foil-option"][data-correct="false"]').first();
     await wrong.click();
     await expect(page.getByTestId('foil-feedback')).toContainText('不對');
-    await expect(page.getByTestId('foil-confirm-hint')).toContainText(answer);
     await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+    // Study the contrast, then find the word again among reshuffled, unmarked tiles.
+    await page.getByTestId('foil-retry').click();
+    await expect(page.getByTestId('foil-retry-hint')).toBeVisible();
+    await expect(page.locator('[data-testid="foil-option"][data-correct="true"]')).toHaveCount(1);
     await page.locator('[data-testid="foil-option"][data-correct="true"]').click();
     await expect(page.getByTestId('drill-outcome')).toContainText('Again');
     await page.getByTestId('drill-continue').click();
@@ -53,9 +54,21 @@ test.describe('Drills tab (standalone modalities)', () => {
     expect(sentence).not.toMatch(/[a-z]/i);
     await expect(page.getByTestId('cloze-option')).toHaveCount(4);
 
-    await page.locator('[data-testid="cloze-option"][data-correct="false"]').first().click();
+    // A real word that does not fit is explained and the learner picks again …
+    await page
+      .locator('[data-testid="cloze-option"][data-correct="false"][data-foil="false"]')
+      .first()
+      .click();
+    await expect(page.getByTestId('cloze-misread')).toBeVisible();
+    await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+    // … while the look-alike is a miss on the target word: contrast, then find it again.
+    await page.locator('[data-testid="cloze-option"][data-foil="true"]').click();
     await expect(page.getByTestId('cloze-feedback')).toContainText('不對');
+    await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+    await page.getByTestId('cloze-retry').click();
+    await page.locator('[data-testid="cloze-option"][data-correct="true"]').click();
     await expect(page.getByTestId('cloze-feedback')).toHaveText(TONE_MARK_RE);
+    await expect(page.getByTestId('drill-outcome')).toContainText('Again');
     await page.getByTestId('drill-continue').click();
     await expect(page.getByTestId('cloze-exercise')).toBeVisible();
   });

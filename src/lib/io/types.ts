@@ -13,6 +13,9 @@ export interface ImportRow {
   exampleSentenceTranslation?: string;
   visualFoils: string[];
   variants: string[];
+  spoken?: string;
+  variantNote?: string;
+  clozeDistractors: string[];
   fsrs?: FsrsState;
   createdAt?: string;
   updatedAt?: string;

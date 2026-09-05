@@ -5,6 +5,8 @@ export const META_KEYS = {
   seededAt: 'seededAt',
   schemaVersion: 'schemaVersion',
   lastBackupAt: 'lastBackupAt',
+  /** Local day (YYYY-MM-DD) on which the learner tapped "Done for today". */
+  doneForTodayDate: 'doneForTodayDate',
 } as const;
 
 /**

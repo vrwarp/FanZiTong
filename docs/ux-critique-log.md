@@ -57,3 +57,47 @@ Pedagogy rule verified on every prompt by all three.
 - Theme: no flash of the light theme on launch for dark-mode users; offline-ready toast removed (the first-run card mentions offline).
 
 **Deferred (from ideation section D):** realia for church/slang/anime surfaces; second example sentence per card; leech remediation view; "as heard" Taiwanese readings; latency-based nudges; generated foils for custom cards; per-character stats; variant as correct tile in Spot the Character; price-reading tasks; "learn 5 more" on the all-done dashboard.
+
+## Iteration 2
+
+**Scores:** PM 7/10 · Language expert 8/10 · Heritage learner 8/10.
+Pedagogy rule verified on every prompt by all three; nobody found pinyin on a prompt face. All three called the Spot-the-Character miss card the best screen in the app, and all three named the same remaining blocker-class defect.
+
+**Consensus findings (2+ reviewers)**
+
+1. Fill the Blank marked a correct reading wrong: two "readable" distractors from the same domain fit the sentence too (餛飩湯大碗一碗 is a fine order), and a miss on such a false key can reset a Review card.
+2. "End session" → "Session paused" → "Done for today" → a dashboard that forgot all of it ("Start Daily Session" again, no resume, no ✓); the completed-session and all-done states had never been captured.
+3. The variant note was a food template on every card ("common on signs and menus" under 借口).
+4. Anki-speak crept back in through the outcome lines ("graduating", "Already in review — schedule unchanged" contradicting the Drills tab).
+5. Slip result: the rows that matter were colour-only, the verdict sat below an 11-row slip, the wrong tick was unglossed.
+6. Character chips: "+2" unexplained, chips looked like tags, not connected to the sentence.
+7. "How this works" never left the dashboard; the title wrapped under the streak chip; the 30-day chart overprinted its last two labels; "Hear the word" implied audio; "TIME 1s".
+8. Stats still had two vocabularies for card states and a percentage computed from five answers.
+9. Heritage learner: the friend orders "kē zǎi jiān" (nobody says that; it is ô-á-tsian); invented dishes with prices on a real-looking slip; the pinned cue strip ate half the screen; the slip font was only half real.
+
+**Decisions from ideation (conflicts resolved)**
+
+- Cloze keys are unique by construction AND graded by evidence: readable distractors come from authored `clozeDistractors` or other domains, never the same domain while another can supply them; picking a real word that does not fit is explained, retired and re-asked with no schedule change; only the look-alike (now named explicitly by the exercise) is a miss, and it is corrected the way Spot the Character corrects — contrast, then a reshuffled retry, capped at three misses.
+- An in-session cloze is never built on a sentence revealed earlier that session; Fill the Blank takes learning cards outside today's queue, and seen cards get Spot the Character or the slip.
+- Two intents, two persisted states: Pause (saved after every answer, resumable the same day with its counts and clock) and Done for today (a flag the dashboard honours even while cards remain). Three dashboard states: Resume · Done ✓ · Due.
+- Size errors on the slip are verdict-only (overturns an iteration-1 rule): FSRS schedules the dish's shape → sound binding, not the 小/大 column.
+- No invented string on the slip, ever; the discrimination demand comes from real same-section neighbours (滷肉飯 ↔ 焢肉飯, 牛肉麵 ↔ 牛肉湯麵, 蚵仔煎 ↔ 蚵仔麵線), guaranteed one per ordered dish, with a character contrast when a neighbour is ticked instead.
+- One romanisation for as-heard readings (Tâi-lô); definitions carry meaning only.
+- The rating question asks about the reading, not the word; the reassurance for new cards stays but the attempt comes first.
+- Per-word sentence readings behind a tap, whole-sentence reveal second.
+
+**Changes shipped**
+
+- Data: `spoken` (as-heard reading), `variantNote`, `clozeDistractors` on cards (CSV/JSON/editor/import/export); bundled OFL Noto Serif TC subset for the slip; Tâi-lô readings (ô-á-tsian, bah-uân, uánn-kué, ô-te); slang additions and definition sweep.
+- Recognition card: "How well did you _read_ it? 讀得如何？", "0.4s to answer", rubric above the question on the first reveals then a one-line reminder; sticky rating footer; `spoken` shown first; per-card variant line (也寫作 … · note) with per-domain defaults; chips "肉 ròu · 2 more words" that underline the character in the sentence; per-word tap readings + "Show all readings"; "keeps slipping" chip on the answer panel of a leech.
+- Fill the Blank: explicit foil, other-domain distractors, misread → amber tile + "right reading, wrong word here" + hint, foil → contrast + reshuffled retry (cap 3) → Again, tap-to-check glosses, no cloze on a just-seen sentence.
+- Spot the Character: reshuffled retry after a miss, cap at three then a copy-match gate.
+- Order slip: sound + meaning cue one line per dish with "meaning 意思", timer in the header row, verdict strip replacing the cue on submit with the first flagged row scrolled into view, 漏點 / 點錯 / 份量 tags with readings auto-opened, wrong-size verdict-only, real neighbours per dish with character contrast, 內用／外帶 as printed text, 讀音 affordance on every row.
+- Session: Pause (saved after every answer; "Resume session · N cards left" on the dashboard; counts and time carry on), Done for today honoured ("Done for today ✓ · N words studied today · Tomorrow: … · Study N more"), "🔥 Day 1 ✓", Time "< 1 min", "Start a fresh session instead".
+- Dashboard: intro dismissed by starting a session, "Show the intro again" in Settings, iOS add-to-home-screen hint, "Shows after 7 study days · 1 so far".
+- Stats: one state vocabulary (New 新 · Learning 學習中 · Review 複習中 · Relearning 重學) shared with Vocab and the editor, "Not enough answers yet (N/10)", chart labels never overprint, leech rows with per-character cues, variants, foils and "Practice this word".
+- Drills: "Read the sound and meaning …", "N of M" progress, plain outcome lines ("Again — it comes back sooner", "Good — moves it toward long-term review", "Already learned — no change; a miss would bring it back sooner", "No change to its schedule — that was a reading of another word").
+- Editor: delete as a text link, "Not studied yet 還沒學過" for new cards.
+- Walkthrough: 24 captures including paused → resume, the completed summary, the all-done dashboard, the foil retry and the cloze misread.
+
+**Deferred (from ideation section D):** realia for church/slang/anime on the slip engine; second example sentence per card; full leech remediation view (needs `chosen` logs); persisted neutral-answer logs; latency-based nudge; generated foils for custom cards; per-character stats; "learn 5 more" beyond the daily new limit; price-reading tasks; a `notes` field.

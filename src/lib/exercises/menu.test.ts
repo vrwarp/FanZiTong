@@ -9,10 +9,12 @@ import { containsPinyin } from '@/lib/util/pinyin';
 import { makeCard, makePool } from '@/test/factories';
 import {
   buildMenuExercise,
+  cueReading,
   formatOrderPrompt,
   gradeMenuExercise,
   MENU_TIME_LIMIT_MS,
   selectionKey,
+  isNeighbour,
 } from './menu';
 
 describe('categorizeDish', () => {
@@ -74,13 +76,42 @@ describe('buildMenuExercise', () => {
     }
   });
 
-  it('prints a look-alike foil for each target in the same category', () => {
-    const rice = pool[0]; // 滷肉飯 with foils 魯 / 鹵肉飯
+  it('surrounds each target with real neighbouring dishes, never invented look-alikes', () => {
+    const rice = pool[0]; // 滷肉飯 with authored foils 魯 / 鹵肉飯
     const ex = buildMenuExercise([rice, food[1]], mulberry32(9))!;
+    const allItems = ex.categories.flatMap((c) => c.items);
+    expect(allItems.map((i) => i.label)).not.toContain('鹵肉飯');
     const riceCategory = ex.categories.find((c) => c.id === 'rice')!;
-    const foil = riceCategory.items.find((i) => i.foilOf === rice.id);
-    expect(foil).toBeDefined();
-    expect(['魯肉飯', '鹵肉飯']).toContain(foil!.label);
+    // The confusion comes from a real neighbour in the same section (焢肉飯, 肉燥飯 …).
+    const neighbour = riceCategory.items.find((i) => i.neighbourOf === rice.id);
+    expect(neighbour).toBeDefined();
+    expect(isNeighbour('滷肉飯', neighbour!.label)).toBe(true);
+    const realRice = new Set(
+      MENU_CATEGORIES.find((c) => c.id === 'rice')!.fillers.map((f) => f.label),
+    );
+    for (const item of riceCategory.items) {
+      if (item.cardId) continue;
+      expect(realRice.has(item.label)).toBe(true);
+      expect(item.pinyin).toBeTruthy();
+      expect(item.gloss).toBeTruthy();
+    }
+    // A 小吃店 always prints its own sections, whatever was ordered.
+    for (const id of SHOP_TEMPLATES['rice-noodle'].categories) {
+      expect(ex.categories.map((c) => c.id)).toContain(id);
+    }
+  });
+
+  it('cues with the as-heard reading when the card has one', () => {
+    const oyster = makeCard({
+      traditional: '蚵仔煎',
+      pinyin: 'kē zǎi jiān',
+      spoken: 'ô-á-chian',
+      domain: 'food',
+    });
+    const ex = buildMenuExercise([oyster, food[0]], mulberry32(12))!;
+    const target = ex.targets.find((t) => t.cardId === oyster.id)!;
+    expect(cueReading(target)).toBe('ô-á-chian');
+    expect(cueReading(ex.targets.find((t) => t.cardId === food[0].id)!)).toBe(food[0].pinyin);
   });
 
   it('cues by sound and meaning; characters are only for the post-grade order line', () => {
@@ -111,12 +142,10 @@ describe('buildMenuExercise', () => {
         expect(target.standard).toBe('滷肉飯');
         const grade = gradeMenuExercise(ex, new Set(ex.targets.map((t) => t.key)));
         expect(grade.perCard[rice.id]).toBe(true);
-        // The variant never doubles as the look-alike trap.
+        // The variant is the card's own row, never a second trap row.
         expect(
-          ex.categories
-            .flatMap((c) => c.items)
-            .some((i) => i.foilOf === rice.id && i.label === '魯肉飯'),
-        ).toBe(false);
+          ex.categories.flatMap((c) => c.items).filter((i) => i.label === '魯肉飯'),
+        ).toHaveLength(1);
       }
     }
     expect(printedVariant).toBe(true);
@@ -143,7 +172,7 @@ describe('gradeMenuExercise', () => {
 
   it('marks missed targets and extra ticks', () => {
     const [first, ...rest] = ex.targets;
-    const extra = ex.categories.flatMap((c) => c.items).find((i) => !i.cardId && !i.foilOf)!;
+    const extra = ex.categories.flatMap((c) => c.items).find((i) => !i.cardId)!;
     const selected = new Set([
       ...rest.map((t) => t.key),
       selectionKey(extra.id, extra.sized ? '小' : undefined),
@@ -155,22 +184,18 @@ describe('gradeMenuExercise', () => {
     expect(grade.wrongSelections).toHaveLength(1);
   });
 
-  it('fails a target when its look-alike foil or wrong size is ticked too', () => {
-    const items = ex.categories.flatMap((c) => c.items);
-    const targetWithFoil = ex.targets.find((t) => items.some((i) => i.foilOf === t.cardId));
-    if (targetWithFoil) {
-      const foil = items.find((i) => i.foilOf === targetWithFoil.cardId)!;
-      const selected = new Set(ex.targets.map((t) => t.key));
-      selected.add(selectionKey(foil.id, foil.sized ? targetWithFoil.size : undefined));
-      const grade = gradeMenuExercise(ex, selected);
-      expect(grade.perCard[targetWithFoil.cardId]).toBe(false);
-    }
+  it('reports a wrong size without failing the dish', () => {
     const sized = ex.targets.find((t) => t.size);
     if (sized) {
       const other = sized.size === '小' ? '大' : '小';
       const selected = new Set(ex.targets.map((t) => t.key));
       selected.add(selectionKey(sized.itemId, other));
-      expect(gradeMenuExercise(ex, selected).perCard[sized.cardId]).toBe(false);
+      const grade = gradeMenuExercise(ex, selected);
+      // The dish was read correctly: a tick in the wrong size column is not a misread.
+      expect(grade.perCard[sized.cardId]).toBe(true);
+      expect(grade.sizeErrors.map((t) => t.cardId)).toEqual([sized.cardId]);
+      expect(grade.wrongSelections).toEqual([]);
+      expect(grade.allCorrect).toBe(false);
     }
   });
 });

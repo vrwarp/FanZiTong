@@ -148,7 +148,7 @@ function DrillSession({
           className="text-xs font-semibold text-stone-500 dark:text-stone-400"
           data-testid="drill-progress"
         >
-          {EXERCISE_LABELS[drillType].en} · {snapshot.drillsRemaining + 1} to go
+          {EXERCISE_LABELS[drillType].en} · {snapshot.drillIndex} of {snapshot.drillTotal}
         </span>
         <Button variant="ghost" size="sm" onClick={api.finish} data-testid="drill-exit">
           End

@@ -55,6 +55,13 @@ export function formatDuration(ms: number): string {
   return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
 }
 
+/** Session time for the summary: whole minutes, never a stopwatch reading. */
+export function formatSessionTime(ms: number): string {
+  const minutes = Math.round(Math.max(0, ms) / 60_000);
+  if (minutes < 1) return '< 1 min';
+  return `${minutes} min`;
+}
+
 export function formatRelativeDue(due: Date, now: Date): string {
   const diff = due.getTime() - now.getTime();
   if (diff <= 0) return 'due now';

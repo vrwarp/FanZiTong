@@ -4,6 +4,7 @@ import {
   formatDuration,
   formatInterval,
   formatRelativeDue,
+  formatSessionTime,
   isSameLocalDay,
   startOfDay,
 } from './time';
@@ -39,6 +40,9 @@ describe('day helpers', () => {
   it('formats durations and relative due', () => {
     expect(formatDuration(0)).toBe('0s');
     expect(formatDuration(65_000)).toBe('1m 05s');
+    expect(formatSessionTime(12_000)).toBe('< 1 min');
+    expect(formatSessionTime(65_000)).toBe('1 min');
+    expect(formatSessionTime(11 * 60_000 + 40_000)).toBe('12 min');
     const now = new Date('2026-09-05T08:00:00Z');
     expect(formatRelativeDue(new Date(now.getTime() - 1), now)).toBe('due now');
     expect(formatRelativeDue(addDays(now, 3), now)).toBe('in 3d');

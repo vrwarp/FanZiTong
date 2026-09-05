@@ -61,6 +61,7 @@ Overall score: 8/10 — the daily loop (character-only prompt with no domain cue
 Converged? Yes for shape → known-word binding in the daily loop, Spot the Character and the Order Slip; the biggest remaining gap is Fill the Blank, whose deck-word distractors can legitimately fit the sentence, so a learner who reads correctly is marked wrong and rescheduled.
 
 ## Keep doing
+
 - The "How this works" card (01): "Say it in your head: the sound and the meaning you already know" is the right framing of the method for a heritage speaker, and it explains the pinyin rule in one sentence.
 - The Spot the Character contrast card (11): side-by-side words, the differing character outlined, reading + gloss for both, and a tell — this is the template for every feedback moment in the app.
 - Sound + meaning as the slip cue with the Taiwanese name (ô-á-chian) alongside the Mandarin reading (08); look-alike traps adjacent to their targets (鹽肉飯 above 滷肉飯, 半肉麵 above 牛肉麵).

@@ -33,6 +33,7 @@ Pedagogy-rule check first: pinyin is hidden on every character prompt (02, 04, 0
 Overall score: 6/10 — The skeleton of a good daily loop is here (one CTA, an honest time estimate, the pedagogy rule respected on every prompt), but the loop doesn't close, the rating buttons and drill feedback leave the learner guessing, and three different "health" numbers within minutes leak trust and habit.
 
 ## Keep doing
+
 - Pinyin hidden on every character prompt by default, with "Show pinyin" off in the vocab list and the Settings copy explaining why — the rule is applied consistently and honestly.
 - The dashboard leads with one clear action and a time estimate ("0 reviews, 10 new cards · ≈ 8 min").
 - Rating buttons preview their interval — "Easy 8d" tells the learner what the button costs.

@@ -35,6 +35,7 @@ Out of scope for this lens but noted: the two "dark" screenshots (19, 20) render
 Overall score: 6/10 — the recognition loop (character-only prompt, strict tap-to-reveal, FSRS with visible intervals, a well-built foil drill) is the right core for this learner, but two of the four modes create no retrieval demand on the bottleneck and the feedback moments reveal the wrong things at the wrong grain (whole-sentence pinyin, no per-character or contrastive explanation), so today the app trains shape discrimination well and shape → word binding only partially.
 
 ## Keep doing
+
 - Character-only prompt with pinyin strictly tap-to-reveal; "Manual tap only (recommended)" as the default with honest explanatory copy in Settings; "Show pinyin" off by default in the Vocab list.
 - Reading direction only — no handwriting or production drills; that matches both the learner's bottleneck and the 15–30 minute budget.
 - The foil drill's cue design (sound + meaning → shape), foils that vary which character differs (滷內飯 vs 鹵肉飯; 牧帥 vs 枚師), and hand-curated look-alikes of genuinely confusable pairs.

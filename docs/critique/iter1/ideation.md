@@ -36,12 +36,13 @@ Resolution: sound + meaning, exactly like the foil drill — `朋友說 Your fri
 
 **B2. How variants like 魯肉飯 behave in each drill (HL: slip may use either spelling as correct; LE: accept with a note or make it a deliberate "same dish" test).**
 Resolution, per surface:
+
 - Data: `variants?: string[]` on Card ("Also written 也寫作"). Variants are accepted forms, never distractors, anywhere.
 - Foil drill: canonical form is always the correct tile; variants are filtered out of the foil pool at generation time (even if a hand-authored foil field contains one). After answering, the feedback card adds "也寫作 魯肉飯 · common on signs".
 - Cloze: canonical is the correct tile; distractors are other deck words (B4) so variants cannot collide; same post-answer note.
 - Order slip: exactly one accepted form of each target is printed, chosen at random (canonical 60 % / a variant 40 %); ticking it is correct; the result row gets a tag "也寫作 滷肉飯 · this shop spells it 魯". A variant never appears as a trap row, and the dedupe set (item 1) includes every target's variants.
 - Search, import duplicate detection and the Vocab row all treat variants as the same card.
-Reasoning: the slip is the realia surface where spelling variation actually occurs, so that is where the learner should meet it; keeping the foil and cloze tiles canonical avoids the "two correct tiles" bug and keeps the shape drill about shape.
+  Reasoning: the slip is the realia surface where spelling variation actually occurs, so that is where the learner should meet it; keeping the foil and cloze tiles canonical avoids the "two correct tiles" bug and keeps the shape drill about shape.
 
 **B3. Is 鹵肉飯 an acceptable foil? (HL: yes, you never see 鹵 on a sign; LE: 鹵 is an attested form in converted text.)**
 Resolution: no attested spelling of the target — in any region's convention — may be a foil. Foils must be unambiguously wrong strings (a wrong character or a non-word). Replace 鹵肉飯 with 滷肉販 (販 fàn, homophone, 貝 not 食) or 鹽肉飯 (shares the 鹵 component). Reasoning: a foil teaches "this is not lǔ ròu fàn", and for 鹵肉飯 that statement is false; the learner reads reposted mainland text on PTT and Bilibili subtitles. HL's point that it is low-stakes is granted — it is a cheap rule to apply deck-wide and it removes the ambiguity forever.
@@ -89,19 +90,25 @@ Resolution: a permanent one-line question above the row, a coach strip on the fi
 Order: bug fixes and pedagogy-critical items first, then impact-per-effort. Effort: S ≤ half a day, M ≈ 1–2 days, L > 2 days.
 
 ### 1. Order slip integrity: dedupe rows, honest result colouring, size grading — S
+
 Addresses A1; HL major, PM major, LE major.
+
 - Build rows against a `taken: Set<string>` seeded with every target's traditional and variants. A candidate foil/filler row is skipped if it is in `taken` or already placed in any section; each target appears exactly once, in one section. Assert no duplicates in dev.
 - Result colouring: correctly ticked target → green row + ✓; target not ticked → amber row, empty box outlined, tag `Missed 漏點`; wrongly ticked row → red row, tag `Wrong 點錯`; untouched look-alike rows → no tint, small grey tag `look-alike 形近`; untouched filler → unchanged.
 - Right dish, wrong size (大 ticked for 小) → the ticked box red, the correct box amber; verdict `Right dish, wrong size 對的菜，錯的份量`; that target is graded wrong.
 - Verdict `Perfect order` only when zero misses and zero wrong ticks. Timer expiry auto-submits with verdict `Time's up 時間到`.
 
 ### 2. Dark theme actually dark — S
+
 Addresses A9.
+
 - Verify `data-theme` is written to `<html>` on toggle and persisted; "System" follows `prefers-color-scheme`; the three Theme buttons reflect the stored value (capture 18 shows System selected while 19/20 are labelled dark — either persistence or the capture is wrong; test with Playwright `emulateMedia({ colorScheme: 'dark' })` and with the explicit Dark button, both must produce a dark study card).
 - Palette: page `#1c1917`, cards `#292524`, text `#f5f5f4`, headword glyph `#fafaf9` (warm, not pure black/white — HL); red accent desaturated one step; `color-scheme: dark` on root so native selects/inputs follow. Slip in dark mode uses dark paper `#2b2523` with the same red rules (a white slip at 11 pm is the flashlight HL describes).
 
 ### 3. Accepted spelling variants + starter-deck corrections — M
+
 Addresses A4, B2, B3; HL blocker.
+
 - Card: `variants?: string[]`, `notes?: string` (free-text mnemonic, shown on reveal under the definition, editable). Editor: field `Also written 也寫作` directly under Traditional, helper: "Other spellings you'll see on signs and online (e.g. 魯肉飯 for 滷肉飯). Separate with |. Never used as wrong answers." Foil helper becomes: "Wrong look-alikes only, separated with | (e.g. 滷內飯 | 滷肉販). Real alternative spellings go under Also written."
 - CSV column `variants` and `notes`; JSON keys the same; export round-trips them. Import duplicate check: a row whose traditional equals an existing card's traditional or variant is flagged `Variant of 滷肉飯`.
 - Generation guard (one helper used by foil drill, cloze and slip): drop any candidate string ∈ traditional ∪ variants of the target, and any candidate that equals another deck card's traditional/variant unless that card is the intended distractor.
@@ -110,21 +117,27 @@ Addresses A4, B2, B3; HL blocker.
 - Starter deck edits: 滷肉飯 variants [魯肉飯], foils [滷內飯 | 滷肉販 | 鹽肉飯]; 藉口 definition "Excuse", variants [借口], tags + `日常口語`; if present as cards: 鹹酥雞 [鹽酥雞], 肉燥飯 [肉臊飯], 焢肉飯 [爌肉飯]. Sweep every card's foils for attested spellings (B3) and move them to variants or delete them.
 
 ### 4. Order slip cue = sound + meaning, pinned strip, post-grade reveal — M
+
 Addresses A2, A3, B1; PM, LE, HL majors. Depends on 1 and 3.
-- Pinned top strip (sticky under the app header, ~92 px): label `朋友說 Your friend says:`; line 2 large: the targets' pinyin with tone marks joined by ` · `, size in parentheses `(xiǎo)` / `(dà)`; line 3 small grey: English glosses joined by ` · `, `(small)` / `(large)`; line 4: timer bar + seconds, bar turns amber under 5 s. No Chinese characters for ordered items anywhere in the strip.
+
+- Pinned top strip (sticky under the app header, ~92 px): label `朋友說 Your friend says:`; line 2 large: the targets' pinyin with tone marks joined by `·`, size in parentheses `(xiǎo)` / `(dà)`; line 3 small grey: English glosses joined by `·`, `(small)` / `(large)`; line 4: timer bar + seconds, bar turns amber under 5 s. No Chinese characters for ordered items anywhere in the strip.
 - Pinned bottom bar: `Ticked 已點 2 / 3` + `Submit order 送單`. Submit enabled at 0 ticks (submitting nothing is a valid wrong answer).
 - Slip rows show characters only until grading. After grading every row becomes tappable and expands one line: pinyin + gloss (deck cards from the card; filler rows from the bundled filler table, which must carry `pinyin` and `gloss`), plus `+ Add to deck 加入詞彙` on filler rows not in the deck (creates a food card with pinyin, definition, tag `小吃店`, no sentence).
 - Copy at the top of the screen: `Order Slip 點菜單 — tick what your friend ordered before the timer runs out.`
 - Timer stays 20 s (a constant); grading is per target as today (item 8 defines the FSRS effect).
 
 ### 5. Reveal panel: sentence pinyin behind a tap, target highlight, chip moved, per-character tap — M
+
 Addresses A5, B8, B10; LE major, HL major, LE character-level.
+
 - Prompt face: no domain chip; a small state chip instead (`New 新` for New, `Relearning 重學` for Relearning, none otherwise). Copy under the glyphs: `Say it in your head, then tap anywhere to check 先在心裡唸出來，再點一下看答案`; the whole area below the header is the tap target (merge the second card into the prompt card).
 - Answer panel order: pinyin (large) → definition → `也寫作 …` (if any) → `notes` (if any) → domain chip (small) → divider → `例句 Example` → sentence in characters with every occurrence of traditional or a variant highlighted (reuse the green underline from screen 13) → English translation → pill `拼音 Reading` that reveals the sentence pinyin inline (grey); state resets on every card; no delay-based auto-reveal for the sentence.
 - Per-character tap (after reveal only): each headword glyph is a button; tapping opens a popover under the card: `滷 lǔ · brine, braise · also in 滷蛋、滷味`. Reading = the card's pinyin split on whitespace when token count equals character count, else omitted; gloss from charInfo when present, else omitted; "also in" = up to 4 other deck cards whose traditional or variants contain the character. Tap again or tap elsewhere to close.
 
 ### 6. Shared feedback card with character-level contrast + charInfo table — M
+
 Addresses A6, A16 copy, B5 copy; PM, LE, HL majors.
+
 - Bundled `charInfo.ts`: `Record<string, { pinyin: string; gloss: string; tell?: string }>` covering every character in starter headwords and every character that appears in a starter foil but not in its headword (~250 entries). Author `tell` for at least: 內/肉 "肉 has two 人 stacked inside; 內 has one 入"; 師/帥 "師 has the extra 𠂤 on the left; 帥 is bare"; 牧/收/枚 "牧 starts with 牛, 收 with 丩, 枚 with 木"; 藉/借 "藉 wears 艹 over 耒; 借 is 亻+ 昔"; 己/已/巳 "the left gap closes: 己 open, 已 half, 巳 shut"; 未/末 "未 short top stroke, 末 long"; 燥/躁 "火 dry vs 足 restless"; 旦/蛋 "蛋 has 疋 on top"; 面/麵 "麵 has 麥 on the left"; 滷/鹵 "滷 adds 氵"; 煎/炸 "煎 has 灬 underneath; 炸 has 火 beside 乍"; 飯/販 "食 to eat vs 貝 to sell".
 - One `FeedbackCard` used by foil drill and cloze (slip keeps its checklist but shares rows 1 and 5):
   1. Verdict: correct → rotating `答對了！ Correct` / `就是這個！` / `讚！`; wrong → `不對 — 答案是 滷肉飯` (`Not this one — the answer is …`).
@@ -136,7 +149,9 @@ Addresses A6, A16 copy, B5 copy; PM, LE, HL majors.
 - Log `chosen` (the picked string) on every drill answer so leech remediation (D) has data.
 
 ### 7. Cloze that requires reading the sentence — M
+
 Addresses A7, B4; PM minor, LE major, HL nits.
+
 - Options: correct + 2 same-domain deck words (not present in the sentence, not variants of anything on screen) + 1 visual foil of the correct word; 3 deck words if the card has no foils; fill from all domains when the domain has < 3 other cards (custom). Shuffle; drop the A–D letters (the foil drill has none).
 - Blank: `＿` repeated `traditional.length` times, inline, no spaces before or after; the filled answer renders inline (fixes "牧師 和師母").
 - Mid-session drill selection: prefer a learning card not shown in the last 3 positions; if none, run the foil drill instead of a cloze on a just-seen sentence.
@@ -145,21 +160,27 @@ Addresses A7, B4; PM minor, LE major, HL nits.
 - Drills-tab description: `Read the sentence and pick the word that fits.`
 
 ### 8. Drill → FSRS mapping and lapse rule — S
+
 Addresses A16, B5.
+
 - `rateFromDrill(card, correct)`: wrong → Again; correct and state ∈ {New, Learning, Relearning} → Good; correct and Review → no rating. Review-log gains `source: 'session' | 'drill:foil' | 'drill:cloze' | 'drill:slip'` and `applied: 'again' | 'good' | 'none'`; `applied: 'none'` entries count toward answers today but not toward retention or Reviews.
 - Slip: per target — ticked with the right size → correct; missed, wrong row, or wrong size → wrong; extra ticks on rows that are not a target's foil affect the verdict only.
 - Verify leech = `card.lapses ≥ threshold` where lapses increment only on Again for a Review-state card (if the count is derived from logs, filter to logs whose pre-state was Review).
 - Drills tab subtitle: `Extra practice 額外練習 — a miss brings the word back sooner; a hit only moves words you're still learning.`
 
 ### 9. Rating rubric, coach strip, duplicate-interval labels, latency logging — S
+
 Addresses A8, B7, B15.
+
 - Above the buttons: `How well did you read it? 讀得如何？` with the reveal latency small grey at the right (`4.2 s`) and a `?` that opens the rubric.
 - Coach strip (first three reveals ever, `ratingCoachSeen` counter in settings, dismissable ✕): `Again = it didn't come · Hard = slow, or only part of it · Good = sound and meaning came · Easy = instant, like a chat message`.
 - When two adjacent buttons format to the same interval, the lower one shows words instead: Again → `relearn now 重來`, Hard → `again soon 稍後`, Good → `later 稍後`; Easy always keeps its interval.
 - Log `revealMs` (card shown → tap) and `rateMs` (tap → rating) on session answers. No minimum dwell.
 
 ### 10. Session summary that closes the loop + all-done dashboard — M
+
 Addresses A13, A10 (summary tiles); PM major, LE minor, HL minor.
+
 - Variant A (queue empty for today): title `Done for today 今天練完了`, subtitle rotating `讚啦！` / `太強了！` / `辛苦了！`. Variant B (due or new cards remain): title `Good stop 先到這裡`, subtitle `5 new words still available today`, primary `Continue (≈ 4 min) 繼續`, secondary `Done for today 今天先這樣`.
 - Tiles: `Words 5` · `Answers 7 (incl. repeats)` · `First try 4 of 5` (fraction only; add the % only when ≥ 10) · `Time 3 min` (real active time; `45 s` under a minute).
 - `Look again 再看一次`: cards rated Again/Hard this session as large characters, no pinyin, each tap-to-reveal pinyin + gloss inline, max 8, caption `Read these once more before you go — tap to check.`
@@ -167,7 +188,9 @@ Addresses A13, A10 (summary tiles); PM major, LE minor, HL minor.
 - Dashboard all-done state: CTA becomes outlined `Done for today ✓ 今天完成` with sub `Tomorrow: 5 reviews · ≈ 4 min`; secondary link `Extra practice 額外練習 →` (Drills).
 
 ### 11. One set of numbers, plain language everywhere — M
+
 Addresses A10, A11, B13, B14; PM major, HL minor, LE minor.
+
 - `Recall now 現在記得` = mean retrievability of Review-state cards; the only name for it on dashboard ring and Stats hero; caption `Chance you'd remember a learned word right now`. Hidden (grey ring, `—`, `Shows after 7 study days 練滿 7 天就會出現`) until ≥ 7 distinct study days.
 - `Not-Again rate, 30 days 30 天答對率` in Stats only, shown as `80% · 5 answers`, replaced by `Not enough answers yet` under 10.
 - Today card: `Reviews 0/30` counts due cards answered; `New 5/10`; hide the Reviews row when nothing is due and nothing done; both bars the app green, `✓` at full.
@@ -176,21 +199,27 @@ Addresses A10, A11, B13, B14; PM major, HL minor, LE minor.
 - Editor memory panel for New cards: `Not studied yet 還沒學過`, stability/difficulty rows hidden.
 
 ### 12. First launch that explains the method — S
+
 Addresses A12, B9; PM major, HL minor.
+
 - One-time card above DUE TODAY: `How this works 怎麼用` — `1. You'll see a word in 繁體字. 2. Say it in your head — sound and meaning. 3. Tap to check. Pinyin stays hidden until then, on purpose.` Button `Got it 知道了` (persisted).
 - Install row under YOUR DECK, dismissable: `📲 Add to Home Screen — opens full-screen and keeps your progress safe · How`; "How" opens a sheet with iOS/Android steps; on Android use `beforeinstallprompt` to show `Install` instead of `How`.
 - Service-worker ready → 3-second buttonless snackbar `Ready to use offline ✓`, once.
 - Streak chip before day 1: `🔥 Start your streak`; `🔥 Day N` after.
 
 ### 13. Slang deck audit and relabel — M (content)
+
 Addresses HL major, B11, B12.
+
 - Label `Slang 網路用語` in dashboard chips, filters, editor select, Settings, Stats, Drills (key `slang` unchanged); description `PTT / Dcard / LINE talk and everyday chat`.
 - Replace 劇透 with 爆雷 (bào léi, "spoil / spoiler — online you'll also see the China term 劇透") and add 有雷 (yǒu léi, "contains spoilers (warning tag)"); delete the 劇透 card.
 - Add three Zhuyin-as-slang cards: ㄏㄏ (hē hē, sarcastic "heh"), ㄎㄎ (kē kē, giggle), 頗ㄏ (pǒ hē, "that's a laugh"); foils are other Zhuyin pairs (ㄑㄑ, ㄈㄈ, ㄏㄎ); PTT-style example sentences.
 - Check all 22 against current Taiwan usage; ensure 母湯, 是在哈囉, 87, 傻眼貓咪, 北七, 笑死, 4ni are present; keep the domain at 22 by swapping out anything that is 中國用語 or not internet usage (except 藉口, retagged per B12). Anime cards untouched.
 
 ### 14. Slips that look and read like real shops — M
+
 Addresses B6; HL major, PM (length).
+
 - Three bundled templates, ≤ 14 rows, 3–4 sections, filler rows with `pinyin` + `gloss`:
   - 小吃店 (阿婆小吃店): 飯類 (小/大), 麵類 (小/大), 湯類 (貢丸湯, 蛋花湯, 味噌湯, 餛飩湯, 魚丸湯), 小菜 (嘴邊肉, 滷蛋, 皮蛋豆腐, 燙青菜, 滷豆干, 海帶).
   - 早餐店 (美而美早餐): 蛋餅類 (蛋餅, 起司蛋餅, 玉米蛋餅, 鮪魚蛋餅), 吐司／漢堡 (火腿蛋吐司, 培根蛋吐司, 豬排漢堡), 其他 (蘿蔔糕, 鐵板麵, 薯餅), 飲料 (豆漿, 米漿, 紅茶, 奶茶) with 冰/熱 columns.
@@ -201,25 +230,33 @@ Addresses B6; HL major, PM (length).
 - 桌號 random 1–12; 老闆 reply rotates `好～馬上來！` / `好喔，等一下` / `來，{n} 號桌！`; wrong order: `老闆娘：欸，你是不是點錯了？`.
 
 ### 15. One name per drill, one exit, one progress format, thumb-zone layout — S/M
+
 Addresses A14, HL thumb-zone; PM minor.
+
 - Names used in tab card, kicker and header: `Order Slip 點菜單` · `Fill the Blank 填空` · `Spot the Character 辨字`. Descriptions: Order Slip `Your friend orders out loud — tick it on the slip in 20 seconds.`; Spot the Character `Hear the word, find the right shape among look-alikes.`
 - Domain select full width, `All domains 全部`.
 - One exit control top-right: `End session 結束` in sessions, `End 結束` in drills; remove `← Back`. Progress: `Card 3 of 10` (denominator grows with repeats) / `2 of 5` in drills; remove `0 answered · 9 left` and `2 left after this`.
 - Tile grid + Continue anchored to the bottom (`margin-top: auto`, safe-area padding); cue/sentence sits above. Continue hidden until an answer exists (no disabled pink state).
 
 ### 16. Taiwan voice — S
+
 Addresses HL minor.
+
 - Rotation sets (Chinese large, English small): session end `讚啦！` / `太強了！` / `辛苦了！` / `今天練完了！`; correct `答對了！` / `就是這個！` / `讚！`; wrong `不對喔` / `差一點` / `再看一次`; slip replies per item 14.
 - Example sentence for 滷肉飯: `老闆，滷肉飯大碗一碗，加一顆滷蛋。` (target still present for cloze). Other sentence tune-ups happen inside the slang audit (13).
 
 ### 17. Vocab tab: learner jobs first — S
+
 Addresses A15; PM minor, HL nit.
+
 - Order: title + `+ Add`, search, domain filters, sort (`Due · Newest · A–Z · Domain`, default Due), list. Import / Export JSON / Export CSV / Restore starter deck move to a `⋯` menu.
 - `Restore starter deck (adds N missing cards)` with live N (matches on traditional or variants); disabled with `(all 88 present)` at 0; never overwrites.
 - Rows: definition wraps to two lines; domain pill → 8-px coloured dot before the state text; `也寫作 …` sub-line when present. `Show pinyin` stays off by default.
 
 ### 18. Data safety: destructive actions and backup age — S
+
 Addresses PM minor.
+
 - Editor: `Delete card 刪除` becomes a red text link at the bottom; confirm sheet `Delete 本命 and its review history? 刪除後無法復原` with `Delete` / `Cancel`.
 - Settings: `Reset all data` outlined danger; confirm names the loss `This removes 88 cards and 132 answers.`
 - `Last backup: never / 12 days ago 上次備份` next to Export; set `lastBackupAt` on export. Dashboard row after 14 study days without a backup: `Back up your progress — 14 days since last backup · Export` (dismiss snoozes 7 days).

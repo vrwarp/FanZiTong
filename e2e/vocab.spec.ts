@@ -72,7 +72,7 @@ test.describe('Vocab tab: import, export, edit (Journey 2, AC-3)', () => {
     const csv = await readFile((await csvDownload.path())!, 'utf8');
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv.slice(1).split('\n')[0]).toBe(
-      'traditional,pinyin,definition,domain,tags,example_sentence,foils,example_pinyin,example_translation,variants,spoken,variant_note,cloze_distractors',
+      'traditional,pinyin,definition,domain,tags,example_sentence,foils,example_pinyin,example_translation,variants,spoken,variant_note,cloze_distractors,notes',
     );
     expect(csv).toContain('滷肉飯,lǔ ròu fàn,');
     expect(csv).toContain('團契,tuán qì,');

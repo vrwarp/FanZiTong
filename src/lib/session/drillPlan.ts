@@ -1,6 +1,6 @@
 import { buildClozeExercise } from '@/lib/exercises/cloze';
 import { buildFoilExercise } from '@/lib/exercises/foil';
-import { buildMenuExercise, MENU_MAX_TARGETS } from '@/lib/exercises/menu';
+import { buildMenuExercise, companionsFor, groupCardsByShop } from '@/lib/exercises/menu';
 import { hasClozeSentence, isActiveDomain, isDrillCandidate } from '@/lib/queue/session';
 import { shuffle, type Rng } from '@/lib/util/random';
 import {
@@ -84,11 +84,10 @@ export function buildDrillExercises(
 ): DrillExercise[] {
   const exercises: DrillExercise[] = [];
   if (type === 'realia_menu') {
-    for (let i = 0; i < selected.length; i += MENU_MAX_TARGETS) {
-      const group = selected.slice(i, i + MENU_MAX_TARGETS);
-      // Pad a lonely last group with another food card so the slip stays realistic.
+    for (const group of groupCardsByShop(selected, rng)) {
+      // Pad a lonely group with another dish the same shop sells, so the slip stays realistic.
       if (group.length < 2) {
-        const extra = pool.find((c) => c.domain === 'food' && !group.some((g) => g.id === c.id));
+        const extra = companionsFor(group[0], pool).find((c) => !selected.includes(c));
         if (extra) group.push(extra);
       }
       const ex = buildMenuExercise(group, rng);

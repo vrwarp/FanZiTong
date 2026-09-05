@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { DailyChart } from '@/components/stats/DailyChart';
@@ -13,7 +13,9 @@ import { useNow } from '@/hooks/useNow';
 import { useSettings } from '@/hooks/useSettings';
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import {
+  RECALL_MIN_STUDY_DAYS,
   averageRetrievability,
+  countStudyDays,
   dailySeries,
   domainMastery,
   findLeeches,
@@ -42,6 +44,7 @@ export default function StatsPage() {
     );
     return {
       recallDataReady: ready,
+      studyDays: countStudyDays(logs),
       retrievability: ready ? averageRetrievability(scheduler, cards, now) : null,
       answers30: logs30.length,
       retention30: retentionRate(logs30),
@@ -67,6 +70,11 @@ export default function StatsPage() {
             Probability you can recall a reviewed card right now. Target{' '}
             {Math.round(settings.targetRetention * 100)}%.
           </p>
+          {!model.recallDataReady && (
+            <p className="text-stone-500 dark:text-stone-400" data-testid="stats-recall-empty">
+              Shows after {RECALL_MIN_STUDY_DAYS} study days · {model.studyDays} so far
+            </p>
+          )}
           <p className="mt-2 font-bold">Not-&quot;Again&quot; rate, 30 days</p>
           <p className="text-stone-500 dark:text-stone-400" data-testid="retention-30">
             {model.retention30 === null
@@ -206,6 +214,7 @@ export default function StatsPage() {
  * look-alikes it is confused with.
  */
 function LeechRow({ card }: { card: VocabCard }) {
+  const [showReading, setShowReading] = useState(false);
   const chars = hanChars(card.traditional);
   const syllables = syllablesPerCharacter(card.traditional, card.pinyin);
   const variants = (card.variants ?? []).filter(Boolean);
@@ -217,10 +226,18 @@ function LeechRow({ card }: { card: VocabCard }) {
         <Link to={`/vocab/${card.id}`} className="flex min-w-0 flex-1 items-center gap-3">
           <Hanzi className="text-2xl font-bold text-red-600">{card.traditional}</Hanzi>
           <span className="min-w-0 flex-1">
-            <span className="block text-xs text-stone-500">{card.spoken ?? card.pinyin}</span>
-            <span className="block truncate text-sm">{card.definition}</span>
+            <span className="block text-sm">{card.definition}</span>
           </span>
         </Link>
+        <button
+          type="button"
+          onClick={() => setShowReading((v) => !v)}
+          className="shrink-0 rounded-full border border-stone-300 px-2 py-0.5 text-xs font-semibold text-stone-600 dark:border-stone-600 dark:text-stone-300"
+          aria-expanded={showReading}
+          data-testid="leech-reading"
+        >
+          {showReading ? (card.spoken ?? card.pinyin) : 'reading'}
+        </button>
         <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
           forgotten {card.fsrs.lapses}×
         </span>

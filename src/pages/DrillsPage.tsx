@@ -17,8 +17,7 @@ const DRILLS: { type: DrillType; icon: string; description: string; foodOnly?: b
   {
     type: 'cloze',
     icon: '✍️',
-    description:
-      'Read a real sentence and pick the word that fits — your ear for grammar rules out the rest.',
+    description: 'Read a real sentence and pick the word that fits.',
   },
   {
     type: 'foil_discrimination',
@@ -38,7 +37,7 @@ export default function DrillsPage() {
       <PageHeader
         title="Drills"
         zh="練習"
-        subtitle="Extra practice. A miss brings the word back sooner; a hit only speeds up words you are still learning."
+        subtitle="Extra practice. A miss brings the word back sooner; a hit only speeds up words not yet in review."
       />
 
       <div className="card-surface grid grid-cols-2 gap-3 p-4">
@@ -93,7 +92,7 @@ export default function DrillsPage() {
                 <p className="text-sm text-stone-600 dark:text-stone-300">{drill.description}</p>
                 {drill.foodOnly && (
                   <p className="text-xs text-stone-500 dark:text-stone-400">
-                    Uses food words only.
+                    Food words only · each slip asks for up to 3 dishes.
                   </p>
                 )}
                 <Button

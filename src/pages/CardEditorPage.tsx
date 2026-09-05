@@ -34,6 +34,7 @@ interface FormState {
   variants: string;
   spoken: string;
   variantNote: string;
+  notes: string;
   clozeDistractors: string;
 }
 
@@ -50,6 +51,7 @@ const EMPTY_FORM: FormState = {
   variants: '',
   spoken: '',
   variantNote: '',
+  notes: '',
   clozeDistractors: '',
 };
 
@@ -67,6 +69,7 @@ function toForm(card: VocabCard): FormState {
     variants: (card.variants ?? []).join(' | '),
     spoken: card.spoken ?? '',
     variantNote: card.variantNote ?? '',
+    notes: card.notes ?? '',
     clozeDistractors: (card.clozeDistractors ?? []).join(' | '),
   };
 }
@@ -148,6 +151,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     card.variants = variants.length ? variants : undefined;
     card.spoken = form.spoken.trim() || undefined;
     card.variantNote = form.variantNote.trim() || undefined;
+    card.notes = form.notes.trim() || undefined;
     const clozeDistractors = splitList(form.clozeDistractors);
     card.clozeDistractors = clozeDistractors.length ? clozeDistractors : undefined;
     // A foil must be unambiguously wrong: never a real spelling of this or another word.
@@ -337,6 +341,19 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
         />
       </Field>
       <Field
+        label="Note 備註"
+        htmlFor="notes"
+        hint="A usage note or mnemonic, shown after the reveal (e.g. “spells the sound of Taiwanese 毋通”)."
+      >
+        <textarea
+          id="notes"
+          className={`${inputClass} min-h-16`}
+          value={form.notes}
+          onChange={set('notes')}
+          data-testid="field-notes"
+        />
+      </Field>
+      <Field
         label="Fill-the-blank distractors 填空干擾詞"
         htmlFor="clozeDistractors"
         hint="Readable words that must NOT fit the example sentence, separated with |. Optional; other domains are used otherwise."
@@ -377,7 +394,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
                 <dd>{existing.fsrs.stability.toFixed(2)} days</dd>
                 <dt>Difficulty</dt>
                 <dd>{existing.fsrs.difficulty.toFixed(2)} / 10</dd>
-                <dt>Reviews / forgotten</dt>
+                <dt>Reviews / forgotten (after learning)</dt>
                 <dd>
                   {existing.fsrs.reps} / {existing.fsrs.lapses}
                 </dd>

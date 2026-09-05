@@ -19,6 +19,7 @@ export const CSV_HEADERS = [
   'spoken',
   'variant_note',
   'cloze_distractors',
+  'notes',
 ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
@@ -63,6 +64,8 @@ const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
   variant_note: 'variant_note',
   cloze_distractors: 'cloze_distractors',
   distractors: 'cloze_distractors',
+  notes: 'notes',
+  note: 'notes',
 };
 
 const BOM = '\uFEFF';
@@ -143,6 +146,8 @@ export function parseCsv(text: string): ParseResult {
     if (spoken) row.spoken = spoken;
     const variantNote = (record.variant_note ?? '').trim();
     if (variantNote) row.variantNote = variantNote;
+    const notes = (record.notes ?? '').trim();
+    if (notes) row.notes = notes;
     const sentence = (record.example_sentence ?? '').trim();
     if (sentence) row.exampleSentenceTraditional = sentence;
     const sentencePinyin = (record.example_pinyin ?? '').trim();
@@ -171,6 +176,7 @@ export function toCsv(cards: VocabCard[]): string {
     spoken: c.spoken ?? '',
     variant_note: c.variantNote ?? '',
     cloze_distractors: (c.clozeDistractors ?? []).join('|'),
+    notes: c.notes ?? '',
   }));
   const body = Papa.unparse(
     { fields: [...CSV_HEADERS], data: data.map((d) => CSV_HEADERS.map((h) => d[h])) },

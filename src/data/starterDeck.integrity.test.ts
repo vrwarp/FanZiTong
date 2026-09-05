@@ -1,6 +1,8 @@
 import { buildStarterDeck } from './starterDeck';
 import { charInfo } from './charInfo';
-import { MENU_CATEGORIES, categorizeDish } from './menuTemplate';
+import { MENU_CATEGORIES, categorizeDish, shopsFor } from './menuTemplate';
+import { MENU_MAX_ROWS, buildMenuExercise, groupCardsByShop } from '@/lib/exercises/menu';
+import { mulberry32 } from '@/lib/util/random';
 import { expandFoil, diffCharacters } from '@/lib/exercises/foil';
 import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
 
@@ -56,6 +58,57 @@ describe('starter deck integrity', () => {
       }
     }
     expect(Array.from(missing).sort()).toEqual([]);
+  });
+
+  it('never ships a foil that renders as its headword or a variant', () => {
+    const invisible = (a: string, b: string) => {
+      const x = Array.from(a.normalize('NFC'));
+      const y = Array.from(b.normalize('NFC'));
+      if (x.length !== y.length) return false;
+      return x.every((ch, i) => ch === y[i] || new Set(['口囗', '囗口']).has(ch + y[i]));
+    };
+    const offenders: string[] = [];
+    for (const card of deck) {
+      const real = [card.traditional, ...(card.variants ?? [])];
+      for (const foil of card.visualFoils ?? []) {
+        const expanded = expandFoil(card.traditional, foil) ?? foil;
+        if (real.some((r) => invisible(expanded, r)))
+          offenders.push(`${card.traditional}: ${foil}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('uses one romanisation for as-heard readings (Tâi-lô, never POJ ch-)', () => {
+    const offenders = deck
+      .filter((c) => c.spoken && /ch/.test(c.spoken))
+      .map((c) => `${c.traditional}: ${c.spoken}`);
+    expect(offenders).toEqual([]);
+  });
+
+  it('prints a same-section neighbour for every food word it can order', () => {
+    const food = deck.filter((c) => c.domain === 'food');
+    const missing: string[] = [];
+    for (const card of food) {
+      const ex = buildMenuExercise([card], mulberry32(3));
+      if (!ex) continue;
+      const items = ex.categories.flatMap((c) => c.items);
+      if (!items.some((i) => i.neighbourOf === card.id)) missing.push(card.traditional);
+      expect(items.length).toBeLessThanOrEqual(MENU_MAX_ROWS);
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('groups slip orders by the shop that sells them', () => {
+    const food = deck.filter((c) => c.domain === 'food');
+    for (const group of groupCardsByShop(food, mulberry32(5))) {
+      const shops = group.map((c) => shopsFor(categorizeDish(c.traditional)));
+      const common = shops.reduce((acc, list) => acc.filter((s) => list.includes(s)));
+      expect(common.length).toBeGreaterThan(0);
+      expect(group.length).toBeLessThanOrEqual(3);
+      const ex = buildMenuExercise(group, mulberry32(5))!;
+      expect(common).toContain(ex.shop.type);
+    }
   });
 
   it('keeps readings out of definitions', () => {

@@ -54,11 +54,11 @@ const LEECH_BACKUP = JSON.stringify({
     {
       traditional: '藉口',
       pinyin: 'jiè kǒu',
-      definition: 'Excuse (Taiwan standard form)',
+      definition: 'Excuse, pretext',
       domain: 'slang',
       tags: ['colloquial'],
       exampleSentenceTraditional: '他每次遲到都有一堆藉口。',
-      visualFoils: ['籍口', '耤口', '藉囗'],
+      visualFoils: ['籍口', '耤口', '蓆口'],
       fsrs: {
         due: new Date(now.getTime() - 3_600_000).toISOString(),
         stability: 2.5,
@@ -131,9 +131,16 @@ await step('session', async () => {
   await tid('start-session').click();
   await tid('recognition-prompt').waitFor();
   await shot('02-study-prompt-hidden');
+  await page.waitForTimeout(1800); // read the word the way a person would
   await tid('recognition-prompt').click();
   await tid('pinyin').waitFor();
   await shot('03-study-revealed');
+  // The character layer: a tapped chip lists its other words and underlines it in the sentence;
+  // a tapped sentence word shows only its own reading.
+  await tid('character-chip').nth(1).click();
+  await tid('sentence-word').first().click();
+  await page.waitForTimeout(200);
+  await shot('03b-study-revealed-chip-and-word');
   await tid('rate-1').click();
   let drills = 0;
   for (let i = 0; i < 12 && drills < 1; i += 1) {
@@ -202,9 +209,14 @@ await step('menu drill', async () => {
   await shot('11-drill-menu-result', { fullPage: true });
 });
 await step('menu drill, wrong size', async () => {
-  await page.goto(`${base}/drills/realia_menu?count=3`);
-  await tid('menu-exercise').waitFor();
-  const keys = ((await tid('menu-exercise').getAttribute('data-target-keys')) ?? '').split(',');
+  // Only rice and noodle dishes come in sizes: reload until one is ordered.
+  let keys = [];
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    await page.goto(`${base}/drills/realia_menu?count=3`);
+    await tid('menu-exercise').waitFor();
+    keys = ((await tid('menu-exercise').getAttribute('data-target-keys')) ?? '').split(',');
+    if (keys.some((k) => k.includes(':'))) break;
+  }
   const sized = keys.find((k) => k.includes(':'));
   for (const key of keys) {
     const other = key === sized ? key.replace(/:小$/, ':大').replace(/:大$/, ':小') : key;
@@ -218,7 +230,7 @@ await step('menu drill, wrong size', async () => {
 
 // 12-14. Foil discrimination: wrong pick, the contrast, the corrective retry
 await step('foil drill', async () => {
-  await page.goto(`${base}/drills/foil_discrimination?count=3`);
+  await page.goto(`${base}/drills/foil_discrimination?count=5`);
   await tid('foil-exercise').waitFor();
   await shot('12-drill-foil');
   await page.locator('[data-testid="foil-option"][data-correct="false"]').first().click();
@@ -230,7 +242,7 @@ await step('foil drill', async () => {
 
 // 15-17. Cloze: prompt, a misread deck word, then the right answer
 await step('cloze drill', async () => {
-  await page.goto(`${base}/drills/cloze?count=3&domain=church`);
+  await page.goto(`${base}/drills/cloze?count=5&domain=church`);
   await tid('cloze-exercise').waitFor();
   await shot('15-drill-cloze');
   const misread = page.locator(
@@ -282,6 +294,12 @@ await step('stats', async () => {
   await tid('stat-cards').waitFor();
   await shot('21-stats', { fullPage: true });
 });
+await step('leech foil drill', async () => {
+  await page.goto(`${base}/stats`);
+  await tid('leech-practice').first().click();
+  await tid('foil-exercise').waitFor();
+  await shot('21c-drill-foil-leech');
+});
 await step('spoken reveal', async () => {
   await page.goto(`${base}/study`);
   await tid('recognition-prompt').waitFor();
@@ -301,6 +319,7 @@ await step('dark', async () => {
   await tid('theme-dark').click();
   await page.waitForFunction(() => document.documentElement.classList.contains('dark'));
   await page.waitForTimeout(600); // let the IndexedDB write land before navigating
+  await shot('22b-settings-dark-selected');
   await page.goto(base);
   await tid('start-session').waitFor();
   await shot('23-learn-dark');

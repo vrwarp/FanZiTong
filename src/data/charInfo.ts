@@ -277,7 +277,15 @@ export const CHAR_INFO: Record<string, CharInfo> = {
   歌: { pinyin: 'gē', gloss: 'song', tell: '歌 = 哥 + 欠' },
   欹: { pinyin: 'qī', gloss: 'to lean, tilt', tell: '欹 has 奇 on the left; 歌 has 哥' },
   續: { pinyin: 'xù', gloss: 'to continue', tell: '續 has 賣 on the right; 讀 has 言 on the left' },
-  正: { pinyin: 'zhèng', gloss: 'correct, upright', tell: '正 is five strokes; 證 is 言 + 登' },
+  正: {
+    pinyin: 'zhèng',
+    gloss: 'correct, upright',
+    tell: '正 sounds exactly like 證 — only the 言 tells them apart; a testimony is something said',
+  },
+  蓆: { pinyin: 'xí', gloss: 'mat', tell: '蓆 has 席 under 艹; 藉 has 耤 (耒 + 昔)' },
+  腿: { pinyin: 'tuǐ', gloss: 'leg', tell: '腿 = 月 + 退' },
+  素: { pinyin: 'sù', gloss: 'plain; vegetarian', tell: '素 is 龶 over 糸' },
+  食: { pinyin: 'shí', gloss: 'food; to eat', tell: '食 is the food radical on its own' },
   建: { pinyin: 'jiàn', gloss: 'to build', tell: '建 has 廴; 見 is 目 over 儿' },
   誑: { pinyin: 'kuáng', gloss: 'to deceive', tell: '誑 has 狂 on the right; 證 has 登' },
   先: { pinyin: 'xiān', gloss: 'first', tell: '先 lacks the 氵 that 洗 has' },
@@ -630,6 +638,12 @@ export const CHAR_INFO: Record<string, CharInfo> = {
   桃: { pinyin: 'táo', gloss: 'peach', tell: '桃 = 木 + 兆' },
   汁: { pinyin: 'zhī', gloss: 'juice', tell: '汁 = 氵 + 十' },
   鮮: { pinyin: 'xiān', gloss: 'fresh; (鮮奶) fresh milk', tell: '鮮 = 魚 + 羊' },
+  拌: { pinyin: 'bàn', gloss: 'to toss, to mix', tell: '拌 = 扌 + 半' },
+  水: { pinyin: 'shuǐ', gloss: 'water', tell: '水 is the water pictograph' },
+  粥: { pinyin: 'zhōu', gloss: 'congee', tell: '粥 is 米 between two 弓' },
+  粽: { pinyin: 'zòng', gloss: 'rice dumpling (in bamboo leaves)', tell: '粽 = 米 + 宗' },
+  芋: { pinyin: 'yù', gloss: 'taro', tell: '芋 = 艹 + 于' },
+  頭: { pinyin: 'tóu', gloss: 'head', tell: '頭 = 豆 + 頁' },
 };
 
 export function charInfo(ch: string): CharInfo | undefined {

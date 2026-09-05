@@ -31,13 +31,13 @@ export function DomainMasteryBars({
                 <span lang="zh-Hant-TW">{DOMAIN_LABELS[m.domain].zh}</span>
               </span>
               <span className="text-xs text-stone-500 dark:text-stone-400">
-                {learning} learning · {solid} solid · {notStarted} not started
+                {learning} started · {solid} solid · {notStarted} not started
               </span>
             </div>
             <div
               className="mt-1 flex h-2.5 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700"
               role="img"
-              aria-label={`${DOMAIN_LABELS[m.domain].en}: ${learning} learning, ${solid} solid, ${notStarted} not started`}
+              aria-label={`${DOMAIN_LABELS[m.domain].en}: ${learning} started, ${solid} solid, ${notStarted} not started`}
             >
               <div className="bg-jade-500" style={{ width: pct(solid) }} />
               <div className="bg-amber-brand" style={{ width: pct(learning) }} />

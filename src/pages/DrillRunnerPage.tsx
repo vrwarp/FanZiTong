@@ -15,6 +15,7 @@ import {
   selectDrillCards,
   type DrillType,
 } from '@/lib/session/drillPlan';
+import { MENU_MAX_TARGETS } from '@/lib/exercises/menu';
 import { StudyEngine } from '@/lib/session/engine';
 import { computeStreak } from '@/lib/stats/analytics';
 import {
@@ -89,9 +90,12 @@ function DrillSession({
 }) {
   const navigate = useNavigate();
   const [engine] = useState<StudyEngine | null>(() => {
+    // For the Order Slip a "question" is one slip of up to three dishes.
+    const cardCount =
+      drillType === 'realia_menu' ? Math.min(30, options.count * MENU_MAX_TARGETS) : options.count;
     const selected = selectDrillCards(initialCards, settings, {
       type: drillType,
-      count: options.count,
+      count: cardCount,
       now: new Date(),
       domain: options.domain,
       onlyIds: options.onlyIds,
@@ -154,8 +158,17 @@ function DrillSession({
           End
         </Button>
       </div>
+      {snapshot.requeued > 0 && (
+        <p
+          className="-mt-2 text-xs text-stone-500 dark:text-stone-400"
+          data-testid="drill-requeue-note"
+        >
+          A missed word comes back before the end. <span lang="zh-Hant-TW">等一下會再考一次</span>
+        </p>
+      )}
       {snapshot.step?.kind === 'drill' && (
         <DrillStep
+          key={`drill-${snapshot.drillIndex}`}
           exercise={snapshot.step.exercise}
           getCard={(id) => engine.getCard(id)}
           onComplete={api.answerDrill}

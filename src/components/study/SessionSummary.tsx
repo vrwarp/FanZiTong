@@ -39,10 +39,12 @@ export function SessionSummary({
   weakCards = [],
   onContinue,
   onDone,
-  doneLabel = 'Done for today',
+  doneLabel,
   title,
 }: SessionSummaryProps) {
   const summary = summarizeResults(results);
+  const cardAnswers = results.filter((r) => r.exerciseType === 'rapid_recognition').length;
+  const drillAnswers = results.length - cardAnswers;
   const [revealed, setRevealed] = useState<Set<string>>(() => new Set());
   const praise = PRAISE[summary.uniqueCards % PRAISE.length];
   const heading = title ?? (mode === 'complete' ? 'Daily goal reached' : 'Paused');
@@ -74,8 +76,9 @@ export function SessionSummary({
       <dl className="grid w-full max-w-sm grid-cols-2 gap-3">
         <Stat label="Words seen" value={String(summary.uniqueCards)} testId="summary-cards" />
         <Stat
-          label="Answers (incl. repeats)"
+          label="Answers"
           value={String(summary.total)}
+          note={`${cardAnswers} card${cardAnswers === 1 ? '' : 's'} · ${drillAnswers} drill item${drillAnswers === 1 ? '' : 's'}`}
           testId="summary-answers"
         />
         <Stat
@@ -145,14 +148,33 @@ export function SessionSummary({
           onClick={onDone}
           data-testid="summary-done"
         >
-          {doneLabel}
+          {doneLabel ??
+            (mode === 'complete' ? (
+              <>
+                Back to Learn <span lang="zh-Hant-TW">回首頁</span>
+              </>
+            ) : (
+              <>
+                Done for today <span lang="zh-Hant-TW">今天先這樣</span>
+              </>
+            ))}
         </Button>
       </div>
     </div>
   );
 }
 
-function Stat({ label, value, testId }: { label: string; value: string; testId: string }) {
+function Stat({
+  label,
+  value,
+  note,
+  testId,
+}: {
+  label: string;
+  value: string;
+  note?: string;
+  testId: string;
+}) {
   return (
     <div className="card-surface px-3 py-3">
       <dt className="text-xs font-semibold text-stone-500 uppercase dark:text-stone-400">
@@ -161,6 +183,7 @@ function Stat({ label, value, testId }: { label: string; value: string; testId: 
       <dd className="text-2xl font-extrabold" data-testid={testId}>
         {value}
       </dd>
+      {note && <dd className="text-[11px] text-stone-500 dark:text-stone-400">{note}</dd>}
     </div>
   );
 }

@@ -276,7 +276,7 @@ export function ClozeExerciseView({ exercise, card, onComplete }: ClozeExerciseV
                 data-foil={isFoil ? 'true' : 'false'}
                 data-kind={isAnswer ? 'answer' : isFoil ? 'foil' : 'word'}
                 className={cn(
-                  'card-surface flex min-h-20 flex-col items-center justify-center gap-0.5 px-3 text-xl font-semibold transition-colors',
+                  'card-surface flex min-h-24 flex-col items-center justify-center gap-0.5 px-3 text-xl font-semibold transition-colors',
                   !inert && !done && 'active:bg-stone-100 dark:active:bg-ink-3',
                   (done || phase === 'gate') && isAnswer && 'border-jade-500 bg-jade-500/15',
                   phase === 'wrong' && isFoil && 'border-red-500 bg-red-500/15',

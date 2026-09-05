@@ -22,6 +22,19 @@ const SPOKEN: Record<string, string> = {
   阿雜: 'a-tsa̍p',
 };
 
+/** Notes shown after the reveal: where a spelling is only a sound, a loan, or an image. */
+const NOTES: Record<string, string> = {
+  母湯: 'Spells the sound of Taiwanese 毋通 m̄-thang, "must not" — the characters are only the sound.',
+  歸剛: 'Spells Taiwanese 規工 kui-kang, "the whole day"; the meme adds 欸 (歸剛欸).',
+  阿雜: 'A Taiwanese word (a-tsa̍p) written with sound-alike characters.',
+  盤子: 'Taiwanese phân-á, "plate": someone easily served up — a sucker.',
+  蛤: 'Just the sound of the Taiwanese "hannh?"; the character means clam.',
+  魯蛇: 'Sound-spelling of English "loser" — 魯 and 蛇 carry no meaning here.',
+  吃土: 'Literally "eating dirt": nothing left to spend on food.',
+  暈船: 'Literally "seasick": unsteady after one date.',
+  爆雷: 'Taiwan says 爆雷／有雷／防雷; 劇透 is the China term you will also see online.',
+};
+
 /** Per-word notes about the accepted spelling variants. */
 const VARIANT_NOTES: Record<string, string> = {
   藉口: '藉口 is the Taiwan standard spelling; 借口 is what most people type online.',
@@ -36,7 +49,7 @@ const FOOD: SeedEntry[] = [
   [
     '滷肉飯',
     'lǔ ròu fàn',
-    'Braised minced pork over rice (Taiwanese staple)',
+    'Braised minced pork over rice',
     'staple|rice|night-market',
     '老闆，滷肉飯大碗一碗，加一顆滷蛋。',
     'Lǎobǎn, lǔròufàn dà wǎn yī wǎn, jiā yī kē lǔdàn.',
@@ -77,7 +90,7 @@ const FOOD: SeedEntry[] = [
   [
     '蛋餅',
     'dàn bǐng',
-    'Egg crepe roll (breakfast-shop staple)',
+    'Egg crepe roll',
     'breakfast',
     '早餐店的蛋餅加起司是我的最愛。',
     "Zǎocāndiàn de dànbǐng jiā qǐsī shì wǒ de zuì'ài.",
@@ -118,7 +131,7 @@ const FOOD: SeedEntry[] = [
   [
     '排骨',
     'pái gǔ',
-    'Pork chop / pork rib (bento classic)',
+    'Pork chop / pork rib',
     'bento|meat',
     '這家的炸排骨又大又香。',
     'Zhè jiā de zhá páigǔ yòu dà yòu xiāng.',
@@ -138,7 +151,7 @@ const FOOD: SeedEntry[] = [
   [
     '地瓜葉',
     'dì guā yè',
-    'Sweet potato leaves (blanched-greens staple)',
+    'Sweet potato leaves',
     'vegetable|greens',
     '燙青菜我要地瓜葉，加一點蒜頭醬油。',
     'Tàng qīngcài wǒ yào dìguāyè, jiā yīdiǎn suàntóu jiàngyóu.',
@@ -179,7 +192,7 @@ const FOOD: SeedEntry[] = [
   [
     '燙青菜',
     'tàng qīng cài',
-    'Blanched greens (menu section)',
+    'Blanched greens',
     'vegetable|greens',
     '老闆，再來一盤燙青菜。',
     'Lǎobǎn, zài lái yī pán tàng qīngcài.',
@@ -518,7 +531,7 @@ const SLANG: SeedEntry[] = [
   [
     '魯蛇',
     'lǔ shé',
-    'Loser (from English "loser")',
+    'Loser',
     'internet',
     '他老是自嘲是一條魯蛇。',
     'Tā lǎoshì zìcháo shì yī tiáo lǔshé.',
@@ -638,7 +651,7 @@ const SLANG: SeedEntry[] = [
   [
     '吃土',
     'chī tǔ',
-    'Broke ("eating dirt")',
+    'Broke, out of money',
     'internet',
     '月底又要吃土了。',
     'Yuèdǐ yòu yào chītǔ le.',
@@ -658,7 +671,7 @@ const SLANG: SeedEntry[] = [
   [
     '暈船',
     'yūn chuán',
-    'To catch feelings fast (dating slang)',
+    'To catch feelings fast',
     'internet',
     '才聊三天就暈船，也太快了吧。',
     'Cái liáo sān tiān jiù yūnchuán, yě tài kuài le ba.',
@@ -693,7 +706,7 @@ const SLANG: SeedEntry[] = [
     '他每次遲到都有一堆藉口。',
     'Tā měi cì chídào dōu yǒu yī duī jièkǒu.',
     "He has a pile of excuses every time he's late.",
-    '籍口|耤口|藉囗',
+    '籍口|耤口|蓆口',
     '借口',
   ],
   [
@@ -942,7 +955,7 @@ const ANIME: SeedEntry[] = [
   [
     '爆雷',
     'bào léi',
-    'To spoil a plot (Taiwan: 有雷／防雷; 劇透 is the China term you will also see online)',
+    'To spoil a plot',
     'acgn|ptt',
     '拜託不要爆雷，我還沒看最後一集！',
     'Bàituō bù yào bàoléi, wǒ hái méi kàn zuìhòu yī jí!',
@@ -1047,6 +1060,7 @@ export function buildStarterDeck(options: BuildStarterDeckOptions = {}): VocabCa
         visualFoils: foils.split('|').filter(Boolean),
         variants: variants ? variants.split('|').filter(Boolean) : undefined,
         variantNote: VARIANT_NOTES[traditional],
+        notes: NOTES[traditional],
         spoken: SPOKEN[traditional],
         fsrs: newFsrsState(now),
         createdAt,

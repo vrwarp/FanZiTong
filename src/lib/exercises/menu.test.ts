@@ -72,7 +72,7 @@ describe('buildMenuExercise', () => {
     const labels = allItems.map((i) => i.label);
     expect(new Set(labels).size).toBe(labels.length);
     for (const category of ex.categories) {
-      expect(category.items.length).toBeGreaterThanOrEqual(3);
+      expect(category.items.length).toBeGreaterThanOrEqual(2);
     }
   });
 

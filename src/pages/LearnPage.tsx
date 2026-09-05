@@ -35,7 +35,6 @@ export default function LearnPage() {
   const resumeCount = pausedQueue.filter((id) => cards.some((c) => c.id === id)).length;
   const doneMeta = useLiveQuery(() => repository.getMeta(META_KEYS.doneForTodayDate), []);
   const markedDone = doneMeta === dayKey(now);
-  const showReviewsBar = model.reviewsToday > 0 || plan.dueReviewCount > 0;
   const lastBackupAt = useLiveQuery(() => repository.getMeta(META_KEYS.lastBackupAt), []);
   const studyDays = countStudyDays(logs);
   const backupAgeDays = lastBackupAt
@@ -156,7 +155,8 @@ export default function LearnPage() {
               className="mt-1 text-sm text-stone-500 dark:text-stone-400"
               data-testid="estimated-time"
             >
-              Paused earlier today — pick up where you stopped.
+              Paused earlier today — pick up where you stopped. ≈{' '}
+              {Math.max(1, Math.round((resumeCount * SECONDS_PER_NEW_CARD) / 60))} min
             </p>
             <Button
               block
@@ -288,7 +288,7 @@ export default function LearnPage() {
 
       <section className="grid grid-cols-2 gap-3">
         <div className="card-surface p-4">
-          <p className="text-xs font-bold text-stone-500 uppercase dark:text-stone-400">Today</p>
+          <p className="text-xs font-bold text-stone-500 uppercase dark:text-stone-400">Progress</p>
           <p className="mt-1 text-sm" data-testid="today-new">
             New {model.newCardsToday}/{settings.maxDailyNewCards}
           </p>
@@ -298,7 +298,7 @@ export default function LearnPage() {
             value={(model.newCardsToday / Math.max(1, settings.maxDailyNewCards)) * 100}
             label="New cards introduced today"
           />
-          {showReviewsBar ? (
+          {plan.dueReviewCount > 0 || (model.reviewsToday > 0 && plan.totalDueCount > 0) ? (
             <>
               <p className="mt-2 text-sm" data-testid="today-reviews">
                 Reviews {model.reviewsToday}/{settings.maxDailyReviews}
@@ -310,6 +310,10 @@ export default function LearnPage() {
                 label="Reviews done today"
               />
             </>
+          ) : model.reviewsToday > 0 ? (
+            <p className="mt-2 text-sm" data-testid="today-reviews">
+              Reviews · {model.reviewsToday} done today
+            </p>
           ) : (
             <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">No reviews due yet.</p>
           )}

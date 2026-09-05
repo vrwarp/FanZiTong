@@ -215,7 +215,11 @@ export function ImportDialog({ source, existing, onClose, onImported }: ImportDi
                             : 'bg-amber-200 text-amber-900',
                         )}
                       >
-                        {row.status === 'new' ? 'new' : 'duplicate'}
+                        {row.status === 'new'
+                          ? 'new'
+                          : row.status === 'duplicate-in-file'
+                            ? 'repeated in file'
+                            : 'already in deck'}
                       </span>
                       {row.messages.length > 0 && (
                         <span className="block text-stone-500" title={row.messages.join(' ')}>

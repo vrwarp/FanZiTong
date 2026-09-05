@@ -7,9 +7,19 @@
  * NT$ prices so reading the slip feels like standing at the counter.
  */
 export type MenuCategoryId =
-  'rice' | 'noodle' | 'soup' | 'greens' | 'side' | 'breakfast' | 'snack' | 'drink';
+  | 'rice'
+  | 'noodle'
+  | 'soup'
+  | 'greens'
+  | 'side'
+  | 'breakfast'
+  | 'snack'
+  | 'drink'
+  | 'bento'
+  /** Not something a slip can order (a sauce, a hot-pot night). */
+  | 'other';
 
-export type ShopType = 'rice-noodle' | 'breakfast' | 'night-market';
+export type ShopType = 'rice-noodle' | 'breakfast' | 'night-market' | 'bento';
 
 export interface MenuFiller {
   label: string;
@@ -36,7 +46,10 @@ export interface ShopTemplate {
   type: ShopType;
   /** Printed at the top of the slip. */
   name: string;
+  /** Sections this shop always prints. */
   categories: MenuCategoryId[];
+  /** Sections it also sells, printed only when a dish from them is ordered. */
+  alsoSells?: MenuCategoryId[];
 }
 
 export const MENU_SIZES = ['小', '大'] as const;
@@ -50,6 +63,7 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     defaultPrice: [35, 50],
     fillers: [
       { label: '雞肉飯', price: [35, 50], pinyin: 'jī ròu fàn', gloss: 'shredded chicken rice' },
+      { label: '地瓜粥', price: [30, 45], pinyin: 'dì guā zhōu', gloss: 'sweet-potato congee' },
       { label: '排骨飯', price: [90, 110], pinyin: 'pái gǔ fàn', gloss: 'pork-chop rice' },
       {
         label: '焢肉飯',
@@ -74,6 +88,7 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: true,
     defaultPrice: [45, 60],
     fillers: [
+      { label: '乾拌麵', price: [40, 55], pinyin: 'gān bàn miàn', gloss: 'dry tossed noodles' },
       { label: '陽春麵', price: [35, 45], pinyin: 'yáng chūn miàn', gloss: 'plain noodle soup' },
       {
         label: '牛肉湯麵',
@@ -165,6 +180,8 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 40,
     fillers: [
+      { label: '鮪魚飯糰', price: 45, pinyin: 'wěi yú fàn tuán', gloss: 'tuna rice roll' },
+      { label: '芋頭糕', price: 35, pinyin: 'yù tóu gāo', gloss: 'taro cake' },
       { label: '鐵板麵', price: 55, pinyin: 'tiě bǎn miàn', gloss: 'iron-plate noodles' },
       { label: '蔥抓餅', price: 35, pinyin: 'cōng zhuā bǐng', gloss: 'scallion pancake' },
       { label: '總匯三明治', price: 55, pinyin: 'zǒng huì sān míng zhì', gloss: 'club sandwich' },
@@ -220,6 +237,11 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
       },
       { label: '鹹酥雞', price: 70, pinyin: 'xián sū jī', gloss: 'popcorn chicken' },
       { label: '蚵嗲', price: 45, pinyin: 'kē diē', gloss: 'oyster fritter', spoken: 'ô-te' },
+      { label: '排骨酥', price: 60, pinyin: 'pái gǔ sū', gloss: 'crispy fried pork ribs' },
+      { label: '雞排', price: 70, pinyin: 'jī pái', gloss: 'fried chicken cutlet' },
+      { label: '鹹水雞', price: 80, pinyin: 'xián shuǐ jī', gloss: 'brined chicken' },
+      { label: '炸豆腐', price: 40, pinyin: 'zhà dòu fǔ', gloss: 'fried tofu' },
+      { label: '肉粽', price: 45, pinyin: 'ròu zòng', gloss: 'pork rice dumpling' },
     ],
   },
   {
@@ -228,14 +250,32 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 30,
     fillers: [
-      { label: '紅茶', price: 20, pinyin: 'hóng chá', gloss: 'black tea' },
+      { label: '紅茶', price: 25, pinyin: 'hóng chá', gloss: 'black tea' },
       { label: '冬瓜茶', price: 25, pinyin: 'dōng guā chá', gloss: 'winter-melon tea' },
       { label: '青草茶', price: 25, pinyin: 'qīng cǎo chá', gloss: 'herbal tea' },
       { label: '楊桃汁', price: 30, pinyin: 'yáng táo zhī', gloss: 'starfruit juice' },
-      { label: '米漿', price: 20, pinyin: 'mǐ jiāng', gloss: 'peanut rice milk' },
-      { label: '鮮奶茶', price: 35, pinyin: 'xiān nǎi chá', gloss: 'fresh milk tea' },
-      { label: '珍珠奶茶', price: 40, pinyin: 'zhēn zhū nǎi chá', gloss: 'bubble milk tea' },
-      { label: '豆漿', price: 20, pinyin: 'dòu jiāng', gloss: 'soy milk' },
+      { label: '米漿', price: 25, pinyin: 'mǐ jiāng', gloss: 'peanut rice milk' },
+      { label: '鮮奶茶', price: 60, pinyin: 'xiān nǎi chá', gloss: 'fresh milk tea' },
+      { label: '珍珠奶茶', price: 55, pinyin: 'zhēn zhū nǎi chá', gloss: 'bubble milk tea' },
+      { label: '豆漿', price: 25, pinyin: 'dòu jiāng', gloss: 'soy milk' },
+    ],
+  },
+  {
+    id: 'bento',
+    name: '便當類',
+    sized: false,
+    defaultPrice: 90,
+    fillers: [
+      { label: '排骨便當', price: 90, pinyin: 'pái gǔ biàn dāng', gloss: 'pork-chop lunchbox' },
+      { label: '雞腿便當', price: 100, pinyin: 'jī tuǐ biàn dāng', gloss: 'chicken-leg lunchbox' },
+      {
+        label: '焢肉便當',
+        price: 95,
+        pinyin: 'kòng ròu biàn dāng',
+        gloss: 'braised pork-belly lunchbox',
+      },
+      { label: '魚排便當', price: 90, pinyin: 'yú pái biàn dāng', gloss: 'fish-fillet lunchbox' },
+      { label: '素食便當', price: 80, pinyin: 'sù shí biàn dāng', gloss: 'vegetarian lunchbox' },
     ],
   },
 ];
@@ -245,6 +285,7 @@ export const SHOP_TEMPLATES: Record<ShopType, ShopTemplate> = {
     type: 'rice-noodle',
     name: '阿婆小吃店',
     categories: ['rice', 'noodle', 'soup', 'side'],
+    alsoSells: ['greens'],
   },
   breakfast: {
     type: 'breakfast',
@@ -256,7 +297,19 @@ export const SHOP_TEMPLATES: Record<ShopType, ShopTemplate> = {
     name: '夜市小吃攤',
     categories: ['snack', 'drink'],
   },
+  bento: {
+    type: 'bento',
+    name: '巷口便當店',
+    categories: ['bento', 'soup', 'drink'],
+  },
 };
+
+/** The shops that sell a category (printed core sections plus the ones they also stock). */
+export function shopsFor(category: MenuCategoryId): ShopType[] {
+  return (Object.values(SHOP_TEMPLATES) as ShopTemplate[])
+    .filter((s) => s.categories.includes(category) || (s.alsoSells ?? []).includes(category))
+    .map((s) => s.type);
+}
 
 export function categoryTemplate(id: MenuCategoryId): MenuCategoryTemplate {
   return MENU_CATEGORIES.find((c) => c.id === id)!;
@@ -267,6 +320,8 @@ const SNACK_RE = /(煎|圓|雞|豆腐|甜不辣|包小腸|粿|嗲|排|串)/;
 
 /** Heuristically place a dish name into a slip category by its characters. */
 export function categorizeDish(name: string): MenuCategoryId {
+  if (/火鍋|醬$/.test(name)) return 'other';
+  if (/便當/.test(name)) return 'bento';
   if (BREAKFAST_RE.test(name)) return 'breakfast';
   if (/[茶漿奶汁]/.test(name)) return 'drink';
   if (/湯$/.test(name)) return 'soup';
@@ -277,21 +332,41 @@ export function categorizeDish(name: string): MenuCategoryId {
   return 'side';
 }
 
-/** Choose the kind of shop that would plausibly print all of these dishes. */
+const SHOP_PRIORITY: ShopType[] = ['rice-noodle', 'breakfast', 'night-market', 'bento'];
+
+/** The shop that sells the most of these dishes (a 滷肉飯 counter first on a tie). */
 export function chooseShopType(categories: MenuCategoryId[]): ShopType {
-  const counts = new Map<MenuCategoryId, number>();
-  for (const c of categories) counts.set(c, (counts.get(c) ?? 0) + 1);
-  const n = Math.max(1, categories.length);
-  if ((counts.get('breakfast') ?? 0) / n >= 0.5) return 'breakfast';
-  if ((counts.get('snack') ?? 0) / n >= 0.5) return 'night-market';
-  return 'rice-noodle';
+  let best: ShopType = 'rice-noodle';
+  let bestCount = -1;
+  for (const type of SHOP_PRIORITY) {
+    const count = categories.filter((c) => shopsFor(c).includes(type)).length;
+    if (count > bestCount) {
+      best = type;
+      bestCount = count;
+    }
+  }
+  return best;
 }
+
+/** What a dish actually costs at the counter; jitter only applies to the rest. */
+const PRICE_TABLE: Record<string, number | [number, number]> = {
+  便當: 90,
+  珍珠奶茶: 55,
+  鮮奶茶: 60,
+  豆漿: 25,
+  米漿: 25,
+  紅茶: 25,
+  蛋餅: 35,
+  排骨: 90,
+};
 
 /** Deterministic small price jitter so the same dish always costs the same. */
 export function priceFor(
   label: string,
   base: number | [number, number],
 ): number | [number, number] {
+  const fixed = PRICE_TABLE[label];
+  if (fixed !== undefined) return fixed;
   let hash = 0;
   for (const ch of label) hash = (hash * 31 + ch.codePointAt(0)!) >>> 0;
   const jitter = (hash % 3) * 5; // 0, 5 or 10 NT$

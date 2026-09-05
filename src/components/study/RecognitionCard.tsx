@@ -135,7 +135,11 @@ export function RecognitionCard({
         </Hanzi>
       </button>
 
-      <div className="card-surface min-h-56 px-4 py-4" data-testid="answer-area" aria-live="polite">
+      <div
+        className="card-surface mb-2 min-h-56 px-4 py-4"
+        data-testid="answer-area"
+        aria-live="polite"
+      >
         {revealed ? (
           <div className="flex flex-col gap-2">
             <p
@@ -162,6 +166,11 @@ export function RecognitionCard({
             <p className="text-lg" data-testid="definition">
               {card.definition}
             </p>
+            {card.notes && (
+              <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="card-note">
+                💡 {card.notes}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <DomainBadge domain={card.domain} />
               {keepsSlipping && (

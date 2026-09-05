@@ -15,6 +15,7 @@ export interface ImportRow {
   variants: string[];
   spoken?: string;
   variantNote?: string;
+  notes?: string;
   clozeDistractors: string[];
   fsrs?: FsrsState;
   createdAt?: string;

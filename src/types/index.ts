@@ -95,6 +95,8 @@ export interface VocabCard {
   variants?: string[];
   /** Free-text note about the variants, e.g. "借口 is the China-side spelling". */
   variantNote?: string;
+  /** A usage note or mnemonic, shown after the reveal (never on the prompt face). */
+  notes?: string;
   /** Authored readable-but-wrong options for the cloze; the generator fills the rest. */
   clozeDistractors?: string[];
   fsrs: FsrsState;

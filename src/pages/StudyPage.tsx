@@ -121,7 +121,7 @@ function StudySession({
           results={snapshot.results}
           elapsedMs={snapshot.elapsedMs}
           streak={Math.max(1, computeStreak(logs, now))}
-          remaining={snapshot.remaining + (snapshot.step ? 1 : 0)}
+          remaining={snapshot.remaining + (snapshot.step?.kind === 'card' ? 1 : 0)}
           dueTomorrow={countDueByTomorrow(engine.getCards(), now)}
           weakCards={weakCards}
           onContinue={complete ? undefined : () => setPaused(false)}
@@ -193,6 +193,7 @@ function StudySession({
 
       {snapshot.step?.kind === 'drill' && (
         <DrillStep
+          key={`drill-${snapshot.answered}-${snapshot.drillIndex}`}
           exercise={snapshot.step.exercise}
           getCard={(id) => engine.getCard(id)}
           onComplete={api.answerDrill}

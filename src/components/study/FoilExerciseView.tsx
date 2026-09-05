@@ -115,10 +115,10 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
       </div>
 
       <div className="card-surface flex flex-1 flex-col items-center justify-center px-4 py-5 text-center">
-        <p className="text-3xl font-bold text-brand-700 dark:text-brand-300" data-testid="foil-cue">
+        <p className="text-4xl font-bold text-brand-700 dark:text-brand-300" data-testid="foil-cue">
           ‘{cue}’
         </p>
-        <p className="mt-1 text-base text-stone-600 dark:text-stone-300">{exercise.definition}</p>
+        <p className="mt-2 text-lg text-stone-600 dark:text-stone-300">{exercise.definition}</p>
       </div>
 
       <div className="card-surface px-4 py-3" aria-live="polite" data-testid="foil-feedback">
@@ -211,7 +211,7 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
                 data-testid="foil-option"
                 data-correct={isAnswer ? 'true' : 'false'}
                 className={cn(
-                  'card-surface flex min-h-24 items-center justify-center px-2 transition-colors',
+                  'card-surface flex min-h-28 items-center justify-center px-2 transition-colors',
                   !marked && 'active:bg-stone-100 dark:active:bg-ink-3',
                   (phase === 'done' || phase === 'gate') &&
                     isAnswer &&

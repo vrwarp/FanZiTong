@@ -46,6 +46,7 @@ export const importCardSchema = z.object({
   variants: stringList,
   spoken: z.string().optional(),
   variantNote: z.string().optional(),
+  notes: z.string().optional(),
   clozeDistractors: stringList,
   fsrs: fsrsStateSchema.optional(),
   createdAt: isoDate.optional(),
@@ -166,6 +167,7 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
     }
     if (c.spoken?.trim()) row.spoken = c.spoken.trim();
     if (c.variantNote?.trim()) row.variantNote = c.variantNote.trim();
+    if (c.notes?.trim()) row.notes = c.notes.trim();
     rows.push(row);
   });
 

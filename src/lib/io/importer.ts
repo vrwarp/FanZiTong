@@ -118,6 +118,7 @@ export function materializeImport(
         variants: row.variants.length ? row.variants : current.variants,
         spoken: row.spoken ?? current.spoken,
         variantNote: row.variantNote ?? current.variantNote,
+        notes: row.notes ?? current.notes,
         clozeDistractors: row.clozeDistractors.length
           ? row.clozeDistractors
           : current.clozeDistractors,
@@ -150,6 +151,7 @@ export function materializeImport(
     if (row.variants.length) card.variants = row.variants;
     if (row.spoken) card.spoken = row.spoken;
     if (row.variantNote) card.variantNote = row.variantNote;
+    if (row.notes) card.notes = row.notes;
     if (row.clozeDistractors.length) card.clozeDistractors = row.clozeDistractors;
     result.toInsert.push(card);
   }

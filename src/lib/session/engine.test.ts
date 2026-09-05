@@ -390,3 +390,29 @@ describe('summarizeResults', () => {
     });
   });
 });
+
+describe('StudyEngine — standalone drills', () => {
+  it('asks a missed item once more before the end, and no more than once', () => {
+    const pool = makePool();
+    const card = pool.find((c) => c.traditional === '團契')!;
+    const drills = buildDrillExercises('foil_discrimination', [card], pool, mulberry32(3));
+    const engine = new StudyEngine({
+      pool,
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      rng: mulberry32(1),
+    });
+    expect(engine.snapshot().drillTotal).toBe(1);
+    engine.answerDrill([{ cardId: card.id, correct: false }]);
+    let s = engine.snapshot();
+    expect(s.requeued).toBe(1);
+    expect(s.drillTotal).toBe(2);
+    expect(s.step?.kind).toBe('drill');
+    engine.answerDrill([{ cardId: card.id, correct: false }]);
+    s = engine.snapshot();
+    expect(s.requeued).toBe(1);
+    expect(s.status).toBe('complete');
+  });
+});

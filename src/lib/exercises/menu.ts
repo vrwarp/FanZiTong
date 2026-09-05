@@ -6,6 +6,7 @@ import {
   categoryTemplate,
   chooseShopType,
   priceFor,
+  shopsFor,
   type MenuCategoryId,
   type MenuSize,
   type ShopType,
@@ -18,6 +19,8 @@ export const MENU_TIME_LIMIT_MS = 20_000;
 export const MENU_MIN_TARGETS = 2;
 export const MENU_MAX_TARGETS = 3;
 export const MENU_ITEMS_PER_CATEGORY = 3;
+/** A slip longer than this cannot be read in the 20-second window. */
+export const MENU_MAX_ROWS = 14;
 /** Chance that a card with accepted variants is printed in its variant spelling. */
 const VARIANT_PRINT_PROBABILITY = 0.5;
 
@@ -95,7 +98,9 @@ export function buildMenuExercise(
   targetCards: VocabCard[],
   rng: Rng = Math.random,
 ): MenuExercise | null {
-  const usable = targetCards.filter((c) => hanChars(c.traditional).length > 0);
+  const usable = targetCards.filter(
+    (c) => hanChars(c.traditional).length > 0 && shopsFor(categorizeDish(c.traditional)).length > 0,
+  );
   if (usable.length === 0) return null;
   const chosen = sample(usable, MENU_MAX_TARGETS, rng);
 
@@ -201,6 +206,9 @@ export function buildMenuExercise(
     return { id, name: template.name, sized: template.sized, items: shuffle(existing, rng) };
   });
 
+  addCrossSectionNeighbours(categories, targets, usedLabels, makeId);
+  trimToMaxRows(categories);
+
   return {
     type: 'realia_menu',
     shop: { type: shop.type, name: shop.name },
@@ -209,6 +217,102 @@ export function buildMenuExercise(
     categories,
     timeLimitMs: MENU_TIME_LIMIT_MS,
   };
+}
+
+/**
+ * A dish whose own section offers no neighbour (餛飩湯 among 貢丸湯 and 魚丸湯)
+ * still gets one somewhere on the slip: the shop's other sections are searched
+ * for a real dish sharing a character (餛飩麵 under 麵類).
+ */
+function addCrossSectionNeighbours(
+  categories: MenuCategory[],
+  targets: MenuTarget[],
+  usedLabels: Set<string>,
+  makeId: () => string,
+): void {
+  const items = () => categories.flatMap((c) => c.items);
+  for (const target of targets) {
+    if (items().some((i) => i.neighbourOf === target.cardId)) continue;
+    // A neighbour already printed as a plain filler just needs to be recognised as one.
+    const printed = items().find(
+      (i) => !i.cardId && !i.neighbourOf && isNeighbour(target.label, i.label),
+    );
+    if (printed) {
+      printed.neighbourOf = target.cardId;
+      continue;
+    }
+    for (const category of categories) {
+      const template = categoryTemplate(category.id);
+      const filler = template.fillers.find(
+        (f) => !usedLabels.has(f.label) && isNeighbour(target.label, f.label),
+      );
+      if (!filler) continue;
+      category.items.push({
+        id: makeId(),
+        label: filler.label,
+        category: category.id,
+        sized: template.sized,
+        price: filler.price,
+        pinyin: filler.pinyin,
+        gloss: filler.gloss,
+        spoken: filler.spoken,
+        neighbourOf: target.cardId,
+      });
+      usedLabels.add(filler.label);
+      break;
+    }
+  }
+}
+
+/** Drop plain filler rows from the longest sections until the slip fits the window. */
+function trimToMaxRows(categories: MenuCategory[]): void {
+  const rows = () => categories.reduce((n, c) => n + c.items.length, 0);
+  while (rows() > MENU_MAX_ROWS) {
+    const candidates = categories
+      .filter((c) => c.items.some((i) => !i.cardId && !i.neighbourOf))
+      .sort((a, b) => b.items.length - a.items.length);
+    const section = candidates[0];
+    if (!section) return;
+    const index = section.items.findIndex((i) => !i.cardId && !i.neighbourOf);
+    section.items.splice(index, 1);
+  }
+}
+
+/**
+ * Group food cards by the shop that sells them, so every slip is one shop's
+ * order (a 便當 never turns up as a side dish at a 滷肉飯 counter). Groups hold
+ * at most MENU_MAX_TARGETS cards; a card no shop sells is left out.
+ */
+export function groupCardsByShop(cards: VocabCard[], rng: Rng = Math.random): VocabCard[][] {
+  const remaining = shuffle(
+    cards.filter((c) => c.domain === 'food' && hanChars(c.traditional).length > 0),
+    rng,
+  );
+  const fits = (card: VocabCard, shop: ShopType) =>
+    shopsFor(categorizeDish(card.traditional)).includes(shop);
+  const groups: VocabCard[][] = [];
+  while (remaining.length > 0) {
+    const shops = (Object.keys(SHOP_TEMPLATES) as ShopType[])
+      .map((shop) => ({ shop, cards: remaining.filter((c) => fits(c, shop)) }))
+      .filter((s) => s.cards.length > 0)
+      .sort((a, b) => b.cards.length - a.cards.length);
+    if (shops.length === 0) break;
+    const group = shops[0].cards.slice(0, MENU_MAX_TARGETS);
+    for (const card of group) remaining.splice(remaining.indexOf(card), 1);
+    groups.push(group);
+  }
+  return groups;
+}
+
+/** Other food cards the same shop would print beside this one (for an in-session slip). */
+export function companionsFor(card: VocabCard, pool: VocabCard[]): VocabCard[] {
+  const shops = shopsFor(categorizeDish(card.traditional));
+  return pool.filter(
+    (c) =>
+      c.domain === 'food' &&
+      c.id !== card.id &&
+      shopsFor(categorizeDish(c.traditional)).some((s) => shops.includes(s)),
+  );
 }
 
 export interface MenuGrade {

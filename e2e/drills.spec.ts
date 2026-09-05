@@ -38,6 +38,11 @@ test.describe('Drills tab (standalone modalities)', () => {
     await page.locator('[data-testid="foil-option"][data-correct="true"]').click();
     await expect(page.getByTestId('drill-outcome')).toContainText('Again');
     await page.getByTestId('drill-continue').click();
+    // The missed word is asked once more before the drill ends.
+    await expect(page.getByTestId('drill-requeue-note')).toBeVisible();
+    await expect(page.getByTestId('drill-progress')).toContainText('2 of 2');
+    await page.locator('[data-testid="foil-option"][data-correct="true"]').click();
+    await page.getByTestId('drill-continue').click();
     await expect(page.getByTestId('session-summary')).toBeVisible();
   });
 
@@ -116,6 +121,10 @@ test.describe('Drills tab (standalone modalities)', () => {
     await page.getByTestId('menu-submit').click();
     await expect(page.getByTestId('menu-feedback')).toContainText('❌');
     await page.getByTestId('drill-continue').click();
+    // The missed dish is asked once more on a fresh slip before the drill ends.
+    await expect(page.getByTestId('drill-requeue-note')).toBeVisible();
+    await expect(page.getByTestId('menu-exercise')).toBeVisible();
+    await page.getByTestId('drill-exit').click();
     await expect(page.getByTestId('session-summary')).toBeVisible();
     await expect(page.getByTestId('summary-retention')).not.toHaveText(/^(\d+)\/\1$/);
   });

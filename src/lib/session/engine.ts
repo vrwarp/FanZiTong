@@ -4,7 +4,7 @@ import { buildClozeExercise } from '@/lib/exercises/cloze';
 import type { FoilExercise } from '@/lib/exercises/foil';
 import { buildFoilExercise } from '@/lib/exercises/foil';
 import type { MenuExercise } from '@/lib/exercises/menu';
-import { buildMenuExercise } from '@/lib/exercises/menu';
+import { buildMenuExercise, companionsFor } from '@/lib/exercises/menu';
 import { fromFsrsCard, toFsrsCard, type RatingPreview } from '@/lib/fsrs/scheduler';
 import {
   DRILL_EVERY_N_CARDS,
@@ -70,7 +70,7 @@ export function describeDrillOutcome(
   const rating = drillRatingFor(card, correct);
   if (rating === 1) return 'Again — it comes back sooner.';
   if (rating === 3) return 'Good — moves it toward long-term review.';
-  return 'Already learned — no change; a miss would bring it back sooner.';
+  return 'In review 複習中 — no change; a miss would bring it back sooner.';
 }
 
 /** What the caller must persist after an answer. */
@@ -129,6 +129,8 @@ export interface EngineSnapshot {
   /** 1-based position among the session's pre-built drills (standalone mode). */
   drillIndex: number;
   drillTotal: number;
+  /** Missed standalone items appended once more to the end of the drill queue. */
+  requeued: number;
   results: SessionResultEntry[];
   startedAt: number;
   /** Time spent so far, frozen at completion. */
@@ -148,7 +150,8 @@ export class StudyEngine {
   private readonly cards = new Map<string, VocabCard>();
   private readonly queue: string[];
   private readonly drillQueue: DrillExercise[];
-  private readonly drillTotal: number;
+  private drillTotal: number;
+  private readonly requeuedDrills = new Set<string>();
   private readonly scheduler: FSRS;
   private readonly interleave: boolean;
   private readonly requeueLearning: boolean;
@@ -233,6 +236,7 @@ export class StudyEngine {
       drillsRemaining: this.drillQueue.length,
       drillIndex: this.drillTotal - this.drillQueue.length,
       drillTotal: this.drillTotal,
+      requeued: this.requeuedDrills.size,
       results: [...this.results],
       startedAt: this.startedAt,
       elapsedMs: (this.completedAt ?? this.now().getTime()) - this.startedAt,
@@ -296,7 +300,12 @@ export class StudyEngine {
     for (const outcome of outcomes) {
       const card = this.cards.get(outcome.cardId);
       if (!card) continue;
-      const rating = outcome.applyRating === false ? null : drillRatingFor(card, outcome.correct);
+      // A companion dish the learner has never studied is only there to fill the
+      // slip: its answer is recorded, but the schedule is not touched.
+      const companion =
+        this.interleave && exerciseType === 'realia_menu' && card.fsrs.state === CardState.New;
+      const rating =
+        outcome.applyRating === false || companion ? null : drillRatingFor(card, outcome.correct);
       if (rating === null) {
         this.results.push({
           cardId: card.id,
@@ -309,6 +318,21 @@ export class StudyEngine {
         continue;
       }
       persisted.push(this.applyRating(card.id, rating, exerciseType, now));
+    }
+    // In a standalone drill a missed item comes back once before the end: the
+    // learner should leave having found the shape, not having been told it.
+    if (!this.interleave) {
+      const pool = Array.from(this.cards.values());
+      for (const outcome of outcomes) {
+        if (outcome.correct || outcome.applyRating === false) continue;
+        const card = this.cards.get(outcome.cardId);
+        if (!card || this.requeuedDrills.has(card.id)) continue;
+        const again = this.buildExercise(exerciseType, card, pool);
+        if (!again) continue;
+        this.requeuedDrills.add(card.id);
+        this.drillQueue.push(again);
+        this.drillTotal += 1;
+      }
     }
     this.advance();
     this.touch();
@@ -462,8 +486,7 @@ export class StudyEngine {
         return buildFoilExercise(card, pool, this.rng);
       case 'realia_menu': {
         const seenIds = new Set(this.results.map((r) => r.cardId));
-        const companions = pool
-          .filter((c) => c.domain === 'food' && c.id !== card.id)
+        const companions = companionsFor(card, pool)
           .sort((a, b) => Number(seenIds.has(b.id)) - Number(seenIds.has(a.id)))
           .slice(0, 2);
         return buildMenuExercise([card, ...companions], this.rng);
@@ -494,7 +517,11 @@ export function summarizeResults(results: SessionResultEntry[]) {
   const total = results.length;
   const correct = results.filter((r) => r.rating !== 1).length;
   const firstByCard = new Map<string, SessionResultEntry>();
-  for (const r of results) if (!firstByCard.has(r.cardId)) firstByCard.set(r.cardId, r);
+  // "Words seen" are the cards whose schedule this session touched; a slip's
+  // unstudied companion dish or a cloze misread is recorded but not counted.
+  for (const r of results) {
+    if (r.applied && !firstByCard.has(r.cardId)) firstByCard.set(r.cardId, r);
+  }
   const uniqueCards = firstByCard.size;
   const firstTryCorrect = Array.from(firstByCard.values()).filter((r) => r.rating !== 1).length;
   /** Cards whose first answer was Again or Hard — worth one more look. */

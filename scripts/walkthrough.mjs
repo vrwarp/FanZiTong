@@ -219,7 +219,8 @@ await step('menu drill, wrong size', async () => {
   }
   const sized = keys.find((k) => k.includes(':'));
   for (const key of keys) {
-    const other = key === sized ? key.replace(/:小$/, ':大').replace(/:大$/, ':小') : key;
+    const flipped = key.endsWith(':小') ? key.replace(/:小$/, ':大') : key.replace(/:大$/, ':小');
+    const other = key === sized ? flipped : key;
     await page.locator(`[data-testid="menu-checkbox"][data-key="${other}"]`).check();
   }
   await tid('menu-submit').click();

@@ -28,6 +28,30 @@ const LEECH_BACKUP = JSON.stringify({
   deckName: 'walkthrough fixture',
   cards: [
     {
+      traditional: '蚵仔煎',
+      pinyin: 'kē zǎi jiān',
+      spoken: 'ô-á-tsian',
+      definition: 'Oyster omelette',
+      domain: 'food',
+      tags: ['night-market'],
+      exampleSentenceTraditional: '夜市的蚵仔煎要淋很多甜辣醬才好吃。',
+      exampleSentencePinyin: 'Yèshì de kēzǎijiān yào lín hěn duō tiánlàjiàng cái hǎochī.',
+      exampleSentenceTranslation:
+        'Night-market oyster omelette only tastes right drenched in sweet chili sauce.',
+      visualFoils: ['蚵仔炸', '蜆仔煎', '蚵仔剪'],
+      fsrs: {
+        due: new Date(now.getTime() - 7_200_000).toISOString(),
+        stability: 12,
+        difficulty: 5.2,
+        elapsed_days: 10,
+        scheduled_days: 12,
+        reps: 6,
+        lapses: 0,
+        state: 2,
+        last_review: new Date(now.getTime() - 10 * 86_400_000).toISOString(),
+      },
+    },
+    {
       traditional: '藉口',
       pinyin: 'jiè kǒu',
       definition: 'Excuse (Taiwan standard form)',
@@ -177,6 +201,20 @@ await step('menu drill', async () => {
   await page.waitForTimeout(600); // let the slip scroll the first flagged row into view
   await shot('11-drill-menu-result', { fullPage: true });
 });
+await step('menu drill, wrong size', async () => {
+  await page.goto(`${base}/drills/realia_menu?count=3`);
+  await tid('menu-exercise').waitFor();
+  const keys = ((await tid('menu-exercise').getAttribute('data-target-keys')) ?? '').split(',');
+  const sized = keys.find((k) => k.includes(':'));
+  for (const key of keys) {
+    const other = key === sized ? key.replace(/:小$/, ':大').replace(/:大$/, ':小') : key;
+    await page.locator(`[data-testid="menu-checkbox"][data-key="${other}"]`).check();
+  }
+  await tid('menu-submit').click();
+  await tid('drill-continue').waitFor();
+  await page.waitForTimeout(600);
+  await shot('11b-drill-menu-wrong-size', { fullPage: true });
+});
 
 // 12-14. Foil discrimination: wrong pick, the contrast, the corrective retry
 await step('foil drill', async () => {
@@ -243,6 +281,14 @@ await step('stats', async () => {
   await page.goto(`${base}/stats`);
   await tid('stat-cards').waitFor();
   await shot('21-stats', { fullPage: true });
+});
+await step('spoken reveal', async () => {
+  await page.goto(`${base}/study`);
+  await tid('recognition-prompt').waitFor();
+  await tid('recognition-prompt').click();
+  await tid('spoken').waitFor();
+  await shot('21b-study-revealed-spoken');
+  await tid('rate-3').click();
 });
 
 // 22. Settings

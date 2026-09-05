@@ -36,6 +36,33 @@ function neighbourContrast(picked: string, target: MenuTarget): string {
     });
     if (parts.length > 0) return `${parts.join(' · ')} — you wanted ${target.label}`;
   }
+  // Different lengths: name the shared tail and the heads that differ (鮮 vs 珍珠 before 奶茶).
+  const a = Array.from(picked);
+  const b = Array.from(target.label);
+  let tail = 0;
+  while (
+    tail < a.length - 1 &&
+    tail < b.length - 1 &&
+    a[a.length - 1 - tail] === b[b.length - 1 - tail]
+  ) {
+    tail += 1;
+  }
+  if (tail > 0) {
+    const suffix = a.slice(a.length - tail).join('');
+    const headA = a.slice(0, a.length - tail).join('');
+    const headB = b.slice(0, b.length - tail).join('');
+    const read = (word: string) =>
+      Array.from(word)
+        .map((ch) => charInfo(ch)?.pinyin ?? '')
+        .filter(Boolean)
+        .join(' ');
+    const gloss = (word: string) => {
+      const chars = Array.from(word);
+      const info = chars.length === 1 ? charInfo(chars[0]) : null;
+      return info ? ` “${info.gloss}”` : '';
+    };
+    return `both end in ${suffix} — you read ${headA} ${read(headA)}${gloss(headA)} where ${headB} ${read(headB)}${gloss(headB)} should be · you wanted ${target.label} ${cueReading(target)}`;
+  }
   return `you wanted ${target.label} ${cueReading(target)} · ${target.definition}`;
 }
 

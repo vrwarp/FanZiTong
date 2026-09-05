@@ -48,3 +48,12 @@ describe('day helpers', () => {
     expect(formatRelativeDue(addDays(now, 3), now)).toBe('in 3d');
   });
 });
+
+describe('formatInterval rounding', () => {
+  it('rounds up to the next unit instead of printing 60m or 24h', () => {
+    const now = new Date('2026-09-05T08:00:00Z');
+    expect(formatInterval(now, new Date(now.getTime() + 59.7 * 60_000))).toBe('1h');
+    expect(formatInterval(now, new Date(now.getTime() + 23.7 * 3_600_000))).toBe('1d');
+    expect(formatInterval(now, new Date(now.getTime() + 2 * 86_400_000))).toBe('2d');
+  });
+});

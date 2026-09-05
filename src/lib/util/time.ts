@@ -36,11 +36,12 @@ export function formatInterval(from: Date, to: Date): string {
   const ms = Math.max(0, to.getTime() - from.getTime());
   const minutes = ms / MINUTE_MS;
   if (minutes < 1) return '<1m';
-  if (minutes < 60) return `${Math.round(minutes)}m`;
+  // Never print "60m" or "24h": a value that rounds up to the next unit uses that unit.
+  if (Math.round(minutes) < 60) return `${Math.round(minutes)}m`;
   const hours = minutes / 60;
-  if (hours < 24) return `${Math.round(hours)}h`;
+  if (Math.round(hours) < 24) return `${Math.round(hours)}h`;
   const days = hours / 24;
-  if (days < 30) return `${Math.round(days)}d`;
+  if (days < 30) return `${Math.max(1, Math.round(days))}d`;
   const months = days / 30.437;
   if (months < 12) return `${Math.round(months)}mo`;
   const years = days / 365.25;

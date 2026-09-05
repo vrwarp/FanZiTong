@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { cn } from '@/lib/util/cn';
-import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
+import { alignSentenceReadings, displayReading } from '@/lib/util/sentenceReadings';
 
 export interface ExampleSentenceProps {
   sentence: string;
@@ -86,7 +86,9 @@ export function ExampleSentence({
                         return next;
                       });
                     }}
-                    aria-label={open ? `${w.text} ${w.reading}` : `${w.text}, tap for reading`}
+                    aria-label={
+                      open ? `${w.text} ${displayReading(w.reading)}` : `${w.text}, tap for reading`
+                    }
                     className="inline-flex flex-col items-center align-bottom leading-tight"
                     data-testid="sentence-word"
                   >
@@ -95,7 +97,7 @@ export function ExampleSentence({
                       className="min-h-3.5 font-sans text-[10px] text-stone-500 dark:text-stone-400"
                       data-testid={open ? 'word-reading' : undefined}
                     >
-                      {open ? w.reading : ''}
+                      {open ? displayReading(w.reading) : ''}
                     </span>
                     <span>{renderChars(w.text, w.start)}</span>
                   </button>,

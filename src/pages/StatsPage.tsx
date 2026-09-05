@@ -7,6 +7,7 @@ import { RetentionGauge } from '@/components/stats/RetentionGauge';
 import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { charInfo } from '@/data/charInfo';
+import { diffCharacters, expandFoil } from '@/lib/exercises/foil';
 import { hanChars, syllablesPerCharacter } from '@/lib/util/pinyin';
 import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useNow } from '@/hooks/useNow';
@@ -248,7 +249,7 @@ function LeechRow({ card }: { card: VocabCard }) {
           return (
             <span key={`${ch}-${i}`} className="mr-2 inline-block">
               <Hanzi className="font-semibold">{ch}</Hanzi>
-              {syllables?.[i] && ` ${syllables[i]}`}
+              {showReading && syllables?.[i] && ` ${syllables[i]}`}
               {info && ` “${info.gloss}”`}
             </span>
           );
@@ -262,8 +263,21 @@ function LeechRow({ card }: { card: VocabCard }) {
             </span>
           )}
           {foils.length > 0 && (
-            <span>
-              not <Hanzi>{foils.join(' / ')}</Hanzi>
+            <span data-testid="leech-foils">
+              not{' '}
+              {foils.map((foil, i) => {
+                const expanded = expandFoil(card.traditional, foil) ?? foil;
+                const diff = diffCharacters(expanded, card.traditional)[0];
+                const info = diff ? charInfo(diff.picked) : null;
+                return (
+                  <span key={foil} className="mr-2 inline-block">
+                    <Hanzi>{expanded}</Hanzi>
+                    {info &&
+                      ` (${diff!.picked} ${info.pinyin}${info.gloss ? ` “${info.gloss}”` : ''}${info.tell ? ` — ${info.tell}` : ''})`}
+                    {i < foils.length - 1 ? ' ·' : ''}
+                  </span>
+                );
+              })}
             </span>
           )}
         </p>

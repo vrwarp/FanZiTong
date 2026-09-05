@@ -179,7 +179,7 @@ export function ImportDialog({ source, existing, onClose, onImported }: ImportDi
           )}
 
           <div className="overflow-x-auto rounded-lg border border-stone-200 dark:border-stone-700">
-            <table className="w-full text-left text-xs" data-testid="import-preview">
+            <table className="w-full min-w-[34rem] text-left text-xs" data-testid="import-preview">
               <thead className="bg-stone-100 dark:bg-stone-800">
                 <tr>
                   <th className="px-2 py-1.5">Traditional</th>

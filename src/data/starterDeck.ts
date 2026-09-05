@@ -33,6 +33,10 @@ const NOTES: Record<string, string> = {
   吃土: 'Literally "eating dirt": nothing left to spend on food.',
   暈船: 'Literally "seasick": unsteady after one date.',
   爆雷: 'Taiwan says 爆雷／有雷／防雷; 劇透 is the China term you will also see online.',
+  飯糰: 'Sticky rice wrapped around 油條 youtiao, pickled radish and pork floss.',
+  有雷: 'The warning tag on PTT / Dcard threads; 防雷 marks a spoiler-free zone.',
+  是在哈囉: 'Sarcastic; Dcard / PTT slang from around 2019.',
+  泡麵番: 'As long as it takes to cook instant noodles: a three-minute episode.',
 };
 
 /** Per-word notes about the accepted spelling variants. */
@@ -110,7 +114,7 @@ const FOOD: SeedEntry[] = [
   [
     '飯糰',
     'fàn tuán',
-    'Taiwanese rice roll (with youtiao, pickled radish and pork floss)',
+    'Taiwanese rice roll',
     'breakfast|rice',
     '傳統飯糰裡面包了油條、菜脯和肉鬆。',
     'Chuántǒng fàntuán lǐmiàn bāo le yóutiáo, càipú hé ròusōng.',
@@ -299,9 +303,9 @@ const CHURCH: SeedEntry[] = [
     'ēn diǎn',
     'Grace',
     'theology',
-    '我們得救是本乎恩典，也因著信。',
-    'Wǒmen déjiù shì běn hū ēndiǎn, yě yīnzhe xìn.',
-    'We are saved by grace, through faith.',
+    '我們得救全是神的恩典，不是靠自己的行為。',
+    'Wǒmen déjiù quán shì shén de ēndiǎn, bú shì kào zìjǐ de xíngwéi.',
+    "We are saved entirely by God's grace, not by our own works.",
     '思典|恩點|恩曲',
   ],
   [
@@ -712,7 +716,7 @@ const SLANG: SeedEntry[] = [
   [
     '有雷',
     'yǒu léi',
-    'Contains spoilers (the warning tag on PTT / Dcard threads)',
+    'Contains spoilers',
     'internet|ptt',
     '這篇心得有雷，沒看完的先別點。',
     'Zhè piān xīndé yǒu léi, méi kàn wán de xiān bié diǎn.',
@@ -742,7 +746,7 @@ const SLANG: SeedEntry[] = [
   [
     '是在哈囉',
     'shì zài hā lóu',
-    '"Hello?? What are you doing?" (sarcastic; Dcard/PTT slang)',
+    '"Hello?? What are you doing?"',
     'internet|ptt',
     '大半夜打電話來，是在哈囉？',
     'Dàbànyè dǎ diànhuà lái, shì zài hālóu?',
@@ -762,7 +766,7 @@ const SLANG: SeedEntry[] = [
   [
     'ㄏㄏ',
     'hē hē',
-    '"Heh heh" — sarcastic laugh typed in Zhuyin letters (PTT/LINE)',
+    '"Heh heh" — a sarcastic laugh typed in Zhuyin',
     'internet|ptt|zhuyin',
     '你說你會早起？ㄏㄏ。',
     'Nǐ shuō nǐ huì zǎoqǐ? Hē hē.',
@@ -835,7 +839,7 @@ const ANIME: SeedEntry[] = [
   [
     '泡麵番',
     'pào miàn fān',
-    'Short-episode anime (as long as it takes to cook instant noodles)',
+    'Short-episode anime',
     'acgn',
     '泡麵番一集只有三分鐘，很適合通勤看。',
     'Pàomiànfān yī jí zhǐ yǒu sān fēnzhōng, hěn shìhé tōngqín kàn.',

@@ -290,7 +290,10 @@ export function ClozeExerciseView({ exercise, card, onComplete }: ClozeExerciseV
                   <span className="text-[11px] font-normal text-stone-500 dark:text-stone-400">
                     形近 look-alike
                     {foilDiff[0] && charInfo(foilDiff[0].picked)
-                      ? ` · ${foilDiff[0].picked} ${charInfo(foilDiff[0].picked)!.pinyin} “${charInfo(foilDiff[0].picked)!.gloss}”`
+                      ? ` · ${foilDiff[0].picked} ${charInfo(foilDiff[0].picked)!.pinyin} “${charInfo(foilDiff[0].picked)!.gloss}” is not ${foilDiff[0].correct}${charInfo(foilDiff[0].correct) ? ` ${charInfo(foilDiff[0].correct)!.pinyin}` : ''}`
+                      : ''}
+                    {foilDiff[0] && charInfo(foilDiff[0].correct)?.tell
+                      ? ` — ${charInfo(foilDiff[0].correct)!.tell}`
                       : ''}
                   </span>
                 )}

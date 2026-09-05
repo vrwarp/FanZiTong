@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { DomainBadge } from '@/components/ui/Badge';
 import type { RatingPreview } from '@/lib/fsrs/scheduler';
@@ -66,6 +66,17 @@ export function RecognitionCard({
   const [revealCount] = useState(readRevealCount);
   const [coachOpen, setCoachOpen] = useState(false);
   const [selectedChar, setSelectedChar] = useState<string | null>(null);
+  const exampleRef = useRef<HTMLDivElement | null>(null);
+
+  // The sentence is the only connected-text retrieval on the card: once revealed,
+  // scroll just enough for it to clear the rating footer.
+  useEffect(() => {
+    if (!revealed) return;
+    const el = exampleRef.current;
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [revealed, card.id]);
 
   useEffect(() => {
     if (revealed || autoRevealMs <= 0) return;
@@ -195,7 +206,10 @@ export function RecognitionCard({
               onSelect={setSelectedChar}
             />
             {card.exampleSentenceTraditional && (
-              <div className="mt-1 border-t border-stone-200 pt-2 dark:border-stone-700">
+              <div
+                ref={exampleRef}
+                className="mt-1 scroll-mb-44 border-t border-stone-200 pt-2 dark:border-stone-700"
+              >
                 <p className="text-xs font-semibold text-stone-500 dark:text-stone-400">
                   例句 · Example
                 </p>

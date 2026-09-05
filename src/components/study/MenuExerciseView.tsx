@@ -174,20 +174,29 @@ export function MenuExerciseView({
   const timedOut = grade !== null && remainingMs <= 0 && selected.size === 0;
   const boss = BOSS_PHRASES[exercise.targets.length % BOSS_PHRASES.length];
   const hits = grade ? exercise.targets.filter((t) => grade.perCard[t.cardId]).length : 0;
+  const sizeOnly =
+    grade !== null &&
+    !grade.allCorrect &&
+    grade.missed.length === 0 &&
+    grade.wrongSelections.length === 0;
   const verdictLabel = !grade
     ? ''
     : grade.allCorrect
       ? 'Perfect order.'
-      : timedOut
-        ? "Time's up."
-        : 'Not quite.';
+      : sizeOnly
+        ? 'All read right — check the size column.'
+        : timedOut
+          ? "Time's up."
+          : 'Not quite.';
   const verdictZh = !grade
     ? ''
     : grade.allCorrect
       ? `老闆娘：${boss}`
-      : timedOut
-        ? '時間到！'
-        : '老闆娘：欸，你是不是點錯了？';
+      : sizeOnly
+        ? '老闆娘：大碗還是小碗？'
+        : timedOut
+          ? '時間到！'
+          : '老闆娘：欸，你是不是點錯了？';
 
   /** What the grade says about one printed row. */
   const rowVerdict = (itemId: string, keys: string[]): RowVerdict => {
@@ -290,7 +299,11 @@ export function MenuExerciseView({
           <div
             className={cn(
               'card-surface mt-1 border-l-4 px-3 py-2',
-              grade.allCorrect ? 'border-l-jade-500' : 'border-l-red-500',
+              grade.allCorrect
+                ? 'border-l-jade-500'
+                : sizeOnly
+                  ? 'border-l-amber-500'
+                  : 'border-l-red-500',
             )}
             aria-live="polite"
             data-testid="menu-verdict"
@@ -298,7 +311,11 @@ export function MenuExerciseView({
             <p
               className={cn(
                 'text-sm font-bold',
-                grade.allCorrect ? 'text-jade-600' : 'text-red-600',
+                grade.allCorrect
+                  ? 'text-jade-600'
+                  : sizeOnly
+                    ? 'text-amber-700 dark:text-amber-300'
+                    : 'text-red-600',
               )}
             >
               <Hanzi>{verdictZh}</Hanzi> {verdictLabel}
@@ -484,8 +501,17 @@ export function MenuExerciseView({
       {grade !== null && (
         <div className="card-surface px-4 py-3" data-testid="menu-feedback">
           <div className="text-sm">
-            <p className={cn('font-bold', grade.allCorrect ? 'text-jade-600' : 'text-red-600')}>
-              {verdictLabel} The order was{' '}
+            <p
+              className={cn(
+                'font-bold',
+                grade.allCorrect
+                  ? 'text-jade-600'
+                  : sizeOnly
+                    ? 'text-amber-700 dark:text-amber-300'
+                    : 'text-red-600',
+              )}
+            >
+              {sizeOnly ? 'Read right, size wrong.' : verdictLabel} The order was{' '}
               <Hanzi className="font-semibold" data-testid="menu-order-hanzi">
                 {orderHanzi}
               </Hanzi>

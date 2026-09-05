@@ -1,6 +1,6 @@
 import { buildStarterDeck } from './starterDeck';
 import { charInfo } from './charInfo';
-import { MENU_CATEGORIES, categorizeDish, shopsFor } from './menuTemplate';
+import { MENU_CATEGORIES, categorizeDish, priceFor, shopsFor } from './menuTemplate';
 import { MENU_MAX_ROWS, buildMenuExercise, groupCardsByShop } from '@/lib/exercises/menu';
 import { mulberry32 } from '@/lib/util/random';
 import { expandFoil, diffCharacters } from '@/lib/exercises/foil';
@@ -109,6 +109,35 @@ describe('starter deck integrity', () => {
       const ex = buildMenuExercise(group, mulberry32(5))!;
       expect(common).toContain(ex.shop.type);
     }
+  });
+
+  it('prices a broth-only noodle below the meat version and small below large', () => {
+    const offenders: string[] = [];
+    const priced = new Map<string, number | [number, number]>();
+    for (const category of MENU_CATEGORIES) {
+      for (const f of category.fillers) priced.set(f.label, f.price);
+    }
+    for (const card of deck.filter((c) => c.domain === 'food')) {
+      const category = MENU_CATEGORIES.find((c) => c.id === categorizeDish(card.traditional));
+      if (category) priced.set(card.traditional, priceFor(card.traditional, category.defaultPrice));
+    }
+    const low = (p: number | [number, number]) => (Array.isArray(p) ? p[0] : p);
+    for (const [label, price] of priced) {
+      if (Array.isArray(price) && price[0] >= price[1]) offenders.push(`${label}: 小 ≥ 大`);
+      const soupVersion = label.replace(/麵$/, '湯麵');
+      if (soupVersion !== label && priced.has(soupVersion)) {
+        if (low(priced.get(soupVersion)!) >= low(price))
+          offenders.push(`${soupVersion} ≥ ${label}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps definitions short enough to survive the slip cue', () => {
+    const offenders = deck
+      .filter((c) => c.definition.length > 60)
+      .map((c) => `${c.traditional}: ${c.definition}`);
+    expect(offenders).toEqual([]);
   });
 
   it('keeps readings out of definitions', () => {

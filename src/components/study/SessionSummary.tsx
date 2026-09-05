@@ -78,7 +78,7 @@ export function SessionSummary({
         <Stat
           label="Answers"
           value={String(summary.total)}
-          note={`${cardAnswers} card${cardAnswers === 1 ? '' : 's'} · ${drillAnswers} drill item${drillAnswers === 1 ? '' : 's'}`}
+          note={`${summary.uniqueCards} word${summary.uniqueCards === 1 ? '' : 's'} · ${Math.max(0, cardAnswers - summary.uniqueCards)} re-asked · ${drillAnswers} drill item${drillAnswers === 1 ? '' : 's'}`}
           testId="summary-answers"
         />
         <Stat
@@ -129,9 +129,11 @@ export function SessionSummary({
             className="block text-xs font-medium text-stone-500 dark:text-stone-400"
             data-testid="summary-next"
           >
-            {dueTomorrow > 0
-              ? `Tomorrow 明天: ${dueTomorrow} review${dueTomorrow === 1 ? '' : 's'} due — do ${dueTomorrow === 1 ? 'it' : 'them'} to keep the streak.`
-              : 'Come back tomorrow to keep the streak alive.'}
+            {mode === 'paused'
+              ? `Today 今天: ${remaining} card${remaining === 1 ? '' : 's'} left — continue when you're ready.`
+              : dueTomorrow > 0
+                ? `Tomorrow 明天: ${dueTomorrow} review${dueTomorrow === 1 ? '' : 's'} due — do ${dueTomorrow === 1 ? 'it' : 'them'} to keep the streak.`
+                : 'Come back tomorrow to keep the streak alive.'}
           </span>
         )}
       </p>

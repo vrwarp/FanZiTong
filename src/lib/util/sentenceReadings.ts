@@ -29,6 +29,25 @@ function countRun(letters: string): number {
   return count;
 }
 
+/** "Lǎobǎn," → "lǎo bǎn": the house style of every headword, syllable by syllable. */
+export function displayReading(token: string): string {
+  const letters = token.replace(/[^a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ']/g, '').toLowerCase();
+  const syllables: string[] = [];
+  for (const part of letters.split("'")) {
+    let rest = part;
+    while (rest.length > 0) {
+      const m = SYLLABLE_RE.exec(rest);
+      if (!m || m[0].length === 0) {
+        rest = rest.slice(1);
+        continue;
+      }
+      syllables.push(m[0]);
+      rest = rest.slice(m[0].length);
+    }
+  }
+  return syllables.join(' ') || token;
+}
+
 export interface WordReading {
   /** Characters of this word as they appear in the sentence. */
   text: string;

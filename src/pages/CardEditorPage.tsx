@@ -328,7 +328,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
         />
       </Field>
       <Field
-        label="Note on spellings"
+        label="Spelling note 寫法備註"
         htmlFor="variantNote"
         hint="Where you meet each spelling, e.g. “借口 is what most people type online”."
       >
@@ -341,7 +341,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
         />
       </Field>
       <Field
-        label="Note 備註"
+        label="Usage note 用法備註"
         htmlFor="notes"
         hint="A usage note or mnemonic, shown after the reveal (e.g. “spells the sound of Taiwanese 毋通”)."
       >

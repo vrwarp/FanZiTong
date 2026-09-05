@@ -92,7 +92,7 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
       { label: '陽春麵', price: [35, 45], pinyin: 'yáng chūn miàn', gloss: 'plain noodle soup' },
       {
         label: '牛肉湯麵',
-        price: [70, 85],
+        price: [60, 80],
         pinyin: 'niú ròu tāng miàn',
         gloss: 'noodles in beef broth (no beef)',
       },
@@ -180,6 +180,10 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 40,
     fillers: [
+      { label: '燒餅', price: 30, pinyin: 'shāo bǐng', gloss: 'baked sesame flatbread' },
+      { label: '飯捲', price: 40, pinyin: 'fàn juǎn', gloss: 'rice roll (sushi-style)' },
+      { label: '饅頭', price: 20, pinyin: 'mán tou', gloss: 'steamed bun' },
+      { label: '漢堡', price: 45, pinyin: 'hàn bǎo', gloss: 'breakfast burger' },
       { label: '鮪魚飯糰', price: 45, pinyin: 'wěi yú fàn tuán', gloss: 'tuna rice roll' },
       { label: '芋頭糕', price: 35, pinyin: 'yù tóu gāo', gloss: 'taro cake' },
       { label: '鐵板麵', price: 55, pinyin: 'tiě bǎn miàn', gloss: 'iron-plate noodles' },
@@ -358,6 +362,8 @@ const PRICE_TABLE: Record<string, number | [number, number]> = {
   紅茶: 25,
   蛋餅: 35,
   排骨: 90,
+  牛肉麵: [130, 160],
+  乾麵: [40, 55],
 };
 
 /** Deterministic small price jitter so the same dish always costs the same. */

@@ -176,10 +176,14 @@ export function buildMenuExercise(
     const neighbourFor = new Map<string, string>();
     const chosenFillers: MenuFiller[] = [];
     for (const target of targetsHere) {
+      const standard = target.variantOf ?? target.label;
       const candidates = available.filter(
-        (f) => !chosenFillers.includes(f) && isNeighbour(target.label, f.label),
+        (f) =>
+          !chosenFillers.includes(f) &&
+          (isNeighbour(target.label, f.label) || isNeighbour(standard, f.label)),
       );
-      const neighbour = pick(candidates, rng);
+      const neighbour =
+        candidates.length > 0 ? pick(bestNeighbours(standard, candidates), rng) : undefined;
       if (neighbour) {
         chosenFillers.push(neighbour);
         neighbourFor.set(neighbour.label, target.cardId!);
@@ -235,7 +239,10 @@ function addCrossSectionNeighbours(
     if (items().some((i) => i.neighbourOf === target.cardId)) continue;
     // A neighbour already printed as a plain filler just needs to be recognised as one.
     const printed = items().find(
-      (i) => !i.cardId && !i.neighbourOf && isNeighbour(target.label, i.label),
+      (i) =>
+        !i.cardId &&
+        !i.neighbourOf &&
+        (isNeighbour(target.label, i.label) || isNeighbour(target.standard, i.label)),
     );
     if (printed) {
       printed.neighbourOf = target.cardId;
@@ -243,9 +250,12 @@ function addCrossSectionNeighbours(
     }
     for (const category of categories) {
       const template = categoryTemplate(category.id);
-      const filler = template.fillers.find(
-        (f) => !usedLabels.has(f.label) && isNeighbour(target.label, f.label),
+      const candidates = template.fillers.filter(
+        (f) =>
+          !usedLabels.has(f.label) &&
+          (isNeighbour(target.label, f.label) || isNeighbour(target.standard, f.label)),
       );
+      const filler = candidates.length > 0 ? bestNeighbours(target.standard, candidates)[0] : null;
       if (!filler) continue;
       category.items.push({
         id: makeId(),
@@ -366,11 +376,24 @@ export function gradeMenuExercise(exercise: MenuExercise, selected: Set<string>)
 /** Section suffixes every dish in the section shares; they do not make two dishes neighbours. */
 const GENERIC_DISH_CHARS = new Set(['飯', '麵', '湯', '茶', '菜']);
 
-/** Two real dishes are neighbours when they share a character beyond the section suffix. */
+/**
+ * Two real dishes are neighbours when they share a character beyond the section
+ * suffix; for a two-character dish half the word is the suffix, so any shared
+ * character counts (飯糰 ↔ 飯捲).
+ */
 export function isNeighbour(a: string, b: string): boolean {
   if (a === b) return false;
-  const shared = new Set(Array.from(a).filter((ch) => !GENERIC_DISH_CHARS.has(ch)));
+  const short = Array.from(a).length <= 2 || Array.from(b).length <= 2;
+  const shared = new Set(Array.from(a).filter((ch) => short || !GENERIC_DISH_CHARS.has(ch)));
   return Array.from(b).some((ch) => shared.has(ch));
+}
+
+/** Prefer a neighbour of the same length: the confusion should be in the characters, not the row shape. */
+function bestNeighbours<T extends { label: string }>(target: string, candidates: T[]): T[] {
+  const len = Array.from(target).length;
+  const distance = (c: T) => Math.abs(Array.from(c.label).length - len);
+  const best = Math.min(...candidates.map(distance));
+  return candidates.filter((c) => distance(c) === best);
 }
 
 /** The sound the friend says: the spoken reading when people use it, else the pinyin. */

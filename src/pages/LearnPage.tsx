@@ -52,6 +52,11 @@ export default function LearnPage() {
     navigate('/study');
   };
 
+  // Done over due (never over the daily cap): what today asked for, not the limit.
+  const reviewsDueToday = Math.min(
+    settings.maxDailyReviews,
+    model.reviewsToday + plan.dueReviewCount,
+  );
   const todayState: 'resume' | 'done' | 'due' =
     resumeCount > 0 ? 'resume' : markedDone || model.doneForToday ? 'done' : 'due';
   const today = dayKey(now);
@@ -301,12 +306,12 @@ export default function LearnPage() {
           {plan.dueReviewCount > 0 || (model.reviewsToday > 0 && plan.totalDueCount > 0) ? (
             <>
               <p className="mt-2 text-sm" data-testid="today-reviews">
-                Reviews {model.reviewsToday}/{settings.maxDailyReviews}
+                Reviews {model.reviewsToday}/{reviewsDueToday}
               </p>
               <ProgressBar
                 className="mt-1"
                 tone="jade"
-                value={(model.reviewsToday / Math.max(1, settings.maxDailyReviews)) * 100}
+                value={(model.reviewsToday / Math.max(1, reviewsDueToday)) * 100}
                 label="Reviews done today"
               />
             </>

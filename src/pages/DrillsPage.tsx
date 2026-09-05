@@ -92,7 +92,8 @@ export default function DrillsPage() {
                 <p className="text-sm text-stone-600 dark:text-stone-300">{drill.description}</p>
                 {drill.foodOnly && (
                   <p className="text-xs text-stone-500 dark:text-stone-400">
-                    Food words only · each slip asks for up to 3 dishes.
+                    Food words only · each question is one slip of up to 3 dishes, fewer when your
+                    food words run out.
                   </p>
                 )}
                 <Button

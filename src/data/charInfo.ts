@@ -644,6 +644,10 @@ export const CHAR_INFO: Record<string, CharInfo> = {
   粽: { pinyin: 'zòng', gloss: 'rice dumpling (in bamboo leaves)', tell: '粽 = 米 + 宗' },
   芋: { pinyin: 'yù', gloss: 'taro', tell: '芋 = 艹 + 于' },
   頭: { pinyin: 'tóu', gloss: 'head', tell: '頭 = 豆 + 頁' },
+  堡: { pinyin: 'bǎo', gloss: 'fort; (漢堡) burger', tell: '堡 is 保 over 土' },
+  捲: { pinyin: 'juǎn', gloss: 'roll', tell: '捲 = 扌 + 卷' },
+  漢: { pinyin: 'hàn', gloss: 'Han; (漢堡) burger', tell: '漢 = 氵 + 𦰩' },
+  饅: { pinyin: 'mán', gloss: '(饅頭) steamed bun', tell: '饅 = 飠 + 曼' },
 };
 
 export function charInfo(ch: string): CharInfo | undefined {

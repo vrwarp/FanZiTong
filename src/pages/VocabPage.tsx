@@ -149,6 +149,7 @@ export default function VocabPage() {
           {(['all', ...DOMAIN_CATEGORIES] as DomainFilter[]).map((d) => (
             <button
               key={d}
+              data-testid={`filter-${d}`}
               type="button"
               onClick={() => setDomain(d)}
               className={cn(

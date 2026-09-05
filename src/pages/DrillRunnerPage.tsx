@@ -158,14 +158,15 @@ function DrillSession({
           End
         </Button>
       </div>
-      {snapshot.requeued > 0 && (
-        <p
-          className="-mt-2 text-xs text-stone-500 dark:text-stone-400"
-          data-testid="drill-requeue-note"
-        >
-          A missed word comes back before the end. <span lang="zh-Hant-TW">等一下會再考一次</span>
-        </p>
-      )}
+      <p
+        className="-mt-2 text-xs text-stone-500 dark:text-stone-400"
+        data-testid="drill-requeue-note"
+      >
+        {snapshot.requeued > 0
+          ? 'A missed word comes back before the end. '
+          : 'Miss one and it comes back before the end. '}
+        <span lang="zh-Hant-TW">錯了會再考一次</span>
+      </p>
       {snapshot.step?.kind === 'drill' && (
         <DrillStep
           key={`drill-${snapshot.drillIndex}`}

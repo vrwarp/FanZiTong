@@ -40,7 +40,7 @@ const LEECH_BACKUP = JSON.stringify({
         'Night-market oyster omelette only tastes right drenched in sweet chili sauce.',
       visualFoils: ['蚵仔炸', '蜆仔煎', '蚵仔剪'],
       fsrs: {
-        due: new Date(now.getTime() - 7_200_000).toISOString(),
+        due: new Date(now.getTime() - 5 * 3_600_000).toISOString(),
         stability: 12,
         difficulty: 5.2,
         elapsed_days: 10,
@@ -49,6 +49,31 @@ const LEECH_BACKUP = JSON.stringify({
         lapses: 0,
         state: 2,
         last_review: new Date(now.getTime() - 10 * 86_400_000).toISOString(),
+      },
+    },
+    {
+      traditional: '母湯',
+      pinyin: 'mǔ tāng',
+      spoken: 'm̄-thang',
+      definition: "Don't / no way",
+      domain: 'slang',
+      tags: ['colloquial'],
+      notes:
+        'Spells the sound of Taiwanese 毋通 m̄-thang, "must not" — the characters are only the sound.',
+      exampleSentenceTraditional: '這樣做母湯啦，會被罵。',
+      exampleSentencePinyin: 'Zhèyàng zuò mǔtāng la, huì bèi mà.',
+      exampleSentenceTranslation: "Don't do it like that — you'll get told off.",
+      visualFoils: ['毋湯', '母揚', '母場'],
+      fsrs: {
+        due: new Date(now.getTime() - 4 * 3_600_000).toISOString(),
+        stability: 8,
+        difficulty: 6,
+        elapsed_days: 7,
+        scheduled_days: 8,
+        reps: 4,
+        lapses: 0,
+        state: 2,
+        last_review: new Date(now.getTime() - 7 * 86_400_000).toISOString(),
       },
     },
     {
@@ -262,6 +287,12 @@ await step('cloze drill', async () => {
 await page.goto(`${base}/vocab`);
 await tid('vocab-item').first().waitFor();
 await shot('18-vocab-list');
+await step('slang filter', async () => {
+  await tid('filter-slang').click();
+  await page.waitForTimeout(300);
+  await shot('18b-vocab-slang');
+  await tid('filter-all').click();
+});
 await step('editor', async () => {
   await tid('vocab-item').first().click();
   await tid('card-editor').waitFor();
@@ -308,6 +339,13 @@ await step('spoken reveal', async () => {
   await tid('spoken').waitFor();
   await shot('21b-study-revealed-spoken');
   await tid('rate-3').click();
+  await tid('recognition-prompt').waitFor();
+  await page.waitForTimeout(900);
+  await tid('recognition-prompt').click();
+  await tid('card-note').waitFor();
+  await shot('21d-study-revealed-note');
+  await tid('rate-3').click();
+  await page.waitForTimeout(500); // let the write land before navigating away
 });
 
 // 22. Settings

@@ -137,3 +137,24 @@ A verification round against the five statements from iteration 2. All three rev
 - Walkthrough: 29 captures — adds the tapped chip + sentence word, the wrong-size slip, the ô-á-tsian reveal, the leech foil drill, Settings with Dark selected; paced first reveal; Questions = 5.
 
 **Exit criterion for round 4:** statements 2, 3 and 5 pass with no new major and no score below 8.
+
+## Iteration 4 — converged
+
+**Scores:** PM 8.5/10 · Language expert 9/10 · Heritage learner 9/10. All three: converged.
+A verification round of statements 2, 3 and 5. Statement 2 (one definition of "left" and "due") passed for all three; statement 5 (the reveal and the rating speak to this learner; meaning-only definitions; one romanisation) passed on every captured clause; statement 3 (a real shop with real confusions) passed on realism, the wrong-size tick, the variant row and the ô-á-tsian reveal, and failed one clause for one dish (飯糰 had section-mates but none sharing a character). No new major finding; no score below 8. The exit criterion set in iteration 3 is met.
+
+**What the reviewers still asked for (all shipped in the same pass)**
+
+- A same-length neighbour sharing a character for every ordered dish, including two-character ones (飯糰 ↔ 飯捲; 蛋餅 ↔ 燒餅); real breakfast rows (燒餅, 飯捲, 饅頭, 漢堡).
+- Honest beef-noodle prices (牛肉麵 130/160 above 牛肉湯麵 60/80) with a build-time rule: a broth-only bowl is cheaper than the meat bowl, 小 is cheaper than 大.
+- An amber verdict when every dish was read right and only a size was wrong ("老闆娘：大碗還是小碗？ All read right — check the size column").
+- The cloze look-alike tag names the character it is not, with the tell; the leech row lists each foil with its differing character's reading and tell, and hides pinyin until tapped.
+- One pinyin house style for tapped sentence words (lǎo bǎn, not Lǎobǎn); "Reviews 1/2" as done over due; "10 words · 7 re-asked · 1 drill item" on the summary; the paused summary talks about today, not tomorrow.
+- The grace verse quoted the way it is said (我們得救全是神的恩典，不是靠自己的行為) instead of a misquoted Ephesians 2:8; long descriptive parentheticals moved from definitions into notes (飯糰, 有雷, 是在哈囉, 泡麵番); definitions capped at 60 characters by test.
+- Standalone drills state the re-ask rule before any miss; "Spelling note 寫法備註" and "Usage note 用法備註" told apart; the import preview scrolls instead of clipping its last column; the reveal scrolls the example sentence clear of the rating footer.
+
+**One counter that was not a bug.** Both the PM and the learner saw "18 answers today" fail to move after a restored review. Reproduced in a browser probe: every answer persisted and counted; the walkthrough had navigated away in the same instant as the rating, before the write was visible to the next page load. The walkthrough now waits for the write; the app was correct.
+
+**Final captures (31):** the two states the learner could not verify from earlier rounds are now on screen — the Slang filter of the vocab list, and a 母湯 reveal leading with m̄-thang and its 備註 note.
+
+**Loop closed after four iterations** (the brief allowed up to twenty). Deferred for a later release, unchanged from the iteration-2 plan: realia for church, slang and anime on the slip engine; a second example sentence per card; the full leech remediation view with per-lapse history; persisted neutral-answer logs; latency-based nudges; generated foils for custom cards; per-character stats; a "learn 5 more" beyond the daily new limit; price-reading tasks.

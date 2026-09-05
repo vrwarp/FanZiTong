@@ -62,7 +62,7 @@ describe('starter deck integrity', () => {
     const offenders = deck
       // Mandarin tone marks or Tâi-lô/POJ diacritics inside a definition mean a
       // reading was pasted where the meaning belongs (it goes in `spoken`).
-      .filter((c) => /[áǎàéěèíǐìóǒòúǔùâêôû\u0304\u030d]/.test(c.definition))
+      .filter((c) => /[áǎàéěèíǐìóǒòúǔùâêôû]|\u0304|\u030d/.test(c.definition))
       .map((c) => `${c.traditional}: ${c.definition}`);
     expect(offenders).toEqual([]);
   });

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { AppShell } from '@/components/layout/AppShell';
+import { ChunkErrorBoundary } from '@/components/ui/ChunkErrorBoundary';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useBootstrap } from '@/hooks/useBootstrap';
 import { useTheme } from '@/hooks/useTheme';
@@ -32,21 +33,23 @@ export default function App() {
   }
 
   return (
-    <Suspense fallback={<LoadingScreen message="Loading…" />}>
-      <Routes>
-        <Route element={<AppShell />}>
-          <Route index element={<LearnPage />} />
-          <Route path="drills" element={<DrillsPage />} />
-          <Route path="vocab" element={<VocabPage />} />
-          <Route path="vocab/new" element={<CardEditorPage />} />
-          <Route path="vocab/:cardId" element={<CardEditorPage />} />
-          <Route path="stats" element={<StatsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
-        <Route path="study" element={<StudyPage />} />
-        <Route path="drills/:drillType" element={<DrillRunnerPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Suspense>
+    <ChunkErrorBoundary>
+      <Suspense fallback={<LoadingScreen message="Loading…" />}>
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route index element={<LearnPage />} />
+            <Route path="drills" element={<DrillsPage />} />
+            <Route path="vocab" element={<VocabPage />} />
+            <Route path="vocab/new" element={<CardEditorPage />} />
+            <Route path="vocab/:cardId" element={<CardEditorPage />} />
+            <Route path="stats" element={<StatsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
+          <Route path="study" element={<StudyPage />} />
+          <Route path="drills/:drillType" element={<DrillRunnerPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </ChunkErrorBoundary>
   );
 }

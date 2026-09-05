@@ -76,7 +76,8 @@ test.describe('Daily study session (Journey 1)', () => {
     await expect(page.getByTestId('today-answers')).toHaveText(/1 answer/);
     await page.getByTestId('start-session').click();
     await expect(page.getByTestId('study-status')).toHaveText(/resumed/);
-    await expect(page.getByTestId('session-progress')).toHaveText(/Card 1 of 9/);
+    // Counts carry on from before the pause: one answered, nine to go.
+    await expect(page.getByTestId('session-progress')).toHaveText(/Card 2 of 10/);
   });
 
   test('"Done for today" from a paused session is honoured by the dashboard', async ({ page }) => {

@@ -182,6 +182,7 @@ describe('StudyEngine — drill interleaving', () => {
     expect(s.step?.kind).toBe('drill');
     if (s.step?.kind !== 'drill') throw new Error('expected drill');
     expect(s.step.exercise.type).toBe('cloze');
+    if (s.step.exercise.type !== 'cloze') throw new Error('expected cloze');
     expect(s.step.exercise.cardId).toBe(outside.id);
   });
 

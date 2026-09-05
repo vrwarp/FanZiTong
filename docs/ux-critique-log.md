@@ -101,3 +101,39 @@ Pedagogy rule verified on every prompt by all three; nobody found pinyin on a pr
 - Walkthrough: 24 captures including paused → resume, the completed summary, the all-done dashboard, the foil retry and the cloze misread.
 
 **Deferred (from ideation section D):** realia for church/slang/anime on the slip engine; second example sentence per card; full leech remediation view (needs `chosen` logs); persisted neutral-answer logs; latency-based nudge; generated foils for custom cards; per-character stats; "learn 5 more" beyond the daily new limit; price-reading tasks; a `notes` field.
+
+## Iteration 3
+
+**Scores:** PM 8/10 · Language expert 8/10 · Heritage learner 8/10.
+A verification round against the five statements from iteration 2. All three reviewers: the pinyin rule holds on every prompt face, the mechanics have converged (evidence-graded cloze, reading-focused rating, find-not-match retry, per-word readings, honest slip feedback, the pause/done handoff), and what remains is data and copy. Statements 1 and 4 passed; 2, 3 and 5 each failed on one clause.
+
+**Consensus findings (2+ reviewers)**
+
+1. "Cards left" was 7 on the paused summary and 6 on the resume card for the same session (the summary counted the interrupted drill).
+2. 便當 printed under 小菜 at NT$35 with no neighbour at a 滷肉飯 counter; a friend ordering 豆漿 + 便當 + 珍珠奶茶 at one shop — the slip's rows were real but the shop was not.
+3. 阿雜 was taught as "ā zá" with the real reading (a-tsa̍p, POJ) inside the definition; the editor hint still said ô-á-chian; definitions still carried non-meaning parentheticals ("Taiwanese staple", "bento classic").
+4. The third foil of 藉口 (藉囗) rendered identically to the headword on the leech row.
+5. The contrast card for 午/牛 and the look-alike tag for 正/證 had no reading or tell (the character table lacked them).
+6. Two meanings of "learning" on the Stats page; the Stats gauge showed "—" without the reason the dashboard gives; "Next: 1 review due within a day — do them".
+7. A missed item in a standalone drill did not come back; "Questions = 5" ran three items and one slip.
+
+**Decisions (no conflicts; recorded in iter3/ideation.md)**
+
+- Slips are one shop's order: dishes grouped by the shop that sells them before a slip is built; a 便當店 template with 便當類 (排骨便當／雞腿便當／焢肉便當 as neighbours); a dish without a same-section neighbour gets one from another section of the same shop; ≤ 14 rows; a per-dish price table; unstudied companion dishes on an in-session slip are recorded but never rated.
+- No foil may render as its headword or a variant (NFC-equal or a 口／囗-only difference fails the build).
+- One romanisation (Tâi-lô) in bundled data, meaning-only definitions, and a `notes` field for sound-spellings and origins (母湯＝毋通, 歸剛＝規工, 阿雜, 盤子, 蛤, 魯蛇, 吃土, 暈船, 爆雷).
+- One remaining count (cards only) on the summary and the resume card; "words seen" counts cards whose schedule the session touched.
+- A missed standalone item comes back once before the end, announced in the header; for the Order Slip "Questions" means slips.
+
+**Changes shipped**
+
+- Data: 305 character-table entries so every character a starter foil or a same-section menu neighbour differs by has a reading, gloss and tell (午／牛, 正／證, 蚵／蜆 …); the syllable counter treats an apostrophe as a boundary (zuì'ài); 反浱 → 反脈, 藉囗 → 蓆口; Tâi-lô readings (ô-á-tsian, a-tsa̍p, phân-á, m̄-thang, kui-kang); definitions swept; `notes` on cards (CSV/JSON/editor, 💡 after the reveal).
+- Slip: 便當店 template, shop-first grouping (standalone and in-session), cross-section neighbours, row cap, price table, more real neighbours (乾拌麵, 鮪魚飯糰, 芋頭糕, 排骨酥, 雞排, 鹹水雞, 炸豆腐, 肉粽, 地瓜粥), a character contrast on a wrongly ticked neighbour, `, small／large` in the expanded gloss.
+- Session: one count; "≈ N min" on the resume card; "Done for today 今天先這樣" / "Back to Learn 回首頁"; "Answers" split into cards and drill items; "Tomorrow 明天" with one window (due by the end of local tomorrow) and singular/plural agreement; "Reviews · 1 done today" when nothing was due; "PROGRESS" kicker.
+- Drills: standalone re-queue of a missed item ("A missed word comes back before the end 等一下會再考一次"); each drill step keyed so a re-asked item starts fresh; "In review 複習中 — no change"; "Read a real sentence and pick the word that fits."; "each slip asks for up to 3 dishes"; bigger cue and taller tiles.
+- Stats: "started · solid · not started"; the gauge's empty state; leech readings behind a tap and definitions that wrap; the card-state legend never wraps mid-word; the gauge is labelled "Recall now".
+- Editor: "Reviews / forgotten (after learning)"; "Note 備註"; ô-á-tsian in the As-heard hint. Import preview rows tagged "already in deck" / "repeated in file".
+- Integrity tests over the starter deck: sentence alignment, character-table coverage, foil visibility, one romanisation, a neighbour for every food word, one shop per slip, meaning-only definitions.
+- Walkthrough: 29 captures — adds the tapped chip + sentence word, the wrong-size slip, the ô-á-tsian reveal, the leech foil drill, Settings with Dark selected; paced first reveal; Questions = 5.
+
+**Exit criterion for round 4:** statements 2, 3 and 5 pass with no new major and no score below 8.

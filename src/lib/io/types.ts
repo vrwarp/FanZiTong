@@ -12,6 +12,7 @@ export interface ImportRow {
   exampleSentencePinyin?: string;
   exampleSentenceTranslation?: string;
   visualFoils: string[];
+  variants: string[];
   fsrs?: FsrsState;
   createdAt?: string;
   updatedAt?: string;

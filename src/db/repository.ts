@@ -4,6 +4,7 @@ import { db as defaultDb, type FanZiTongDatabase } from './database';
 export const META_KEYS = {
   seededAt: 'seededAt',
   schemaVersion: 'schemaVersion',
+  lastBackupAt: 'lastBackupAt',
 } as const;
 
 /**

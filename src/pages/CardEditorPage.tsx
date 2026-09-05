@@ -30,6 +30,7 @@ interface FormState {
   exampleSentencePinyin: string;
   exampleSentenceTranslation: string;
   visualFoils: string;
+  variants: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -42,6 +43,7 @@ const EMPTY_FORM: FormState = {
   exampleSentencePinyin: '',
   exampleSentenceTranslation: '',
   visualFoils: '',
+  variants: '',
 };
 
 function toForm(card: VocabCard): FormState {
@@ -55,6 +57,7 @@ function toForm(card: VocabCard): FormState {
     exampleSentencePinyin: card.exampleSentencePinyin ?? '',
     exampleSentenceTranslation: card.exampleSentenceTranslation ?? '',
     visualFoils: (card.visualFoils ?? []).join(' | '),
+    variants: (card.variants ?? []).join(' | '),
   };
 }
 
@@ -131,6 +134,8 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     card.exampleSentenceTranslation = form.exampleSentenceTranslation.trim() || undefined;
     const foils = splitList(form.visualFoils);
     card.visualFoils = foils.length ? foils : undefined;
+    const variants = splitList(form.variants);
+    card.variants = variants.length ? variants : undefined;
     await repository.putCard(card);
     navigate('/vocab');
   };
@@ -254,7 +259,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
       <Field
         label="Visual foils 形近字"
         htmlFor="foils"
-        hint="Look-alike characters/words for discrimination drills, separated with | (e.g. 魯 | 鱸)."
+        hint="Look-alike characters/words for discrimination drills, separated with | (e.g. 鹵 | 鱸)."
       >
         <input
           id="foils"
@@ -263,6 +268,20 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
           value={form.visualFoils}
           onChange={set('visualFoils')}
           data-testid="field-foils"
+        />
+      </Field>
+      <Field
+        label="Also written 常見寫法"
+        htmlFor="variants"
+        hint="Accepted spellings you will see on signs and in chats (e.g. 魯肉飯 for 滷肉飯). Never used as wrong answers."
+      >
+        <input
+          id="variants"
+          className={`${inputClass} hanzi`}
+          lang="zh-Hant-TW"
+          value={form.variants}
+          onChange={set('variants')}
+          data-testid="field-variants"
         />
       </Field>
 
@@ -313,7 +332,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
 
       <Modal
         open={confirmDelete}
-        title="Delete this card?"
+        title={`Delete ${existing?.traditional ?? 'this card'}?`}
         onClose={() => setConfirmDelete(false)}
         testId="delete-dialog"
         footer={

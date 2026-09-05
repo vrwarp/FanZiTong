@@ -1,10 +1,16 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { openApp, SAMPLE_CSV } from './helpers';
+import type { Page } from '@playwright/test';
+
+async function openDataTools(page: Page) {
+  await page.getByTestId('vocab-data').locator('summary').click();
+}
 
 test.describe('Vocab tab: import, export, edit (Journey 2, AC-3)', () => {
   test('imports a CSV with preview, duplicate flags and a domain tag', async ({ page }) => {
     await openApp(page, '/vocab');
+    await openDataTools(page);
     await page.getByTestId('import-file').setInputFiles({
       name: 'sermon-and-dishes.csv',
       mimeType: 'text/csv',
@@ -32,7 +38,7 @@ test.describe('Vocab tab: import, export, edit (Journey 2, AC-3)', () => {
     const item = page.getByTestId('vocab-item');
     await expect(item).toHaveCount(1);
     await expect(item).toContainText('火鍋料');
-    await expect(item).toContainText('Church');
+    await expect(item.locator('[aria-label="Church"]')).toHaveCount(1);
     await expect(page.getByTestId('vocab-pinyin')).toHaveCount(0);
     await page.getByTestId('toggle-pinyin').check();
     await expect(page.getByTestId('vocab-pinyin')).toHaveText('huǒ guō liào');
@@ -40,6 +46,7 @@ test.describe('Vocab tab: import, export, edit (Journey 2, AC-3)', () => {
 
   test('exports JSON and CSV with intact Traditional characters', async ({ page }) => {
     await openApp(page, '/vocab');
+    await openDataTools(page);
 
     const [jsonDownload] = await Promise.all([
       page.waitForEvent('download'),
@@ -61,10 +68,13 @@ test.describe('Vocab tab: import, export, edit (Journey 2, AC-3)', () => {
     const csv = await readFile((await csvDownload.path())!, 'utf8');
     expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv.slice(1).split('\n')[0]).toBe(
-      'traditional,pinyin,definition,domain,tags,example_sentence,foils,example_pinyin,example_translation',
+      'traditional,pinyin,definition,domain,tags,example_sentence,foils,example_pinyin,example_translation,variants',
     );
     expect(csv).toContain('滷肉飯,lǔ ròu fàn,');
     expect(csv).toContain('團契,tuán qì,');
+    expect(csv).toMatch(/滷肉飯,.*魯肉飯/); // accepted variant round-trips
+    const lurouJson = json.cards.find((c: { traditional: string }) => c.traditional === '滷肉飯');
+    expect(lurouJson.variants).toEqual(['魯肉飯']);
   });
 
   test('re-importing an export restores every card without duplication', async ({ page }) => {

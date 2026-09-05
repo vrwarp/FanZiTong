@@ -14,10 +14,15 @@ export interface FoilExercise {
   answer: string;
 }
 
+/** True when `text` is one of the card's accepted alternative spellings. */
+export function isVariantOf(card: VocabCard, text: string): boolean {
+  return (card.variants ?? []).some((v) => v.trim() === text);
+}
+
 /**
  * Expand an authored foil into a full-length option for the target word.
  * Same-length foils are used verbatim. A single-character foil for a
- * multi-character word replaces the first character (e.g. 滷肉飯 + 魯 → 魯肉飯),
+ * multi-character word replaces the first character (e.g. 滷肉飯 + 鹵 → 鹵肉飯),
  * which is where the confusable radical almost always lives in the PRD data.
  */
 export function expandFoil(target: string, foil: string): string | null {
@@ -42,7 +47,7 @@ export function pickFoilOptions(
   const target = card.traditional;
   const targetLength = hanChars(target).length;
   const chosen: string[] = [];
-  const seen = new Set<string>([target]);
+  const seen = new Set<string>([target, ...(card.variants ?? [])]);
   const push = (candidates: string[]) => {
     for (const c of candidates) {
       if (chosen.length >= count) return;
@@ -55,9 +60,11 @@ export function pickFoilOptions(
   push(
     shuffle(card.visualFoils ?? [], rng)
       .map((f) => expandFoil(target, f))
-      .filter((f): f is string => f !== null),
+      .filter((f): f is string => f !== null && !isVariantOf(card, f)),
   );
-  const others = pool.filter((c) => c.id !== card.id && c.traditional !== target);
+  const others = pool.filter(
+    (c) => c.id !== card.id && c.traditional !== target && !isVariantOf(card, c.traditional),
+  );
   const sameLength = others.filter((c) => hanChars(c.traditional).length === targetLength);
   push(
     shuffle(
@@ -86,4 +93,26 @@ export function buildFoilExercise(
     options: shuffle([card.traditional, ...foils], rng),
     answer: card.traditional,
   };
+}
+
+export interface CharDiff {
+  index: number;
+  picked: string;
+  correct: string;
+}
+
+/**
+ * Character positions where a picked option differs from the answer, so
+ * feedback can point at the exact glyph (內 vs 肉) instead of the whole word.
+ * Returns an empty list when the strings have different lengths.
+ */
+export function diffCharacters(picked: string, correct: string): CharDiff[] {
+  const a = Array.from(picked);
+  const b = Array.from(correct);
+  if (a.length !== b.length) return [];
+  const diffs: CharDiff[] = [];
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) diffs.push({ index: i, picked: a[i], correct: b[i] });
+  }
+  return diffs;
 }

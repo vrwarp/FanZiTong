@@ -15,6 +15,7 @@ export const CSV_HEADERS = [
   'foils',
   'example_pinyin',
   'example_translation',
+  'variants',
 ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
@@ -49,6 +50,10 @@ const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
   example_translation: 'example_translation',
   example_sentence_translation: 'example_translation',
   translation: 'example_translation',
+  variants: 'variants',
+  variant: 'variants',
+  also_written: 'variants',
+  異體: 'variants',
 };
 
 const BOM = '\uFEFF';
@@ -120,6 +125,7 @@ export function parseCsv(text: string): ParseResult {
       domain,
       tags: splitList(record.tags),
       visualFoils: splitList(record.foils),
+      variants: splitList(record.variants),
       warnings,
       sourceIndex,
     };
@@ -147,6 +153,7 @@ export function toCsv(cards: VocabCard[]): string {
     foils: (c.visualFoils ?? []).join('|'),
     example_pinyin: c.exampleSentencePinyin ?? '',
     example_translation: c.exampleSentenceTranslation ?? '',
+    variants: (c.variants ?? []).join('|'),
   }));
   const body = Papa.unparse(
     { fields: [...CSV_HEADERS], data: data.map((d) => CSV_HEADERS.map((h) => d[h])) },

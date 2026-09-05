@@ -15,6 +15,7 @@ import {
   dailySeries,
   domainMastery,
   findLeeches,
+  hasEnoughRecallData,
   retentionRate,
   stateDistribution,
   totalLapses,
@@ -29,8 +30,10 @@ export default function StatsPage() {
 
   const model = useMemo(() => {
     const scheduler = createScheduler(settings, { enableFuzz: false });
+    const ready = hasEnoughRecallData(logs);
     return {
-      retrievability: averageRetrievability(scheduler, cards, now),
+      recallDataReady: ready,
+      retrievability: ready ? averageRetrievability(scheduler, cards, now) : null,
       retention30: retentionRate(
         logs.filter(
           (l) => now.getTime() - new Date(l.reviewTimestamp).getTime() <= 30 * 86_400_000,
@@ -48,7 +51,7 @@ export default function StatsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Stats" zh="統計" subtitle="Memory health, lapses and leeches" />
+      <PageHeader title="Stats" zh="統計" subtitle="How well the words are sticking" />
 
       <section className="card-surface flex items-center gap-4 p-4">
         <RetentionGauge value={model.retrievability} target={settings.targetRetention} />
@@ -104,9 +107,9 @@ export default function StatsPage() {
           className="mt-2 grid grid-cols-4 gap-1 text-xs text-stone-600 dark:text-stone-300"
           data-testid="state-distribution"
         >
-          <li>● New {model.states.new}</li>
+          <li>● Not started {model.states.new}</li>
           <li className="text-amber-700 dark:text-amber-300">● Learning {model.states.learning}</li>
-          <li className="text-jade-600">● Review {model.states.review}</li>
+          <li className="text-jade-600">● Reviewing {model.states.review}</li>
           <li className="text-red-600">● Relearning {model.states.relearning}</li>
         </ul>
       </section>
@@ -128,7 +131,7 @@ export default function StatsPage() {
         <p className="mb-3 text-xs text-stone-500 dark:text-stone-400">
           Cards with stability over 30 days.
         </p>
-        <DomainMasteryBars mastery={model.mastery} />
+        <DomainMasteryBars mastery={model.mastery} cards={cards} />
       </section>
 
       <section className="card-surface p-4" aria-labelledby="leech-heading">
@@ -143,7 +146,7 @@ export default function StatsPage() {
         </div>
         {model.leeches.length === 0 ? (
           <p className="mt-2 text-sm text-stone-500 dark:text-stone-400" data-testid="no-leeches">
-            No leeches. Keep it up!
+            Nothing keeps slipping. Keep it up!
           </p>
         ) : (
           <>
@@ -158,7 +161,7 @@ export default function StatsPage() {
                     <span className="min-w-0 flex-1 truncate text-sm">{card.definition}</span>
                   </Link>
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
-                    {card.fsrs.lapses} lapses
+                    forgotten {card.fsrs.lapses}×
                   </span>
                   {card.visualFoils && card.visualFoils.length > 0 && (
                     <Hanzi className="hidden text-sm text-stone-500 sm:inline">

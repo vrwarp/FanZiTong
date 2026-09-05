@@ -17,9 +17,50 @@ export function logsOnDay(logs: ReviewLog[], day: Date): ReviewLog[] {
   return logs.filter((l) => dayKey(new Date(l.reviewTimestamp)) === key);
 }
 
-/** Reviews answered today (any modality). */
-export function countReviewsToday(logs: ReviewLog[], now: Date): number {
+/** Every answer given today, including learning-step repeats and drills. */
+export function countAnswersToday(logs: ReviewLog[], now: Date): number {
   return logsOnDay(logs, now).length;
+}
+
+/**
+ * Reviews answered today: answers to cards that were already in Review or
+ * Relearning when answered. New cards and their learning-step repeats are
+ * counted separately (`countNewCardsIntroducedToday`). Logs written before
+ * `stateBefore` existed count as reviews.
+ */
+export function countReviewsToday(logs: ReviewLog[], now: Date): number {
+  return logsOnDay(logs, now).filter(
+    (l) =>
+      l.stateBefore === undefined ||
+      l.stateBefore === CardState.Review ||
+      l.stateBefore === CardState.Relearning,
+  ).length;
+}
+
+/** Cards that will become due within the next `hours` hours (not due yet now). */
+export function countDueWithin(cards: VocabCard[], now: Date, hours: number): number {
+  const start = now.getTime();
+  const end = start + hours * 3_600_000;
+  return cards.filter((c) => {
+    if (c.fsrs.state === CardState.New) return false;
+    const due = new Date(c.fsrs.due).getTime();
+    return due > start && due <= end;
+  }).length;
+}
+
+export const RECALL_MIN_STUDY_DAYS = 7;
+
+/** Number of distinct local days with at least one answer. */
+export function countStudyDays(logs: ReviewLog[]): number {
+  return new Set(logs.map((l) => dayKey(new Date(l.reviewTimestamp)))).size;
+}
+
+/**
+ * Retrievability is only meaningful once cards have had time to be forgotten;
+ * before a week of study days every percentage reads as a verdict on noise.
+ */
+export function hasEnoughRecallData(logs: ReviewLog[], minDays = RECALL_MIN_STUDY_DAYS): boolean {
+  return countStudyDays(logs) >= minDays;
 }
 
 /**

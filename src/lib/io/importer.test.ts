@@ -11,6 +11,7 @@ function row(overrides: Partial<ImportRow>): ImportRow {
     definition: 'Hot pot',
     tags: [],
     visualFoils: [],
+    variants: [],
     warnings: [],
     sourceIndex: 1,
     ...overrides,

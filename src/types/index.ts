@@ -11,7 +11,7 @@ export type DomainCategory = (typeof DOMAIN_CATEGORIES)[number];
 export const DOMAIN_LABELS: Record<DomainCategory, { en: string; zh: string; emoji: string }> = {
   food: { en: 'Food', zh: '飲食', emoji: '🍜' },
   church: { en: 'Church', zh: '教會', emoji: '⛪' },
-  slang: { en: 'Slang', zh: '俚語', emoji: '💬' },
+  slang: { en: 'Slang', zh: '流行語', emoji: '💬' },
   anime: { en: 'Anime', zh: '動漫', emoji: '🎌' },
   custom: { en: 'Custom', zh: '自訂', emoji: '📝' },
 };
@@ -75,6 +75,11 @@ export interface VocabCard {
   exampleSentenceTranslation?: string;
   /** Visually confusable characters/words for discrimination drills. */
   visualFoils?: string[];
+  /**
+   * Accepted alternative spellings seen in the wild (e.g. 滷肉飯 → 魯肉飯,
+   * 鹹酥雞 → 鹽酥雞). Never used as "wrong" foils; shown as "also written".
+   */
+  variants?: string[];
   fsrs: FsrsState;
   createdAt: string;
   updatedAt: string;
@@ -90,11 +95,12 @@ export const RATING_LABELS: Record<RatingGrade, string> = {
 };
 
 export type ExerciseType = 'rapid_recognition' | 'cloze' | 'realia_menu' | 'foil_discrimination';
-export const EXERCISE_LABELS: Record<ExerciseType, string> = {
-  rapid_recognition: 'Rapid recognition',
-  cloze: 'Cloze',
-  realia_menu: 'Menu realia',
-  foil_discrimination: 'Foil discrimination',
+/** One plain name per exercise, used everywhere it appears. */
+export const EXERCISE_LABELS: Record<ExerciseType, { en: string; zh: string }> = {
+  rapid_recognition: { en: 'Recognition', zh: '認字' },
+  cloze: { en: 'Fill the Blank', zh: '填空' },
+  realia_menu: { en: 'Order Slip', zh: '點菜單' },
+  foil_discrimination: { en: 'Spot the Character', zh: '辨字' },
 };
 
 export interface ReviewLog {
@@ -104,6 +110,8 @@ export interface ReviewLog {
   exerciseType: ExerciseType;
   reviewTimestamp: string;
   timeSpentMs: number;
+  /** FSRS state of the card before this answer (0 New, 1 Learning, 2 Review, 3 Relearning). */
+  stateBefore?: number;
   // Snapshot of FSRS state after the review.
   stability: number;
   difficulty: number;

@@ -17,8 +17,27 @@ test.describe('Drills tab (standalone modalities)', () => {
       expect(await solveDrill(page)).toBe('foil');
     }
     await expect(page.getByTestId('session-summary')).toBeVisible();
-    await expect(page.getByTestId('summary-retention')).toHaveText('100%');
+    await expect(page.getByTestId('summary-retention')).toHaveText('3/3');
     await expect(page.getByTestId('summary-answers')).toHaveText('3');
+  });
+
+  test('spot the character: a wrong pick explains the differing character and asks for one corrective tap', async ({
+    page,
+  }) => {
+    await openApp(page, '/drills');
+    await page.goto('/drills/foil_discrimination?count=1');
+    await expect(page.getByTestId('foil-exercise')).toBeVisible({ timeout: 20_000 });
+    const answer =
+      (await page.locator('[data-testid="foil-option"][data-correct="true"]').textContent()) ?? '';
+    const wrong = page.locator('[data-testid="foil-option"][data-correct="false"]').first();
+    await wrong.click();
+    await expect(page.getByTestId('foil-feedback')).toContainText('不對');
+    await expect(page.getByTestId('foil-confirm-hint')).toContainText(answer);
+    await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+    await page.locator('[data-testid="foil-option"][data-correct="true"]').click();
+    await expect(page.getByTestId('drill-outcome')).toContainText('Again');
+    await page.getByTestId('drill-continue').click();
+    await expect(page.getByTestId('session-summary')).toBeVisible();
   });
 
   test('cloze: the sentence never shows pinyin; a wrong pick is corrected', async ({ page }) => {
@@ -52,10 +71,19 @@ test.describe('Drills tab (standalone modalities)', () => {
     await expect(exercise).toBeVisible();
     await expect(page.getByTestId('menu-slip')).toContainText('點菜單');
     await expect(page.getByTestId('menu-timer')).toHaveText(/\d+s/);
+    // The order is cued by sound + meaning, so the slip has to be read.
     const prompt = (await page.getByTestId('menu-prompt').textContent()) ?? '';
-    expect(prompt).not.toMatch(TONE_MARK_RE);
+    expect(prompt).toMatch(TONE_MARK_RE);
     const keys = ((await exercise.getAttribute('data-target-keys')) ?? '').split(',');
     expect(keys.length).toBeGreaterThanOrEqual(2);
+    for (const key of keys) {
+      const label = await page
+        .locator(`[data-testid="menu-checkbox"][data-key="${key}"]`)
+        .locator('xpath=ancestor::li')
+        .getAttribute('data-label');
+      expect(prompt).not.toContain(label ?? '∅');
+    }
+    await expect(page.getByTestId('menu-slip')).toContainText(/\d+/); // prices
 
     for (const key of keys)
       await page.locator(`[data-testid="menu-checkbox"][data-key="${key}"]`).check();
@@ -76,6 +104,6 @@ test.describe('Drills tab (standalone modalities)', () => {
     await expect(page.getByTestId('menu-feedback')).toContainText('❌');
     await page.getByTestId('drill-continue').click();
     await expect(page.getByTestId('session-summary')).toBeVisible();
-    await expect(page.getByTestId('summary-retention')).not.toHaveText('100%');
+    await expect(page.getByTestId('summary-retention')).not.toHaveText(/^(\d+)\/\1$/);
   });
 });

@@ -1,7 +1,7 @@
 import { mulberry32 } from '@/lib/util/random';
 import { containsPinyin } from '@/lib/util/pinyin';
 import { makeCard, makePool } from '@/test/factories';
-import { buildClozeExercise, CLOZE_OPTION_COUNT, pickClozeDistractors } from './cloze';
+import { buildClozeExercise, clozeBlank, CLOZE_OPTION_COUNT, pickClozeDistractors } from './cloze';
 
 describe('buildClozeExercise', () => {
   const pool = makePool();
@@ -18,10 +18,27 @@ describe('buildClozeExercise', () => {
     expect(ex.answer).toBe('團契');
   });
 
-  it('prefers word-length visual foils as distractors', () => {
+  it('uses readable deck words plus one look-alike, never a variant', () => {
     const card = pool.find((c) => c.traditional === '團契')!;
     const distractors = pickClozeDistractors(card, pool, 3, mulberry32(2));
-    expect(distractors.sort()).toEqual(['團夥', '團隊', '契合']);
+    expect(distractors).toHaveLength(3);
+    const deckWords = new Set(pool.map((c) => c.traditional));
+    const fromDeck = distractors.filter((d) => deckWords.has(d));
+    const foils = distractors.filter((d) => ['團隊', '契合', '團夥'].includes(d));
+    expect(fromDeck.length).toBe(2);
+    expect(foils.length).toBe(1);
+    // Same-domain deck words come first.
+    expect(fromDeck).toContain('禱告');
+    const withVariant = { ...card, variants: ['團隊'] };
+    expect(pickClozeDistractors(withVariant, pool, 3, mulberry32(2))).not.toContain('團隊');
+  });
+
+  it('carries pinyin and gloss for deck-word options', () => {
+    const card = pool.find((c) => c.traditional === '團契')!;
+    const ex = buildClozeExercise(card, pool, mulberry32(5))!;
+    expect(ex.optionInfo['團契']).toEqual({ pinyin: 'tuán qì', definition: 'Fellowship' });
+    expect(Object.keys(ex.optionInfo).length).toBeGreaterThanOrEqual(3);
+    expect(clozeBlank('滷肉飯')).toBe('＿＿＿');
   });
 
   it('keeps pinyin out of the prompt (AC-2) and only in feedback', () => {

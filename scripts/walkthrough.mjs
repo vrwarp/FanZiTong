@@ -202,6 +202,8 @@ await shot('18-settings', { fullPage: true });
 // 19-20. Dark mode
 await step('dark', async () => {
   await tid('theme-dark').click();
+  await page.waitForFunction(() => document.documentElement.classList.contains('dark'));
+  await page.waitForTimeout(600); // let the IndexedDB write land before navigating
   await page.goto(base);
   await tid('start-session').waitFor();
   await shot('19-learn-dark');

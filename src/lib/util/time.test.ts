@@ -11,7 +11,9 @@ import {
 describe('formatInterval', () => {
   const now = new Date('2026-09-05T08:00:00Z');
   it('formats learning-step and day-scale intervals', () => {
-    expect(formatInterval(now, new Date(now.getTime() + 60_000))).toBe('<10m');
+    expect(formatInterval(now, new Date(now.getTime() + 20_000))).toBe('<1m');
+    expect(formatInterval(now, new Date(now.getTime() + 60_000))).toBe('1m');
+    expect(formatInterval(now, new Date(now.getTime() + 6 * 60_000))).toBe('6m');
     expect(formatInterval(now, new Date(now.getTime() + 25 * 60_000))).toBe('25m');
     expect(formatInterval(now, new Date(now.getTime() + 3 * 3_600_000))).toBe('3h');
     expect(formatInterval(now, addDays(now, 1))).toBe('1d');
@@ -21,7 +23,7 @@ describe('formatInterval', () => {
     expect(formatInterval(now, addDays(now, 3650))).toBe('10y');
   });
   it('never goes negative', () => {
-    expect(formatInterval(now, new Date(now.getTime() - 1000))).toBe('<10m');
+    expect(formatInterval(now, new Date(now.getTime() - 1000))).toBe('<1m');
   });
 });
 

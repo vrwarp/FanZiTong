@@ -84,6 +84,12 @@
   .safe-top {
     padding-top: env(safe-area-inset-top, 0px);
   }
+  /* Printed order slips are set in 楷體/明體; prefer those where the device has them. */
+  .font-slip {
+    font-family:
+      'DFKai-SB', 'BiauKai', '標楷體', 'Kaiti TC', 'PMingLiU', '新細明體', 'Noto Serif TC',
+      'Noto Serif CJK TC', 'Songti TC', serif;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

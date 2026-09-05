@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/Button';
 import { Field, inputClass } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { ImportDialog, type ImportSource } from '@/components/vocab/ImportDialog';
-import { repository } from '@/db/repository';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { META_KEYS, repository } from '@/db/repository';
 import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useSettings } from '@/hooks/useSettings';
 import { downloadTextFile, timestampForFilename } from '@/lib/io/download';
@@ -34,6 +35,7 @@ export default function SettingsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [storage, setStorage] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const lastBackupAt = useLiveQuery(() => repository.getMeta(META_KEYS.lastBackupAt), []);
 
   useEffect(() => {
     navigator.storage
@@ -119,7 +121,7 @@ export default function SettingsPage() {
           <NumberField
             key={`leech-${settings.leechThreshold}`}
             id="leech"
-            label="Leech at lapses"
+            label="Flag after N forgets"
             value={settings.leechThreshold}
             min={1}
             onChange={(v) => void update({ leechThreshold: v })}
@@ -216,6 +218,9 @@ export default function SettingsPage() {
           state, review history and settings.{' '}
           {storage && <span className="text-stone-500">{storage}.</span>}
         </p>
+        <p className="text-sm font-semibold" data-testid="last-backup">
+          Last backup: {lastBackupAt ? new Date(lastBackupAt).toLocaleString() : 'never'}
+        </p>
         {notice && (
           <p
             role="status"
@@ -250,7 +255,12 @@ export default function SettingsPage() {
           >
             ⬆️ Restore backup
           </Button>
-          <Button variant="danger" onClick={() => setConfirmReset(true)} data-testid="reset-data">
+          <Button
+            variant="outline"
+            className="border-red-400 text-red-700 hover:bg-red-50 dark:text-red-300"
+            onClick={() => setConfirmReset(true)}
+            data-testid="reset-data"
+          >
             Reset all data
           </Button>
         </div>
@@ -292,8 +302,8 @@ export default function SettingsPage() {
         }
       >
         <p className="text-sm">
-          All cards, review history and settings on this device will be erased and the starter deck
-          reloaded. Export a backup first if you want to keep your progress.
+          This removes {cards.length} cards and {logs.length} answers from this device and reloads
+          the starter deck. Export a backup first if you want to keep your progress.
         </p>
       </Modal>
     </div>

@@ -17,8 +17,8 @@ const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
 
 export default function App() {
   const bootstrap = useBootstrap();
-  const { settings } = useSettings();
-  useTheme(settings.theme);
+  const { settings, loaded } = useSettings();
+  useTheme(loaded ? settings.theme : null);
 
   if (bootstrap.status === 'loading') {
     return <LoadingScreen message="Preparing your deck…" />;

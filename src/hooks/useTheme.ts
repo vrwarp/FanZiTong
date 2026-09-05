@@ -9,9 +9,14 @@ export function resolveIsDark(preference: ThemePreference, systemPrefersDark: bo
   return systemPrefersDark;
 }
 
-/** Keeps the <html> "dark" class in sync with the preference and the OS setting. */
-export function useTheme(preference: ThemePreference): void {
+/**
+ * Keeps the <html> "dark" class in sync with the preference and the OS setting.
+ * Pass `null` until settings have loaded so the class applied by the inline
+ * boot script in index.html is not flipped back to the default in between.
+ */
+export function useTheme(preference: ThemePreference | null): void {
   useEffect(() => {
+    if (preference === null) return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const apply = () => {
       const dark = resolveIsDark(preference, media.matches);

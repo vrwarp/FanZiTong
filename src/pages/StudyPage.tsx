@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { DrillStep } from '@/components/study/DrillStep';
 import { RecognitionCard } from '@/components/study/RecognitionCard';
@@ -11,8 +11,8 @@ import { computeDashboard } from '@/hooks/useDashboard';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { createScheduler } from '@/lib/fsrs/scheduler';
-import { StudyEngine } from '@/lib/session/engine';
-import { computeStreak } from '@/lib/stats/analytics';
+import { StudyEngine, summarizeResults } from '@/lib/session/engine';
+import { computeStreak, countDueWithin } from '@/lib/stats/analytics';
 import type { RatingGrade, ReviewLog, UserSettings, VocabCard } from '@/types';
 
 /** Journey 1: waits for the local data, then mounts the session exactly once. */
@@ -48,11 +48,12 @@ function StudySession({
   });
   const api = useStudyEngine(engine);
   const { snapshot } = api;
+  const [paused, setPaused] = useState(false);
 
   // Keyboard shortcuts for desktop practice: space/enter reveal, 1-4 rate.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!snapshot || snapshot.step?.kind !== 'card') return;
+      if (paused || !snapshot || snapshot.step?.kind !== 'card') return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
@@ -63,7 +64,14 @@ function StudySession({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [snapshot, api]);
+  }, [snapshot, api, paused]);
+
+  const weakCards = useMemo(() => {
+    if (!engine || !snapshot) return [];
+    return summarizeResults(snapshot.results)
+      .weakCardIds.map((id) => engine.getCard(id))
+      .filter((c): c is VocabCard => Boolean(c));
+  }, [engine, snapshot]);
 
   if (!engine || !snapshot) {
     return (
@@ -78,30 +86,54 @@ function StudySession({
     );
   }
 
-  if (snapshot.status === 'complete') {
+  if (snapshot.status === 'complete' || paused) {
+    const now = new Date(snapshot.startedAt + snapshot.elapsedMs);
     return (
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col p-4">
         <SessionSummary
-          title="Session complete"
+          mode={snapshot.status === 'complete' ? 'complete' : 'paused'}
           results={snapshot.results}
           elapsedMs={snapshot.elapsedMs}
-          streak={computeStreak(logs, new Date(snapshot.startedAt + snapshot.elapsedMs))}
-          onDone={() => navigate('/')}
+          streak={Math.max(1, computeStreak(logs, now))}
+          remaining={snapshot.remaining + (snapshot.step ? 1 : 0)}
+          dueTomorrow={countDueWithin(engine.getCards(), now, 24)}
+          weakCards={weakCards}
+          onContinue={snapshot.status === 'complete' ? undefined : () => setPaused(false)}
+          onDone={() => {
+            api.finish();
+            navigate('/');
+          }}
         />
       </div>
     );
   }
 
+  const isHiddenCard = snapshot.step?.kind === 'card' && !snapshot.revealed;
+
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-3 p-4 pb-6">
+    // The whole screen is the tap target while the answer is hidden (one-thumb use).
+    <div
+      className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-3 p-4 pb-6"
+      onClick={(e) => {
+        if (!isHiddenCard) return;
+        if ((e.target as HTMLElement).closest('button, a, input, select, textarea')) return;
+        api.reveal();
+      }}
+      data-testid="study-screen"
+    >
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/')} data-testid="study-exit">
-          ← Back
-        </Button>
-        <span className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+        <span
+          className="text-xs font-semibold text-stone-500 dark:text-stone-400"
+          data-testid="study-status"
+        >
           {snapshot.answered} answered · {snapshot.remaining} left
         </span>
-        <Button variant="ghost" size="sm" onClick={api.finish} data-testid="study-finish">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setPaused(true)}
+          data-testid="study-finish"
+        >
           End session
         </Button>
       </div>
@@ -116,8 +148,10 @@ function StudySession({
         <RecognitionCard
           key={`${snapshot.card.id}-${snapshot.answered}`}
           card={snapshot.card}
+          pool={initialCards}
           revealed={snapshot.revealed}
           previews={snapshot.previews}
+          revealLatencyMs={snapshot.revealLatencyMs}
           onReveal={api.reveal}
           onRate={api.rate}
           autoRevealMs={settings.pinyinRevealDelayMs}

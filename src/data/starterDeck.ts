@@ -4,11 +4,13 @@ import { uuid } from '@/lib/util/id';
 
 /**
  * Compact authoring format:
- * [traditional, pinyin, definition, tags, sentence, sentence pinyin, translation, foils]
- * `tags` and `foils` are "|"-delimited. Foils are visually confusable
- * look-alikes (radical/component swaps, near-homographs) for §5.4 drills.
+ * [traditional, pinyin, definition, tags, sentence, sentence pinyin, translation, foils, variants?]
+ * `tags`, `foils` and `variants` are "|"-delimited. Foils are visually
+ * confusable look-alikes (radical/component swaps, near-homographs) for §5.4
+ * drills. Variants are accepted real-world spellings (滷肉飯 → 魯肉飯) that are
+ * shown as "also written" and never used as wrong answers.
  */
-type SeedEntry = [string, string, string, string, string, string, string, string];
+type SeedEntry = [string, string, string, string, string, string, string, string, string?];
 
 export const STARTER_DECK_NAME = 'Taiwanese Heritage Vocabulary (starter)';
 
@@ -18,10 +20,11 @@ const FOOD: SeedEntry[] = [
     'lǔ ròu fàn',
     'Braised minced pork over rice (Taiwanese staple)',
     'staple|rice|night-market',
-    '老闆，我要一碗大碗的滷肉飯加一顆滷蛋。',
-    'Lǎobǎn, wǒ yào yī wǎn dà wǎn de lǔròufàn jiā yī kē lǔdàn.',
-    "Boss, I'd like a large bowl of braised pork rice with a braised egg.",
-    '魯肉飯|鹵肉飯|滷內飯',
+    '老闆，滷肉飯大碗一碗，加一顆滷蛋。',
+    'Lǎobǎn, lǔròufàn dà wǎn yī wǎn, jiā yī kē lǔdàn.',
+    'Boss, one large braised pork rice, and add a braised egg.',
+    '滷內飯|滷肉販|鹽肉飯',
+    '魯肉飯',
   ],
   [
     '蚵仔煎',
@@ -82,6 +85,7 @@ const FOOD: SeedEntry[] = [
     'Chuántǒng fàntuán lǐmiàn bāo le yóutiáo, càipú hé ròusōng.',
     'A traditional rice roll is stuffed with fried dough, pickled radish and pork floss.',
     '飯糧|販糰|飩糰',
+    '飯團',
   ],
   [
     '便當',
@@ -131,7 +135,8 @@ const FOOD: SeedEntry[] = [
     '晚上肚子餓，我們去買鹹酥雞配九層塔。',
     'Wǎnshang dùzi è, wǒmen qù mǎi xiánsūjī pèi jiǔcéngtǎ.',
     'Hungry at night, we went for popcorn chicken with basil.',
-    '咸酥雞|鹹穌雞|鹹酥難',
+    '減酥雞|鹹穌雞|鹹酥難',
+    '鹽酥雞',
   ],
   [
     '臭豆腐',
@@ -171,7 +176,8 @@ const FOOD: SeedEntry[] = [
     '宵夜買一袋滷味回家配電視。',
     'Xiāoyè mǎi yī dài lǔwèi huí jiā pèi diànshì.',
     'For a late-night snack, grab a bag of braised goodies to eat in front of the TV.',
-    '魯味|鹵味|滷未',
+    '滷未|滷咪|漏味',
+    '魯味',
   ],
   [
     '肉圓',
@@ -191,7 +197,7 @@ const FOOD: SeedEntry[] = [
     '我要一碗乾麵，不要加辣。',
     'Wǒ yào yī wǎn gānmiàn, bù yào jiā là.',
     'One bowl of dry noodles, no chili.',
-    '干麵|乾面|幹麵',
+    '幹麵|乾麯|軋麵',
   ],
   [
     '餛飩湯',
@@ -232,6 +238,7 @@ const FOOD: SeedEntry[] = [
     'Xiǎocài lái yī pán lǔ dòugān hé hǎidài.',
     'For sides, a plate of braised dried tofu and kelp.',
     '荳干|豆千|豆于',
+    '豆乾',
   ],
 ];
 
@@ -254,7 +261,7 @@ const CHURCH: SeedEntry[] = [
     '她每天早上都會花半小時靈修讀經。',
     'Tā měitiān zǎoshang dōu huì huā bàn xiǎoshí língxiū dújīng.',
     'She spends half an hour every morning on devotions and Bible reading.',
-    '靈休|零修|靈脩',
+    '靈休|零修|靈條',
   ],
   [
     '恩典',
@@ -284,7 +291,7 @@ const CHURCH: SeedEntry[] = [
     '主日的奉獻會用來支持宣教工作。',
     'Zhǔrì de fèngxiàn huì yònglái zhīchí xuānjiào gōngzuò.',
     "Sunday's offering goes to support mission work.",
-    '奉献|捧獻|奉戲',
+    '奏獻|捧獻|奉戲',
   ],
   [
     '聖餐',
@@ -354,7 +361,7 @@ const CHURCH: SeedEntry[] = [
     '弟兄在台上分享他信主的見證。',
     'Dìxiōng zài tái shàng fēnxiǎng tā xìn zhǔ de jiànzhèng.',
     'A brother shared his testimony of coming to faith.',
-    '見証|見正|建證',
+    '見正|建證|見誑',
   ],
   [
     '受洗',
@@ -414,7 +421,8 @@ const CHURCH: SeedEntry[] = [
     '禱告結束時大家一起說阿們。',
     'Dǎogào jiéshù shí dàjiā yīqǐ shuō āmen.',
     'When the prayer ended, everyone said amen together.',
-    '阿門|呵們|阿倆',
+    '呵們|阿倆|何們',
+    '阿門',
   ],
   [
     '傳福音',
@@ -424,7 +432,7 @@ const CHURCH: SeedEntry[] = [
     '暑假短宣隊要去部落傳福音。',
     'Shǔjià duǎnxuān duì yào qù bùluò chuán fúyīn.',
     'The summer short-term mission team is going to share the gospel in the tribal villages.',
-    '傳褔音|傅福音|傳福因',
+    '傅福音|傳福因|傳副音',
   ],
   [
     '聖靈',
@@ -467,7 +475,7 @@ const SLANG: SeedEntry[] = [
     '他做事很靠譜，交給他就對了。',
     'Tā zuòshì hěn kàopǔ, jiāo gěi tā jiù duì le.',
     "He's very reliable; just leave it to him.",
-    '靠普|告譜|靠谱',
+    '靠普|告譜|靠諳',
   ],
   [
     '傻眼',
@@ -627,7 +635,7 @@ const SLANG: SeedEntry[] = [
     '他很佛系，考試從來不緊張。',
     'Tā hěn fóxì, kǎoshì cónglái bù jǐnzhāng.',
     "He's so laid-back; he never stresses about exams.",
-    '佛係|拂系|佛糸',
+    '拂系|佛糸|彿系',
   ],
   [
     '暈船',
@@ -657,17 +665,38 @@ const SLANG: SeedEntry[] = [
     '在路上遇到前任真的超尷尬。',
     'Zài lù shàng yù dào qiánrèn zhēn de chāo gāngà.',
     'Running into your ex on the street is seriously awkward.',
-    '尴尬|監尬|尷介',
+    '監尬|尷介|尷尪',
   ],
   [
     '藉口',
     'jiè kǒu',
-    'Excuse (Taiwan standard form)',
-    'colloquial',
+    'Excuse (everyday word; 藉 is the Taiwan standard, 借口 is also common)',
+    'colloquial|everyday|confusable',
     '他每次遲到都有一堆藉口。',
     'Tā měi cì chídào dōu yǒu yī duī jièkǒu.',
     "He has a pile of excuses every time he's late.",
     '籍口|耤口|藉囗',
+    '借口',
+  ],
+  [
+    '有雷',
+    'yǒu léi',
+    'Contains spoilers (the warning tag on PTT / Dcard threads)',
+    'internet|ptt',
+    '這篇心得有雷，沒看完的先別點。',
+    'Zhè piān xīndé yǒu léi, méi kàn wán de xiān bié diǎn.',
+    "This review contains spoilers; don't open it if you haven't finished.",
+    '有電|又雷|有雪',
+  ],
+  [
+    '傻眼貓咪',
+    'shǎ yǎn māo mī',
+    'Stunned-cat meme: "I am speechless"',
+    'internet|meme',
+    '看到帳單的金額，我整個傻眼貓咪。',
+    "Kàn dào zhàngdān de jīn'é, wǒ zhěnggè shǎyǎn māomī.",
+    'I saw the bill and was completely stunned-cat.',
+    '傻限貓咪|傻眼描咪|傻眼貓迷',
   ],
   [
     '翻白眼',
@@ -678,6 +707,56 @@ const SLANG: SeedEntry[] = [
     'Tīng dào tā de jièkǒu, wǒ rěn bu zhù fān báiyǎn.',
     "Hearing his excuse, I couldn't help rolling my eyes.",
     '番白眼|翻自眼|翻白限',
+  ],
+  [
+    '是在哈囉',
+    'shì zài hā lóu',
+    '"Hello?? What are you doing?" (sarcastic; Dcard/PTT slang)',
+    'internet|ptt',
+    '大半夜打電話來，是在哈囉？',
+    'Dàbànyè dǎ diànhuà lái, shì zài hālóu?',
+    'Calling in the middle of the night, what are you even doing?',
+    '是在哈羅|是再哈囉|足在哈囉',
+  ],
+  [
+    '笑死',
+    'xiào sǐ',
+    'LOL / dying of laughter',
+    'internet',
+    '看到他的表情我笑死。',
+    'Kàn dào tā de biǎoqíng wǒ xiào sǐ.',
+    'I died laughing when I saw his face.',
+    '笑屍|哭死|笑外',
+  ],
+  [
+    'ㄏㄏ',
+    'hē hē',
+    '"Heh heh" — sarcastic laugh typed in Zhuyin letters (PTT/LINE)',
+    'internet|ptt|zhuyin',
+    '你說你會早起？ㄏㄏ。',
+    'Nǐ shuō nǐ huì zǎoqǐ? Hē hē.',
+    "You say you'll get up early? Heh heh.",
+    '厂厂|ㄏㄎ|ㄒㄏ',
+  ],
+  [
+    'ㄎㄎ',
+    'kē kē',
+    'Giggle / "kek" typed in Zhuyin letters',
+    'internet|ptt|zhuyin',
+    '偷吃了他的宵夜ㄎㄎ。',
+    'Tōu chī le tā de xiāoyè kē kē.',
+    'Snuck a bite of his midnight snack, hehe.',
+    'ㄏㄏ|ㄎㄋ|丂丂',
+  ],
+  [
+    '頗ㄏ',
+    'pǒ hē',
+    '"Pretty lol" — dryly amused / not impressed (PTT)',
+    'internet|ptt|zhuyin',
+    '這個理由頗ㄏ。',
+    'Zhège lǐyóu pǒ hē.',
+    'That excuse is pretty lol.',
+    '頗ㄎ|波ㄏ|頗厂',
   ],
 ];
 
@@ -730,7 +809,7 @@ const ANIME: SeedEntry[] = [
     '泡麵番一集只有三分鐘，很適合通勤看。',
     'Pàomiànfān yī jí zhǐ yǒu sān fēnzhōng, hěn shìhé tōngqín kàn.',
     'Each episode is only three minutes; perfect for the commute.',
-    '泡面番|泡麵蕃|抱麵番',
+    '泡麵蕃|抱麵番|泡麯番',
   ],
   [
     '治癒系',
@@ -740,7 +819,7 @@ const ANIME: SeedEntry[] = [
     '累了一天，看治癒系的動畫最放鬆。',
     'Lèi le yī tiān, kàn zhìyùxì de dònghuà zuì fàngsōng.',
     'After a tiring day, a healing-genre anime is the most relaxing.',
-    '治愈系|治癒係|冶癒系',
+    '治瘐系|治癒係|冶癒系',
   ],
   [
     '婆',
@@ -843,14 +922,14 @@ const ANIME: SeedEntry[] = [
     '反湃|返派|反浱',
   ],
   [
-    '劇透',
-    'jù tòu',
-    'Spoiler',
-    'acgn',
-    '拜託不要劇透，我還沒看最後一集！',
-    'Bàituō bù yào jùtòu, wǒ hái méi kàn zuìhòu yī jí!',
+    '爆雷',
+    'bào léi',
+    'To spoil a plot (Taiwan: 有雷／防雷; 劇透 is the China term you will also see online)',
+    'acgn|ptt',
+    '拜託不要爆雷，我還沒看最後一集！',
+    'Bàituō bù yào bàoléi, wǒ hái méi kàn zuìhòu yī jí!',
     "Please, no spoilers; I haven't watched the last episode!",
-    '劇秀|據透|劇誘',
+    '曝雷|爆霄|爆雪',
   ],
   [
     '同人',
@@ -932,6 +1011,7 @@ export function buildStarterDeck(options: BuildStarterDeckOptions = {}): VocabCa
       sentencePinyin,
       translation,
       foils,
+      variants,
     ] of STARTER_ENTRIES[domain]) {
       // Stagger createdAt so the new-card queue keeps authoring order.
       const createdAt = new Date(now.getTime() + index).toISOString();
@@ -947,6 +1027,7 @@ export function buildStarterDeck(options: BuildStarterDeckOptions = {}): VocabCa
         exampleSentencePinyin: sentencePinyin,
         exampleSentenceTranslation: translation,
         visualFoils: foils.split('|').filter(Boolean),
+        variants: variants ? variants.split('|').filter(Boolean) : undefined,
         fsrs: newFsrsState(now),
         createdAt,
         updatedAt: createdAt,

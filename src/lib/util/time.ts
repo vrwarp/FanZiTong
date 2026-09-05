@@ -29,12 +29,13 @@ export function addDays(date: Date, days: number): Date {
 
 /**
  * Human-friendly interval label used on the FSRS rating buttons, e.g.
- * "<10m", "25m", "3h", "1d", "12d", "2mo", "1.5y".
+ * "1m", "6m", "25m", "3h", "1d", "12d", "2mo", "1.5y". Learning steps show
+ * exact minutes so Again and Hard never read the same.
  */
 export function formatInterval(from: Date, to: Date): string {
   const ms = Math.max(0, to.getTime() - from.getTime());
   const minutes = ms / MINUTE_MS;
-  if (minutes < 10) return '<10m';
+  if (minutes < 1) return '<1m';
   if (minutes < 60) return `${Math.round(minutes)}m`;
   const hours = minutes / 60;
   if (hours < 24) return `${Math.round(hours)}h`;

@@ -1,8 +1,21 @@
 import { Link } from 'react-router';
-import { DomainBadge } from '@/components/ui/Badge';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { formatRelativeDue } from '@/lib/util/time';
-import { CARD_STATE_LABELS, type CardStateValue, type VocabCard } from '@/types';
+import {
+  CARD_STATE_LABELS,
+  DOMAIN_LABELS,
+  type CardStateValue,
+  type DomainCategory,
+  type VocabCard,
+} from '@/types';
+
+const DOT: Record<DomainCategory, string> = {
+  food: 'bg-orange-500',
+  church: 'bg-sky-500',
+  slang: 'bg-emerald-500',
+  anime: 'bg-fuchsia-500',
+  custom: 'bg-stone-500',
+};
 
 export function CardListItem({
   card,
@@ -31,8 +44,18 @@ export function CardListItem({
               {card.pinyin}
             </p>
           )}
-          <p className="truncate text-sm">{card.definition}</p>
+          <p className="line-clamp-2 text-sm">{card.definition}</p>
+          {card.variants && card.variants.length > 0 && (
+            <p className="text-xs text-stone-500 dark:text-stone-400">
+              也寫作 <Hanzi>{card.variants.join('、')}</Hanzi>
+            </p>
+          )}
           <p className="text-xs text-stone-500 dark:text-stone-400">
+            <span
+              className={`mr-1 inline-block h-2 w-2 rounded-full align-middle ${DOT[card.domain]}`}
+              title={DOMAIN_LABELS[card.domain].en}
+              aria-label={DOMAIN_LABELS[card.domain].en}
+            />
             {state}
             {card.fsrs.state !== 0 && ` · ${formatRelativeDue(new Date(card.fsrs.due), now)}`}
             {card.fsrs.lapses > 0 &&
@@ -44,7 +67,6 @@ export function CardListItem({
             )}
           </p>
         </div>
-        <DomainBadge domain={card.domain} className="hidden sm:inline-flex" />
       </Link>
     </li>
   );

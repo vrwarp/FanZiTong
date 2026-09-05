@@ -126,10 +126,14 @@ function DrillSession({
     return (
       <div className="mx-auto flex min-h-dvh max-w-2xl flex-col p-4">
         <SessionSummary
-          title={`${EXERCISE_LABELS[drillType]} drill complete`}
+          mode="complete"
+          title={`${EXERCISE_LABELS[drillType].en} done`}
           results={snapshot.results}
           elapsedMs={snapshot.elapsedMs}
-          streak={computeStreak(logs, new Date(snapshot.startedAt + snapshot.elapsedMs))}
+          streak={Math.max(
+            1,
+            computeStreak(logs, new Date(snapshot.startedAt + snapshot.elapsedMs)),
+          )}
           onDone={() => navigate('/drills')}
           doneLabel="Back to Drills"
         />
@@ -140,21 +144,13 @@ function DrillSession({
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-3 p-4 pb-6">
       <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/drills')}
-          data-testid="drill-exit"
-        >
-          ← Back
-        </Button>
         <span
           className="text-xs font-semibold text-stone-500 dark:text-stone-400"
           data-testid="drill-progress"
         >
-          {EXERCISE_LABELS[drillType]} · {snapshot.drillsRemaining} left after this
+          {EXERCISE_LABELS[drillType].en} · {snapshot.drillsRemaining + 1} to go
         </span>
-        <Button variant="ghost" size="sm" onClick={api.finish}>
+        <Button variant="ghost" size="sm" onClick={api.finish} data-testid="drill-exit">
           End
         </Button>
       </div>

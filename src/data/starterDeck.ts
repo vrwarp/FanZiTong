@@ -51,7 +51,7 @@ const FOOD: SeedEntry[] = [
     '這家牛肉麵的湯頭很濃郁，麵條也很有嚼勁。',
     'Zhè jiā niúròumiàn de tāngtóu hěn nóngyù, miàntiáo yě hěn yǒu jiáojìn.',
     "This place's beef noodle broth is rich and the noodles are nicely chewy.",
-    '午肉麵|牛內麵|牛肉麪',
+    '午肉麵|牛內麵|半肉麵',
   ],
   [
     '蛋餅',
@@ -61,7 +61,7 @@ const FOOD: SeedEntry[] = [
     '早餐店的蛋餅加起司是我的最愛。',
     "Zǎocāndiàn de dànbǐng jiā qǐsī shì wǒ de zuì'ài.",
     'Breakfast-shop egg crepe with cheese is my favorite.',
-    '旦餅|蛋餠|蛋拼',
+    '旦餅|蛋餌|蛋拼',
   ],
   [
     '豆漿',
@@ -81,7 +81,7 @@ const FOOD: SeedEntry[] = [
     '傳統飯糰裡面包了油條、菜脯和肉鬆。',
     'Chuántǒng fàntuán lǐmiàn bāo le yóutiáo, càipú hé ròusōng.',
     'A traditional rice roll is stuffed with fried dough, pickled radish and pork floss.',
-    '飯團|販糰|飮糰',
+    '飯糧|販糰|飩糰',
   ],
   [
     '便當',
@@ -131,7 +131,7 @@ const FOOD: SeedEntry[] = [
     '晚上肚子餓，我們去買鹹酥雞配九層塔。',
     'Wǎnshang dùzi è, wǒmen qù mǎi xiánsūjī pèi jiǔcéngtǎ.',
     'Hungry at night, we went for popcorn chicken with basil.',
-    '咸酥雞|鹹穌雞|鹹酥鷄',
+    '咸酥雞|鹹穌雞|鹹酥難',
   ],
   [
     '臭豆腐',
@@ -161,7 +161,7 @@ const FOOD: SeedEntry[] = [
     '老闆，再來一盤燙青菜。',
     'Lǎobǎn, zài lái yī pán tàng qīngcài.',
     'Boss, one more plate of blanched greens.',
-    '湯青菜|燙清菜|燙靑菜',
+    '湯青菜|燙清菜|燙青萊',
   ],
   [
     '滷味',
@@ -274,7 +274,7 @@ const CHURCH: SeedEntry[] = [
     '讓我們一起低頭禱告。',
     'Ràng wǒmen yīqǐ dītóu dǎogào.',
     'Let us bow our heads and pray together.',
-    '濤告|禱吿|檮告',
+    '濤告|禱吉|檮告',
   ],
   [
     '奉獻',
@@ -324,7 +324,7 @@ const CHURCH: SeedEntry[] = [
     '敬拜團在台上帶領大家唱詩歌。',
     'Jìngbài tuán zài tái shàng dàilǐng dàjiā chàng shīgē.',
     'The worship team led everyone in song from the stage.',
-    '敬敗|警拜|敬拝',
+    '敬敗|警拜|敬湃',
   ],
   [
     '詩歌',
@@ -434,7 +434,7 @@ const CHURCH: SeedEntry[] = [
     '求聖靈充滿我們的心。',
     'Qiú Shènglíng chōngmǎn wǒmen de xīn.',
     'May the Holy Spirit fill our hearts.',
-    '聖零|聲靈|聖霊',
+    '聖零|聲靈|聖靄',
   ],
   [
     '感恩',
@@ -454,7 +454,7 @@ const CHURCH: SeedEntry[] = [
     '各位弟兄姊妹，平安！',
     "Gèwèi dìxiōng zǐmèi, píng'ān!",
     'Peace to you, brothers and sisters!',
-    '第兄姊妹|弟兄姉妹|弟兄姊味',
+    '第兄姊妹|弟兄姊姝|弟兄姊味',
   ],
 ];
 
@@ -557,7 +557,7 @@ const SLANG: SeedEntry[] = [
     '這家店的雞排真的讚！',
     'Zhè jiā diàn de jīpái zhēn de zàn!',
     "This shop's chicken cutlet is seriously awesome!",
-    '贊|讃|譖',
+    '贊|譖|讜',
   ],
   [
     '母湯',
@@ -770,7 +770,7 @@ const ANIME: SeedEntry[] = [
     '這隻貓咪也太萌了吧！',
     'Zhè zhī māomī yě tài méng le ba!',
     'This kitty is way too cute!',
-    '明|萠|崩',
+    '明|萄|崩',
   ],
   [
     '神作',

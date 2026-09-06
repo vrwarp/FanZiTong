@@ -88,8 +88,6 @@ jobs:
         working-directory: agent
       - run: npm run build
         working-directory: agent
-      - name: Build the container image
-        run: docker build -f agent/Dockerfile -t fanzitong-agent:ci .
 
   e2e:
     name: End-to-end (Playwright)

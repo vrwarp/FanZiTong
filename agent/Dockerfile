@@ -24,9 +24,15 @@ COPY --from=build /build/agent/prompts ./prompts
 COPY --from=build /build/agent/package.json ./package.json
 
 # `claude auth login` / `claude auth status` inside the container use the same
-# binary the SDK spawns.
-RUN ln -sf /app/node_modules/@anthropic-ai/claude-agent-sdk/vendor/claude /usr/local/bin/claude \
-  || true
+# binary the SDK spawns. It ships in a per-platform package
+# (@anthropic-ai/claude-agent-sdk-linux-{x64,arm64}[-musl]), so the path is
+# found rather than assumed — and the build fails if it is missing, because
+# signing in inside the container depends on it.
+RUN set -eu; \
+  binary="$(find /app/node_modules/@anthropic-ai -maxdepth 2 -type f -name claude -perm -u+x | head -n1)"; \
+  test -n "$binary"; \
+  ln -sf "$binary" /usr/local/bin/claude; \
+  test -x /usr/local/bin/claude
 
 # Credentials and session transcripts share one volume, so a container restart
 # keeps the learner signed in.

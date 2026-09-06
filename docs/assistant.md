@@ -68,8 +68,27 @@ be `wss://`; the agent port is never published on its own.
 token, and press _Save & connect_. The status line shows the account it is
 signed in as.
 
-Updating: `docker compose pull && docker compose up -d`. The image is built for
-x86-64 and ARM64 by `.github/workflows/publish-agent.yml`.
+Updating: `docker compose pull && docker compose up -d`. The image is
+`docker.io/vrwarp/fanzitong-agent`, built for x86-64 and ARM64 by
+`.github/workflows/agent-image.yml`; point `FZT_AGENT_IMAGE` at your own
+namespace if you publish it yourself.
+
+### Publishing the image yourself
+
+The workflow builds the image on every pull request that touches the sidecar —
+starting the container and checking it answers `/healthz`, without pushing
+anything — and publishes to Docker Hub on a push to `main`. To publish under
+your own account, add two settings under _Settings → Secrets and variables →
+Actions_:
+
+- `DOCKERHUB_TOKEN` (secret): an access token from
+  [Docker Hub](https://app.docker.com/settings/personal-access-tokens), with
+  Read & Write scope.
+- `DOCKERHUB_USERNAME` (variable): only if your Docker Hub account is not named
+  after the GitHub owner.
+
+Pull requests from forks never see those credentials, which is why the dry run
+does not log in.
 
 ## Running it on your desktop instead
 

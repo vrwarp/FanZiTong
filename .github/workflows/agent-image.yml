@@ -1,0 +1,145 @@
+name: Agent image
+
+# The sidecar ships as a container. A pull request builds it to prove the
+# Dockerfile still works and the image actually starts; a push to main builds
+# it for both architectures and publishes it to Docker Hub.
+on:
+  pull_request:
+    paths:
+      - 'agent/**'
+      - 'src/lib/assistant/**'
+      - 'src/types/index.ts'
+      - '.dockerignore'
+      - '.github/workflows/agent-image.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'agent/**'
+      - 'src/lib/assistant/**'
+      - 'src/types/index.ts'
+      - '.dockerignore'
+      - '.github/workflows/agent-image.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: agent-image-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Set the DOCKERHUB_USERNAME repository variable when the Docker Hub account
+  # is not named after the GitHub owner.
+  IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME || github.repository_owner }}/fanzitong-agent
+  # Anything that is not a pull request publishes: pushes to main, and a manual
+  # run when an image needs rebuilding without a code change.
+  PUBLISH: ${{ github.event_name != 'pull_request' }}
+
+jobs:
+  image:
+    name: ${{ github.event_name == 'pull_request' && 'Build (dry run)' || 'Build and publish' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the Docker Hub credentials are set
+        if: env.PUBLISH == 'true'
+        env:
+          TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::DOCKERHUB_TOKEN is not set. Create an access token at" \
+                 "https://app.docker.com/settings/personal-access-tokens and add it under" \
+                 "Settings → Secrets and variables → Actions. Set the DOCKERHUB_USERNAME" \
+                 "variable too if your Docker Hub account is not '${{ github.repository_owner }}'."
+            exit 1
+          fi
+
+      # Only the publishing build needs emulation; the dry run stays on the
+      # runner's own architecture so a pull request gets its answer quickly.
+      - uses: docker/setup-qemu-action@v3
+        if: env.PUBLISH == 'true'
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        if: env.PUBLISH == 'true'
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME || github.repository_owner }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=raw,value=ci,enable=${{ github.event_name == 'pull_request' }}
+          labels: |
+            org.opencontainers.image.title=FanZiTong assistant sidecar
+            org.opencontainers.image.description=Runs the Claude Agent SDK for the 繁字通 PWA. Holds the Claude Code login; the deck stays in the browser.
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: agent/Dockerfile
+          # arm64 covers a Raspberry Pi or an ARM NAS. The Claude Code binary
+          # ships per platform, so both are built rather than assumed.
+          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          # Keep the dry-run image on the runner so it can be started below.
+          load: ${{ github.event_name == 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # A dry run that only proves the Dockerfile parses is worth little. Start
+      # the image and make sure it serves, and that the bundled Claude Code
+      # binary really is on the PATH the sign-in instructions rely on.
+      - name: Start the image and check it serves
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          docker run --rm "$IMAGE:ci" sh -c 'command -v claude'
+          docker run -d --name agent-smoke -p 8787:8787 \
+            -e FZT_AGENT_TOKEN=smoke-test "$IMAGE:ci"
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8787/healthz; then
+              echo
+              echo "The sidecar answered its health check."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::The image started but never answered /healthz."
+          docker logs agent-smoke
+          exit 1
+
+      - name: Container logs
+        if: github.event_name == 'pull_request' && always()
+        run: docker logs agent-smoke 2>&1 | tail -50 || true
+
+      - name: Stop the container
+        if: github.event_name == 'pull_request' && always()
+        run: docker rm -f agent-smoke || true
+
+      - name: Summarise
+        if: always()
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            if [ "$PUBLISH" = "true" ]; then
+              echo "### Published to Docker Hub"
+            else
+              echo "### Built as a dry run (nothing was pushed)"
+            fi
+            echo '```'
+            echo "$TAGS"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

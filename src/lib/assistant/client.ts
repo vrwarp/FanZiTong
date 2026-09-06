@@ -34,12 +34,28 @@ export interface ClientOptions {
 
 const BACKOFF_MS = [1000, 2000, 5000, 10_000, 30_000];
 
+/**
+ * Between turns the socket carries nothing at all, and a reverse proxy reads
+ * silence as an abandoned connection: nginx closes one after sixty seconds by
+ * default. A beat well inside that keeps it open wherever the sidecar is
+ * published from.
+ *
+ * It is also how the app learns a socket has already died. A phone that
+ * changes network leaves a half-open connection the browser keeps calling
+ * `OPEN`, sometimes for minutes, and a turn sent into it is simply lost.
+ */
+const HEARTBEAT_MS = 25_000;
+/** Two beats with nothing back. Every frame counts, not just a pong. */
+const SILENCE_LIMIT_MS = HEARTBEAT_MS * 2 + 5_000;
+
 export class AssistantClient {
   private socket: WebSocket | null = null;
   private attempt = 0;
   private lastSeq = 0;
   private conversationId: string | null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  private heardAt = 0;
   private closedByUs = false;
   private started = false;
 
@@ -65,11 +81,16 @@ export class AssistantClient {
     this.open();
   }
 
+  private now(): number {
+    return (this.options.now?.() ?? new Date()).getTime();
+  }
+
   private open(): void {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
+    this.stopHeartbeat();
     const factory = this.options.socketFactory ?? ((url: string) => new WebSocket(url));
     this.options.onState('connecting');
     let socket: WebSocket;
@@ -97,11 +118,18 @@ export class AssistantClient {
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
       });
+      this.startHeartbeat();
     };
 
     socket.onmessage = (event: MessageEvent) => {
+      // Anything arriving proves the connection is alive, parseable or not.
+      this.heardAt = this.now();
       const frame = parseServerFrame(String(event.data));
       if (!frame) return;
+      // A pong says the socket is alive and nothing more. It never entered the
+      // sidecar's replay ring, so it is not the frame to resume from, and it
+      // is not something the panel should be shown either.
+      if (frame.type === 'pong') return;
       this.lastSeq = Math.max(this.lastSeq, frame.seq);
       if (frame.type === 'welcome') {
         this.attempt = 0;
@@ -118,6 +146,7 @@ export class AssistantClient {
 
     socket.onclose = (event: CloseEvent) => {
       this.socket = null;
+      this.stopHeartbeat();
       if (this.closedByUs) return;
       if (event.code === 4401) {
         this.options.onState('unauthorized', 'The sidecar rejected this pairing token.');
@@ -151,6 +180,31 @@ export class AssistantClient {
         error: error instanceof Error ? error.message : String(error),
       });
     }
+  }
+
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.heardAt = this.now();
+    this.heartbeatTimer = setInterval(() => this.beat(), HEARTBEAT_MS);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = null;
+  }
+
+  private beat(): void {
+    const socket = this.socket;
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    if (this.now() - this.heardAt > SILENCE_LIMIT_MS) {
+      // The browser still calls this open, but nothing has come back for two
+      // beats. Closing it is what starts the reconnect, which replays whatever
+      // the sidecar said while we were talking to a dead socket.
+      this.stopHeartbeat();
+      socket.close();
+      return;
+    }
+    this.send({ type: 'ping' });
   }
 
   private scheduleReconnect(): void {
@@ -207,6 +261,7 @@ export class AssistantClient {
     this.closedByUs = true;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.reconnectTimer = null;
+    this.stopHeartbeat();
     this.socket?.close();
     this.socket = null;
   }

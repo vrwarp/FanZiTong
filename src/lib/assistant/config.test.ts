@@ -4,7 +4,6 @@ import {
   isSecureEndpoint,
   loadConfig,
   loadConversationId,
-  parsePairingHash,
   savePrefs,
   saveConversationId,
   saveEndpoint,
@@ -58,22 +57,5 @@ describe('stored pairing', () => {
   it('ignores a profile name it does not recognise', () => {
     savePrefs({ ...DEFAULT_PREFS, profile: 'turbo' as never });
     expect(loadConfig().prefs.profile).toBe(DEFAULT_PREFS.profile);
-  });
-});
-
-describe('pairing links', () => {
-  const link = (payload: object) =>
-    `#pair=${btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_')}`;
-
-  it('reads an endpoint and token out of the fragment', () => {
-    const parsed = parsePairingHash(link({ u: 'wss://agent.example', t: 'tok' }));
-    expect(parsed).toEqual({ endpoint: 'wss://agent.example', token: 'tok' });
-  });
-
-  it('ignores anything that is not a pairing link', () => {
-    expect(parsePairingHash('')).toBeNull();
-    expect(parsePairingHash('#settings')).toBeNull();
-    expect(parsePairingHash('#pair=not-base64!!')).toBeNull();
-    expect(parsePairingHash(link({ u: 'wss://agent.example' }))).toBeNull();
   });
 });

@@ -110,21 +110,3 @@ export function loadConversationId(): string | null {
 export function saveConversationId(id: string | null): void {
   write(KEYS.conversation, id);
 }
-
-/**
- * The sidecar prints a link with the endpoint and token in the fragment, so
- * pairing a phone is one tap rather than typing a base64 token. Fragments are
- * never sent to the server that hosts the app.
- */
-export function parsePairingHash(hash: string): { endpoint: string; token: string } | null {
-  const match = /(?:^#|&)pair=([A-Za-z0-9_-]+)/.exec(hash);
-  if (!match) return null;
-  try {
-    const json = atob(match[1].replace(/-/g, '+').replace(/_/g, '/'));
-    const parsed = JSON.parse(json) as { u?: string; t?: string };
-    if (!parsed.u || !parsed.t) return null;
-    return { endpoint: parsed.u, token: parsed.t };
-  } catch {
-    return null;
-  }
-}

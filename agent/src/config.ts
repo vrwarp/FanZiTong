@@ -22,6 +22,8 @@ export interface AgentConfig {
   claudeConfigDir: string;
   /** Let a sign-in take the assistant over when its owner is locked out. */
   allowReclaim: boolean;
+  /** Development only: serve anyone who can reach the socket. */
+  allowAnonymous: boolean;
   allowedOrigins: string[];
   workspace: string;
   maxSessions: number;
@@ -60,6 +62,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     );
   }
 
+  // There is no way to tell a development client from an internet one at the
+  // socket: bind to loopback behind a reverse proxy and every remote caller
+  // looks local. So skipping authentication is something the operator asks for
+  // in as many words, and only where it cannot reach the internet.
+  const allowAnonymous = env.FZT_ALLOW_ANONYMOUS?.trim() === 'true';
+  if (allowAnonymous && !loopback) {
+    throw new Error(
+      'FZT_ALLOW_ANONYMOUS turns authentication off, so it only works with FZT_AGENT_HOST on loopback. Sign in through the app instead.',
+    );
+  }
+
   const claudeConfigDir = env.CLAUDE_CONFIG_DIR?.trim() || path.join(homedir(), '.claude');
 
   return {
@@ -69,6 +82,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     stateDir: env.FZT_AGENT_STATE_DIR?.trim() || path.join(claudeConfigDir, 'fanzitong'),
     claudeConfigDir,
     allowReclaim: env.FZT_ALLOW_RECLAIM?.trim() === 'true',
+    allowAnonymous,
     allowedOrigins: origins,
     workspace: env.FZT_AGENT_WORKSPACE?.trim() || process.cwd(),
     maxSessions: int(env.FZT_AGENT_MAX_SESSIONS, 3),

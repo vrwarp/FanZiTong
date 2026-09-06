@@ -14,7 +14,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const FAKE_CLI = path.join(here, 'test', 'fakeClaude.mjs');
 const APP = 'https://learner.example';
 
-async function boot(options: { claimed?: boolean; allowReclaim?: boolean } = {}) {
+async function boot(
+  options: { claimed?: boolean; allowReclaim?: boolean; fixedToken?: string } = {},
+) {
   const stateDir = await mkdtemp(path.join(tmpdir(), 'fzt-http-'));
   const claudeConfigDir = path.join(stateDir, 'live');
   await mkdir(claudeConfigDir, { recursive: true });
@@ -40,6 +42,7 @@ async function boot(options: { claimed?: boolean; allowReclaim?: boolean } = {})
   const config = loadConfig({
     FZT_ALLOWED_ORIGINS: APP,
     FZT_ALLOW_RECLAIM: options.allowReclaim ? 'true' : '',
+    ...(options.fixedToken ? { FZT_AGENT_TOKEN: options.fixedToken } : {}),
   } as NodeJS.ProcessEnv);
 
   const handle = createHttpHandler({
@@ -49,6 +52,7 @@ async function boot(options: { claimed?: boolean; allowReclaim?: boolean } = {})
     version: 'test',
     probeAuth: async () => 'ok',
     sessions: () => 0,
+    verifyFixedToken: (token) => Boolean(config.token && token === config.token),
   });
   const server: Server = createServer((req, res) => void handle(req, res));
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
@@ -169,6 +173,69 @@ describe('the sign-in endpoints', () => {
       codes.push((await call('/auth/start', { method: 'POST', body: '{}' })).status);
     }
     expect(codes).toContain(429);
+    await stop();
+  });
+});
+
+describe('an assistant opened with a fixed token', () => {
+  // Credentials come from the operator here, so nobody ever signs in and the
+  // assistant is never "claimed". Without a gate the sign-in flow would stay
+  // open to the internet and hand a stranger a session that spends them.
+  it('will not let a stranger sign in and be issued a session', async () => {
+    const { call, stop } = await boot({ fixedToken: 'operator-token' });
+
+    const state = (await (await call('/auth/state')).json()) as { canSignIn: boolean };
+    expect(state.canSignIn).toBe(false);
+
+    const start = await call('/auth/start', { method: 'POST', body: '{}' });
+    expect(start.status).toBe(403);
+
+    const code = await call('/auth/code', {
+      method: 'POST',
+      body: JSON.stringify({ loginId: 'anything', code: 'good-code' }),
+    });
+    expect(code.status).toBe(403);
+    await stop();
+  });
+
+  it('lets the operator through with their token', async () => {
+    const { call, stop } = await boot({ fixedToken: 'operator-token' });
+    const response = await call('/auth/start', {
+      method: 'POST',
+      body: '{}',
+      headers: { authorization: 'Bearer operator-token' },
+    });
+    expect(response.status).toBe(200);
+    await stop();
+  });
+});
+
+describe('what an unauthenticated caller can learn', () => {
+  it('does not name the owner', async () => {
+    const { call, stop } = await boot({ claimed: true });
+    const state = (await (await call('/auth/state')).json()) as {
+      claimed: boolean;
+      account: unknown;
+    };
+    expect(state.claimed).toBe(true);
+    expect(state.account).toBeNull();
+    await stop();
+  });
+
+  it('names the owner to a device that is signed in', async () => {
+    const { call, auth, stop } = await boot({ claimed: true });
+    const { token } = await auth.mintSession();
+    const state = (await (
+      await call('/auth/state', { headers: { authorization: `Bearer ${token}` } })
+    ).json()) as { account: { email: string } | null };
+    expect(state.account?.email).toBe('owner@example.com');
+    await stop();
+  });
+
+  it('shrugs off a cookie header it cannot decode', async () => {
+    const { call, stop } = await boot();
+    const response = await call('/auth/state', { headers: { cookie: 'fzt_session=%' } });
+    expect(response.status).toBe(200);
     await stop();
   });
 });

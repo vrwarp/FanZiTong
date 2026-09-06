@@ -104,6 +104,45 @@ describe('the sidecar socket', () => {
   });
 });
 
+describe('anonymous access', () => {
+  it('is refused on anything but loopback, whatever the operator asks for', () => {
+    // Binding to loopback behind a reverse proxy makes every internet client
+    // look local, so this cannot be inferred from the connection.
+    expect(() =>
+      loadConfig({
+        FZT_AGENT_HOST: '0.0.0.0',
+        FZT_ALLOW_ANONYMOUS: 'true',
+      } as NodeJS.ProcessEnv),
+    ).toThrow(/loopback/);
+  });
+
+  it('opens the socket with no credential when it is asked for on loopback', async () => {
+    const { port, stop } = await boot({
+      FZT_ALLOW_ANONYMOUS: 'true',
+      FZT_ALLOWED_ORIGINS: 'https://good.example',
+    });
+    const ws = connect(port, 'https://good.example');
+    await new Promise((resolve) => ws.on('open', resolve));
+    ws.send(JSON.stringify({ type: 'hello', protocolVersion: 1, token: '', app: {} }));
+    const welcome = await new Promise<Record<string, unknown>>((resolve) => {
+      ws.on('message', (raw) => resolve(JSON.parse(raw.toString())));
+    });
+    expect(welcome.type).toBe('welcome');
+    ws.close();
+    await stop();
+  });
+
+  it('is off by default, so a local socket still needs a credential', async () => {
+    const { port, stop } = await boot({ FZT_ALLOWED_ORIGINS: 'https://good.example' });
+    const ws = connect(port, 'https://good.example');
+    await new Promise((resolve) => ws.on('open', resolve));
+    ws.send(JSON.stringify({ type: 'hello', protocolVersion: 1, token: '', app: {} }));
+    const code = await new Promise<number>((resolve) => ws.on('close', resolve));
+    expect(code).toBe(4401);
+    await stop();
+  });
+});
+
 describe('configuration', () => {
   it('needs no token on a public address: the Claude sign-in is the credential', () => {
     const config = loadConfig({ FZT_AGENT_HOST: '0.0.0.0' } as NodeJS.ProcessEnv);

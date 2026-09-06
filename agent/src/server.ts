@@ -31,6 +31,13 @@ import { SESSION_COOKIE } from './auth';
 const run = promisify(execFile);
 const VERSION = '1.0.0';
 
+/** Whether the other end of this socket is on this machine. */
+function isLoopbackPeer(address: string | undefined): boolean {
+  if (!address) return false;
+  const host = address.replace(/^::ffff:/, '');
+  return host === '127.0.0.1' || host === '::1' || host.startsWith('127.');
+}
+
 /**
  * The Claude Code binary that ships with the SDK, so a sign-in started from the
  * app is the same program the agent itself runs.
@@ -129,7 +136,6 @@ export function startServer(config: AgentConfig = loadConfig()) {
   const log = createLogger(config.logLevel);
   const registry = new SessionRegistry(realSdk, config, log);
   const probeAuth = createAuthProbe(log, config);
-  const loopback = ['127.0.0.1', 'localhost', '::1'].includes(config.host);
   const failures = new Map<string, { count: number; until: number }>();
 
   const auth = new AuthService({
@@ -147,6 +153,7 @@ export function startServer(config: AgentConfig = loadConfig()) {
     config,
     log,
     version: VERSION,
+    verifyFixedToken: (token) => Boolean(config.token && token && sameToken(config.token, token)),
     probeAuth,
     sessions: () => registry.size,
   });
@@ -165,7 +172,9 @@ export function startServer(config: AgentConfig = loadConfig()) {
     const origin = req.headers.origin;
     // A browser always sends Origin; a missing one means a non-browser client,
     // which is fine on loopback and refused anywhere else.
-    const originOk = origin ? config.allowedOrigins.includes(origin) : loopback;
+    const originOk = origin
+      ? config.allowedOrigins.includes(origin)
+      : isLoopbackPeer(req.socket.remoteAddress);
     if (!originOk) {
       log.warn('refused an origin', { origin });
       socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
@@ -188,10 +197,13 @@ export function startServer(config: AgentConfig = loadConfig()) {
    * cookie that sign-in set, or the fixed token where one is configured.
    */
   function authorize(token: string | undefined, cookieToken: string | null): boolean {
-    if (auth.verify(token) || auth.verify(cookieToken)) return true;
     if (config.token && token && sameToken(config.token, token)) return true;
-    // A loopback sidecar with no token and no owner is the development case.
-    return loopback && !config.token && !auth.claimed;
+    if (auth.verify(token) || auth.verify(cookieToken)) return true;
+    // Nothing about a connection proves it came from this machine — a sidecar
+    // on 127.0.0.1 behind a reverse proxy sees every internet client as local
+    // — so serving an anonymous caller is something the operator turns on
+    // deliberately, and only on loopback.
+    return config.allowAnonymous;
   }
 
   function handleSocket(ws: WebSocket, ip: string, cookieToken: string | null): void {
@@ -317,7 +329,11 @@ export function startServer(config: AgentConfig = loadConfig()) {
     });
     if (auth.claimed) {
       log.info('signed in; open the app and it will connect');
-    } else if (!config.token) {
+    } else if (config.allowAnonymous) {
+      log.warn('anonymous access is on: anyone who can reach this socket may use it');
+    } else if (config.token) {
+      log.info('opened with a fixed token; the app asks for it');
+    } else {
       log.info('not claimed yet: open the app at this address and sign in to Claude');
     }
   });

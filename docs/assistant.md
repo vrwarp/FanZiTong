@@ -91,6 +91,20 @@ served from somewhere else entirely (GitHub Pages), which makes it a
 third-party cookie — and Safari refuses those outright. The token always works,
 so it is what the socket actually relies on.
 
+### Running it on your own machine
+
+`npm run agent` binds `127.0.0.1:8787` and uses the Claude Code login already
+in your home directory, so there is nothing to sign in to for the model's sake.
+The socket still wants a credential, though: being on loopback is not proof of
+anything, because a reverse proxy on the same host makes every caller in the
+world look local. Two ways round it for development:
+
+- Press **Sign in with Claude** once, exactly as on a real deployment. The
+  session is kept in `~/.claude/fanzitong`, so this survives restarts.
+- Or set `FZT_ALLOW_ANONYMOUS=true`, which serves anyone who can open the
+  socket. It is off by default and the sidecar refuses to start with it on
+  unless `FZT_AGENT_HOST` is a loopback address.
+
 ### An assistant you supply credentials to
 
 If you would rather give the container a credential than sign in through the
@@ -211,6 +225,7 @@ rather than guessed at.
 | `FZT_AGENT_PORT`            | `8787`             | Port.                                                                     |
 | `FZT_AGENT_TOKEN`           | none               | Fixed token, only for an assistant that is not signed in through the app. |
 | `FZT_ALLOW_RECLAIM`         | `false`            | Let a sign-in take a claimed assistant over.                              |
+| `FZT_ALLOW_ANONYMOUS`       | `false`            | Development only: no credential at all. Loopback binds only.              |
 | `FZT_AGENT_STATE_DIR`       | beside credentials | Sessions, ownership and staged sign-ins.                                  |
 | `FZT_ALLOWED_ORIGINS`       | localhost          | Exact origins allowed to open a socket or sign in.                        |
 | `FZT_AGENT_MAX_SESSIONS`    | `3`                | Live conversations, and so subprocesses.                                  |

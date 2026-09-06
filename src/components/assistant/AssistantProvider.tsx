@@ -5,9 +5,7 @@ import {
   isSecureEndpoint,
   loadConfig,
   loadConversationId,
-  parsePairingHash,
   saveConversationId,
-  saveEndpoint,
 } from '@/lib/assistant/config';
 import {
   createToolExecutor,
@@ -44,20 +42,11 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   // The reading gate has to drive rendering, not just tool answers: a ref would
   // leave the launcher on screen after the next card comes up face down.
   const [studyHidden, setStudyHidden] = useState(false);
-  // Pairing may arrive in the URL fragment, so read it before the first render
-  // rather than in an effect that would connect twice.
-  const [config, setConfig] = useState(() => {
-    const pairing = typeof window === 'undefined' ? null : parsePairingHash(window.location.hash);
-    if (pairing) saveEndpoint(pairing.endpoint, pairing.token);
-    return loadConfig();
-  });
-
-  // Strip the pairing fragment so it never sits in the address bar or a
-  // screenshot. The value was already taken above.
-  useEffect(() => {
-    if (!window.location.hash.includes('pair=')) return;
-    window.history.replaceState(null, '', window.location.pathname + window.location.search);
-  }, []);
+  // The address is only ever set in Settings, by someone typing it. A link
+  // that could set it — a pairing fragment, say — would let one click point
+  // the app at somebody else's server, which then drives the deck through the
+  // same tool channel the real one uses.
+  const [config, setConfig] = useState(() => loadConfig());
 
   const configured = Boolean(config.endpoint) && isSecureEndpoint(config.endpoint);
 

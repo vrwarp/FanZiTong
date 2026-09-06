@@ -148,6 +148,10 @@ cd agent && npm install
 npm run agent      # http://127.0.0.1:8787, uses your Claude Code login
 ```
 
+The sidecar borrows the login already on the machine, but the socket still
+wants a credential of its own: sign in once from _Settings › Assistant_, or set
+`FZT_ALLOW_ANONYMOUS=true` for a loopback development run.
+
 For a phone, run it in Docker behind Caddy on a domain you own, then open
 _Settings › Assistant_ and press **Sign in with Claude**: it hands you a link,
 you approve access on Claude's own site, and you paste the code back. That

@@ -16,7 +16,14 @@ export function readCookie(header: string | undefined, name: string): string | n
   if (!header) return null;
   for (const part of header.split(';')) {
     const [key, ...rest] = part.trim().split('=');
-    if (key === name) return decodeURIComponent(rest.join('='));
+    if (key !== name) continue;
+    const raw = rest.join('=');
+    try {
+      return decodeURIComponent(raw);
+    } catch {
+      // A cookie we cannot decode is not one of ours.
+      return null;
+    }
   }
   return null;
 }
@@ -45,6 +52,8 @@ export interface HttpDeps {
   config: AgentConfig;
   log: Logger;
   version: string;
+  /** True when the caller presented the configured fixed token. */
+  verifyFixedToken: (token: string | null) => boolean;
   /** Whether Claude Code has usable credentials right now. */
   probeAuth: () => Promise<'ok' | 'unknown' | 'needs_login'>;
   sessions: () => number;
@@ -165,27 +174,41 @@ export function createHttpHandler(deps: HttpDeps) {
       }
 
       const token = bearerOf(req);
-      const authenticated = deps.auth.verify(token);
+      const authenticated = deps.auth.verify(token) || deps.verifyFixedToken(token);
+
+      /**
+       * Who may begin a sign-in.
+       *
+       * Once the assistant is claimed, only a device that already holds a
+       * session. And whenever a fixed token is configured — the setup where
+       * credentials come from the operator and nobody ever signs in, so
+       * `claimed` would stay false forever — that token is the credential and
+       * an anonymous sign-in would hand a stranger a session that spends it.
+       */
+      const mayStartSignIn =
+        authenticated ||
+        deps.config.allowReclaim ||
+        deps.config.allowAnonymous ||
+        (!deps.auth.claimed && !deps.config.token);
 
       if (route === '/auth/state' && req.method === 'GET') {
         send(req, res, 200, {
           claimed: deps.auth.claimed,
           authenticated,
           signedIn: (await deps.probeAuth()) === 'ok',
-          // Named so the app can say which account it belongs to.
-          account: deps.auth.owner?.account ?? null,
-          canSignIn: !deps.auth.claimed || authenticated || deps.config.allowReclaim,
+          // Only a device that is already signed in gets to see whose it is.
+          account: authenticated ? (deps.auth.owner?.account ?? null) : null,
+          canSignIn: mayStartSignIn,
         });
         return;
       }
 
       if (route === '/auth/start' && req.method === 'POST') {
-        // Once claimed, only a signed-in device may start another sign-in;
-        // otherwise anyone who found the URL could take the assistant over.
-        if (deps.auth.claimed && !authenticated && !deps.config.allowReclaim) {
+        if (!mayStartSignIn) {
           send(req, res, 403, {
-            error:
-              'This assistant already belongs to a Claude account. Sign in from a device that is already connected, or restart it with FZT_ALLOW_RECLAIM=true.',
+            error: deps.config.token
+              ? 'This assistant is opened with its own token, which the app asks for instead.'
+              : 'This assistant already belongs to a Claude account. Sign in from a device that is already connected, or restart it with FZT_ALLOW_RECLAIM=true.',
           });
           return;
         }
@@ -207,6 +230,10 @@ export function createHttpHandler(deps: HttpDeps) {
       }
 
       if (route === '/auth/code' && req.method === 'POST') {
+        if (!mayStartSignIn) {
+          send(req, res, 403, { error: 'This assistant is not accepting sign-ins.' });
+          return;
+        }
         if (!codeThrottle.allow(ip)) {
           send(req, res, 429, { error: 'Too many attempts. Wait a few minutes.' });
           return;

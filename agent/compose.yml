@@ -1,8 +1,14 @@
-# The sidecar behind Caddy, which gets a certificate for your domain on first
-# start. Nothing else is published: the assistant's own port stays inside the
-# compose network.
+# The sidecar, with Caddy in front of it if you want one: Caddy gets a
+# certificate for your domain on first start, and the assistant's own port stays
+# inside the compose network.
 #
-#   cp .env.example .env      # set FZT_DOMAIN and FZT_ALLOWED_ORIGINS
+#   cp .env.example .env                 # set FZT_DOMAIN and FZT_ALLOWED_ORIGINS
+#   docker compose --profile caddy up -d
+#
+# If you already run a reverse proxy — nginx on a NAS, say — leave the profile
+# off, so only the assistant starts, and uncomment its `ports` below so your
+# proxy can reach it:
+#
 #   docker compose up -d
 #
 # Then open the app, put the address in Settings, and sign in with Claude. The
@@ -23,13 +29,23 @@ services:
       # stays signed in across restarts.
       - claude-data:/data
     expose: ['8787']
+    # Uncomment for a proxy of your own. Bound to loopback because nothing
+    # outside this machine should reach the assistant except through the proxy
+    # that terminates TLS; use 0.0.0.0 only if the proxy is on another host.
+    # ports: ['127.0.0.1:8787:8787']
     restart: unless-stopped
 
   caddy:
+    # Only with `--profile caddy`, so a host that already has a proxy — or has
+    # something else on 80 and 443, as a NAS does — is not fighting it.
+    profiles: ['caddy']
     image: caddy:2
     ports: ['80:80', '443:443']
     environment:
-      FZT_DOMAIN: ${FZT_DOMAIN:?set FZT_DOMAIN in .env}
+      # Not `:?` however much it belongs there: compose interpolates every
+      # service whether or not its profile was asked for, so a hard requirement
+      # here would break `up -d` for everyone not using Caddy.
+      FZT_DOMAIN: ${FZT_DOMAIN:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

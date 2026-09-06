@@ -36,12 +36,49 @@ You need a machine that stays on and a domain pointed at it.
 
 ```bash
 cd agent
-cp .env.example .env      # set FZT_DOMAIN and FZT_ALLOWED_ORIGINS
-docker compose up -d
+cp .env.example .env                 # set FZT_DOMAIN and FZT_ALLOWED_ORIGINS
+docker compose --profile caddy up -d
 ```
 
 Caddy gets a certificate for your domain on first start. The assistant's own
 port is never published: Caddy is the only thing in front of it.
+
+### Behind a proxy you already run
+
+A NAS or a VPS usually has one, and it already owns 80 and 443. Leave the
+profile off so only the assistant starts, uncomment its `ports` in
+`compose.yml` so the proxy can reach it, and terminate TLS out there — the
+sidecar speaks plain HTTP and expects to be the whole of a host, or a prefix
+the proxy strips.
+
+```nginx
+map $http_upgrade $connection_upgrade { default upgrade; '' close; }
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name fanzitong-agent.example.com;
+    # ssl_certificate ... ;
+
+    location / {
+        proxy_pass http://127.0.0.1:8787;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade    $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host       $host;
+    }
+}
+```
+
+Two things to get right. `FZT_ALLOWED_ORIGINS` is the origin the **app** is
+served from, not the proxy's hostname — it is checked against what the browser
+sends. And on a path rather than a hostname of its own
+(`https://nas.example.com/fanzitong/`), the prefix has to be stripped, because
+the sidecar matches routes like `/auth/state` exactly: `proxy_pass
+http://127.0.0.1:8787/;` with the trailing slash.
+
+On Synology, DSM's own reverse proxy works too — its Custom Header dropdown has
+a **WebSocket** preset, and without it the upgrade silently fails.
 
 Then open the app on any device, put `wss://your-domain` into _Settings →
 Assistant_, and press **Sign in with Claude**. It shows you a link; you approve
@@ -191,6 +228,14 @@ sidecar holds the conversation for three minutes, queues any tool call it
 cannot deliver, and replays what was missed when the app reconnects with a
 `lastSeq`. Past that grace it closes the subprocess; the transcript is on disk,
 so the next question resumes the same conversation.
+
+Between turns the socket would otherwise carry nothing, which a reverse proxy
+reads as an abandoned connection — nginx closes one after sixty seconds. The
+app sends a `ping` every twenty-five, so no proxy timeout needs raising. The
+answer matters as much as the beat: a phone that changes network leaves a
+half-open socket the browser keeps calling open, so two beats with nothing back
+means the connection is gone, and the app drops it and reconnects rather than
+sending the next turn into a dead pipe.
 
 Frames: `turn`, `note`, `rpc_result`, `interrupt`, `new_conversation`, `ping`
 from the app; `welcome`, `turn_started`, `delta`, `thinking`, `tool_started`,

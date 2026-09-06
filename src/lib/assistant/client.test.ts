@@ -17,8 +17,13 @@ class FakeSocket {
   send(raw: string) {
     this.sent.push(JSON.parse(raw));
   }
+  closeCalls = 0;
   close() {
+    if (this.readyState === 3) return;
     this.readyState = 3;
+    this.closeCalls += 1;
+    // A real socket reports the close it was asked for.
+    this.onclose?.({ code: 1000 });
   }
   accept() {
     this.readyState = 1;
@@ -33,6 +38,8 @@ class FakeSocket {
   }
 }
 
+const opened: AssistantClient[] = [];
+
 function makeClient(over: Partial<ClientOptions> = {}) {
   const frames: ServerFrame[] = [];
   const states: { state: string; detail?: string }[] = [];
@@ -45,6 +52,7 @@ function makeClient(over: Partial<ClientOptions> = {}) {
     socketFactory: (url) => new FakeSocket(url) as unknown as WebSocket,
     ...over,
   });
+  opened.push(client);
   return { client, frames, states };
 }
 
@@ -59,6 +67,11 @@ const welcome = {
 
 beforeEach(() => {
   FakeSocket.last = null;
+});
+
+// Every client owns a heartbeat interval; leaving them running outlives the test.
+afterEach(() => {
+  for (const client of opened.splice(0)) client.close();
 });
 
 describe('AssistantClient', () => {
@@ -156,5 +169,71 @@ describe('AssistantClient', () => {
     expect(turnId).toEqual(expect.any(String));
     const turn = FakeSocket.last!.sent.find((f) => f.type === 'turn');
     expect(turn).toMatchObject({ profile: 'quick', label: '滷肉飯' });
+  });
+});
+
+describe('the heartbeat', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Connect and get past the handshake, which is what starts the beating. */
+  function connected() {
+    const made = makeClient();
+    made.client.connect();
+    FakeSocket.last!.accept();
+    FakeSocket.last!.deliver(welcome);
+    return { ...made, socket: FakeSocket.last! };
+  }
+
+  it('keeps talking often enough that a proxy does not call the socket idle', () => {
+    const { socket } = connected();
+
+    // nginx closes a connection it has read nothing from for sixty seconds,
+    // and it is not the only proxy that does.
+    vi.advanceTimersByTime(59_000);
+
+    expect(socket.sent.filter((f) => f.type === 'ping').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('gives up on a socket that has stopped answering and opens another', () => {
+    const { socket, states } = connected();
+
+    vi.advanceTimersByTime(80_000);
+
+    expect(socket.closeCalls).toBe(1);
+    expect(states.map((s) => s.state)).toContain('offline');
+    // Dropping it is only half the point: the reconnect is what recovers the
+    // turn the dead socket swallowed.
+    expect(FakeSocket.last).not.toBe(socket);
+  });
+
+  it('holds on while the sidecar is still answering', () => {
+    const { socket } = connected();
+
+    for (let beat = 0; beat < 4; beat += 1) {
+      vi.advanceTimersByTime(25_000);
+      socket.deliver({ type: 'pong', seq: 2 + beat });
+    }
+
+    expect(socket.closeCalls).toBe(0);
+  });
+
+  it('does not let a pong stand in for the transcript', () => {
+    const { client, frames, socket } = connected();
+    socket.deliver({ type: 'delta', seq: 7, text: 'Hello' });
+    socket.deliver({ type: 'pong', seq: 8 });
+
+    expect(frames.some((f) => f.type === 'pong')).toBe(false);
+
+    socket.drop();
+    client.nudge();
+    FakeSocket.last!.accept();
+    // The sidecar never buffered that pong, so 7 is the frame to resume from.
+    expect(FakeSocket.last!.sent[0].lastSeq).toBe(7);
   });
 });

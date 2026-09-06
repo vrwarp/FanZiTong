@@ -4,6 +4,7 @@ import { DrillStep } from '@/components/study/DrillStep';
 import { RecognitionCard } from '@/components/study/RecognitionCard';
 import { SessionSummary } from '@/components/study/SessionSummary';
 import { Button } from '@/components/ui/Button';
+import { useAssistant } from '@/lib/assistant/assistantContext';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { META_KEYS, repository } from '@/db/repository';
@@ -66,6 +67,26 @@ function StudySession({
   const api = useStudyEngine(engine);
   const { snapshot } = api;
   const [paused, setPaused] = useState(false);
+  const assistant = useAssistant();
+
+  // Tell the assistant what is on screen. While a card is unrevealed it learns
+  // only that a session is running: the reading must not reach it before the
+  // learner has tried to read the characters themselves (PRD AC-2).
+  const hiddenNow = snapshot?.step?.kind !== 'card' ? true : !snapshot.revealed;
+  const publish = assistant.publishContext;
+  useEffect(() => {
+    publish({
+      route: '/study',
+      card: hiddenNow ? null : (snapshot?.card ?? null),
+      study: {
+        active: true,
+        hidden: hiddenNow,
+        answered: snapshot?.answered,
+        remaining: snapshot?.remaining,
+      },
+    });
+    return () => publish(null);
+  }, [publish, hiddenNow, snapshot?.card, snapshot?.answered, snapshot?.remaining]);
 
   // Remember where the session stands after every answer, so leaving the app
   // (or pausing) never loses the place; a finished session clears the note.
@@ -158,14 +179,31 @@ function StudySession({
         >
           {resumed ? 'Daily session · resumed' : 'Daily session'}
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setPaused(true)}
-          data-testid="study-finish"
-        >
-          Pause
-        </Button>
+        <div className="flex items-center gap-1">
+          {assistant.available && snapshot.revealed && snapshot.card && (
+            <Button
+              variant="ghost"
+              size="sm"
+              data-testid="study-ask"
+              onClick={() =>
+                assistant.ask(
+                  `Why does ${snapshot.card?.traditional} keep catching me out? Explain the shape and give me one thing to hold on to.`,
+                  { label: snapshot.card?.traditional, open: true },
+                )
+              }
+            >
+              Why this? 為什麼
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setPaused(true)}
+            data-testid="study-finish"
+          >
+            Pause
+          </Button>
+        </div>
       </div>
 
       {api.saveError && (

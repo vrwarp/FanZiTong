@@ -1,0 +1,5 @@
+# Point your domain's DNS at this host and Caddy gets a certificate on first
+# start. WebSocket upgrades are proxied without any extra configuration.
+{$FZT_DOMAIN} {
+	reverse_proxy agent:8787
+}

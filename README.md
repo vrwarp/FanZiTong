@@ -132,6 +132,33 @@ visible and always applicable:
   clears the asset caches, leaving IndexedDB — the learner's words, history and
   settings — untouched.
 
+## Assistant (optional)
+
+An optional in-app assistant can write example sentences and foils, add words
+on request, read a menu photo into cards and talk through what keeps slipping.
+It runs on the Claude Agent SDK in a small sidecar process, which is what lets
+it use your own Claude Code login rather than an API key; the deck never leaves
+the browser, since the sidecar forwards every tool call back to the app. Its
+edits apply immediately and are journaled, so any batch can be undone, and it
+is held to the pinyin rule: while a study card is unrevealed it is not shown
+the card at all.
+
+```bash
+cd agent && npm install
+npm run agent      # http://127.0.0.1:8787, uses your Claude Code login
+```
+
+The sidecar borrows the login already on the machine, but the socket still
+wants a credential of its own: sign in once from _Settings › Assistant_, or set
+`FZT_ALLOW_ANONYMOUS=true` for a loopback development run.
+
+For a phone, run it in Docker behind Caddy on a domain you own, then open
+_Settings › Assistant_ and press **Sign in with Claude**: it hands you a link,
+you approve access on Claude's own site, and you paste the code back. That
+sign-in is also what locks the assistant to you — the first one claims it, and
+afterwards only a signed-in device can start another. Setup, the wire protocol
+and the content rules it is held to: [`docs/assistant.md`](docs/assistant.md).
+
 ## Notes
 
 - `.npmrc` sets `legacy-peer-deps=true` because npm 10's resolver crashes on an optional peer (`jsdom → canvas`); the lockfile is generated in that mode, so `npm ci` must use it too.

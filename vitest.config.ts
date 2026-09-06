@@ -41,6 +41,11 @@ export default defineConfig({
         'src/test/**',
         'src/**/*.d.ts',
         'src/components/layout/**',
+        // Socket and dialog glue; covered end to end by Playwright instead.
+        'src/components/assistant/AssistantProvider.tsx',
+        'src/components/assistant/AssistantPanel.tsx',
+        'src/components/assistant/AssistantSettings.tsx',
+        'src/lib/assistant/images.ts',
         'src/components/stats/**',
         'src/components/vocab/CardListItem.tsx',
         'src/hooks/useCards.ts',

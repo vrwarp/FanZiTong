@@ -22,6 +22,11 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "icons": "node scripts/generate-icons.mjs",
+    "simplified": "node scripts/generate-simplified-chars.mjs",
+    "agent": "npm run dev --prefix agent",
+    "agent:build": "npm run build --prefix agent",
+    "agent:start": "npm run start --prefix agent",
+    "agent:validate": "npm run validate --prefix agent",
     "validate": "npm run lint && npm run format:check && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
@@ -48,6 +53,7 @@
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^10.0.0",
@@ -63,6 +69,7 @@
     "typescript-eslint": "^8.69.0",
     "vite": "^7.3.6",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "ws": "^8.21.3"
   }
 }

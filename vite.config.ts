@@ -32,6 +32,15 @@ function resolveBuildId(): string {
   }
 }
 
+/** `/agent` reaches the sidecar on its default port during development. */
+const agentProxy = {
+  '/agent': {
+    target: process.env.FZT_AGENT_URL ?? 'http://127.0.0.1:8787',
+    ws: true,
+    rewrite: (path: string) => path.replace(/^\/agent/, ''),
+  },
+};
+
 export default defineConfig({
   base,
   define: {
@@ -82,6 +91,8 @@ export default defineConfig({
         // so the whole study session works with zero network access.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2}'],
         navigateFallback: 'index.html',
+        // The sidecar is not part of the app shell; never answer it from cache.
+        navigateFallbackDenylist: [/^\/agent(\/|$)/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false,
@@ -107,9 +118,13 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: false,
+    // Same-origin path to a locally running sidecar, so development needs no
+    // pairing token and no mixed-content exemption.
+    proxy: agentProxy,
   },
   preview: {
     port: 4173,
     strictPort: true,
+    proxy: agentProxy,
   },
 });

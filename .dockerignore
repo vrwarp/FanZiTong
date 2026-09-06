@@ -1,0 +1,28 @@
+# The image is built from the repository root, because the sidecar shares the
+# validator and protocol with the app (src/lib/assistant). Everything the build
+# does not need is kept out — most importantly node_modules, which carries a
+# platform-specific Claude Code binary that must be installed inside the image
+# rather than copied from whatever machine ran the build.
+node_modules
+agent/node_modules
+agent/dist
+agent/workspace
+agent/tailscale/state
+
+dist
+dev-dist
+coverage
+playwright-report
+test-results
+blob-report
+public/icons
+
+.git
+.github
+.env
+.env.*
+!.env.example
+e2e
+docs
+scripts
+*.log

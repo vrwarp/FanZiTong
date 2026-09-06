@@ -68,6 +68,33 @@ jobs:
           path: dist
           retention-days: 7
 
+  agent:
+    name: Assistant sidecar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            agent/package-lock.json
+      # The sidecar has its own lockfile so the app's install never pulls the
+      # bundled Claude Code binaries. It still needs the app's, because the
+      # validator and the protocol live in src/ and declare their dependencies
+      # — zod — in the root package.json: node_modules resolution only walks
+      # up, so a file under src/ can never see agent/node_modules.
+      - run: npm ci
+      - run: npm ci
+        working-directory: agent
+      - run: npm run typecheck
+        working-directory: agent
+      - run: npm run test
+        working-directory: agent
+      - run: npm run build
+        working-directory: agent
+
   e2e:
     name: End-to-end (Playwright)
     runs-on: ubuntu-latest

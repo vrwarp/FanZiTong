@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "types": ["node", "vitest/globals"],
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Shared modules live in the app; they are DOM-free on purpose. */
+    "baseUrl": "..",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "vitest.config.ts",
+    "../src/lib/assistant/protocol.ts",
+    "../src/lib/assistant/tools.ts",
+    "../src/lib/assistant/rules.ts",
+    "../src/lib/assistant/profiles.ts",
+    "../src/types/index.ts"
+  ]
+}

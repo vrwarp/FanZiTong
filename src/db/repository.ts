@@ -1,4 +1,11 @@
-import { DEFAULT_SETTINGS, type ReviewLog, type UserSettings, type VocabCard } from '@/types';
+import {
+  DEFAULT_SETTINGS,
+  type AiBatch,
+  type AiChange,
+  type ReviewLog,
+  type UserSettings,
+  type VocabCard,
+} from '@/types';
 import { db as defaultDb, type FanZiTongDatabase } from './database';
 
 export const META_KEYS = {
@@ -100,14 +107,122 @@ export function createRepository(db: FanZiTongDatabase = defaultDb) {
       });
     },
     async clearAll(): Promise<void> {
-      await db.transaction('rw', db.cards, db.reviewLogs, db.settings, db.meta, async () => {
-        await Promise.all([
-          db.cards.clear(),
-          db.reviewLogs.clear(),
-          db.settings.clear(),
-          db.meta.clear(),
-        ]);
+      await db.transaction(
+        'rw',
+        [db.cards, db.reviewLogs, db.settings, db.meta, db.aiBatches, db.aiChanges],
+        async () => {
+          await Promise.all([
+            db.cards.clear(),
+            db.reviewLogs.clear(),
+            db.settings.clear(),
+            db.meta.clear(),
+            db.aiBatches.clear(),
+            db.aiChanges.clear(),
+          ]);
+        },
+      );
+    },
+
+    // ---- assistant journal -------------------------------------------
+    /**
+     * Apply one assistant tool call: the card writes and the journal rows that
+     * let the learner undo them land in a single transaction, so a half-applied
+     * batch can never be left behind.
+     */
+    async applyAssistantBatch(batch: AiBatch, changes: AiChange[]): Promise<void> {
+      await db.transaction('rw', db.cards, db.reviewLogs, db.aiBatches, db.aiChanges, async () => {
+        const upserts = changes
+          .filter((c) => c.op !== 'delete' && c.after)
+          .map((c) => c.after as VocabCard);
+        if (upserts.length > 0) await db.cards.bulkPut(upserts);
+
+        for (const change of changes) {
+          if (change.op !== 'delete') continue;
+          await db.cards.delete(change.cardId);
+          await db.reviewLogs.where('cardId').equals(change.cardId).delete();
+        }
+        // A merge re-parents the losing card's history onto the survivor.
+        const moved = changes.flatMap((c) => (c.op === 'update' ? (c.reviewLogs ?? []) : []));
+        if (moved.length > 0) await db.reviewLogs.bulkPut(moved);
+
+        await db.aiBatches.put(batch);
+        if (changes.length > 0) await db.aiChanges.bulkPut(changes);
       });
+    },
+
+    async listAssistantBatches(limit = 50): Promise<AiBatch[]> {
+      return db.aiBatches.orderBy('createdAt').reverse().limit(limit).toArray();
+    },
+
+    async getAssistantBatch(batchId: string): Promise<AiBatch | undefined> {
+      return db.aiBatches.get(batchId);
+    },
+
+    async getAssistantChanges(batchId: string): Promise<AiChange[]> {
+      const rows = await db.aiChanges.where('batchId').equals(batchId).toArray();
+      return rows.sort((a, b) => a.seq - b.seq);
+    },
+
+    /**
+     * Put the deck back the way it was before one batch.
+     *
+     * Scheduling is never rolled back: a card whose text the assistant changed
+     * keeps the FSRS state it has now, because the learner has studied it since.
+     */
+    async undoAssistantBatch(batchId: string): Promise<{ restored: number; error?: string }> {
+      return db.transaction('rw', db.cards, db.reviewLogs, db.aiBatches, db.aiChanges, async () => {
+        const batch = await db.aiBatches.get(batchId);
+        if (!batch) return { restored: 0, error: 'That change is no longer in the log.' };
+        if (batch.undoneAt) return { restored: 0, error: 'That change was already undone.' };
+        const changes = (await db.aiChanges.where('batchId').equals(batchId).toArray()).sort(
+          (a, b) => b.seq - a.seq,
+        );
+
+        let restored = 0;
+        let error: string | undefined;
+        for (const change of changes) {
+          const current = await db.cards.get(change.cardId);
+          if (change.op === 'insert') {
+            await db.cards.delete(change.cardId);
+            await db.reviewLogs.where('cardId').equals(change.cardId).delete();
+            restored += 1;
+          } else if (change.op === 'update' && change.before) {
+            await db.cards.put(current ? { ...change.before, fsrs: current.fsrs } : change.before);
+            // Undo a merge: send the borrowed history back where it came from.
+            for (const log of change.reviewLogs ?? []) await db.reviewLogs.put(log);
+            restored += 1;
+          } else if (change.op === 'delete' && change.before) {
+            const clash = await db.cards
+              .where('traditional')
+              .equals(change.before.traditional)
+              .first();
+            if (clash && clash.id !== change.before.id) {
+              error = `“${change.before.traditional}” is back in your deck already, so it was left as it is.`;
+              continue;
+            }
+            await db.cards.put(change.before);
+            if (change.reviewLogs?.length) await db.reviewLogs.bulkPut(change.reviewLogs);
+            restored += 1;
+          }
+        }
+
+        await db.aiBatches.put({ ...batch, undoneAt: new Date().toISOString(), undoError: error });
+        return { restored, error };
+      });
+    },
+
+    /** Keep the change log from growing without bound. */
+    async pruneAssistantJournal(keep = 200, maxAgeDays = 30): Promise<number> {
+      const cutoff = new Date(Date.now() - maxAgeDays * 24 * 60 * 60 * 1000).toISOString();
+      const all = await db.aiBatches.orderBy('createdAt').reverse().toArray();
+      const doomed = all.filter((b, index) => index >= keep || b.createdAt < cutoff);
+      if (doomed.length === 0) return 0;
+      const ids = doomed.map((b) => b.id);
+      await db.transaction('rw', db.aiBatches, db.aiChanges, async () => {
+        await db.aiBatches.bulkDelete(ids);
+        await db.aiChanges.where('batchId').anyOf(ids).delete();
+      });
+      return ids.length;
     },
   };
 }

@@ -6,3 +6,7 @@ test-results
 playwright-report
 package-lock.json
 public/icons
+agent/dist
+agent/node_modules
+agent/package-lock.json
+src/data/simplifiedChars.ts

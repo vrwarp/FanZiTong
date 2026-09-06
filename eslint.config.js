@@ -15,6 +15,8 @@ export default tseslint.config(
       'test-results',
       'node_modules',
       'public/icons',
+      'agent/dist',
+      'agent/node_modules',
     ],
   },
   {
@@ -41,6 +43,13 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs['recommended-latest'].rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  {
+    // The sidecar is Node-only: no browser globals, and none of the React rules.
+    files: ['agent/**/*.ts'],
+    languageOptions: {
+      globals: { ...globals.node },
     },
   },
   {

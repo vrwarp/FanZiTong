@@ -23,3 +23,13 @@ npm-debug.log*
 .idea/
 .DS_Store
 *.local
+
+# sidecar
+agent/dist/
+agent/workspace/
+agent/tailscale/state/
+
+# secrets
+.env
+.env.*
+!.env.example

@@ -148,9 +148,12 @@ cd agent && npm install
 npm run agent      # http://127.0.0.1:8787, uses your Claude Code login
 ```
 
-For a phone, run it in Docker behind Tailscale or Caddy and pair the app in
-Settings. Setup, hosting recipes, the wire protocol and the content rules it is
-held to: [`docs/assistant.md`](docs/assistant.md).
+For a phone, run it in Docker behind Caddy on a domain you own, then open
+_Settings › Assistant_ and press **Sign in with Claude**: it hands you a link,
+you approve access on Claude's own site, and you paste the code back. That
+sign-in is also what locks the assistant to you — the first one claims it, and
+afterwards only a signed-in device can start another. Setup, the wire protocol
+and the content rules it is held to: [`docs/assistant.md`](docs/assistant.md).
 
 ## Notes
 

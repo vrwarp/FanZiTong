@@ -39,7 +39,20 @@ describe('the sidecar socket', () => {
     await stop();
   });
 
-  it('refuses a wrong pairing token', async () => {
+  it('refuses a socket that presents no session', async () => {
+    const { port, stop } = await boot({
+      FZT_AGENT_HOST: '0.0.0.0',
+      FZT_ALLOWED_ORIGINS: 'https://good.example',
+    });
+    const ws = connect(port, 'https://good.example');
+    await new Promise((resolve) => ws.on('open', resolve));
+    ws.send(JSON.stringify({ type: 'hello', protocolVersion: 1, token: 'made-up', app: {} }));
+    const code = await new Promise<number>((resolve) => ws.on('close', resolve));
+    expect(code).toBe(4401);
+    await stop();
+  });
+
+  it('refuses a wrong fixed token', async () => {
     const { port, stop } = await boot({
       FZT_AGENT_HOST: '0.0.0.0',
       FZT_AGENT_TOKEN: 'the-real-token',
@@ -53,7 +66,7 @@ describe('the sidecar socket', () => {
     await stop();
   });
 
-  it('welcomes a client with the right token and opens a conversation', async () => {
+  it('welcomes a client with the right fixed token and opens a conversation', async () => {
     const { port, stop } = await boot({
       FZT_AGENT_HOST: '0.0.0.0',
       FZT_AGENT_TOKEN: 'the-real-token',
@@ -92,13 +105,32 @@ describe('the sidecar socket', () => {
 });
 
 describe('configuration', () => {
-  it('insists on a token when it is not on loopback', () => {
-    expect(() => loadConfig({ FZT_AGENT_HOST: '0.0.0.0' } as NodeJS.ProcessEnv)).toThrow(
-      /FZT_AGENT_TOKEN/,
-    );
+  it('needs no token on a public address: the Claude sign-in is the credential', () => {
+    const config = loadConfig({ FZT_AGENT_HOST: '0.0.0.0' } as NodeJS.ProcessEnv);
+    expect(config.token).toBeNull();
   });
 
-  it('allows a tokenless sidecar on loopback for development', () => {
-    expect(loadConfig({ FZT_AGENT_HOST: '127.0.0.1' } as NodeJS.ProcessEnv).token).toBeNull();
+  it('insists on a token when the operator supplies the Claude credential', () => {
+    // Nobody signs in through the app in that setup, so there is no sign-in to
+    // establish who the assistant belongs to.
+    expect(() =>
+      loadConfig({
+        FZT_AGENT_HOST: '0.0.0.0',
+        CLAUDE_CODE_OAUTH_TOKEN: 'sk-ant-oat-example',
+      } as NodeJS.ProcessEnv),
+    ).toThrow(/FZT_AGENT_TOKEN/);
+  });
+
+  it('leaves loopback alone, credential or not', () => {
+    const config = loadConfig({
+      FZT_AGENT_HOST: '127.0.0.1',
+      CLAUDE_CODE_OAUTH_TOKEN: 'sk-ant-oat-example',
+    } as NodeJS.ProcessEnv);
+    expect(config.token).toBeNull();
+  });
+
+  it('keeps its state beside the Claude credentials by default', () => {
+    const config = loadConfig({ CLAUDE_CONFIG_DIR: '/data/claude' } as NodeJS.ProcessEnv);
+    expect(config.stateDir).toBe('/data/claude/fanzitong');
   });
 });

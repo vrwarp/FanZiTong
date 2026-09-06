@@ -1,13 +1,13 @@
-# Two ways to reach the sidecar from a phone, both terminating TLS in front of
-# it. The agent port is never published on its own: the pairing token is the
-# only credential, so nothing that speaks plain HTTP should see it.
+# The sidecar behind Caddy, which gets a certificate for your domain on first
+# start. Nothing else is published: the assistant's own port stays inside the
+# compose network.
 #
-#   docker compose --profile tailscale up -d     (recommended: private tailnet)
-#   docker compose --profile caddy up -d         (public domain)
+#   cp .env.example .env      # set FZT_DOMAIN and FZT_ALLOWED_ORIGINS
+#   docker compose up -d
 #
-# Credentials: put CLAUDE_CODE_OAUTH_TOKEN from `claude setup-token` in .env,
-# or leave it empty and run once:
-#   docker compose exec -it agent claude auth login
+# Then open the app, put the address in Settings, and sign in with Claude. The
+# first sign-in claims the assistant; after that only a signed-in device can
+# start another one.
 
 services:
   agent:
@@ -19,43 +19,25 @@ services:
     environment:
       FZT_AGENT_HOST: 0.0.0.0
     volumes:
+      # Credentials, sessions and transcripts: keep this and the assistant
+      # stays signed in across restarts.
       - claude-data:/data
-    restart: unless-stopped
-    # No published ports: the only ways in are the two proxies below, both of
-    # which reach this container by its compose network name.
     expose: ['8787']
-
-  tailscale:
-    profiles: [tailscale]
-    image: tailscale/tailscale:latest
-    hostname: fanzitong-agent
-    environment:
-      # Required for this profile, but not marked as such: compose interpolates
-      # every service even when its profile is not selected, so demanding it
-      # here would break `docker compose up` for anyone using Caddy instead.
-      TS_AUTHKEY: ${TS_AUTHKEY}
-      TS_STATE_DIR: /var/lib/tailscale
-      TS_SERVE_CONFIG: /config/serve.json
-      TS_HOSTNAME: fanzitong-agent
-    volumes:
-      - tailscale-state:/var/lib/tailscale
-      # serve.json proxies the tailnet HTTPS endpoint to http://agent:8787.
-      - ./tailscale:/config:ro
-    depends_on: [agent]
-    cap_add: [net_admin, net_raw]
     restart: unless-stopped
 
   caddy:
-    profiles: [caddy]
     image: caddy:2
     ports: ['80:80', '443:443']
+    environment:
+      FZT_DOMAIN: ${FZT_DOMAIN:?set FZT_DOMAIN in .env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
+      - caddy-config:/config
     depends_on: [agent]
     restart: unless-stopped
 
 volumes:
   claude-data:
-  tailscale-state:
   caddy-data:
+  caddy-config:

@@ -30,76 +30,74 @@ the personal-use shape of that: your machine, your login, your own devices. Do
 not run it as a service for other people. If you want to share the app with
 someone, they need their own sidecar and their own credentials.
 
-## Setting it up with Docker
+## Setting it up
+
+You need a machine that stays on and a domain pointed at it.
 
 ```bash
 cd agent
-cp .env.example .env          # fill in FZT_AGENT_TOKEN and FZT_ALLOWED_ORIGINS
-docker compose --profile tailscale up -d
+cp .env.example .env      # set FZT_DOMAIN and FZT_ALLOWED_ORIGINS
+docker compose up -d
 ```
 
-**Credentials.** Either is fine:
+Caddy gets a certificate for your domain on first start. The assistant's own
+port is never published: Caddy is the only thing in front of it.
 
-- On a machine where you are already signed in, run `claude setup-token`. It
-  prints a one-year OAuth token tied to your subscription, meant for scripts.
-  Put it in `.env` as `CLAUDE_CODE_OAUTH_TOKEN`.
-- Or sign in inside the container once:
-  `docker compose exec -it agent claude auth login`. It prints a URL; the
-  browser shows a code you paste back, which is the documented path for
-  containers and SSH. The login is kept in the `claude-data` volume, because
-  `CLAUDE_CONFIG_DIR=/data/claude` moves credentials there along with the
-  session transcripts.
+Then open the app on any device, put `wss://your-domain` into _Settings →
+Assistant_, and press **Sign in with Claude**. It shows you a link; you approve
+access on Claude's own site, copy the code it gives you, and paste it back. The
+app stores the session that comes out of that and connects.
 
-Do not set `ANTHROPIC_API_KEY` unless you mean to bill the API: it outranks the
-subscription login.
+There is nothing else to configure, and nothing to run in the container by
+hand.
 
-**Reaching it from a phone.** The app is served over https, so the socket must
-be `wss://`; the agent port is never published on its own.
+### How the sign-in doubles as the lock
 
-- `--profile tailscale` runs the official Tailscale container beside it and
-  serves `https://fanzitong-agent.<your-tailnet>.ts.net` with a real
-  certificate. Install Tailscale on the phone and nothing is exposed publicly.
-  Put your `TS_AUTHKEY` in `.env`.
-- `--profile caddy` is for a public domain. Edit `Caddyfile`, point DNS at the
-  host, and the pairing token becomes the only thing standing between the
-  internet and the sidecar — so make it long.
+The assistant is on the public internet and spends your Claude subscription, so
+it cannot be open to anyone who finds the address. Rather than inventing a
+password, it uses the only credential that already matters:
 
-**Pairing the app.** Open Settings on the phone, enter the address and the
-token, and press _Save & connect_. The status line shows the account it is
-signed in as.
+- **The first sign-in claims it.** Whoever completes a Claude sign-in becomes
+  the owner, and the account is recorded.
+- **After that, only a signed-in device can start another sign-in.** Someone
+  who finds the URL is turned away before any process is started.
+- **A sign-in as a different account is refused.** Each attempt runs against a
+  staging directory, and the credentials it produces are only promoted once the
+  account matches the owner — so a stranger cannot replace your credentials
+  even if they get that far.
+- **Sessions last 30 days**, are stored as hashes rather than tokens, and can
+  be ended from Settings.
 
-Updating: `docker compose pull && docker compose up -d`. The image is
-`docker.io/vrwarp/fanzitong-agent`, built for x86-64 and ARM64 by
-`.github/workflows/agent-image.yml`; point `FZT_AGENT_IMAGE` at your own
-namespace if you publish it yourself.
+The `claude auth login` flow drives cleanly over pipes: it prints the URL,
+waits at a paste prompt, and exits 0 once the code is accepted. Success is
+taken from that exit code and confirmed with `claude auth status`, not from
+matching words in its output.
 
-### Publishing the image yourself
+If you are locked out — every device signed out, or you want to hand the
+assistant to another account — set `FZT_ALLOW_RECLAIM=true`, restart, sign in,
+and turn it off again.
 
-The workflow builds the image on every pull request that touches the sidecar —
-starting the container and checking it answers `/healthz`, without pushing
-anything — and publishes to Docker Hub on a push to `main`. To publish under
-your own account, add two settings under _Settings → Secrets and variables →
-Actions_:
+Sign-in attempts are rate limited per address, and at most three can be in
+flight at once, because each one holds a running process.
 
-- `DOCKERHUB_TOKEN` (secret): an access token from
-  [Docker Hub](https://app.docker.com/settings/personal-access-tokens), with
-  Read & Write scope.
-- `DOCKERHUB_USERNAME` (variable): only if your Docker Hub account is not named
-  after the GitHub owner.
+### The session, the cookie, and why there are both
 
-Pull requests from forks never see those credentials, which is why the dry run
-does not log in.
+Completing the sign-in returns a session token and sets it as an `HttpOnly`
+cookie. The app keeps the token as well and sends it when it opens the socket.
 
-## Running it on your desktop instead
+Both exist because they cover different deployments: the cookie is the better
+mechanism when the app and the assistant share a site, but the app is usually
+served from somewhere else entirely (GitHub Pages), which makes it a
+third-party cookie — and Safari refuses those outright. The token always works,
+so it is what the socket actually relies on.
 
-```bash
-cd agent && npm install
-npm run agent          # from the repo root; binds 127.0.0.1:8787
-```
+### An assistant you supply credentials to
 
-On loopback no token is needed, and `npm run dev` proxies `/agent` to it, so
-the app finds it with no configuration at all. This is the same code the image
-runs.
+If you would rather give the container a credential than sign in through the
+app — `claude setup-token` prints one that lasts a year — set
+`CLAUDE_CODE_OAUTH_TOKEN`. There is then no sign-in to establish who owns the
+assistant, so `FZT_AGENT_TOKEN` is required too and the app asks for it instead.
+The sidecar refuses to start on a public address with one and not the other.
 
 ## What it can do
 
@@ -149,12 +147,27 @@ character you are being asked to read. The assistant is held to it:
 - The panel is a dialog outside the card, so nothing it renders can appear
   inside the prompt or trip the tap-to-reveal handler.
 
+## The sign-in endpoints
+
+Alongside the socket the sidecar answers a handful of HTTP routes, all of them
+restricted to the origins in `FZT_ALLOWED_ORIGINS`:
+
+| Route               | What it does                                                           |
+| ------------------- | ---------------------------------------------------------------------- |
+| `GET /healthz`      | The process is up. No origin required, for the container's own check.  |
+| `GET /readyz`       | Claude Code has usable credentials.                                    |
+| `GET /auth/state`   | Claimed or not, signed in or not, and whether this device may sign in. |
+| `POST /auth/start`  | Starts a sign-in and returns the link to open.                         |
+| `POST /auth/code`   | Hands back the pasted code; returns a session and sets the cookie.     |
+| `POST /auth/cancel` | Abandons a half-finished sign-in.                                      |
+| `POST /auth/logout` | Ends this device's session.                                            |
+
 ## The wire protocol
 
 JSON frames over one socket, defined and validated by
 `src/lib/assistant/protocol.ts` on both sides.
 
-The app opens with `hello` carrying the pairing token, the conversation id and
+The app opens with `hello` carrying its session token, the conversation id and
 the last frame it saw. The sidecar checks the origin against its allowlist and
 the token in constant time, then answers `welcome`.
 
@@ -192,19 +205,21 @@ rather than guessed at.
 
 ## Configuration
 
-| Variable                    | Default        | What it does                                      |
-| --------------------------- | -------------- | ------------------------------------------------- |
-| `FZT_AGENT_HOST`            | `127.0.0.1`    | Bind address; `0.0.0.0` in the container.         |
-| `FZT_AGENT_PORT`            | `8787`         | Port.                                             |
-| `FZT_AGENT_TOKEN`           | none           | Pairing token. Required unless bound to loopback. |
-| `FZT_ALLOWED_ORIGINS`       | localhost      | Exact origins allowed to open a socket.           |
-| `FZT_AGENT_MAX_SESSIONS`    | `3`            | Live conversations, and so subprocesses.          |
-| `FZT_AGENT_IDLE_TIMEOUT_MS` | `600000`       | Close a quiet conversation.                       |
-| `FZT_AGENT_DETACH_GRACE_MS` | `180000`       | How long a locked phone keeps its turn.           |
-| `FZT_AGENT_RPC_TIMEOUT_MS`  | `60000`        | How long a tool call waits for the app.           |
-| `FZT_AGENT_MAX_BUDGET_USD`  | none           | Optional per-turn spend cap.                      |
-| `CLAUDE_CODE_OAUTH_TOKEN`   | none           | Long-lived token from `claude setup-token`.       |
-| `CLAUDE_CONFIG_DIR`         | `/data/claude` | Where credentials and transcripts live.           |
+| Variable                    | Default            | What it does                                                              |
+| --------------------------- | ------------------ | ------------------------------------------------------------------------- |
+| `FZT_AGENT_HOST`            | `127.0.0.1`        | Bind address; `0.0.0.0` in the container.                                 |
+| `FZT_AGENT_PORT`            | `8787`             | Port.                                                                     |
+| `FZT_AGENT_TOKEN`           | none               | Fixed token, only for an assistant that is not signed in through the app. |
+| `FZT_ALLOW_RECLAIM`         | `false`            | Let a sign-in take a claimed assistant over.                              |
+| `FZT_AGENT_STATE_DIR`       | beside credentials | Sessions, ownership and staged sign-ins.                                  |
+| `FZT_ALLOWED_ORIGINS`       | localhost          | Exact origins allowed to open a socket or sign in.                        |
+| `FZT_AGENT_MAX_SESSIONS`    | `3`                | Live conversations, and so subprocesses.                                  |
+| `FZT_AGENT_IDLE_TIMEOUT_MS` | `600000`           | Close a quiet conversation.                                               |
+| `FZT_AGENT_DETACH_GRACE_MS` | `180000`           | How long a locked phone keeps its turn.                                   |
+| `FZT_AGENT_RPC_TIMEOUT_MS`  | `60000`            | How long a tool call waits for the app.                                   |
+| `FZT_AGENT_MAX_BUDGET_USD`  | none               | Optional per-turn spend cap.                                              |
+| `CLAUDE_CODE_OAUTH_TOKEN`   | none               | Operator-supplied credential; needs `FZT_AGENT_TOKEN` too.                |
+| `CLAUDE_CONFIG_DIR`         | `/data/claude`     | Where credentials and transcripts live.                                   |
 
 ## What the model cannot do
 

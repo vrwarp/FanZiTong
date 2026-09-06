@@ -114,3 +114,71 @@ test.describe('Assistant', () => {
     await expect(page.getByTestId('assistant-panel')).toContainText('offline');
   });
 });
+
+test.describe('Signing in', () => {
+  let sidecar: FakeSidecar;
+
+  test.afterEach(async () => {
+    await sidecar?.close();
+  });
+
+  test('hands over a link, takes the code back, and connects', async ({ page }) => {
+    sidecar = await startFakeSidecar([{ finish: 'Hello.' }]);
+    await openApp(page, '/settings');
+
+    // Nothing is stored yet: the address is all the learner has.
+    await page.getByTestId('assistant-endpoint').fill(sidecar.url);
+    await page.getByTestId('assistant-endpoint').blur();
+
+    await page.getByTestId('assistant-signin').click();
+    const link = page.getByTestId('assistant-signin-link');
+    await expect(link).toBeVisible();
+    // The link goes to Claude, not to the assistant.
+    await expect(link).toHaveAttribute('href', /^https:\/\/claude\.com\//);
+
+    await page.getByTestId('assistant-code').fill('good-code');
+    await page.getByTestId('assistant-code-submit').click();
+
+    await expect(page.getByTestId('assistant-status')).toContainText('Connected');
+    await expect(page.getByTestId('assistant-status')).toContainText('owner@example.com');
+    // The session it minted is what the app keeps, not anything the user typed.
+    const stored = await page.evaluate(() => localStorage.getItem('fzt-assistant-token'));
+    expect(stored).toBe('session-token-1');
+  });
+
+  test('says so when the code is wrong, and stays signed out', async ({ page }) => {
+    sidecar = await startFakeSidecar([]);
+    await openApp(page, '/settings');
+    await page.getByTestId('assistant-endpoint').fill(sidecar.url);
+    await page.getByTestId('assistant-endpoint').blur();
+
+    await page.getByTestId('assistant-signin').click();
+    await page.getByTestId('assistant-code').fill('wrong-code');
+    await page.getByTestId('assistant-code-submit').click();
+
+    await expect(page.getByRole('alert')).toContainText('not accepted');
+    expect(await page.evaluate(() => localStorage.getItem('fzt-assistant-token'))).toBeNull();
+  });
+
+  test('turns a stranger away once someone else has claimed it', async ({ page }) => {
+    sidecar = await startFakeSidecar([], { claimed: true });
+    await openApp(page, '/settings');
+    await page.getByTestId('assistant-endpoint').fill(sidecar.url);
+    await page.getByTestId('assistant-endpoint').blur();
+
+    await expect(page.getByTestId('assistant-settings')).toContainText(
+      'already belongs to a Claude account',
+    );
+    await expect(page.getByTestId('assistant-signin')).toBeDisabled();
+  });
+
+  test('refuses an unencrypted address that is not this machine', async ({ page }) => {
+    sidecar = await startFakeSidecar([]);
+    await openApp(page, '/settings');
+    await page.getByTestId('assistant-endpoint').fill('ws://192.168.1.50:8787');
+    await page.getByTestId('assistant-endpoint').blur();
+
+    await expect(page.getByRole('alert')).toContainText('wss://');
+    await expect(page.getByTestId('assistant-signin')).toHaveCount(0);
+  });
+});

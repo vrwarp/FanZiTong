@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { ReviewLog, UserSettings, VocabCard } from '@/types';
+import type { AiBatch, AiChange, ReviewLog, UserSettings, VocabCard } from '@/types';
 
 export interface SettingsRow extends UserSettings {
   /** Single-row table; the id is always "user". */
@@ -25,6 +25,9 @@ export class FanZiTongDatabase extends Dexie {
   reviewLogs!: EntityTable<ReviewLog, 'id'>;
   settings!: EntityTable<SettingsRow, 'id'>;
   meta!: EntityTable<MetaRow, 'key'>;
+  /** Assistant edits, kept so any batch can be undone. */
+  aiBatches!: EntityTable<AiBatch, 'id'>;
+  aiChanges!: EntityTable<AiChange, 'id'>;
 
   constructor(name: string = DB_NAME) {
     super(name);
@@ -33,6 +36,11 @@ export class FanZiTongDatabase extends Dexie {
       reviewLogs: 'id, cardId, reviewTimestamp, [cardId+reviewTimestamp]',
       settings: 'id',
       meta: 'key',
+    });
+    // v2 only adds the assistant journal, so existing data needs no upgrade step.
+    this.version(2).stores({
+      aiBatches: 'id, createdAt, conversationId, turnId, undoneAt',
+      aiChanges: 'id, batchId, cardId, [batchId+seq]',
     });
   }
 }

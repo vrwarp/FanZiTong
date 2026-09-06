@@ -172,3 +172,40 @@ export interface DeckExport {
   reviewLogs?: ReviewLog[];
   settings?: UserSettings;
 }
+
+/** What one assistant tool call did to the deck, so it can be undone. */
+export type AiChangeOp = 'insert' | 'update' | 'delete';
+
+export interface AiChange {
+  id: string;
+  batchId: string;
+  /** Order within the batch; undo walks it in reverse. */
+  seq: number;
+  cardId: string;
+  op: AiChangeOp;
+  /** The card before the change; null when it was created. */
+  before: VocabCard | null;
+  /** The card after the change; null when it was deleted. */
+  after: VocabCard | null;
+  /**
+   * Review history removed or re-parented by this change, so undoing a delete
+   * or a merge gives the learner their scheduling history back.
+   */
+  reviewLogs?: ReviewLog[];
+}
+
+export interface AiBatch {
+  id: string;
+  createdAt: string;
+  /** Sidecar conversation and turn, so "undo everything from that reply" works. */
+  conversationId?: string;
+  turnId?: string;
+  tool: string;
+  /** The assistant's own one-line reason, shown in the change log. */
+  reason: string;
+  summary: string;
+  counts: { inserted: number; updated: number; deleted: number };
+  undoneAt?: string;
+  /** Why an undo could not be completed, when that happens. */
+  undoError?: string;
+}

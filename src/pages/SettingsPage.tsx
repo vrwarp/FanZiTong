@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { AssistantSettings } from '@/components/assistant/AssistantSettings';
 import { Button } from '@/components/ui/Button';
 import { Field, inputClass } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
@@ -302,6 +303,8 @@ export default function SettingsPage() {
           </Button>
         </div>
       </section>
+
+      <AssistantSettings />
 
       <section className="card-surface flex flex-col gap-3 p-4" aria-labelledby="about-heading">
         <h2

@@ -68,6 +68,29 @@ jobs:
           path: dist
           retention-days: 7
 
+  agent:
+    name: Assistant sidecar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: agent/package-lock.json
+      # The sidecar has its own lockfile so the app's install never pulls the
+      # bundled Claude Code binaries.
+      - run: npm ci
+        working-directory: agent
+      - run: npm run typecheck
+        working-directory: agent
+      - run: npm run test
+        working-directory: agent
+      - run: npm run build
+        working-directory: agent
+      - name: Build the container image
+        run: docker build -f agent/Dockerfile -t fanzitong-agent:ci .
+
   e2e:
     name: End-to-end (Playwright)
     runs-on: ubuntu-latest

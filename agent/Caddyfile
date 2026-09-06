@@ -1,0 +1,6 @@
+# Replace the domain, point its DNS at this host, and Caddy gets a certificate
+# on first start. The pairing token is the only thing standing between the
+# public internet and the sidecar, so keep it long.
+agent.example.com {
+	reverse_proxy agent:8787
+}

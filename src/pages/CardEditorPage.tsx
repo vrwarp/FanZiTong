@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/Button';
 import { Field, inputClass, textareaClass } from '@/components/ui/Field';
 import { Modal } from '@/components/ui/Modal';
 import { repository } from '@/db/repository';
+import { useAssistant } from '@/lib/assistant/assistantContext';
+import { buildDeckIndex, validateCard } from '@/lib/assistant/validateCard';
 import { useCard } from '@/hooks/useCards';
 import { newFsrsState } from '@/lib/fsrs/scheduler';
 import { splitList } from '@/lib/io/domain';
@@ -103,6 +105,21 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
   const isNew = !existing;
   const [form, setForm] = useState<FormState>(() => (existing ? toForm(existing) : EMPTY_FORM));
   const [error, setError] = useState<string | null>(null);
+  const assistant = useAssistant();
+
+  /**
+   * Hand the card to the assistant with a specific job. It writes through the
+   * same validator this form uses, so anything it applies is already legal,
+   * and the change is journaled with an undo.
+   */
+  const askFor = (job: string) => {
+    const word = form.traditional.trim();
+    if (!word) {
+      setError('Type the characters first, then ask.');
+      return;
+    }
+    assistant.ask(job.replace('{word}', word), { label: word, open: true });
+  };
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const set = (key: keyof FormState) => (e: { target: { value: string } }) =>
@@ -113,11 +130,6 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     const traditional = form.traditional.trim();
     if (!traditional) {
       setError('Traditional characters are required.');
-      return;
-    }
-    const clash = await repository.findByTraditional(traditional);
-    if (clash && clash.id !== cardId) {
-      setError(`“${traditional}” is already in your deck.`);
       return;
     }
     const now = new Date().toISOString();
@@ -154,16 +166,18 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     card.notes = form.notes.trim() || undefined;
     const clozeDistractors = splitList(form.clozeDistractors);
     card.clozeDistractors = clozeDistractors.length ? clozeDistractors : undefined;
-    // A foil must be unambiguously wrong: never a real spelling of this or another word.
+    // One implementation of the content rules, shared with the assistant and
+    // asserted against the starter deck, instead of a check that only ran here.
     const allCards = await repository.getAllCards();
-    const realSpellings = new Set(
-      allCards.flatMap((c) => [c.traditional, ...(c.variants ?? [])]).concat(variants),
-    );
-    const realFoil = foils.find((f) => realSpellings.has(f));
-    if (realFoil) {
-      setError(
-        `“${realFoil}” is a real spelling — move it to “Also written” instead of the foils.`,
-      );
+    const report = validateCard(card, {
+      deck: buildDeckIndex(allCards),
+      existing: existing ?? null,
+      // Typing a card by hand is allowed to be a work in progress; only the
+      // things that are actually wrong stop the save.
+      mode: 'draft',
+    });
+    if (report.errors.length > 0) {
+      setError(report.errors.map((issue) => issue.message).join(' '));
       return;
     }
     await repository.putCard(card);
@@ -190,9 +204,25 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
         title={isNew ? 'New card' : 'Edit card'}
         zh={isNew ? '新增' : '編輯'}
         action={
-          <Button variant="ghost" size="sm" onClick={() => navigate('/vocab')}>
-            Cancel
-          </Button>
+          <div className="flex items-center gap-1">
+            {assistant.available && (
+              <Button
+                variant="ghost"
+                size="sm"
+                data-testid="card-ask-assistant"
+                onClick={() =>
+                  askFor(
+                    'Make the card for {word} ready to drill: an example sentence someone in Taiwan would actually say, its reading and translation, and look-alike foils. Fill only what is missing.',
+                  )
+                }
+              >
+                ✨ Fill in
+              </Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={() => navigate('/vocab')}>
+              Cancel
+            </Button>
+          </div>
         }
       />
 

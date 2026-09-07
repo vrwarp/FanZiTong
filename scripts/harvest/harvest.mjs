@@ -18,6 +18,7 @@ import {
   HAN_ONLY,
   bahamutTerms,
   categoryMembers,
+  cuvVerses,
   cchatTerms,
   moedictEntry,
   pttHits,
@@ -183,6 +184,67 @@ async function report() {
 }
 
 /**
+ * Church candidates from the 和合本, plus the verse each word came from.
+ *
+ * Public domain, so unlike every other corpus here its text may be kept: the
+ * verse is saved alongside the word as a ready-made example sentence, which is
+ * what the style guide asks for anyway.
+ */
+async function bible() {
+  const cached = await load('cuv.json', null);
+  const verses =
+    cached ??
+    (await cuvVerses({
+      onChapter: (book, chap, n) => {
+        if (chap === 1) process.stdout.write(`${book} `);
+        if (n && n % 5000 === 0) console.log(`\n  ${n} verses`);
+      },
+    }));
+  if (!cached) await save('cuv.json', verses);
+  console.log(`\n${verses.length} verses`);
+
+  // Count words, and remember the shortest verse each was seen in: a short
+  // verse makes a better card than a long one.
+  const counts = new Map();
+  const homeVerse = new Map();
+  for (const { ref, text } of verses) {
+    for (const run of text.split(/[^一-鿿]+/)) {
+      for (let n = 2; n <= 4; n += 1) {
+        for (let i = 0; i + n <= run.length; i += 1) {
+          const gram = run.slice(i, i + n);
+          counts.set(gram, (counts.get(gram) ?? 0) + 1);
+          const held = homeVerse.get(gram);
+          if (!held || text.length < held.text.length) homeVerse.set(gram, { ref, text });
+        }
+      }
+    }
+  }
+  const already = await existingWords();
+  const rows = await load('candidates.json', []);
+  const seen = new Set(rows.map((r) => r.word));
+  const ranked = [...counts].filter(([, n]) => n >= 8).sort((a, b) => b[1] - a[1]);
+  console.log(`${ranked.length} n-grams appear eight times or more; checking which are words`);
+  const added = [];
+  for (const [word, verseCount] of ranked) {
+    if (!HAN_ONLY.test(word) || already.has(word) || seen.has(word)) continue;
+    const entry = await moedictEntry(word).catch(() => null);
+    if (!entry?.mandarin) continue;
+    const home = homeVerse.get(word);
+    added.push({
+      word,
+      domains: ['church'],
+      source: 'https://bible.fhl.net/ 和合本 (public domain)',
+      verses: verseCount,
+      verse: home?.text,
+      ref: home?.ref,
+    });
+    seen.add(word);
+  }
+  await save('candidates.json', [...rows, ...added]);
+  console.log(`${added.length} new church candidates from scripture`);
+}
+
+/**
  * ACG candidates from 巴哈姆特, dictionary-checked like the C_Chat ones.
  *
  * Boards are sampled across the whole id range rather than cherry-picked, so
@@ -191,8 +253,11 @@ async function report() {
 async function bahamut() {
   // A spread over the sitemap's range: early ids are the long-lived boards,
   // later ones the games people are playing now.
+  // Stride is an argument so a first pass can be cheap and a later one deeper;
+  // 433 boards at stride 37 already yielded 442 candidates.
+  const stride = Number(process.argv[3]) || 37;
   const boards = [];
-  for (let bsn = 1; bsn <= 16000; bsn += 37) boards.push(bsn);
+  for (let bsn = 1; bsn <= 16000; bsn += stride) boards.push(bsn);
   const { boards: read, terms } = await bahamutTerms({ boards });
   console.log(`${read} boards read, ${terms.length} n-grams recur; checking which are words`);
   const already = await existingWords();
@@ -286,7 +351,7 @@ async function cchat() {
 }
 
 const stage = process.argv[2];
-const stages = { candidates, cchat, bahamut, attest, boards, readings, report };
+const stages = { candidates, cchat, bahamut, bible, attest, boards, readings, report };
 if (!stages[stage]) {
   console.error(`usage: harvest.mjs <${Object.keys(stages).join('|')}>`);
   process.exit(1);

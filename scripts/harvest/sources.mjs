@@ -192,6 +192,110 @@ export const DOMAIN_SOURCES = {
 };
 
 /**
+ * The 和合本 (Chinese Union Version, 1919), through 信望愛's JSON API.
+ *
+ * Church vocabulary lives in scripture the way ACG vocabulary lives on 巴哈姆特,
+ * and this text is public domain — published in 1919, its translators long
+ * dead — which makes it the one source here whose sentences may be quoted
+ * verbatim. That matters twice over, because the deck's own style guide says to
+ * quote scripture exactly or not at all.
+ *
+ * Returns verses, so a caller can mine words from them and keep the verse a
+ * word came from as its example sentence.
+ */
+const CUV_BOOKS = [
+  ['創', 50],
+  ['出', 40],
+  ['利', 27],
+  ['民', 36],
+  ['申', 34],
+  ['書', 24],
+  ['士', 21],
+  ['得', 4],
+  ['撒上', 31],
+  ['撒下', 24],
+  ['王上', 22],
+  ['王下', 25],
+  ['代上', 29],
+  ['代下', 36],
+  ['拉', 10],
+  ['尼', 13],
+  ['斯', 10],
+  ['伯', 42],
+  ['詩', 150],
+  ['箴', 31],
+  ['傳', 12],
+  ['歌', 8],
+  ['賽', 66],
+  ['耶', 52],
+  ['哀', 5],
+  ['結', 48],
+  ['但', 12],
+  ['何', 14],
+  ['珥', 3],
+  ['摩', 9],
+  ['俄', 1],
+  ['拿', 4],
+  ['彌', 7],
+  ['鴻', 3],
+  ['哈', 3],
+  ['番', 3],
+  ['該', 2],
+  ['亞', 14],
+  ['瑪', 4],
+  ['太', 28],
+  ['可', 16],
+  ['路', 24],
+  ['約', 21],
+  ['徒', 28],
+  ['羅', 16],
+  ['林前', 16],
+  ['林後', 13],
+  ['加', 6],
+  ['弗', 6],
+  ['腓', 4],
+  ['西', 4],
+  ['帖前', 5],
+  ['帖後', 3],
+  ['提前', 6],
+  ['提後', 4],
+  ['多', 3],
+  ['門', 1],
+  ['來', 13],
+  ['雅', 5],
+  ['彼前', 5],
+  ['彼後', 3],
+  ['約一', 5],
+  ['約二', 1],
+  ['約三', 1],
+  ['猶', 1],
+  ['啟', 22],
+];
+
+export async function cuvVerses({ books = CUV_BOOKS, onChapter } = {}) {
+  const verses = [];
+  for (const [book, chapters] of books) {
+    for (let chap = 1; chap <= chapters; chap += 1) {
+      const url = `https://bible.fhl.net/json/qb.php?chineses=${encodeURIComponent(book)}&chap=${chap}&version=unv`;
+      try {
+        const res = await retrying(url, { headers: { 'User-Agent': UA } });
+        if (!res.ok) continue;
+        const body = await res.json();
+        for (const row of body.record ?? []) {
+          if (row.bible_text)
+            verses.push({ ref: `${book} ${chap}:${row.sec}`, text: row.bible_text });
+        }
+      } catch {
+        // A chapter that will not load is one chapter, not a reason to stop.
+      }
+      onChapter?.(book, chap, verses.length);
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  return verses;
+}
+
+/**
  * ACG words from 巴哈姆特, Taiwan's ACG and gaming community.
  *
  * Its 16,667 哈啦板 are listed in the sitemap its own robots.txt advertises, and

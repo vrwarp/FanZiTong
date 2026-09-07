@@ -93,6 +93,23 @@ describe('AgentSession', () => {
     await session.close('test');
   });
 
+  // Left to itself the SDK searches for the binary and can pick one this
+  // machine cannot run, so the session hands it the path that was resolved
+  // against the running architecture.
+  it('tells the SDK which binary to spawn', async () => {
+    const { sdk, calls } = fakeSdk([initFrame, resultFrame]);
+    const session = new AgentSession(
+      'conv-bin',
+      { sdk, config, log, facts: {}, claudeBinary: '/somewhere/claude' },
+      () => {},
+    );
+    session.attach(() => {});
+    await session.send('hi', 'turn-1', 'quick');
+    await new Promise((r) => setTimeout(r, 10));
+    expect(calls[0].options.pathToClaudeCodeExecutable).toBe('/somewhere/claude');
+    await session.close('test');
+  });
+
   it('keeps the host environment while naming the client app', async () => {
     const { session, calls } = makeSession([initFrame, resultFrame]);
     await session.send('hi', 'turn-1', 'quick');

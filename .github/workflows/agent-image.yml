@@ -105,7 +105,11 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           set -euo pipefail
-          docker run --rm "$IMAGE:ci" sh -c 'command -v claude'
+          # Run the binary, do not just find it. `command -v` resolves a symlink
+          # and proves nothing about whether the thing at the end of it starts:
+          # a wrong-architecture or wrong-libc build passes that check and then
+          # fails the first time the assistant is asked anything.
+          docker run --rm "$IMAGE:ci" claude --version
           docker run -d --name agent-smoke -p 8787:8787 \
             -e FZT_AGENT_TOKEN=smoke-test "$IMAGE:ci"
           for _ in $(seq 1 30); do

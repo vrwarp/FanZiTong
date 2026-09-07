@@ -8,6 +8,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useCards, useReviewLogs } from '@/hooks/useCards';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
+import { useAssistant } from '@/lib/assistant/assistantContext';
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import {
   buildDrillExercises,
@@ -89,6 +90,7 @@ function DrillSession({
   settings: UserSettings;
 }) {
   const navigate = useNavigate();
+  const assistant = useAssistant();
   const [engine] = useState<StudyEngine | null>(() => {
     // For the Order Slip a "question" is one slip of up to three dishes.
     const cardCount =
@@ -147,16 +149,33 @@ function DrillSession({
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-3 p-4 pb-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <span
           className="text-xs font-semibold text-stone-500 dark:text-stone-400"
           data-testid="drill-progress"
         >
           {EXERCISE_LABELS[drillType].en} · {snapshot.drillIndex} of {snapshot.drillTotal}
         </span>
-        <Button variant="ghost" size="sm" onClick={api.finish} data-testid="drill-exit">
-          End
-        </Button>
+        <div className="flex items-center gap-1">
+          {assistant.available && (
+            <Button
+              variant="ghost"
+              size="sm"
+              data-testid="drill-ask"
+              onClick={() =>
+                assistant.ask(
+                  `I am practising ${EXERCISE_LABELS[drillType].en.toLowerCase()} and keep slipping. What should I look at?`,
+                  { label: EXERCISE_LABELS[drillType].en, open: true },
+                )
+              }
+            >
+              Assistant 助教
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={api.finish} data-testid="drill-exit">
+            End
+          </Button>
+        </div>
       </div>
       <p
         className="-mt-2 text-xs text-stone-500 dark:text-stone-400"

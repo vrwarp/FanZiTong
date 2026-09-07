@@ -98,8 +98,28 @@ test.describe('Assistant', () => {
     // Tapping the screen is how the card is revealed.
     await page.getByTestId('recognition-prompt').click();
     await expect(page.getByTestId('pinyin')).toBeVisible();
-    await expect(page.getByTestId('assistant-launcher')).toBeVisible();
+    // The way in on this screen is the header button, not the floating disc:
+    // study renders outside the shell and its bottom edge is the rating row.
     await expect(page.getByTestId('study-ask')).toBeVisible();
+    await expect(page.getByTestId('assistant-launcher')).toHaveCount(0);
+  });
+
+  // The disc is anchored above the bottom nav. A drill screen has no nav and
+  // puts its own buttons along the bottom, so the disc would sit on top of
+  // them; the way in there is the header, next to End.
+  test('keeps clear of a drill screen’s own buttons', async ({ page }) => {
+    sidecar = await startFakeSidecar([{ finish: 'ok' }]);
+    await pair(page, sidecar.url);
+    await openApp(page, '/drills');
+    // The disc is here, where there is a nav to sit above.
+    await expect(page.getByTestId('assistant-launcher')).toBeVisible();
+
+    await page.getByTestId('drill-count').selectOption('3');
+    await page.getByTestId('start-drill-foil_discrimination').click();
+    await expect(page.getByTestId('foil-exercise')).toBeVisible();
+
+    await expect(page.getByTestId('assistant-launcher')).toHaveCount(0);
+    await expect(page.getByTestId('drill-ask')).toBeVisible();
   });
 
   test('says so, quietly, when the sidecar is not reachable', async ({ page }) => {

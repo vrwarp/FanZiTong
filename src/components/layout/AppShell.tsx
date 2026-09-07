@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router';
+import { AssistantLauncher } from '@/components/assistant/AssistantLauncher';
 import { AppUpdateProvider } from '@/pwa/AppUpdateProvider';
 import { ServiceWorkerPrompt } from '@/pwa/ServiceWorkerPrompt';
 import { useOnlineStatus } from '@/pwa/useOnlineStatus';
@@ -22,6 +23,8 @@ export function AppShell() {
           <Outlet />
         </main>
         <BottomNav />
+        {/* Sits above the nav; study and the drill runner have their own entry. */}
+        <AssistantLauncher />
         <ServiceWorkerPrompt />
       </div>
     </AppUpdateProvider>

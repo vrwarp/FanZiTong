@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
-import { AssistantLauncher } from '@/components/assistant/AssistantLauncher';
 import { AssistantPanel } from '@/components/assistant/AssistantPanel';
 import { AssistantProvider } from '@/components/assistant/AssistantProvider';
 import { AppShell } from '@/components/layout/AppShell';
@@ -58,7 +57,6 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
-        <AssistantLauncher />
         <AssistantPanel />
       </AssistantProvider>
     </ChunkErrorBoundary>

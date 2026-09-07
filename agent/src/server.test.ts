@@ -8,13 +8,13 @@ function connect(port: number, origin?: string): WebSocket {
   return new WebSocket(`ws://127.0.0.1:${port}`, origin ? { origin } : {});
 }
 
-function boot(env: Record<string, string>) {
+function boot(env: Record<string, string>, overrides: Parameters<typeof startServer>[1] = {}) {
   const config = loadConfig({
     FZT_AGENT_PORT: '0',
     FZT_LOG_LEVEL: 'error',
     ...env,
   } as NodeJS.ProcessEnv);
-  const server = startServer(config);
+  const server = startServer(config, overrides);
   return new Promise<{ port: number; stop: () => Promise<void> }>((resolve) => {
     server.http.once('listening', () => {
       const port = (server.http.address() as AddressInfo).port;
@@ -82,6 +82,38 @@ describe('the sidecar socket', () => {
     });
     expect(welcome.type).toBe('welcome');
     expect(welcome.conversationId).toEqual(expect.any(String));
+    ws.close();
+    await stop();
+  });
+
+  // The handshake used to be sent from inside `probeAuth().then(...)`, and that
+  // probe shells out to `claude auth status` with a fifteen-second timeout. The
+  // app sat on "connecting" for as long as a cold process start took, and this
+  // suite failed whenever that overran its own five seconds. A probe that never
+  // answers is the honest way to state the rule: nothing waits on it.
+  it('welcomes a client without waiting to hear whether it is signed in', async () => {
+    const stuck = Object.assign(() => new Promise<never>(() => {}), {
+      peek: () => 'unknown' as const,
+    });
+    const { port, stop } = await boot(
+      {
+        FZT_AGENT_HOST: '0.0.0.0',
+        FZT_AGENT_TOKEN: 'the-real-token',
+        FZT_ALLOWED_ORIGINS: 'https://good.example',
+      },
+      { probeAuth: stuck },
+    );
+    const ws = connect(port, 'https://good.example');
+    await new Promise((resolve) => ws.on('open', resolve));
+    ws.send(
+      JSON.stringify({ type: 'hello', protocolVersion: 1, token: 'the-real-token', app: {} }),
+    );
+    const welcome = await new Promise<Record<string, unknown>>((resolve) => {
+      ws.on('message', (raw) => resolve(JSON.parse(raw.toString())));
+    });
+    expect(welcome.type).toBe('welcome');
+    // Not knowing yet is a fine answer. Waiting to find out is not.
+    expect((welcome.sidecar as { authState: string }).authState).toBe('unknown');
     ws.close();
     await stop();
   });

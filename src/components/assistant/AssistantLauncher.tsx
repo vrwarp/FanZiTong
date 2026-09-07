@@ -1,3 +1,4 @@
+import { Hanzi } from '@/components/ui/Hanzi';
 import { useAssistant } from '@/lib/assistant/assistantContext';
 import { cn } from '@/lib/util/cn';
 
@@ -10,10 +11,16 @@ const DOT: Record<string, string> = {
 };
 
 /**
- * The way in, everywhere except a study prompt.
+ * The way in, on the screens that carry the bottom nav.
+ *
+ * It is mounted by the shell rather than at the root, because its offset exists
+ * to clear that nav. Study and the drill runner render outside the shell and
+ * own their bottom edge — rating buttons, answer buttons — so they put the
+ * assistant in their own header instead of floating a disc over the controls.
  *
  * A real <button>, so the study screen's tap-anywhere-to-reveal handler ignores
- * it, and it sits above the bottom nav rather than over the rating buttons.
+ * it. The mark is 助, from the panel's own 助教: a sparkle on this red read as
+ * a flag, which is not the country this app is about.
  */
 export function AssistantLauncher() {
   const assistant = useAssistant();
@@ -31,7 +38,9 @@ export function AssistantLauncher() {
         'bg-brand-600 text-2xl text-white shadow-lg hover:bg-brand-700 active:bg-brand-800',
       )}
     >
-      <span aria-hidden="true">{busy ? '…' : '✨'}</span>
+      <Hanzi aria-hidden="true" className="leading-none">
+        {busy ? '…' : '助'}
+      </Hanzi>
       <span
         aria-hidden="true"
         className={cn(

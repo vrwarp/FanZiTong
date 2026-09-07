@@ -152,12 +152,13 @@ The sidecar refuses to start on a public address with one and not the other.
 
 ## What it can do
 
-| Where                   | What                                                                                                                                  |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Card editor             | _Fill in_ writes the missing sentence, reading, translation and foils for the card you are editing.                                   |
-| Study, after you reveal | _Why this?_ explains the shape and gives you something to hold on to. Hidden while the card is still face down.                       |
-| Anywhere                | The ✨ button opens a conversation: ask for words, fixes, or an explanation. Attach a photo of a menu and it reads the dishes off it. |
-| Settings                | Pairing, connection status and the last ten changes it made, each with an undo.                                                       |
+| Where                   | What                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Card editor             | _Fill in_ writes the missing sentence, reading, translation and foils for the card you are editing.                                               |
+| Study, after you reveal | _Why this?_ explains the shape and gives you something to hold on to. Hidden while the card is still face down.                                   |
+| Tabs                    | The 助 disc above the nav opens a conversation: ask for words, fixes, or an explanation. Attach a photo of a menu and it reads the dishes off it. |
+| Drills                  | _Assistant 助教_ in the header, since a drill screen has its own buttons along the bottom.                                                        |
+| Settings                | Pairing, connection status and the last ten changes it made, each with an undo.                                                                   |
 
 Everything it writes is applied straight away and journaled, so any batch can
 be undone from the transcript or from Settings. Undoing a text change keeps the
@@ -191,8 +192,9 @@ shape is the point of that drill, and the deck ships several.
 The rule the whole app is built on is that pinyin does not appear beside a
 character you are being asked to read. The assistant is held to it:
 
-- While a study card is unrevealed the ✨ button is not rendered and the panel
-  is closed.
+- Study renders outside the shell, so the 助 disc is not there at all; the way
+  in is _Why this?_, which only exists once you have revealed the card. While a
+  card is face down the panel cannot open either.
 - `study_context` returns only that a session is running. The card, its reading
   and its meaning are withheld until you reveal it.
 - The panel is a dialog outside the card, so nothing it renders can appear

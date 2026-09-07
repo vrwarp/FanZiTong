@@ -16,8 +16,8 @@ function rules(issues: { rule: string }[]): string[] {
 }
 
 describe('validateCard', () => {
-  it('accepts every card in the shipped starter deck', () => {
-    const deck = buildStarterDeck();
+  it('accepts every card in the shipped starter deck', async () => {
+    const deck = await buildStarterDeck();
     const index = buildDeckIndex(deck);
     const failures = deck
       .map((card) => ({ card, report: validateCard(card, { deck: index }) }))

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -7,6 +7,7 @@ import { inputClass } from '@/components/ui/Field';
 import { CardListItem } from '@/components/vocab/CardListItem';
 import { ImportDialog, type ImportSource } from '@/components/vocab/ImportDialog';
 import { buildStarterDeck, STARTER_DECK_NAME } from '@/data/starterDeck';
+import type { VocabCard } from '@/types';
 import { repository } from '@/db/repository';
 import { useCards, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useNow } from '@/hooks/useNow';
@@ -64,11 +65,25 @@ export default function VocabPage() {
       });
   }, [cards, query, domain, sort]);
 
+  // The starter rows are a separate chunk now, so they are fetched once and
+  // kept: this page needs a count while it renders and the whole deck only if
+  // the learner asks to restore it.
+  const [starter, setStarter] = useState<VocabCard[] | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void buildStarterDeck().then((deck) => {
+      if (!cancelled) setStarter(deck);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const missingStarter = useMemo(() => {
-    if (!cards) return 0;
+    if (!cards || !starter) return 0;
     const have = new Set(cards.map((c) => c.traditional));
-    return buildStarterDeck().filter((c) => !have.has(c.traditional)).length;
-  }, [cards]);
+    return starter.filter((c) => !have.has(c.traditional)).length;
+  }, [cards, starter]);
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -94,7 +109,7 @@ export default function VocabPage() {
   const loadStarter = async () => {
     if (!cards) return;
     const have = new Set(cards.map((c) => c.traditional));
-    const missing = buildStarterDeck().filter((c) => !have.has(c.traditional));
+    const missing = (starter ?? (await buildStarterDeck())).filter((c) => !have.has(c.traditional));
     await repository.importCards(missing);
     setNotice(
       `Added ${missing.length} card${missing.length === 1 ? '' : 's'} from “${STARTER_DECK_NAME}”.`,

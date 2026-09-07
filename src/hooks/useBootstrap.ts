@@ -15,7 +15,7 @@ export async function bootstrapDatabase(repo: Repository = repository): Promise<
   const count = await repo.countCards();
   let seeded = false;
   if (!seededAt && count === 0) {
-    await repo.importCards(buildStarterDeck());
+    await repo.importCards(await buildStarterDeck());
     seeded = true;
   }
   if (!seededAt) await repo.setMeta(META_KEYS.seededAt, new Date().toISOString());

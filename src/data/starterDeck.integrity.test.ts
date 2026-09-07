@@ -13,7 +13,10 @@ import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
  * contrast line can name it), and definitions carry meaning only.
  */
 describe('starter deck integrity', () => {
-  const deck = buildStarterDeck();
+  let deck: Awaited<ReturnType<typeof buildStarterDeck>>;
+  beforeAll(async () => {
+    deck = await buildStarterDeck();
+  });
 
   it('aligns every example sentence with its pinyin, word by word', () => {
     const failures: string[] = [];

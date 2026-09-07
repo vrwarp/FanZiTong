@@ -33,3 +33,6 @@ agent/tailscale/state/
 .env
 .env.*
 !.env.example
+
+# harvest caches: re-runnable, and large
+scripts/harvest/out/

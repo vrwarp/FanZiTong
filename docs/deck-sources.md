@@ -54,11 +54,26 @@ Not every domain has a thousand attested words in it, and the harvest says so
 rather than padding quietly. Run `node scripts/harvest/harvest.mjs report` for
 current numbers.
 
-Food and slang are deep — thousands of candidates each, roughly half of them
-attested. Church is moderate. **Anime is genuinely thin**: Wiktionary has
-almost no ACG vocabulary (`漢語 動畫` has four members), so that deck leans on
-Japanese loanwords and on mining PTT's C_Chat board for the words posters type.
-Cards resting on thin attestation are marked so they can be pruned later.
+As of the September 2026 pass:
+
+| domain | candidates | attested | thinly (1–2 threads) | MOE reading | Tâi-lô |
+| ------ | ---------- | -------- | -------------------- | ----------- | ------ |
+| food   | 1780       | **1250** | 393                  | 595         | 243    |
+| slang  | 2896       | **1140** | 23                   | 567         | 268    |
+| church | 1029       | 689      | 175                  | 488         | 131    |
+| anime  | 687        | 400      | 82                   | 247         | 122    |
+
+Food and slang have the supply for a thousand cards each. Church is 311 short
+and **anime is 600 short** — Wiktionary has almost no ACG vocabulary (`漢語 動畫`
+has four members), so that domain leans on Japanese loanwords and on mining
+C_Chat for the words posters type, and 400 is close to the honest ceiling for
+genuinely ACG-specific vocabulary. Reaching a thousand there means widening into
+gaming and general entertainment; cards resting on thin attestation are marked
+so they can be pruned later.
+
+Only about half the attested words have an MOE reading, because compounds like
+炒飯 and 義大利麵 are not dictionary headwords. The rest have their reading
+composed per character and flagged for review rather than guessed silently.
 
 ## Running it
 

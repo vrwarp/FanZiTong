@@ -37,6 +37,34 @@ lèsè, not lājī — and Tâi-lô for the words that are really Taiwanese
 restriction covers the dictionary text, not format conversion or downstream use;
 this deck takes readings, which are facts, and writes its own definitions.
 
+## The forum sweep
+
+Reddit was asked for and is not usable, so the question became which Taiwanese
+forums are. Every one of these was checked, including its `robots.txt`:
+
+| Site                              | Result                                                        |
+| --------------------------------- | ------------------------------------------------------------- |
+| **PTT** `ptt.cc`                  | ✅ server-rendered, per-board search — the attestation signal |
+| **巴哈姆特** `forum.gamer.com.tw` | ✅ 16,667 哈啦板, server-rendered titles — the ACG source     |
+| 信望愛 `bible.fhl.net`            | reachable, robots fine; search endpoint not found yet         |
+| 基督教論壇報 `ct.org.tw`          | reachable; robots is all comments, no directives either way   |
+| pttweb.cc, 卡提諾 `ck101`         | reachable but rendered client-side                            |
+| **愛料理** `icook.tw`             | ❌ robots.txt names ClaudeBot and refuses it                  |
+| Mobile01, Dcard                   | ❌ 403                                                        |
+| Komica                            | ❌ unreachable                                                |
+
+Two of those are worth spelling out. **愛料理** would have been an excellent
+food source — it is Taiwan's recipe site — and its `robots.txt` disallows
+`ClaudeBot` and `Claude-SearchBot` by name. That is a refusal in the same class
+as Reddit's and it is respected.
+
+**巴哈姆特** is the find. Its own `robots.txt` disallows only `Bo.php` and
+`embed.php` and advertises a sitemap listing every board, and `B.php` returns
+real HTML rather than a JavaScript shell, so board pages give about thirty
+thread titles each without a browser. Only 場外休憩區 sits behind the 兒少保護
+age gate, which the harvest skips rather than works around. For the anime domain
+this is what PTT's C_Chat is, several times over.
+
 ## Reddit
 
 Not usable, though it was asked for. `reddit.com` refuses Anthropic's crawler,

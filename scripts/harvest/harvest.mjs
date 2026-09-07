@@ -16,6 +16,7 @@ import {
   DOMAIN_BOARDS,
   DOMAIN_SOURCES,
   HAN_ONLY,
+  bahamutTerms,
   categoryMembers,
   cchatTerms,
   moedictEntry,
@@ -182,6 +183,39 @@ async function report() {
 }
 
 /**
+ * ACG candidates from 巴哈姆特, dictionary-checked like the C_Chat ones.
+ *
+ * Boards are sampled across the whole id range rather than cherry-picked, so
+ * the vocabulary is not just one fandom's. 場外休憩區 is age-gated and skipped.
+ */
+async function bahamut() {
+  // A spread over the sitemap's range: early ids are the long-lived boards,
+  // later ones the games people are playing now.
+  const boards = [];
+  for (let bsn = 1; bsn <= 16000; bsn += 37) boards.push(bsn);
+  const { boards: read, terms } = await bahamutTerms({ boards });
+  console.log(`${read} boards read, ${terms.length} n-grams recur; checking which are words`);
+  const already = await existingWords();
+  const rows = await load('candidates.json', []);
+  const seen = new Set(rows.map((r) => r.word));
+  const added = [];
+  for (const { word, threads } of terms) {
+    if (!HAN_ONLY.test(word) || already.has(word) || seen.has(word)) continue;
+    const entry = await moedictEntry(word).catch(() => null);
+    if (!entry?.mandarin) continue;
+    added.push({
+      word,
+      domains: ['anime'],
+      source: `https://forum.gamer.com.tw/ (${threads} thread titles)`,
+      threads,
+    });
+    seen.add(word);
+  }
+  await save('candidates.json', [...rows, ...added]);
+  console.log(`${added.length} new ACG candidates from 巴哈姆特`);
+}
+
+/**
  * Ask the boards a word actually lives on, for the words the general board did
  * not know. Only the shortfall is re-queried, so this costs a fraction of a
  * full pass and nothing already answered is asked again.
@@ -219,7 +253,8 @@ async function boards() {
     merged[word] = Math.max(merged[word] ?? 0, n ?? 0);
   }
   await save('attestation.json', merged);
-  const gained = rows.filter((r) => passes(r, merged)).length - rows.filter((r) => passes(r, general)).length;
+  const gained =
+    rows.filter((r) => passes(r, merged)).length - rows.filter((r) => passes(r, general)).length;
   console.log(`\n${gained} more words attested once asked in the right room`);
 }
 
@@ -251,7 +286,7 @@ async function cchat() {
 }
 
 const stage = process.argv[2];
-const stages = { candidates, cchat, attest, boards, readings, report };
+const stages = { candidates, cchat, bahamut, attest, boards, readings, report };
 if (!stages[stage]) {
   console.error(`usage: harvest.mjs <${Object.keys(stages).join('|')}>`);
   process.exit(1);

@@ -192,6 +192,56 @@ export const DOMAIN_SOURCES = {
 };
 
 /**
+ * ACG words from 巴哈姆特, Taiwan's ACG and gaming community.
+ *
+ * Its 16,667 哈啦板 are listed in the sitemap its own robots.txt advertises, and
+ * B.php is server-rendered, so board pages come back as HTML with about thirty
+ * thread titles each. Only 場外休憩區 is behind the 兒少保護 age gate, and this
+ * skips it rather than trying to get around it. Bo.php and embed.php are
+ * disallowed and never fetched.
+ *
+ * Titles only, and only to find candidates — the same rule as PTT.
+ */
+export async function bahamutTerms({ boards = [], floor = 3 } = {}) {
+  const counts = new Map();
+  let seen = 0;
+  for (const bsn of boards) {
+    let html;
+    try {
+      const res = await retrying(`https://forum.gamer.com.tw/B.php?bsn=${bsn}`, {
+        headers: { 'User-Agent': UA },
+      });
+      if (!res.ok) continue;
+      html = await res.text();
+    } catch {
+      continue;
+    }
+    // An age-gated board is a no, not a puzzle.
+    if (/兒少保護警示/.test(html)) continue;
+    seen += 1;
+    for (const [, title] of html.matchAll(/class="b-list__main__title"[^>]*>\s*([^<]+)/g)) {
+      // 【閒聊】【心得】【情報】 are post-type tags, not language.
+      for (const run of title.replace(/【[^】]*】/g, ' ').split(/[^一-鿿]+/)) {
+        for (let n = 2; n <= 4; n += 1) {
+          for (let i = 0; i + n <= run.length; i += 1) {
+            const gram = run.slice(i, i + n);
+            counts.set(gram, (counts.get(gram) ?? 0) + 1);
+          }
+        }
+      }
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
+  return {
+    boards: seen,
+    terms: [...counts]
+      .filter(([, n]) => n >= floor)
+      .sort((a, b) => b[1] - a[1])
+      .map(([word, n]) => ({ word, threads: n })),
+  };
+}
+
+/**
  * ACG words taken from what people post on PTT's C_Chat board.
  *
  * Titles only, and only to find candidates: an n-gram is kept when it recurs

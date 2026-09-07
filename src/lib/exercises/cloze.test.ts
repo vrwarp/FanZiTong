@@ -50,8 +50,8 @@ describe('buildClozeExercise', () => {
     );
   });
 
-  it('names its foil explicitly and never draws a readable distractor from the same domain', () => {
-    const deck = buildStarterDeck();
+  it('names its foil explicitly and never draws a readable distractor from the same domain', async () => {
+    const deck = await buildStarterDeck();
     for (const card of deck) {
       const ex = buildClozeExercise(card, deck, mulberry32(7));
       if (!ex) continue;

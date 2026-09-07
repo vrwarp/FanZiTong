@@ -1,16 +1,24 @@
 import { CardState, DOMAIN_CATEGORIES } from '@/types';
 import { containsHan, containsPinyin } from '@/lib/util/pinyin';
-import { buildStarterDeck, STARTER_DECK_SIZE, STARTER_ENTRIES } from './starterDeck';
+import { buildStarterDeck, loadStarterDeckData, starterDeckSize } from './starterDeck';
+import type { StarterDeckData } from './starterDeck';
 
 describe('starter deck', () => {
-  const cards = buildStarterDeck({ now: new Date('2026-09-05T00:00:00.000Z') });
+  let cards: Awaited<ReturnType<typeof buildStarterDeck>>;
+  let entries: StarterDeckData['entries'];
+  let size: number;
+  beforeAll(async () => {
+    cards = await buildStarterDeck({ now: new Date('2026-09-05T00:00:00.000Z') });
+    ({ entries } = await loadStarterDeckData());
+    size = await starterDeckSize();
+  });
 
   it('covers the four PRD domains with a healthy number of cards each', () => {
-    expect(cards).toHaveLength(STARTER_DECK_SIZE);
-    expect(STARTER_DECK_SIZE).toBeGreaterThanOrEqual(90);
+    expect(cards).toHaveLength(size);
+    expect(size).toBeGreaterThanOrEqual(90);
     for (const domain of ['food', 'church', 'slang', 'anime'] as const) {
-      expect(STARTER_ENTRIES[domain].length).toBeGreaterThanOrEqual(20);
-      expect(cards.filter((c) => c.domain === domain).length).toBe(STARTER_ENTRIES[domain].length);
+      expect(entries[domain].length).toBeGreaterThanOrEqual(20);
+      expect(cards.filter((c) => c.domain === domain).length).toBe(entries[domain].length);
     }
     expect(cards.every((c) => DOMAIN_CATEGORIES.includes(c.domain))).toBe(true);
   });
@@ -54,9 +62,9 @@ describe('starter deck', () => {
     expect(byWord.get('ㄏㄏ')?.domain).toBe('slang');
   });
 
-  it('supports an injectable id factory', () => {
+  it('supports an injectable id factory', async () => {
     let n = 0;
-    const deck = buildStarterDeck({ idFactory: () => `id-${(n += 1)}` });
+    const deck = await buildStarterDeck({ idFactory: () => `id-${(n += 1)}` });
     expect(deck[0].id).toBe('id-1');
   });
 });

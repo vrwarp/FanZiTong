@@ -13,6 +13,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  DOMAIN_BOARDS,
   DOMAIN_SOURCES,
   HAN_ONLY,
   categoryMembers,
@@ -181,6 +182,48 @@ async function report() {
 }
 
 /**
+ * Ask the boards a word actually lives on, for the words the general board did
+ * not know. Only the shortfall is re-queried, so this costs a fraction of a
+ * full pass and nothing already answered is asked again.
+ */
+async function boards() {
+  const rows = await load('candidates.json', []);
+  const general = await load('attestation.json', {});
+  const cache = await load('attestation-boards.json', {});
+  const wanted = rows.filter((r) => !passes(r, general));
+  console.log(`${wanted.length} candidates the general board did not know`);
+  let done = 0;
+  for (const row of wanted) {
+    done += 1;
+    for (const domain of row.domains) {
+      for (const board of (DOMAIN_BOARDS[domain] ?? []).slice(1)) {
+        const key = `${board}:${row.word}`;
+        if (key in cache) continue;
+        try {
+          cache[key] = await pttHits(row.word, board);
+        } catch {
+          cache[key] = null;
+        }
+      }
+    }
+    if (done % 50 === 0) {
+      await save('attestation-boards.json', cache);
+      console.log(`  ${done}/${wanted.length}`);
+    }
+  }
+  await save('attestation-boards.json', cache);
+  // Fold the best answer back into the main table so every later stage sees it.
+  const merged = { ...general };
+  for (const [key, n] of Object.entries(cache)) {
+    const word = key.slice(key.indexOf(':') + 1);
+    merged[word] = Math.max(merged[word] ?? 0, n ?? 0);
+  }
+  await save('attestation.json', merged);
+  const gained = rows.filter((r) => passes(r, merged)).length - rows.filter((r) => passes(r, general)).length;
+  console.log(`\n${gained} more words attested once asked in the right room`);
+}
+
+/**
  * ACG candidates from C_Chat, kept only when a dictionary agrees they are words.
  * Without that check the list is anime titles and n-gram debris.
  */
@@ -208,7 +251,7 @@ async function cchat() {
 }
 
 const stage = process.argv[2];
-const stages = { candidates, cchat, attest, readings, report };
+const stages = { candidates, cchat, attest, boards, readings, report };
 if (!stages[stage]) {
   console.error(`usage: harvest.mjs <${Object.keys(stages).join('|')}>`);
   process.exit(1);

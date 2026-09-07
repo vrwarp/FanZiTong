@@ -83,13 +83,28 @@ export async function categoryMembers(host, category, { depth = 1, seen = new Se
 }
 
 /**
+ * Boards to ask about a word, in the order they are asked.
+ *
+ * Gossiping is the general room and answers for most words, but it is the wrong
+ * room for some: 主日學 and 團契 score zero there and five and twenty on
+ * Christianity. Asking only the general board rejects real vocabulary for having
+ * been posted somewhere else, so each domain gets the room it lives in too.
+ */
+export const DOMAIN_BOARDS = {
+  food: ['Gossiping', 'Food', 'cookclub'],
+  church: ['Gossiping', 'Christianity'],
+  anime: ['Gossiping', 'C_Chat'],
+  slang: ['Gossiping', 'C_Chat'],
+};
+
+/**
  * How many recent PTT threads mention a word.
  *
  * Capped at one page: the question is "do Taiwanese people say this", and 20
  * hits answers it as well as 2000 would, for a twentieth of the traffic.
  */
-export async function pttHits(word) {
-  const url = `https://www.ptt.cc/bbs/Gossiping/search?q=${encodeURIComponent(word)}`;
+export async function pttHits(word, board = 'Gossiping') {
+  const url = `https://www.ptt.cc/bbs/${board}/search?q=${encodeURIComponent(word)}`;
   const res = await retrying(url, {
     headers: { 'User-Agent': UA, cookie: 'over18=1' },
   });

@@ -34,6 +34,13 @@ describe('AssistantLauncher', () => {
   it('shows nothing but an icon: no card text can leak through it', () => {
     renderLauncher({ available: true, state: { ...initialState, connection: 'connected' } });
     const launcher = screen.getByTestId('assistant-launcher');
-    expect(launcher.textContent?.trim()).toBe('✨');
+    expect(launcher.textContent?.trim()).toBe('助');
+  });
+
+  // A gold star on this red is the flag of the wrong country for an app about
+  // Taiwan's characters, and the disc is too big for anyone to miss it.
+  it('does not wear a star', () => {
+    renderLauncher({ available: true, state: { ...initialState, connection: 'connected' } });
+    expect(screen.getByTestId('assistant-launcher').textContent).not.toMatch(/[✨★☆⭐]/);
   });
 });

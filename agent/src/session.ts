@@ -234,7 +234,6 @@ export class AgentSession {
       settingSources: [],
       systemPrompt: buildSystemPrompt(sdk.dynamicBoundary, this.deps.facts),
       model: settings.model,
-      fallbackModel: PROFILES.quick.model,
       effort: settings.effort,
       thinking: { type: 'adaptive', display: 'summarized' },
       maxTurns: settings.maxTurns,
@@ -244,6 +243,11 @@ export class AgentSession {
       env: { ...process.env, CLAUDE_AGENT_SDK_CLIENT_APP: 'fanzitong-agent/1.0.0' },
       stderr: (data: string) => log.debug('claude stderr', { data: data.slice(0, 500) }),
     };
+    // A fallback the same as the main model is refused outright while the CLI
+    // arguments are being built, so the conversation never starts — and two of
+    // the three profiles already run on the model we would fall back to. Opus
+    // is the one that gets busy, which is where a fallback earns its place.
+    if (settings.model !== PROFILES.quick.model) options.fallbackModel = PROFILES.quick.model;
     if (config.maxBudgetUsd) options.maxBudgetUsd = config.maxBudgetUsd;
     if (this.sdkSessionId) options.resume = this.sdkSessionId;
 

@@ -71,11 +71,21 @@ function sameToken(expected: string, given: string): boolean {
 }
 
 /** Ask the bundled CLI whether it has credentials. Cached: it spawns a process. */
+type AuthState = 'ok' | 'needs_login' | 'unknown';
+
+/**
+ * Whether Claude Code has usable credentials.
+ *
+ * Answering costs a subprocess, so the result is cached for a minute and
+ * `peek` reads that cache without waiting for anything: the socket handshake
+ * must never sit behind a process start, and 'unknown' on a cold sidecar
+ * becomes the real answer on the next frame.
+ */
 function createAuthProbe(log: Logger, config: AgentConfig) {
-  let cached: { at: number; state: 'ok' | 'needs_login' | 'unknown' } | null = null;
-  return async function probe(): Promise<'ok' | 'needs_login' | 'unknown'> {
+  let cached: { at: number; state: AuthState } | null = null;
+  async function probe(): Promise<AuthState> {
     if (cached && Date.now() - cached.at < 60_000) return cached.state;
-    let state: 'ok' | 'needs_login' | 'unknown';
+    let state: AuthState;
     if (process.env.CLAUDE_CODE_OAUTH_TOKEN || process.env.ANTHROPIC_API_KEY) {
       state = 'ok';
     } else {
@@ -93,7 +103,8 @@ function createAuthProbe(log: Logger, config: AgentConfig) {
     }
     cached = { at: Date.now(), state };
     return state;
-  };
+  }
+  return Object.assign(probe, { peek: (): AuthState => cached?.state ?? 'unknown' });
 }
 
 /**
@@ -132,10 +143,20 @@ async function readAccount(configDir: string, log: Logger): Promise<AccountIdent
   }
 }
 
-export function startServer(config: AgentConfig = loadConfig()) {
+export interface AuthProbe {
+  (): Promise<AuthState>;
+  /** The last answer, or 'unknown'. Never waits. */
+  peek(): AuthState;
+}
+
+export function startServer(
+  config: AgentConfig = loadConfig(),
+  /** Test seam: a probe that can be made to never answer. */
+  overrides: { probeAuth?: AuthProbe } = {},
+) {
   const log = createLogger(config.logLevel);
   const registry = new SessionRegistry(realSdk, config, log);
-  const probeAuth = createAuthProbe(log, config);
+  const probeAuth = overrides.probeAuth ?? createAuthProbe(log, config);
   const failures = new Map<string, { count: number; until: number }>();
 
   const auth = new AuthService({
@@ -252,20 +273,20 @@ export function startServer(config: AgentConfig = loadConfig()) {
         // A second device on the same conversation takes it over.
         const { replayedFrom } = session.attach(send, frame.lastSeq);
 
-        void probeAuth().then((authState) => {
-          send({
-            type: 'welcome',
-            seq: session.currentSeq,
-            protocolVersion: PROTOCOL_VERSION,
-            conversationId: id,
-            replayedFrom,
-            sidecar: {
-              version: VERSION,
-              account: auth.owner?.account ?? null,
-              authState,
-            },
-          } as ServerFrame);
-        });
+        send({
+          type: 'welcome',
+          seq: session.currentSeq,
+          protocolVersion: PROTOCOL_VERSION,
+          conversationId: id,
+          replayedFrom,
+          sidecar: {
+            version: VERSION,
+            account: auth.owner?.account ?? null,
+            authState: probeAuth.peek(),
+          },
+        } as ServerFrame);
+        // Refresh for the next connection; nothing is waiting on it.
+        void probeAuth();
         return;
       }
 
@@ -323,6 +344,9 @@ export function startServer(config: AgentConfig = loadConfig()) {
   }
 
   http.listen(config.port, config.host, () => {
+    // Warm the credential check now, so the first app to connect finds an
+    // answer waiting instead of a cold 'unknown'.
+    void probeAuth();
     log.info(`sidecar listening on ${config.host}:${config.port}`, {
       origins: config.allowedOrigins,
       auth: config.token ? 'token' : 'loopback only',

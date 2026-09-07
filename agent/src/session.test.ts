@@ -3,6 +3,7 @@ import { createLogger } from './log';
 import { AgentSession } from './session';
 import type { SdkApi } from './sdk';
 import type { ServerFrame } from '@/lib/assistant/protocol';
+import { PROFILES, PROFILE_NAMES } from '@/lib/assistant/profiles';
 
 /**
  * A stand-in for the Agent SDK: it records what the session asked for and
@@ -75,6 +76,20 @@ describe('AgentSession', () => {
     expect(options.allowedTools).toContain('mcp__fanzitong__deck_upsert_cards');
     // The destructive tools are deliberately not auto-allowed.
     expect(options.allowedTools).not.toContain('mcp__fanzitong__deck_delete_cards');
+    await session.close('test');
+  });
+
+  // The SDK refuses a fallback equal to the main model while it is building the
+  // CLI arguments, so getting this wrong does not degrade the turn: the
+  // conversation never starts at all, and the learner is told to go and
+  // configure something they have no way to configure.
+  it.each(PROFILE_NAMES)('starts on the %s profile with a usable fallback', async (profile) => {
+    const { session, calls } = makeSession([initFrame, resultFrame]);
+    await session.send('hi', 'turn-1', profile);
+    await new Promise((r) => setTimeout(r, 10));
+    const { model, fallbackModel } = calls[0].options;
+    expect(model).toBe(PROFILES[profile].model);
+    if (fallbackModel !== undefined) expect(fallbackModel).not.toBe(model);
     await session.close('test');
   });
 

@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { inputClass } from '@/components/ui/Field';
 import { CardListItem } from '@/components/vocab/CardListItem';
 import { ImportDialog, type ImportSource } from '@/components/vocab/ImportDialog';
-import { buildStarterDeck, STARTER_DECK_NAME } from '@/data/starterDeck';
+import { buildStarterDeck, starterRestoreLabel, STARTER_DECK_NAME } from '@/data/starterDeck';
 import type { VocabCard } from '@/types';
 import { repository } from '@/db/repository';
 import { useCards, useReviewLogsOrEmpty } from '@/hooks/useCards';
@@ -79,8 +79,10 @@ export default function VocabPage() {
     };
   }, []);
 
+  // null until both the deck and the starter rows are here: "not known yet" is
+  // not "nothing missing", and the button must not claim otherwise.
   const missingStarter = useMemo(() => {
-    if (!cards || !starter) return 0;
+    if (!cards || !starter) return null;
     const have = new Set(cards.map((c) => c.traditional));
     return starter.filter((c) => !have.has(c.traditional)).length;
   }, [cards, starter]);
@@ -222,10 +224,10 @@ export default function VocabPage() {
             variant="ghost"
             size="sm"
             onClick={loadStarter}
-            disabled={missingStarter === 0}
+            disabled={!missingStarter}
             data-testid="load-starter"
           >
-            Restore starter deck{missingStarter > 0 ? ` (adds ${missingStarter})` : ' (complete)'}
+            {starterRestoreLabel(missingStarter)}
           </Button>
         </div>
         <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">

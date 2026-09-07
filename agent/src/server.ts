@@ -42,16 +42,34 @@ function isLoopbackPeer(address: string | undefined): boolean {
  * The Claude Code binary that ships with the SDK, so a sign-in started from the
  * app is the same program the agent itself runs.
  */
+/**
+ * Which platform package this machine can actually run, best first.
+ *
+ * This used to be a fixed list beginning with linux-x64, which is fine until
+ * more than one package is installed: on an arm64 host it hands back an x86-64
+ * binary, and the only symptom is "exists but failed to launch". Ask the
+ * machine instead. glibcVersionRuntime is absent on musl, which is how a musl
+ * host is told apart from a glibc one.
+ */
+export function platformCandidates(
+  proc: { platform: string; arch: string } = process,
+  glibc: boolean = Boolean(
+    (process.report?.getReport() as { header?: { glibcVersionRuntime?: string } } | undefined)
+      ?.header?.glibcVersionRuntime,
+  ),
+): string[] {
+  const arch = proc.arch === 'arm64' ? 'arm64' : 'x64';
+  if (proc.platform === 'darwin') return [`darwin-${arch}`];
+  const native = glibc ? `linux-${arch}` : `linux-${arch}-musl`;
+  const other = glibc ? `linux-${arch}-musl` : `linux-${arch}`;
+  // The other libc for this architecture is worth a try; the other
+  // architecture is not, and reaching for it is what caused the bug.
+  return [native, other];
+}
+
 function findClaudeBinary(): string {
   const require = createRequire(import.meta.url);
-  for (const platform of [
-    'linux-x64',
-    'linux-arm64',
-    'linux-x64-musl',
-    'linux-arm64-musl',
-    'darwin-arm64',
-    'darwin-x64',
-  ]) {
+  for (const platform of platformCandidates()) {
     try {
       const manifest = require.resolve(`@anthropic-ai/claude-agent-sdk-${platform}/package.json`);
       return path.join(path.dirname(manifest), 'claude');
@@ -155,14 +173,15 @@ export function startServer(
   overrides: { probeAuth?: AuthProbe } = {},
 ) {
   const log = createLogger(config.logLevel);
-  const registry = new SessionRegistry(realSdk, config, log);
+  const claudeBinary = findClaudeBinary();
+  const registry = new SessionRegistry(realSdk, config, log, claudeBinary);
   const probeAuth = overrides.probeAuth ?? createAuthProbe(log, config);
   const failures = new Map<string, { count: number; until: number }>();
 
   const auth = new AuthService({
     stateDir: config.stateDir,
     claudeConfigDir: config.claudeConfigDir,
-    claudeBinary: findClaudeBinary(),
+    claudeBinary,
     log,
     allowReclaim: config.allowReclaim,
     readAccount: (configDir) => readAccount(configDir, log),

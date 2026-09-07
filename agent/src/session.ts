@@ -31,6 +31,13 @@ export interface SessionDeps {
   config: AgentConfig;
   log: Logger;
   facts: SessionFacts;
+  /**
+   * The Claude Code binary to spawn. Pinned rather than left to the SDK: its
+   * own search picked an x86-64 build on an arm64 host and the only symptom
+   * was "exists but failed to launch", after the learner had already asked a
+   * question and waited for it.
+   */
+  claudeBinary?: string;
 }
 
 interface QueuedTurn {
@@ -248,6 +255,7 @@ export class AgentSession {
     // the three profiles already run on the model we would fall back to. Opus
     // is the one that gets busy, which is where a fallback earns its place.
     if (settings.model !== PROFILES.quick.model) options.fallbackModel = PROFILES.quick.model;
+    if (this.deps.claudeBinary) options.pathToClaudeCodeExecutable = this.deps.claudeBinary;
     if (config.maxBudgetUsd) options.maxBudgetUsd = config.maxBudgetUsd;
     if (this.sdkSessionId) options.resume = this.sdkSessionId;
 

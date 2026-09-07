@@ -17,6 +17,8 @@ export class SessionRegistry {
     private readonly sdk: SdkApi,
     private readonly config: AgentConfig,
     private readonly log: Logger,
+    /** Pinned so the SDK does not go looking and find the wrong architecture. */
+    private readonly claudeBinary?: string,
   ) {}
 
   get(id: string): AgentSession | undefined {
@@ -37,7 +39,13 @@ export class SessionRegistry {
       if (idle) void idle.close('made room for a new conversation');
       else return null;
     }
-    const deps: SessionDeps = { sdk: this.sdk, config: this.config, log: this.log, facts };
+    const deps: SessionDeps = {
+      sdk: this.sdk,
+      config: this.config,
+      log: this.log,
+      facts,
+      claudeBinary: this.claudeBinary,
+    };
     const session = new AgentSession(id, deps, (closed) => this.sessions.delete(closed));
     this.sessions.set(id, session);
     return session;

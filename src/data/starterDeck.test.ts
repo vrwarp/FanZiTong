@@ -1,6 +1,11 @@
 import { CardState, DOMAIN_CATEGORIES } from '@/types';
 import { containsHan, containsPinyin } from '@/lib/util/pinyin';
-import { buildStarterDeck, loadStarterDeckData, starterDeckSize } from './starterDeck';
+import {
+  buildStarterDeck,
+  loadStarterDeckData,
+  starterDeckSize,
+  starterRestoreLabel,
+} from './starterDeck';
 import type { StarterDeckData } from './starterDeck';
 
 describe('starter deck', () => {
@@ -66,5 +71,19 @@ describe('starter deck', () => {
     let n = 0;
     const deck = await buildStarterDeck({ idFactory: () => `id-${(n += 1)}` });
     expect(deck[0].id).toBe('id-1');
+  });
+});
+
+describe('the restore control', () => {
+  it('says nothing while it does not know', () => {
+    // The rows arrive as a chunk, so there is a moment — and, if the chunk
+    // never arrives, longer than a moment — when the count is unknown. Saying
+    // "complete" then is a claim made out of missing data.
+    expect(starterRestoreLabel(null)).toBe('Restore starter deck');
+  });
+
+  it('offers to add what is missing, and admits when nothing is', () => {
+    expect(starterRestoreLabel(12)).toBe('Restore starter deck (adds 12)');
+    expect(starterRestoreLabel(0)).toBe('Restore starter deck (complete)');
   });
 });

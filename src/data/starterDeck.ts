@@ -125,6 +125,19 @@ export async function buildStarterDeck(
   return materializeStarterDeck(await loadStarterDeckData(), options);
 }
 
+/**
+ * How the "restore starter deck" control should read.
+ *
+ * `missing` is null until the rows have loaded, and that is not the same as
+ * zero. The two were conflated once and the button said "complete" before it
+ * had looked — a claim made out of missing data, and a permanent one if the
+ * chunk never arrives. Not knowing yet is its own state, and it says nothing.
+ */
+export function starterRestoreLabel(missing: number | null): string {
+  if (missing === null) return 'Restore starter deck';
+  return missing > 0 ? `Restore starter deck (adds ${missing})` : 'Restore starter deck (complete)';
+}
+
 /** How many cards the starter deck ships, without materializing any of them. */
 export async function starterDeckSize(): Promise<number> {
   const { entries } = await loadStarterDeckData();

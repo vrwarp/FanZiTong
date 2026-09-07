@@ -1,7 +1,7 @@
 import type { AddressInfo } from 'node:net';
 import WebSocket from 'ws';
 import { loadConfig } from './config';
-import { startServer } from './server';
+import { platformCandidates, startServer } from './server';
 
 /** Talk to a real socket on an ephemeral port; nothing spawns Claude Code. */
 function connect(port: number, origin?: string): WebSocket {
@@ -203,5 +203,38 @@ describe('configuration', () => {
   it('keeps its state beside the Claude credentials by default', () => {
     const config = loadConfig({ CLAUDE_CONFIG_DIR: '/data/claude' } as NodeJS.ProcessEnv);
     expect(config.stateDir).toBe('/data/claude/fanzitong');
+  });
+});
+
+/**
+ * The bug this pins: the search was a fixed list starting with linux-x64, so an
+ * arm64 machine with both packages installed got an x86-64 binary and the only
+ * symptom was "exists but failed to launch" — after the learner had asked a
+ * question and waited for the answer.
+ */
+describe('choosing the Claude Code binary', () => {
+  it('never offers a binary for the wrong architecture', () => {
+    for (const arch of ['arm64', 'x64']) {
+      for (const glibc of [true, false]) {
+        const wrong = arch === 'arm64' ? 'x64' : 'arm64';
+        const candidates = platformCandidates({ platform: 'linux', arch }, glibc);
+        expect(candidates.every((c) => c.includes(arch))).toBe(true);
+        expect(candidates.some((c) => c.includes(`-${wrong}`))).toBe(false);
+      }
+    }
+  });
+
+  it('asks for the libc it is running on first', () => {
+    expect(platformCandidates({ platform: 'linux', arch: 'arm64' }, true)[0]).toBe('linux-arm64');
+    expect(platformCandidates({ platform: 'linux', arch: 'arm64' }, false)[0]).toBe(
+      'linux-arm64-musl',
+    );
+    expect(platformCandidates({ platform: 'linux', arch: 'x64' }, false)[0]).toBe('linux-x64-musl');
+  });
+
+  it('has one answer on macOS, which has no musl', () => {
+    expect(platformCandidates({ platform: 'darwin', arch: 'arm64' }, true)).toEqual([
+      'darwin-arm64',
+    ]);
   });
 });

@@ -14474,6 +14474,1146 @@
         "Rènwù yǐjīng wánchéng le.",
         "The mission is complete.",
         "完城|完戌|完戍"
+      ],
+      [
+        "外掛",
+        "wài guà",
+        "A cheat program; an add-on",
+        "gaming|taiwan",
+        "用外掛會被停權。",
+        "Yòng wàiguà huì bèi tíngquán.",
+        "Using cheats gets you banned.",
+        "死掛|夕掛"
+      ],
+      [
+        "配音",
+        "pèi yīn",
+        "Voice dubbing",
+        "acg",
+        "中文配音做得很用心。",
+        "Zhōngwén pèiyīn zuò de hěn yòngxīn.",
+        "The Chinese dub was carefully done.",
+        "配因|配言"
+      ],
+      [
+        "語音",
+        "yǔ yīn",
+        "Voice audio; voice chat",
+        "gaming|tech",
+        "我們開語音一起玩。",
+        "Wǒmen kāi yǔyīn yìqǐ wán.",
+        "Let's play with voice chat on.",
+        "悟音|語因|梧音"
+      ],
+      [
+        "聊天",
+        "liáo tiān",
+        "To chat",
+        "online|general",
+        "他們聊天聊到半夜。",
+        "Tāmen liáotiān liáo dào bànyè.",
+        "They chatted until the small hours.",
+        "聊夭|聊夫"
+      ],
+      [
+        "對話",
+        "duì huà",
+        "Dialogue",
+        "acg",
+        "這段對話很經典。",
+        "Zhè duàn duìhuà hěn jīngdiǎn.",
+        "This exchange is a classic.",
+        "封話|對活|樹話"
+      ],
+      [
+        "留言",
+        "liú yán",
+        "To leave a comment",
+        "online",
+        "下面有一百多則留言。",
+        "Xiàmiàn yǒu yìbǎi duō zé liúyán.",
+        "There are over a hundred comments below.",
+        "留音|留信"
+      ],
+      [
+        "標題",
+        "biāo tí",
+        "A title, a headline",
+        "online",
+        "標題寫得太誇張。",
+        "Biāotí xiě de tài kuāzhāng.",
+        "The headline is overblown.",
+        "漂題|飄題"
+      ],
+      [
+        "評論",
+        "píng lùn",
+        "A review, commentary",
+        "online|media",
+        "這部片評論兩極。",
+        "Zhè bù piàn pínglùn liǎngjí.",
+        "Reviews of this film are split.",
+        "評倫|評輪"
+      ],
+      [
+        "灌水",
+        "guàn shuǐ",
+        "To pad out a thread with filler posts",
+        "online|taiwan",
+        "不要在版上灌水。",
+        "Bú yào zài bǎn shàng guànshuǐ.",
+        "Don't spam the board with filler.",
+        "灌永|灌冰"
+      ],
+      [
+        "鍵盤",
+        "jiàn pán",
+        "A keyboard",
+        "tech|online",
+        "他的鍵盤聲音很大。",
+        "Tā de jiànpán shēngyīn hěn dà.",
+        "His keyboard is very loud.",
+        "鍵盆|鍵磐"
+      ],
+      [
+        "代碼",
+        "dài mǎ",
+        "A code",
+        "gaming|tech",
+        "輸入代碼可以領獎品。",
+        "Shūrù dàimǎ kěyǐ lǐng jiǎngpǐn.",
+        "Enter the code to claim the prize.",
+        "伐碼|貸碼"
+      ],
+      [
+        "數據",
+        "shù jù",
+        "Data",
+        "tech",
+        "數據還在跑。",
+        "Shùjù hái zài pǎo.",
+        "The data is still processing.",
+        "樓據|數劇"
+      ],
+      [
+        "啟動",
+        "qǐ dòng",
+        "To start up, to launch",
+        "tech|gaming",
+        "遊戲啟動要三十秒。",
+        "Yóuxì qǐdòng yào sānshí miǎo.",
+        "The game takes thirty seconds to start.",
+        "啟働|啟勤"
+      ],
+      [
+        "維修",
+        "wéi xiū",
+        "Maintenance, repair",
+        "tech|gaming",
+        "伺服器在維修。",
+        "Sìfúqì zài wéixiū.",
+        "The server is under maintenance.",
+        "維休|維條"
+      ],
+      [
+        "修正",
+        "xiū zhèng",
+        "To correct, a fix",
+        "tech|gaming",
+        "這次更新修正了很多錯誤。",
+        "Zhè cì gēngxīn xiūzhèng le hěn duō cuòwù.",
+        "This update fixes a lot of bugs.",
+        "休正|條正"
+      ],
+      [
+        "新版",
+        "xīn bǎn",
+        "A new edition",
+        "acg|tech",
+        "新版下週開放。",
+        "Xīn bǎn xià zhōu kāifàng.",
+        "The new version opens next week.",
+        "親版|薪版"
+      ],
+      [
+        "預約",
+        "yù yuē",
+        "To book, to pre-order",
+        "general|acg",
+        "我已經預約了。",
+        "Wǒ yǐjīng yùyuē le.",
+        "I've already put in a booking.",
+        "頭約|預釣|預納"
+      ],
+      [
+        "預定",
+        "yù dìng",
+        "Scheduled, planned",
+        "general",
+        "預定明年推出。",
+        "Yùdìng míngnián tuīchū.",
+        "It's scheduled for release next year.",
+        "頭定|預是"
+      ],
+      [
+        "優惠",
+        "yōu huì",
+        "A discount, a special offer",
+        "general",
+        "今天有優惠價。",
+        "Jīntiān yǒu yōuhuì jià.",
+        "There's a discount price today.",
+        "憂惠|尤惠"
+      ],
+      [
+        "價錢",
+        "jià qián",
+        "A price",
+        "general",
+        "這個價錢很合理。",
+        "Zhège jiàqián hěn hélǐ.",
+        "This price is reasonable.",
+        "價淺|價賤"
+      ],
+      [
+        "會員",
+        "huì yuán",
+        "A member",
+        "general|online",
+        "會員可以先買。",
+        "Huìyuán kěyǐ xiān mǎi.",
+        "Members can buy first.",
+        "曾員|倉員"
+      ],
+      [
+        "團隊",
+        "tuán duì",
+        "A team",
+        "general",
+        "這個團隊只有五個人。",
+        "Zhège tuánduì zhǐyǒu wǔ ge rén.",
+        "This team is only five people.",
+        "圓隊|圍隊"
+      ],
+      [
+        "隊友",
+        "duì yǒu",
+        "A teammate",
+        "gaming",
+        "我的隊友都很強。",
+        "Wǒ de duìyǒu dōu hěn qiáng.",
+        "My teammates are all strong.",
+        "隊反|隊灰"
+      ],
+      [
+        "戰友",
+        "zhàn yǒu",
+        "A comrade in arms",
+        "acg",
+        "他們是多年的戰友。",
+        "Tāmen shì duō nián de zhànyǒu.",
+        "They have fought side by side for years.",
+        "獸友|戰反|彈友"
+      ],
+      [
+        "對打",
+        "duì dǎ",
+        "To fight one on one",
+        "gaming",
+        "我們來對打一場。",
+        "Wǒmen lái duìdǎ yì chǎng.",
+        "Let's have a one-on-one.",
+        "封打|對釘|樹打"
+      ],
+      [
+        "激戰",
+        "jī zhàn",
+        "A fierce battle",
+        "acg",
+        "雙方激戰了三天。",
+        "Shuāngfāng jīzhàn le sān tiān.",
+        "The two sides fought fiercely for three days.",
+        "激獸|激彈"
+      ],
+      [
+        "決戰",
+        "jué zhàn",
+        "The decisive battle",
+        "acg",
+        "最後的決戰在山頂。",
+        "Zuìhòu de juézhàn zài shāndǐng.",
+        "The final battle is on the mountaintop.",
+        "決獸|決彈"
+      ],
+      [
+        "戰役",
+        "zhàn yì",
+        "A campaign, a battle",
+        "acg|history",
+        "這場戰役改變了結局。",
+        "Zhè chǎng zhànyì gǎibiàn le jiéjú.",
+        "This battle changed the outcome.",
+        "獸役|彈役"
+      ],
+      [
+        "戰術",
+        "zhàn shù",
+        "Tactics",
+        "gaming",
+        "他們換了戰術。",
+        "Tāmen huàn le zhànshù.",
+        "They changed tactics.",
+        "獸術|戰行|彈術"
+      ],
+      [
+        "殺戮",
+        "shā lù",
+        "Slaughter",
+        "acg",
+        "這部片有很多殺戮。",
+        "Zhè bù piàn yǒu hěn duō shālù.",
+        "There's a lot of killing in this film.",
+        "剎戮|設戮"
+      ],
+      [
+        "入侵",
+        "rù qīn",
+        "To invade",
+        "acg",
+        "敵人從南方入侵。",
+        "Dírén cóng nánfāng rùqīn.",
+        "The enemy invaded from the south.",
+        "人侵|八侵"
+      ],
+      [
+        "基地",
+        "jī dì",
+        "A base",
+        "acg|gaming",
+        "他們回到基地補給。",
+        "Tāmen huí dào jīdì bǔjǐ.",
+        "They returned to base for supplies.",
+        "墓地|基池|其地"
+      ],
+      [
+        "裝甲",
+        "zhuāng jiǎ",
+        "Armour",
+        "acg",
+        "這台機體的裝甲很厚。",
+        "Zhè tái jītǐ de zhuāngjiǎ hěn hòu.",
+        "This mech's armour is thick.",
+        "裝中|裝田|裝串"
+      ],
+      [
+        "機動",
+        "jī dòng",
+        "Mobile, motorised",
+        "acg",
+        "這是機動部隊。",
+        "Zhè shì jīdòng bùduì.",
+        "This is a mobile unit.",
+        "幾動|機働|譏動"
+      ],
+      [
+        "力量",
+        "lì liàng",
+        "Strength, power",
+        "acg|general",
+        "他相信團結的力量。",
+        "Tā xiāngxìn tuánjié de lìliàng.",
+        "He believes in the power of unity.",
+        "刀量|力暈|九量"
+      ],
+      [
+        "神話",
+        "shén huà",
+        "Myth, mythology",
+        "acg",
+        "這是北歐神話的角色。",
+        "Zhè shì Běi'ōu shénhuà de juésè.",
+        "This character is from Norse myth.",
+        "伸話|神活|祖話"
+      ],
+      [
+        "奇蹟",
+        "qí jī",
+        "A miracle",
+        "general",
+        "他活下來是個奇蹟。",
+        "Tā huó xiàlái shì ge qíjī.",
+        "It's a miracle he survived.",
+        "寄蹟|崎蹟"
+      ],
+      [
+        "國度",
+        "guó dù",
+        "A realm",
+        "acg",
+        "這是一個魔法國度。",
+        "Zhè shì yí ge mófǎ guódù.",
+        "This is a realm of magic.",
+        "圖度|園度"
+      ],
+      [
+        "地球",
+        "dì qiú",
+        "The Earth",
+        "general",
+        "他們回到地球。",
+        "Tāmen huí dào dìqiú.",
+        "They returned to Earth.",
+        "池球|地求|他球"
+      ],
+      [
+        "空間",
+        "kōng jiān",
+        "Space, room",
+        "general|tech",
+        "手機空間不夠了。",
+        "Shǒujī kōngjiān bú gòu le.",
+        "My phone is out of space.",
+        "控間|空問|空閒"
+      ],
+      [
+        "時代",
+        "shí dài",
+        "An era",
+        "general",
+        "那是一個很不同的時代。",
+        "Nà shì yí ge hěn bùtóng de shídài.",
+        "That was a very different era.",
+        "持代|時伐|詩代"
+      ],
+      [
+        "年代",
+        "nián dài",
+        "A decade, a period",
+        "general",
+        "這首歌是八零年代的。",
+        "Zhè shǒu gē shì bālíng niándài de.",
+        "This song is from the eighties.",
+        "年伐|年貸"
+      ],
+      [
+        "黎明",
+        "lí míng",
+        "Dawn",
+        "acg|written",
+        "他們在黎明出發。",
+        "Tāmen zài límíng chūfā.",
+        "They set out at dawn.",
+        "犁明|黎朋|梨明"
+      ],
+      [
+        "時光",
+        "shí guāng",
+        "Time, days gone by",
+        "written",
+        "那段時光很難忘。",
+        "Nà duàn shíguāng hěn nánwàng.",
+        "That time is hard to forget.",
+        "持光|時先|詩光"
+      ],
+      [
+        "昔日",
+        "xí rì",
+        "In days past",
+        "written",
+        "昔日的對手成了朋友。",
+        "Xírì de duìshǒu chéng le péngyǒu.",
+        "Yesterday's rival became a friend.",
+        "昔口|昔曰|昔目"
+      ],
+      [
+        "盡頭",
+        "jìn tóu",
+        "The very end",
+        "written",
+        "路的盡頭是海。",
+        "Lù de jìntóu shì hǎi.",
+        "At the end of the road is the sea.",
+        "盡預|盡頑"
+      ],
+      [
+        "成長",
+        "chéng zhǎng",
+        "To grow up",
+        "acg|general",
+        "這是一個成長的故事。",
+        "Zhè shì yí ge chéngzhǎng de gùshì.",
+        "This is a coming-of-age story.",
+        "城長|戌長|戍長"
+      ],
+      [
+        "意義",
+        "yì yì",
+        "Meaning, significance",
+        "general",
+        "這樣做沒有意義。",
+        "Zhèyàng zuò méiyǒu yìyì.",
+        "There's no point doing it that way.",
+        "竟義|憶義"
+      ],
+      [
+        "意思",
+        "yì si",
+        "Meaning; interest",
+        "general",
+        "這個字是什麼意思？",
+        "Zhège zì shì shénme yìsi?",
+        "What does this character mean?",
+        "竟思|意恩|憶思"
+      ],
+      [
+        "目標",
+        "mù biāo",
+        "A goal, a target",
+        "general",
+        "他的目標是拿冠軍。",
+        "Tā de mùbiāo shì ná guànjūn.",
+        "His goal is to win the title.",
+        "日標|目漂|貝標"
+      ],
+      [
+        "目的",
+        "mù dì",
+        "A purpose",
+        "general",
+        "你這樣做的目的是什麼？",
+        "Nǐ zhèyàng zuò de mùdì shì shénme?",
+        "What's your purpose in doing this?",
+        "日的|貝的"
+      ],
+      [
+        "事項",
+        "shì xiàng",
+        "Items, matters to note",
+        "general",
+        "注意事項寫在背面。",
+        "Zhùyì shìxiàng xiě zài bèimiàn.",
+        "The notes are on the back.",
+        "吏項|事頂|史項"
+      ],
+      [
+        "情況",
+        "qíng kuàng",
+        "A situation",
+        "general",
+        "情況比想像中複雜。",
+        "Qíngkuàng bǐ xiǎngxiàng zhōng fùzá.",
+        "The situation is more complex than expected.",
+        "精況|晴況|請況"
+      ],
+      [
+        "關係",
+        "guān xì",
+        "A relationship; it matters",
+        "general",
+        "他們的關係很好。",
+        "Tāmen de guānxì hěn hǎo.",
+        "They get on well.",
+        "開係|關系"
+      ],
+      [
+        "處理",
+        "chǔ lǐ",
+        "To handle, to deal with",
+        "general",
+        "這件事我來處理。",
+        "Zhè jiàn shì wǒ lái chǔlǐ.",
+        "I'll deal with this.",
+        "虎理|處埋|處裡"
+      ],
+      [
+        "管理",
+        "guǎn lǐ",
+        "To manage",
+        "general",
+        "他負責管理伺服器。",
+        "Tā fùzé guǎnlǐ sìfúqì.",
+        "He's in charge of managing the server.",
+        "管埋|管裡"
+      ],
+      [
+        "設計",
+        "shè jì",
+        "Design; to design",
+        "acg|general",
+        "這個設計得過獎。",
+        "Zhège shèjì dé guò jiǎng.",
+        "This design has won an award.",
+        "殺計|設記"
+      ],
+      [
+        "研發",
+        "yán fā",
+        "Research and development",
+        "tech",
+        "研發花了很多錢。",
+        "Yánfā huā le hěn duō qián.",
+        "Development cost a lot of money.",
+        "研髮|研廢"
+      ],
+      [
+        "合成",
+        "hé chéng",
+        "To synthesise, to combine",
+        "gaming|tech",
+        "兩張卡可以合成。",
+        "Liǎng zhāng kǎ kěyǐ héchéng.",
+        "Two cards can be combined.",
+        "契成|合城|令成"
+      ],
+      [
+        "材料",
+        "cái liào",
+        "Materials",
+        "gaming|general",
+        "合成需要三種材料。",
+        "Héchéng xūyào sān zhǒng cáiliào.",
+        "Crafting needs three materials.",
+        "材科|材斗"
+      ],
+      [
+        "工具",
+        "gōng jù",
+        "A tool",
+        "general",
+        "這是很方便的工具。",
+        "Zhè shì hěn fāngbiàn de gōngjù.",
+        "This is a handy tool.",
+        "土具|工真|士具"
+      ],
+      [
+        "藥水",
+        "yào shuǐ",
+        "A potion; liquid medicine",
+        "gaming",
+        "喝一瓶藥水回血。",
+        "Hē yì píng yàoshuǐ huí xiě.",
+        "Drink a potion to heal.",
+        "樂水|藥永|藥冰"
+      ],
+      [
+        "寶石",
+        "bǎo shí",
+        "A gem",
+        "gaming|acg",
+        "這顆寶石很值錢。",
+        "Zhè kē bǎoshí hěn zhíqián.",
+        "This gem is worth a lot.",
+        "實石|寶右|寶后"
+      ],
+      [
+        "海報",
+        "hǎi bào",
+        "A poster",
+        "acg|media",
+        "牆上貼了一張海報。",
+        "Qiáng shàng tiē le yì zhāng hǎibào.",
+        "There's a poster on the wall.",
+        "悔報|海服|梅報"
+      ],
+      [
+        "廣告",
+        "guǎng gào",
+        "An advertisement",
+        "media",
+        "這支廣告拍得很好。",
+        "Zhè zhī guǎnggào pāi de hěn hǎo.",
+        "This advert is well made.",
+        "曠告|廣害"
+      ],
+      [
+        "報導",
+        "bào dǎo",
+        "A news report",
+        "media|taiwan",
+        "這則報導不太準確。",
+        "Zhè zé bàodǎo bú tài zhǔnquè.",
+        "This report isn't quite accurate.",
+        "服導|報道|執導"
+      ],
+      [
+        "主播",
+        "zhǔ bò",
+        "A news anchor; a streamer",
+        "media|online",
+        "這位主播很受歡迎。",
+        "Zhè wèi zhǔbò hěn shòu huānyíng.",
+        "This streamer is very popular.",
+        "王播|住播"
+      ],
+      [
+        "三部曲",
+        "sān bù qǔ",
+        "A trilogy",
+        "acg",
+        "這是三部曲的第二部。",
+        "Zhè shì sānbùqǔ de dì èr bù.",
+        "This is the second of the trilogy.",
+        "二部曲|王部曲"
+      ],
+      [
+        "三季",
+        "sān jì",
+        "Three seasons (of a show)",
+        "acg",
+        "這部已經播了三季。",
+        "Zhè bù yǐjīng bō le sān jì.",
+        "This show has run for three seasons.",
+        "二季|王季"
+      ],
+      [
+        "日記",
+        "rì jì",
+        "A diary",
+        "general",
+        "他每天寫日記。",
+        "Tā měitiān xiě rìjì.",
+        "He keeps a diary every day.",
+        "口記|日紀|曰記"
+      ],
+      [
+        "記錄",
+        "jì lù",
+        "A record; to record",
+        "general",
+        "他打破了世界記錄。",
+        "Tā dǎpò le shìjiè jìlù.",
+        "He broke the world record.",
+        "紀錄|計錄"
+      ],
+      [
+        "櫻花",
+        "yīng huā",
+        "Cherry blossom",
+        "acg|general",
+        "三月的櫻花很美。",
+        "Sānyuè de yīnghuā hěn měi.",
+        "The cherry blossom in March is beautiful.",
+        "櫻化|櫻苞"
+      ],
+      [
+        "橘子",
+        "jú zi",
+        "A tangerine",
+        "general",
+        "桌上有一袋橘子。",
+        "Zhuō shàng yǒu yì dài júzi.",
+        "There's a bag of tangerines on the table.",
+        "橘了|橘孑"
+      ],
+      [
+        "腳踏車",
+        "jiǎo tà chē",
+        "A bicycle",
+        "general|taiwan",
+        "他騎腳踏車上學。",
+        "Tā qí jiǎotàchē shàngxué.",
+        "He cycles to school.",
+        "角踏車|腳踏軍|腳踏東"
+      ],
+      [
+        "列車",
+        "liè chē",
+        "A train",
+        "general",
+        "下一班列車七點到。",
+        "Xià yì bān lièchē qī diǎn dào.",
+        "The next train arrives at seven.",
+        "列軍|列東"
+      ],
+      [
+        "鐵道",
+        "tiě dào",
+        "A railway",
+        "general|taiwan",
+        "他很喜歡拍鐵道。",
+        "Tā hěn xǐhuān pāi tiědào.",
+        "He loves photographing railways.",
+        "銅道|鐵首|銀道"
+      ],
+      [
+        "賽車",
+        "sài chē",
+        "Motor racing",
+        "gaming|sport",
+        "他玩賽車遊戲。",
+        "Tā wán sàichē yóuxì.",
+        "He plays racing games.",
+        "賽軍|賽東"
+      ],
+      [
+        "釣魚",
+        "diào yú",
+        "To fish; to bait people online",
+        "online|general",
+        "這篇文章在釣魚。",
+        "Zhè piān wénzhāng zài diàoyú.",
+        "This post is baiting people.",
+        "約魚|釣魯|釣漁"
+      ],
+      [
+        "生意",
+        "shēng yì",
+        "Business, trade",
+        "general",
+        "他們的生意很好。",
+        "Tāmen de shēngyì hěn hǎo.",
+        "Their business is doing well.",
+        "牛意|生竟|生憶"
+      ],
+      [
+        "商人",
+        "shāng rén",
+        "A merchant",
+        "acg|general",
+        "村裡有個旅行商人。",
+        "Cūn lǐ yǒu ge lǚxíng shāngrén.",
+        "There's a travelling merchant in the village.",
+        "商入|商仁|商八"
+      ],
+      [
+        "工廠",
+        "gōng chǎng",
+        "A factory",
+        "general",
+        "這間工廠很老了。",
+        "Zhè jiān gōngchǎng hěn lǎo le.",
+        "This factory is very old.",
+        "土廠|士廠"
+      ],
+      [
+        "倒閉",
+        "dǎo bì",
+        "To go out of business",
+        "general",
+        "那家店去年倒閉了。",
+        "Nà jiā diàn qùnián dǎobì le.",
+        "That shop went under last year.",
+        "到閉|倒開|側閉"
+      ],
+      [
+        "國際",
+        "guó jì",
+        "International",
+        "general",
+        "這是國際比賽。",
+        "Zhè shì guójì bǐsài.",
+        "This is an international competition.",
+        "圖際|園際"
+      ],
+      [
+        "全球",
+        "quán qiú",
+        "Global, worldwide",
+        "general",
+        "全球同步上市。",
+        "Quánqiú tóngbù shàngshì.",
+        "It goes on sale worldwide at the same time.",
+        "金球|全求"
+      ],
+      [
+        "外國",
+        "wài guó",
+        "Foreign, another country",
+        "general",
+        "他在外國念書。",
+        "Tā zài wàiguó niànshū.",
+        "He is studying abroad.",
+        "死國|外圖|夕國"
+      ],
+      [
+        "東京",
+        "dōng jīng",
+        "Tokyo",
+        "general",
+        "這個場景在東京。",
+        "Zhège chǎngjǐng zài Dōngjīng.",
+        "This scene is set in Tokyo.",
+        "車京|東就|果京"
+      ],
+      [
+        "地區",
+        "dì qū",
+        "A region",
+        "general",
+        "這個地區收訊不好。",
+        "Zhège dìqū shōuxùn bù hǎo.",
+        "The signal is poor in this area.",
+        "池區|地品|他區"
+      ],
+      [
+        "家庭",
+        "jiā tíng",
+        "A family, a household",
+        "general|family",
+        "他來自一個大家庭。",
+        "Tā láizì yí ge dà jiātíng.",
+        "He comes from a big family.",
+        "豕庭|冢庭"
+      ],
+      [
+        "兒子",
+        "ér zi",
+        "A son",
+        "general|family",
+        "他兒子今年上小學。",
+        "Tā érzi jīnnián shàng xiǎoxué.",
+        "His son starts primary school this year.",
+        "見子|兒了|兄子"
+      ],
+      [
+        "女兒",
+        "nǚ ér",
+        "A daughter",
+        "general|family",
+        "她女兒很會畫畫。",
+        "Tā nǚ'ér hěn huì huàhuà.",
+        "Her daughter draws very well.",
+        "女見|女兄"
+      ],
+      [
+        "大姊",
+        "dà jiě",
+        "Eldest sister",
+        "general|family",
+        "大姊比我大五歲。",
+        "Dàjiě bǐ wǒ dà wǔ suì.",
+        "My eldest sister is five years older than me.",
+        "太姊|犬姊|夫姊"
+      ],
+      [
+        "小時候",
+        "xiǎo shí hòu",
+        "In childhood",
+        "general",
+        "小時候我住在鄉下。",
+        "Xiǎoshíhòu wǒ zhù zài xiāngxià.",
+        "When I was small I lived in the countryside.",
+        "少時候|小持候|小詩候"
+      ],
+      [
+        "新生",
+        "xīn shēng",
+        "A new student; new life",
+        "general",
+        "新生要參加說明會。",
+        "Xīnshēng yào cānjiā shuōmínghuì.",
+        "New students must attend the briefing.",
+        "親生|新牛|薪生"
+      ],
+      [
+        "體育",
+        "tǐ yù",
+        "Physical education, sport",
+        "general",
+        "下午有體育課。",
+        "Xiàwǔ yǒu tǐyù kè.",
+        "There's PE this afternoon.",
+        "禮育|豐育"
+      ],
+      [
+        "學習",
+        "xué xí",
+        "To learn, learning",
+        "general",
+        "學習語言要有耐心。",
+        "Xuéxí yǔyán yào yǒu nàixīn.",
+        "Learning a language takes patience.",
+        "覺習|舉習"
+      ],
+      [
+        "語言",
+        "yǔ yán",
+        "A language",
+        "language",
+        "他會說三種語言。",
+        "Tā huì shuō sān zhǒng yǔyán.",
+        "He speaks three languages.",
+        "悟言|梧言|語信"
+      ],
+      [
+        "華文",
+        "huá wén",
+        "The Chinese language (in writing)",
+        "language",
+        "這是華文的市場。",
+        "Zhè shì huáwén de shìchǎng.",
+        "This is the Chinese-language market.",
+        "華父|華交"
+      ],
+      [
+        "日常",
+        "rì cháng",
+        "Everyday; slice of life",
+        "acg",
+        "這部是日常系的作品。",
+        "Zhè bù shì rìcháng xì de zuòpǐn.",
+        "This is a slice-of-life work.",
+        "口常|日堂|曰常"
+      ],
+      [
+        "類似",
+        "lèi sì",
+        "Similar",
+        "general",
+        "這兩部設定很類似。",
+        "Zhè liǎng bù shèdìng hěn lèisì.",
+        "These two have very similar premises.",
+        "顆似|類以|頹似"
+      ],
+      [
+        "相同",
+        "xiāng tóng",
+        "The same",
+        "general",
+        "我們的看法相同。",
+        "Wǒmen de kànfǎ xiāngtóng.",
+        "We see it the same way.",
+        "柏同|相冋|想同"
+      ],
+      [
+        "不同",
+        "bù tóng",
+        "Different",
+        "general",
+        "這兩個版本完全不同。",
+        "Zhè liǎng ge bǎnběn wánquán bùtóng.",
+        "These two versions are completely different.",
+        "丕同|不冋|不向"
+      ],
+      [
+        "合理",
+        "hé lǐ",
+        "Reasonable",
+        "general",
+        "這個解釋很合理。",
+        "Zhège jiěshì hěn hélǐ.",
+        "That explanation is reasonable.",
+        "契理|合埋|令理"
+      ],
+      [
+        "嚴重",
+        "yán zhòng",
+        "Serious, severe",
+        "general",
+        "問題比想像嚴重。",
+        "Wèntí bǐ xiǎngxiàng yánzhòng.",
+        "The problem is worse than expected.",
+        "嚴童|嚴量"
+      ],
+      [
+        "豐富",
+        "fēng fù",
+        "Rich, abundant",
+        "general",
+        "這款遊戲內容很豐富。",
+        "Zhè kuǎn yóuxì nèiróng hěn fēngfù.",
+        "This game has a lot of content.",
+        "體富|豐當|豐福"
+      ],
+      [
+        "高級",
+        "gāo jí",
+        "High-grade, upmarket",
+        "general",
+        "這是高級的材料。",
+        "Zhè shì gāojí de cáiliào.",
+        "This is high-grade material.",
+        "亭級|高及|膏級"
+      ],
+      [
+        "強力",
+        "qiáng lì",
+        "Powerful",
+        "gaming",
+        "這是一把強力的武器。",
+        "Zhè shì yì bǎ qiánglì de wǔqì.",
+        "This is a powerful weapon.",
+        "強刀|強九"
+      ],
+      [
+        "獲得",
+        "huò dé",
+        "To obtain",
+        "gaming|general",
+        "你獲得了一把鑰匙。",
+        "Nǐ huòdé le yì bǎ yàoshi.",
+        "You have obtained a key.",
+        "獲德|獲待"
+      ],
+      [
+        "離開",
+        "lí kāi",
+        "To leave",
+        "general",
+        "他昨天離開了。",
+        "Tā zuótiān líkāi le.",
+        "He left yesterday.",
+        "雜開|離閉|璃開"
+      ],
+      [
+        "發生",
+        "fā shēng",
+        "To happen",
+        "general",
+        "這件事發生在去年。",
+        "Zhè jiàn shì fāshēng zài qùnián.",
+        "This happened last year.",
+        "髮生|發牛|廢生"
+      ],
+      [
+        "存在",
+        "cún zài",
+        "To exist; an existence",
+        "acg|general",
+        "他是特別的存在。",
+        "Tā shì tèbié de cúnzài.",
+        "He is a special presence.",
+        "在在|存再|存存"
+      ],
+      [
+        "意外",
+        "yì wài",
+        "An accident; unexpected",
+        "general",
+        "這個結果有點意外。",
+        "Zhège jiéguǒ yǒudiǎn yìwài.",
+        "This outcome is a bit unexpected.",
+        "竟外|意死|憶外"
+      ],
+      [
+        "回歸",
+        "huí guī",
+        "To return, a comeback",
+        "acg",
+        "這個角色下季回歸。",
+        "Zhège juésè xià jì huíguī.",
+        "This character returns next season.",
+        "囚歸|回龜|因歸"
+      ],
+      [
+        "持續",
+        "chí xù",
+        "To continue, sustained",
+        "general",
+        "這個狀態會持續三回合。",
+        "Zhège zhuàngtài huì chíxù sān huíhé.",
+        "This status lasts three turns.",
+        "時續|持讀"
+      ],
+      [
+        "現場",
+        "xiàn chǎng",
+        "The scene, live at the venue",
+        "acg|media",
+        "現場有兩千人。",
+        "Xiànchǎng yǒu liǎngqiān rén.",
+        "There were two thousand people at the venue.",
+        "規場|現湯|視場"
       ]
     ]
   }

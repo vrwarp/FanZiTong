@@ -3,10 +3,17 @@ import { useNavigate } from 'react-router';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Modal } from '@/components/ui/Modal';
 import { inputClass } from '@/components/ui/Field';
 import { CardListItem } from '@/components/vocab/CardListItem';
 import { ImportDialog, type ImportSource } from '@/components/vocab/ImportDialog';
-import { buildStarterDeck, starterRestoreLabel, STARTER_DECK_NAME } from '@/data/starterDeck';
+import {
+  buildStarterDeck,
+  planStarterRestore,
+  starterRestoreLabel,
+  starterRestoreNotice,
+  type StarterRestorePlan,
+} from '@/data/starterDeck';
 import type { VocabCard } from '@/types';
 import { repository } from '@/db/repository';
 import { useCards, useReviewLogsOrEmpty } from '@/hooks/useCards';
@@ -35,6 +42,7 @@ export default function VocabPage() {
   const [sort, setSort] = useState<SortKey>('due');
   const [importSource, setImportSource] = useState<ImportSource | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [confirmRestore, setConfirmRestore] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => {
@@ -69,23 +77,31 @@ export default function VocabPage() {
   // kept: this page needs a count while it renders and the whole deck only if
   // the learner asks to restore it.
   const [starter, setStarter] = useState<VocabCard[] | null>(null);
+  const [starterError, setStarterError] = useState<string | null>(null);
+  const [starterAttempt, setStarterAttempt] = useState(0);
   useEffect(() => {
     let cancelled = false;
-    void buildStarterDeck().then((deck) => {
-      if (!cancelled) setStarter(deck);
-    });
+    void buildStarterDeck().then(
+      (deck) => {
+        if (!cancelled) setStarter(deck);
+      },
+      (err: unknown) => {
+        // A chunk is a fetch, and a fetch can fail. Saying so beats a control
+        // that sits there greyed out for reasons it keeps to itself.
+        if (!cancelled) setStarterError((err as Error).message);
+      },
+    );
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [starterAttempt]);
 
   // null until both the deck and the starter rows are here: "not known yet" is
-  // not "nothing missing", and the button must not claim otherwise.
-  const missingStarter = useMemo(() => {
-    if (!cards || !starter) return null;
-    const have = new Set(cards.map((c) => c.traditional));
-    return starter.filter((c) => !have.has(c.traditional)).length;
-  }, [cards, starter]);
+  // not "nothing to do", and the button must not claim otherwise.
+  const restorePlan = useMemo(
+    () => (cards && starter ? planStarterRestore(cards, starter) : null),
+    [cards, starter],
+  );
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
@@ -108,14 +124,24 @@ export default function VocabPage() {
     downloadTextFile(`fanzitong-deck-${timestampForFilename()}.csv`, toCsv(cards), 'text/csv');
   };
 
+  const applyRestore = async (plan: StarterRestorePlan) => {
+    setConfirmRestore(false);
+    // One transaction: the added cards carry fresh ids and the repaired ones
+    // carry the ids they already had, so this writes both without touching
+    // anything the starter deck does not own.
+    const write = [...plan.add, ...plan.repair];
+    if (write.length > 0) await repository.importCards(write);
+    setNotice(starterRestoreNotice(plan));
+  };
+
   const loadStarter = async () => {
-    if (!cards) return;
-    const have = new Set(cards.map((c) => c.traditional));
-    const missing = (starter ?? (await buildStarterDeck())).filter((c) => !have.has(c.traditional));
-    await repository.importCards(missing);
-    setNotice(
-      `Added ${missing.length} card${missing.length === 1 ? '' : 's'} from “${STARTER_DECK_NAME}”.`,
-    );
+    // The empty-state button can be tapped before the chunk has landed, so the
+    // plan is computed on demand rather than assumed to be here.
+    const plan = restorePlan ?? planStarterRestore(cards ?? [], await buildStarterDeck());
+    // Putting an edited card back the way it ships is the destructive half of
+    // this, so it is the half that asks first.
+    if (plan.repair.length > 0) setConfirmRestore(true);
+    else await applyRestore(plan);
   };
 
   return (
@@ -223,15 +249,31 @@ export default function VocabPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={loadStarter}
-            disabled={!missingStarter}
+            onClick={() => void loadStarter()}
+            disabled={!cards || Boolean(starterError)}
             data-testid="load-starter"
           >
-            {starterRestoreLabel(missingStarter)}
+            {starterRestoreLabel(restorePlan)}
           </Button>
         </div>
+        {starterError && (
+          <p className="mt-2 text-xs text-red-700 dark:text-red-400" data-testid="starter-error">
+            The starter deck could not be loaded ({starterError}).{' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={() => {
+                setStarterError(null);
+                setStarterAttempt((n) => n + 1);
+              }}
+            >
+              Try again
+            </button>
+          </p>
+        )}
         <p className="mt-2 text-xs text-stone-500 dark:text-stone-400">
-          Full backups (with review history) live in Settings › Data.
+          Restoring adds any starter words you are missing and puts edited ones back the way they
+          ship, keeping your review history. Full backups live in Settings › Data.
         </p>
       </details>
 
@@ -258,6 +300,38 @@ export default function VocabPage() {
           )}
         </ul>
       )}
+
+      <Modal
+        open={confirmRestore}
+        title="Restore the starter deck?"
+        onClose={() => setConfirmRestore(false)}
+        testId="starter-restore-dialog"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setConfirmRestore(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (restorePlan) void applyRestore(restorePlan);
+              }}
+              data-testid="confirm-starter-restore"
+            >
+              Restore
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm">
+          {restorePlan?.repair.length} of your cards differ from the version that ships with the
+          app, either because you edited them or because a later release corrected them. Restoring
+          puts their words, sentences and look-alikes back as shipped. Your review history and
+          scheduling are kept.
+          {restorePlan && restorePlan.add.length > 0
+            ? ` ${restorePlan.add.length} missing card${restorePlan.add.length === 1 ? '' : 's'} will also be added.`
+            : ''}
+        </p>
+      </Modal>
 
       <ImportDialog
         source={importSource}

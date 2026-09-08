@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import type { StudyEvent } from '@/lib/analytics/events';
 import type { AiBatch, AiChange, ReviewLog, UserSettings, VocabCard } from '@/types';
 
 export interface SettingsRow extends UserSettings {
@@ -28,6 +29,8 @@ export class FanZiTongDatabase extends Dexie {
   /** Assistant edits, kept so any batch can be undone. */
   aiBatches!: EntityTable<AiBatch, 'id'>;
   aiChanges!: EntityTable<AiChange, 'id'>;
+  /** What the learner did during study, including answers FSRS ignored. */
+  studyEvents!: EntityTable<StudyEvent, 'id'>;
 
   constructor(name: string = DB_NAME) {
     super(name);
@@ -41,6 +44,10 @@ export class FanZiTongDatabase extends Dexie {
     this.version(2).stores({
       aiBatches: 'id, createdAt, conversationId, turnId, undoneAt',
       aiChanges: 'id, batchId, cardId, [batchId+seq]',
+    });
+    // v3 adds the study event log; it starts empty and needs no upgrade step.
+    this.version(3).stores({
+      studyEvents: 'id, at, sessionId, cardId, kind, [sessionId+seq]',
     });
   }
 }

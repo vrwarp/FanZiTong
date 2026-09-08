@@ -9,6 +9,7 @@ import { useCards, useReviewLogs } from '@/hooks/useCards';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { useAssistant } from '@/lib/assistant/assistantContext';
+import { recordStudyEvent } from '@/lib/analytics/recorder';
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import {
   buildDrillExercises,
@@ -110,6 +111,8 @@ function DrillSession({
       drills,
       scheduler: createScheduler(settings),
       interleaveDrills: false,
+      drillType,
+      onEvent: recordStudyEvent,
     });
   });
   const api = useStudyEngine(engine);

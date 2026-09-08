@@ -316,7 +316,18 @@ export function ClozeExerciseView({ exercise, card, onComplete }: ClozeExerciseV
             block
             size="lg"
             onClick={() =>
-              onComplete([{ cardId: exercise.cardId, correct: !foilPicked, applyRating }])
+              onComplete([
+                {
+                  cardId: exercise.cardId,
+                  correct: !foilPicked,
+                  applyRating,
+                  misses: misses + misreads.length,
+                  // The look-alike is a miss on the target; a real word that
+                  // does not fit the sentence is a misreading of the sentence.
+                  ...(foilPicked && foil ? { picked: foil } : {}),
+                  ...(!foilPicked && lastMisread ? { picked: lastMisread } : {}),
+                },
+              ])
             }
             data-testid="drill-continue"
           >

@@ -57,8 +57,9 @@ describe('ClozeExerciseView', () => {
     expect(screen.getAllByTestId('cloze-gloss').length).toBeGreaterThan(0);
     expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
     await userEvent.click(screen.getByTestId('drill-continue'));
+    // The report carries what was picked: the look-alike, and both wrong taps.
     expect(onComplete).toHaveBeenCalledWith([
-      { cardId: card.id, correct: false, applyRating: true },
+      { cardId: card.id, correct: false, applyRating: true, misses: 2, picked: foilText },
     ]);
   });
 
@@ -71,7 +72,7 @@ describe('ClozeExerciseView', () => {
     expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Good/);
     await userEvent.click(screen.getByTestId('drill-continue'));
     expect(onComplete).toHaveBeenCalledWith([
-      { cardId: card.id, correct: true, applyRating: true },
+      { cardId: card.id, correct: true, applyRating: true, misses: 0 },
     ]);
   });
 
@@ -79,15 +80,17 @@ describe('ClozeExerciseView', () => {
     const onComplete = vi.fn();
     render(<ClozeExerciseView exercise={exercise} card={card} onComplete={onComplete} />);
     const options = screen.getAllByTestId('cloze-option');
-    await userEvent.click(
-      options.find((b) => b.dataset.correct === 'false' && b.dataset.foil === 'false')!,
-    );
+    const misread = options.find(
+      (b) => b.dataset.correct === 'false' && b.dataset.foil === 'false',
+    )!;
+    const misreadWord = misread.textContent!.trim();
+    await userEvent.click(misread);
     await userEvent.click(options.find((b) => b.dataset.correct === 'true')!);
     expect(screen.getByTestId('cloze-feedback')).toHaveTextContent(/Found it/);
     expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/No change/);
     await userEvent.click(screen.getByTestId('drill-continue'));
     expect(onComplete).toHaveBeenCalledWith([
-      { cardId: card.id, correct: true, applyRating: false },
+      { cardId: card.id, correct: true, applyRating: false, misses: 1, picked: misreadWord },
     ]);
   });
 });
@@ -106,7 +109,7 @@ describe('FoilExerciseView', () => {
     await userEvent.click(options.find((o) => o.dataset.correct === 'true')!);
     expect(screen.getByTestId('foil-feedback')).toHaveTextContent(/Correct/);
     await userEvent.click(screen.getByTestId('drill-continue'));
-    expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: true }]);
+    expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: true, misses: 0 }]);
   });
 
   it('explains a wrong pick character by character and requires one corrective tap', async () => {
@@ -116,6 +119,7 @@ describe('FoilExerciseView', () => {
     const wrong = options.find(
       (o) => o.dataset.correct === 'false' && o.textContent?.length === card.traditional.length,
     )!;
+    const wrongText = wrong.textContent!.trim();
     await userEvent.click(wrong);
     expect(screen.getByTestId('foil-feedback')).toHaveTextContent(/不對/);
     expect(screen.getByTestId('foil-diff')).toHaveTextContent(/is not/);
@@ -128,7 +132,9 @@ describe('FoilExerciseView', () => {
     await userEvent.click(reshuffled.find((o) => o.dataset.correct === 'true')!);
     expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
     await userEvent.click(screen.getByTestId('drill-continue'));
-    expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: false }]);
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: false, misses: 1, picked: wrongText },
+    ]);
   });
 });
 

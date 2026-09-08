@@ -1,4 +1,6 @@
 import { createScheduler } from '@/lib/fsrs/scheduler';
+import type { StudyEvent } from '@/lib/analytics/events';
+import { MAX_SESSION_REQUEUES } from '@/lib/queue/session';
 import { mulberry32 } from '@/lib/util/random';
 import { CardState, type VocabCard } from '@/types';
 import { makeCard, makePool, reviewState } from '@/test/factories';
@@ -92,6 +94,36 @@ describe('StudyEngine — recognition flow', () => {
     expect(s.step).toEqual({ kind: 'card', cardId: pool[0].id });
     engine.rate(4);
     expect(engine.snapshot().status).toBe('complete');
+  });
+
+  it('stops re-queueing one card once it has had its turns', () => {
+    // Answering Again drives the interval to the floor, which is always inside
+    // the learn-ahead window: without a cap the card returns forever.
+    const pool = makePool();
+    const engine = engineFor(pool, [pool[0].id]);
+    for (let i = 0; i < MAX_SESSION_REQUEUES; i += 1) {
+      expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[0].id });
+      engine.rate(1);
+    }
+    // The last re-queue is spent on this answer; nothing follows it.
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[0].id });
+    engine.rate(1);
+    expect(engine.snapshot().status).toBe('complete');
+    expect(engine.getCard(pool[0].id)?.fsrs.reps).toBe(MAX_SESSION_REQUEUES + 1);
+  });
+
+  it('does not hand a resumed session a fresh set of re-queues', () => {
+    const pool = makePool();
+    const first = engineFor(pool, [pool[0].id]);
+    first.rate(1);
+    const progress = first.serialize();
+    expect(progress.requeues?.[pool[0].id]).toBe(1);
+
+    const resumed = engineFor(pool, first.remainingCardIds(), { restore: progress });
+    for (let i = 0; i < MAX_SESSION_REQUEUES - 1; i += 1) resumed.rate(1);
+    expect(resumed.snapshot().step).toEqual({ kind: 'card', cardId: pool[0].id });
+    resumed.rate(1);
+    expect(resumed.snapshot().status).toBe('complete');
   });
 
   it('reuses the previewed schedule when rating shortly after reveal', () => {
@@ -288,6 +320,88 @@ describe('StudyEngine — drill scoring (recognition ≠ recall)', () => {
       exerciseType: 'foil_discrimination',
     });
     expect(engine.snapshot().results.at(-1)).toMatchObject({ applied: true, rating: 1 });
+  });
+});
+
+describe('StudyEngine — study events', () => {
+  it('brackets the session and records every answer, with its repeat index', () => {
+    const pool = makePool();
+    const events: StudyEvent[] = [];
+    const engine = engineFor(pool, [pool[0].id, pool[1].id], {
+      sessionId: 'session-1',
+      onEvent: (e) => events.push(e),
+    });
+    engine.rate(1);
+    engine.rate(4);
+    engine.rate(4);
+
+    expect(events[0]).toMatchObject({ kind: 'session_start', planned: 2, mode: 'daily' });
+    expect(events.every((e) => e.sessionId === 'session-1')).toBe(true);
+    expect(events.map((e) => e.seq)).toEqual([0, 1, 2, 3, 4]);
+    const answers = events.filter((e) => e.kind === 'answer');
+    expect(answers.map((e) => e.cardId)).toEqual([pool[0].id, pool[1].id, pool[0].id]);
+    expect(answers.map((e) => e.repeatIndex)).toEqual([0, 0, 1]);
+    expect(answers[0]).toMatchObject({ applied: true, correct: false, stateBefore: CardState.New });
+    expect(answers[0].stabilityAfter).toBeGreaterThan(0);
+    const end = events.at(-1)!;
+    expect(end).toMatchObject({ kind: 'session_end', completed: true, answered: 3 });
+  });
+
+  it('records the drill answers FSRS ignores, which never reach the review log', () => {
+    const pool = makePool();
+    const card = { ...pool[0], fsrs: reviewState({ stability: 20 }) };
+    const rest = pool.slice(1);
+    const events: StudyEvent[] = [];
+    const drills = buildDrillExercises('foil_discrimination', [card], [card, ...rest]);
+    const engine = new StudyEngine({
+      pool: [card, ...rest],
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      drillType: 'foil_discrimination',
+      onEvent: (e) => events.push(e),
+    });
+    const persisted = engine.answerDrill([
+      { cardId: card.id, correct: true, misses: 0, picked: undefined },
+    ]);
+    // A hit on a card already in Review changes nothing, so nothing is persisted…
+    expect(persisted).toHaveLength(0);
+    // …but the event log still knows the learner read it correctly.
+    const answer = events.find((e) => e.kind === 'answer')!;
+    expect(answer).toMatchObject({
+      applied: false,
+      correct: true,
+      cardId: card.id,
+      exerciseType: 'foil_discrimination',
+      drillType: 'foil_discrimination',
+      mode: 'drill',
+    });
+  });
+
+  it('records a skipped drill and an abandoned session', () => {
+    const pool = makePool();
+    const events: StudyEvent[] = [];
+    const drills = buildDrillExercises('foil_discrimination', [pool[0]], pool);
+    const engine = new StudyEngine({
+      pool,
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      onEvent: (e) => events.push(e),
+    });
+    engine.skipDrill();
+    engine.finish();
+    expect(events.map((e) => e.kind)).toContain('drill_skip');
+    // The queue emptied on its own before finish() was called.
+    expect(events.filter((e) => e.kind === 'session_end')).toHaveLength(1);
+  });
+
+  it('stays silent when no sink is attached', () => {
+    const pool = makePool();
+    const engine = engineFor(pool, [pool[0].id]);
+    expect(() => engine.rate(4)).not.toThrow();
   });
 });
 

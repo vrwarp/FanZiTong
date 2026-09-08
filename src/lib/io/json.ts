@@ -60,6 +60,12 @@ export const reviewLogSchema = z.object({
   exerciseType: z.enum(['rapid_recognition', 'cloze', 'realia_menu', 'foil_discrimination']),
   reviewTimestamp: isoDate,
   timeSpentMs: z.number().nonnegative(),
+  /**
+   * Zod strips what it does not declare, so anything missing here is silently
+   * dropped on restore. `stateBefore` is what tells a review apart from a new
+   * card's learning steps, and losing it miscounts the daily review budget.
+   */
+  stateBefore: z.number().int().min(0).max(3).optional(),
   stability: z.number(),
   difficulty: z.number(),
   scheduled_days: z.number(),

@@ -12,6 +12,7 @@ import { useCards, useReviewLogs } from '@/hooks/useCards';
 import { computeDashboard } from '@/hooks/useDashboard';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
+import { recordStudyEvent } from '@/lib/analytics/recorder';
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import { StudyEngine, summarizeResults } from '@/lib/session/engine';
 import {
@@ -59,6 +60,7 @@ function StudySession({
         queue,
         scheduler: createScheduler(settings),
         interleaveDrills: true,
+        onEvent: recordStudyEvent,
         restore: saved.length > 0 ? paused?.progress : undefined,
       }),
       saved.length > 0,

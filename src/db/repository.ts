@@ -1,3 +1,4 @@
+import { STUDY_EVENT_LIMIT, type StudyEvent } from '@/lib/analytics/events';
 import {
   DEFAULT_SETTINGS,
   type AiBatch,
@@ -77,6 +78,26 @@ export function createRepository(db: FanZiTongDatabase = defaultDb) {
       });
     },
 
+    // ---- study events -------------------------------------------------
+    async addStudyEvent(event: StudyEvent): Promise<void> {
+      await db.studyEvents.put(event);
+    },
+    async getAllStudyEvents(): Promise<StudyEvent[]> {
+      return db.studyEvents.orderBy('at').toArray();
+    },
+    /**
+     * Drop the oldest events once the log outgrows its budget. Called when a
+     * session ends, so the trim never competes with an answer being saved.
+     */
+    async trimStudyEvents(limit: number = STUDY_EVENT_LIMIT): Promise<number> {
+      const total = await db.studyEvents.count();
+      if (total <= limit) return 0;
+      const excess = total - limit;
+      const oldest = await db.studyEvents.orderBy('at').limit(excess).primaryKeys();
+      await db.studyEvents.bulkDelete(oldest);
+      return oldest.length;
+    },
+
     // ---- settings ---------------------------------------------------
     async getSettings(): Promise<UserSettings> {
       const row = await db.settings.get('user');
@@ -109,7 +130,7 @@ export function createRepository(db: FanZiTongDatabase = defaultDb) {
     async clearAll(): Promise<void> {
       await db.transaction(
         'rw',
-        [db.cards, db.reviewLogs, db.settings, db.meta, db.aiBatches, db.aiChanges],
+        [db.cards, db.reviewLogs, db.settings, db.meta, db.aiBatches, db.aiChanges, db.studyEvents],
         async () => {
           await Promise.all([
             db.cards.clear(),
@@ -118,6 +139,7 @@ export function createRepository(db: FanZiTongDatabase = defaultDb) {
             db.meta.clear(),
             db.aiBatches.clear(),
             db.aiChanges.clear(),
+            db.studyEvents.clear(),
           ]);
         },
       );

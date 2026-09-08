@@ -110,13 +110,28 @@ jobs:
           # a wrong-architecture or wrong-libc build passes that check and then
           # fails the first time the assistant is asked anything.
           docker run --rm "$IMAGE:ci" claude --version
+          # A bind-mounted /data, which is how a NAS runs this: the host
+          # directory replaces the image's, so none of the directories baked
+          # into it are there. The workspace is one of them, and a conversation
+          # spawned in a directory that does not exist fails with ENOENT
+          # against the binary — reported as the binary failing to launch, libc
+          # and all. So check the sidecar makes it, not that the image has it.
+          mkdir -p "$PWD/bind-data"
+          chmod 777 "$PWD/bind-data"
           docker run -d --name agent-smoke -p 8787:8787 \
-            -e FZT_AGENT_TOKEN=smoke-test "$IMAGE:ci"
+            -v "$PWD/bind-data:/data" -e FZT_AGENT_TOKEN=smoke-test "$IMAGE:ci"
           for _ in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:8787/healthz; then
               echo
               echo "The sidecar answered its health check."
-              exit 0
+              if [ -d "$PWD/bind-data/workspace" ]; then
+                echo "It made its workspace in a volume that did not have one."
+                exit 0
+              fi
+              echo "::error::The sidecar is serving but has no workspace:" \
+                   "every conversation would fail to spawn."
+              docker logs agent-smoke
+              exit 1
             fi
             sleep 1
           done

@@ -6,6 +6,7 @@
  */
 import { createServer } from 'node:http';
 import { execFile } from 'node:child_process';
+import { mkdirSync } from 'node:fs';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -22,6 +23,7 @@ import { AuthService, type AccountIdentity } from './auth';
 import { realSdk as sdkForAccount } from './sdk';
 import { loadConfig, type AgentConfig } from './config';
 import { createHttpHandler, readCookie } from './http';
+import { diagnoseLaunch } from './diagnose';
 import { createLogger, type Logger } from './log';
 import { SessionRegistry } from './registry';
 import { newConversationId } from './session';
@@ -81,6 +83,37 @@ function findClaudeBinary(): string {
   return 'claude';
 }
 
+/**
+ * The directory conversations run in, made sure it is there.
+ *
+ * A conversation is spawned with this as its working directory, and spawn
+ * reports a missing working directory as ENOENT against the command it was
+ * given — which the SDK then describes as the Claude Code binary failing to
+ * launch, with a mismatched libc as the suggested cause. So every turn fails
+ * with a message about the wrong thing entirely. The container creates
+ * /data/workspace in the image, which is exactly the directory an operator
+ * who bind-mounts /data from the host does not get.
+ *
+ * Nothing is kept here — the model has no file tools — so where it points
+ * matters less than that it exists: a directory that cannot be created is
+ * worth a warning and the one this process is already running in, not a
+ * sidecar that refuses to answer.
+ */
+export function ensureWorkspace(dir: string, log: Logger): string {
+  try {
+    mkdirSync(dir, { recursive: true });
+    return dir;
+  } catch (error) {
+    const fallback = process.cwd();
+    log.warn('could not create the workspace; conversations will run in the current directory', {
+      dir,
+      fallback,
+      error: String(error),
+    });
+    return fallback;
+  }
+}
+
 function sameToken(expected: string, given: string): boolean {
   // Hash first so the comparison length never leaks the token length.
   const a = createHash('sha256').update(expected).digest();
@@ -99,7 +132,7 @@ type AuthState = 'ok' | 'needs_login' | 'unknown';
  * must never sit behind a process start, and 'unknown' on a cold sidecar
  * becomes the real answer on the next frame.
  */
-function createAuthProbe(log: Logger, config: AgentConfig) {
+function createAuthProbe(log: Logger, config: AgentConfig, binary: string) {
   let cached: { at: number; state: AuthState } | null = null;
   async function probe(): Promise<AuthState> {
     if (cached && Date.now() - cached.at < 60_000) return cached.state;
@@ -108,15 +141,27 @@ function createAuthProbe(log: Logger, config: AgentConfig) {
       state = 'ok';
     } else {
       try {
-        await run(findClaudeBinary(), ['auth', 'status'], {
+        await run(binary, ['auth', 'status'], {
           timeout: 15_000,
           env: { ...process.env, CLAUDE_CONFIG_DIR: config.claudeConfigDir },
         });
         state = 'ok';
       } catch (error) {
-        const code = (error as { code?: number }).code;
+        const code = (error as { code?: number | string }).code;
         state = code === 1 ? 'needs_login' : 'unknown';
-        log.debug('auth probe inconclusive', { code });
+        // An exit status means it ran and answered. An errno means it never
+        // started, and that is worth more than a debug line: it is the same
+        // failure every conversation is about to hit, an hour before anyone
+        // asks the assistant a question.
+        if (typeof code === 'string') {
+          log.error('the bundled Claude Code binary would not start', {
+            binary,
+            code,
+            why: diagnoseLaunch({ binary }) ?? String(error),
+          });
+        } else {
+          log.debug('auth probe inconclusive', { code });
+        }
       }
     }
     cached = { at: Date.now(), state };
@@ -131,7 +176,11 @@ function createAuthProbe(log: Logger, config: AgentConfig) {
  * The SDK reports the account during its startup handshake, so this costs a
  * subprocess and no tokens: the query is closed before a prompt is ever sent.
  */
-async function readAccount(configDir: string, log: Logger): Promise<AccountIdentity | null> {
+async function readAccount(
+  configDir: string,
+  log: Logger,
+  binary: string,
+): Promise<AccountIdentity | null> {
   // An input stream that never produces anything: the handshake is all we want,
   // and a prompt would cost tokens.
   const idle = (async function* () {
@@ -144,6 +193,10 @@ async function readAccount(configDir: string, log: Logger): Promise<AccountIdent
       tools: [],
       settingSources: [],
       cwd: configDir,
+      // The same binary the conversations and the sign-in use. Left to itself
+      // the SDK searches again, and its search is the one that picked the
+      // wrong architecture.
+      pathToClaudeCodeExecutable: binary,
       env: { ...process.env, CLAUDE_CONFIG_DIR: configDir },
     },
   });
@@ -168,14 +221,18 @@ export interface AuthProbe {
 }
 
 export function startServer(
-  config: AgentConfig = loadConfig(),
+  requested: AgentConfig = loadConfig(),
   /** Test seam: a probe that can be made to never answer. */
   overrides: { probeAuth?: AuthProbe } = {},
 ) {
-  const log = createLogger(config.logLevel);
+  const log = createLogger(requested.logLevel);
+  const config: AgentConfig = {
+    ...requested,
+    workspace: ensureWorkspace(requested.workspace, log),
+  };
   const claudeBinary = findClaudeBinary();
   const registry = new SessionRegistry(realSdk, config, log, claudeBinary);
-  const probeAuth = overrides.probeAuth ?? createAuthProbe(log, config);
+  const probeAuth = overrides.probeAuth ?? createAuthProbe(log, config, claudeBinary);
   const failures = new Map<string, { count: number; until: number }>();
 
   const auth = new AuthService({
@@ -184,7 +241,7 @@ export function startServer(
     claudeBinary,
     log,
     allowReclaim: config.allowReclaim,
-    readAccount: (configDir) => readAccount(configDir, log),
+    readAccount: (configDir) => readAccount(configDir, log, claudeBinary),
   });
   void auth.load();
 

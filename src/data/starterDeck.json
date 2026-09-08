@@ -75,7 +75,8 @@
     "老番顛": "lāu-huan-tian",
     "艱苦": "kan-khóo",
     "店仔": "tiàm-á",
-    "紅龜粿": "âng-ku-kué"
+    "紅龜粿": "âng-ku-kué",
+    "歌仔戲": "kua-á-hì"
   },
   "notes": {
     "母湯": "Spells the sound of Taiwanese 毋通 m̄-thang, \"must not\" — the characters are only the sound.",
@@ -9804,6 +9805,626 @@
         "Tā shì shīzizuò de.",
         "She's a Leo.",
         "獅了座|獅孑座"
+      ],
+      [
+        "聖經",
+        "shèng jīng",
+        "The Bible",
+        "christian",
+        "他隨身帶著一本聖經。",
+        "Tā suíshēn dài zhe yì běn Shèngjīng.",
+        "He carries a Bible with him.",
+        "望經|聖輕|聖徑"
+      ],
+      [
+        "聚會",
+        "jù huì",
+        "A gathering, a meeting",
+        "christian",
+        "週三晚上有小組聚會。",
+        "Zhōusān wǎnshàng yǒu xiǎozǔ jùhuì.",
+        "There's a small group meeting on Wednesday night.",
+        "聚曾|聚倉"
+      ],
+      [
+        "頌讚",
+        "sòng zàn",
+        "To extol, to laud",
+        "christian|written",
+        "全會眾一同頌讚。",
+        "Quán huìzhòng yìtóng sòngzàn.",
+        "The whole congregation gave praise together.",
+        "頌譖|頌讜|頌贊"
+      ],
+      [
+        "守望",
+        "shǒu wàng",
+        "To keep watch",
+        "christian|written",
+        "他們為這個城守望禱告。",
+        "Tāmen wèi zhège chéng shǒuwàng dǎogào.",
+        "They keep watch in prayer for this city.",
+        "字望|守聖"
+      ],
+      [
+        "和好",
+        "hé hǎo",
+        "To be reconciled",
+        "christian|general",
+        "兄弟兩個終於和好了。",
+        "Xiōngdì liǎng ge zhōngyú héhǎo le.",
+        "The two brothers were finally reconciled.",
+        "私好|和如|科好"
+      ],
+      [
+        "和睦",
+        "hé mù",
+        "Harmonious, at peace with",
+        "christian|written",
+        "要與眾人和睦相處。",
+        "Yào yǔ zhòngrén hémù xiāngchǔ.",
+        "Live at peace with everyone.",
+        "私睦|科睦"
+      ],
+      [
+        "良心",
+        "liáng xīn",
+        "Conscience",
+        "general",
+        "做這種事要有良心。",
+        "Zuò zhè zhǒng shì yào yǒu liángxīn.",
+        "You need a conscience about this sort of thing.",
+        "食心|良必"
+      ],
+      [
+        "情願",
+        "qíng yuàn",
+        "Willingly; would rather",
+        "written",
+        "我情願走路也不搭車。",
+        "Wǒ qíngyuàn zǒulù yě bù dā chē.",
+        "I'd rather walk than take the bus.",
+        "精願|晴願|請願"
+      ],
+      [
+        "成全",
+        "chéng quán",
+        "To help something come about",
+        "written|general",
+        "謝謝你成全我們。",
+        "Xièxie nǐ chéngquán wǒmen.",
+        "Thank you for making this possible for us.",
+        "城全|成金|戌全"
+      ],
+      [
+        "供給",
+        "gōng jǐ",
+        "To supply",
+        "general",
+        "教會供給他生活費。",
+        "Jiàohuì gōngjǐ tā shēnghuófèi.",
+        "The church supplies his living costs.",
+        "共給|供蛤|供結"
+      ],
+      [
+        "辯論",
+        "biàn lùn",
+        "To debate",
+        "general",
+        "他們為這件事辯論很久。",
+        "Tāmen wèi zhè jiàn shì biànlùn hěn jiǔ.",
+        "They debated this for a long time.",
+        "辦論|辯倫|辯輪"
+      ],
+      [
+        "講論",
+        "jiǎng lùn",
+        "To discourse on",
+        "written|bible",
+        "他在會堂講論這段經文。",
+        "Tā zài huìtáng jiǎnglùn zhè duàn jīngwén.",
+        "He expounded this passage in the synagogue.",
+        "講倫|講輪"
+      ],
+      [
+        "談論",
+        "tán lùn",
+        "To talk about",
+        "general",
+        "大家都在談論這件事。",
+        "Dàjiā dōu zài tánlùn zhè jiàn shì.",
+        "Everyone is talking about it.",
+        "淡論|談倫|談輪"
+      ],
+      [
+        "怨言",
+        "yuàn yán",
+        "A complaint, grumbling",
+        "bible|written",
+        "百姓中有怨言。",
+        "Bǎixìng zhōng yǒu yuànyán.",
+        "There was grumbling among the people.",
+        "怨音|怨信"
+      ],
+      [
+        "惡行",
+        "è xíng",
+        "An evil deed",
+        "bible|written",
+        "他的惡行終於被揭發。",
+        "Tā de èxíng zhōngyú bèi jiēfā.",
+        "His misdeeds were finally exposed.",
+        "亞行|惡術|惡衍"
+      ],
+      [
+        "作孽",
+        "zuò niè",
+        "To do wrong, to bring trouble on oneself",
+        "folk|written",
+        "阿嬤說這樣是在作孽。",
+        "Āmà shuō zhèyàng shì zài zuòniè.",
+        "Grandma says this is asking for trouble.",
+        "做孽|昨孽|詐孽"
+      ],
+      [
+        "管教",
+        "guǎn jiào",
+        "To discipline (a child)",
+        "general|family",
+        "孩子要好好管教。",
+        "Háizi yào hǎohǎo guǎnjiào.",
+        "Children need proper discipline.",
+        "管效|管救"
+      ],
+      [
+        "孩童",
+        "hái tóng",
+        "A child (literary)",
+        "bible|written",
+        "孩童也來到他面前。",
+        "Háitóng yě lái dào tā miànqián.",
+        "The children came to him too.",
+        "該童|孩重"
+      ],
+      [
+        "老年",
+        "lǎo nián",
+        "Old age",
+        "general",
+        "他老年還在學新東西。",
+        "Tā lǎonián hái zài xué xīn dōngxi.",
+        "In old age he was still learning new things.",
+        "考年|孝年"
+      ],
+      [
+        "老邁",
+        "lǎo mài",
+        "Aged, advanced in years",
+        "bible|written",
+        "他年紀老邁還是很清楚。",
+        "Tā niánjì lǎomài háishì hěn qīngchǔ.",
+        "He is advanced in years and still sharp.",
+        "考邁|老邊|孝邁"
+      ],
+      [
+        "後代",
+        "hòu dài",
+        "Later generations",
+        "general|bible",
+        "這是留給後代的。",
+        "Zhè shì liú gěi hòudài de.",
+        "This is left for later generations.",
+        "復代|後伐|徒代"
+      ],
+      [
+        "良人",
+        "liáng rén",
+        "A husband (literary)",
+        "bible|written",
+        "雅歌裡稱他為良人。",
+        "Yǎgē lǐ chēng tā wéi liángrén.",
+        "The Song of Songs calls him her beloved.",
+        "食人|良入|良仁"
+      ],
+      [
+        "身子",
+        "shēn zi",
+        "The body",
+        "colloquial",
+        "她身子不太好。",
+        "Tā shēnzi bú tài hǎo.",
+        "She isn't in good health.",
+        "躬子|身了|身孑"
+      ],
+      [
+        "肉身",
+        "ròu shēn",
+        "The physical body, incarnate",
+        "christian|buddhist",
+        "道成了肉身。",
+        "Dào chéng le ròushēn.",
+        "The Word became flesh.",
+        "內身|肉躬"
+      ],
+      [
+        "情慾",
+        "qíng yù",
+        "Desire, passion",
+        "christian|written",
+        "這段講的是情慾的問題。",
+        "Zhè duàn jiǎng de shì qíngyù de wèntí.",
+        "This passage is about the problem of desire.",
+        "精慾|晴慾|請慾"
+      ],
+      [
+        "氣息",
+        "qì xí",
+        "Breath",
+        "bible|written",
+        "凡有氣息的都要讚美。",
+        "Fán yǒu qìxí de dōu yào zànměi.",
+        "Let everything that has breath give praise.",
+        "汽息|氧息"
+      ],
+      [
+        "腳步",
+        "jiǎo bù",
+        "Footsteps, pace",
+        "general",
+        "他放慢了腳步。",
+        "Tā fàng màn le jiǎobù.",
+        "He slowed his pace.",
+        "角步|腳涉|腳歩"
+      ],
+      [
+        "親手",
+        "qīn shǒu",
+        "With one's own hands",
+        "general",
+        "這是她親手做的。",
+        "Zhè shì tā qīnshǒu zuò de.",
+        "She made this with her own hands.",
+        "親毛|親才"
+      ],
+      [
+        "同心",
+        "tóng xīn",
+        "Of one mind",
+        "christian|written",
+        "大家同心把事情做完。",
+        "Dàjiā tóngxīn bǎ shìqíng zuò wán.",
+        "Everyone pulled together and finished it.",
+        "冋心|同必|向心"
+      ],
+      [
+        "互相",
+        "hù xiāng",
+        "Mutually, each other",
+        "general",
+        "我們要互相幫助。",
+        "Wǒmen yào hùxiāng bāngzhù.",
+        "We should help one another.",
+        "五相|互柏|互想"
+      ],
+      [
+        "帶領",
+        "dài lǐng",
+        "To lead",
+        "christian|general",
+        "他帶領大家唱詩。",
+        "Tā dàilǐng dàjiā chàng shī.",
+        "He led everyone in the hymn.",
+        "滯領|蒂領"
+      ],
+      [
+        "安靜",
+        "ān jìng",
+        "Quiet, still",
+        "general",
+        "教堂裡很安靜。",
+        "Jiàotáng lǐ hěn ānjìng.",
+        "It is very quiet in the church.",
+        "宋靜|宗靜"
+      ],
+      [
+        "信息",
+        "xìn xí",
+        "A message; the sermon",
+        "christian",
+        "今天的信息很有力量。",
+        "Jīntiān de xìnxí hěn yǒu lìliàng.",
+        "Today's message was powerful.",
+        "佶息|訊息|言息"
+      ],
+      [
+        "報信",
+        "bào xìn",
+        "To bring word",
+        "bible|written",
+        "有人跑去報信。",
+        "Yǒu rén pǎo qù bàoxìn.",
+        "Someone ran to bring the news.",
+        "服信|報佶|執信"
+      ],
+      [
+        "發聲",
+        "fā shēng",
+        "To speak out",
+        "general",
+        "他為弱勢發聲。",
+        "Tā wèi ruòshì fāshēng.",
+        "He speaks up for the vulnerable.",
+        "髮聲|發殼|廢聲"
+      ],
+      [
+        "發光",
+        "fā guāng",
+        "To shine",
+        "christian|general",
+        "你們要在世上發光。",
+        "Nǐmen yào zài shì shàng fāguāng.",
+        "You are to shine in the world.",
+        "髮光|發先|廢光"
+      ],
+      [
+        "閃電",
+        "shǎn diàn",
+        "Lightning",
+        "general",
+        "閃電照亮了整個天空。",
+        "Shǎndiàn zhàoliàng le zhěnggè tiānkōng.",
+        "Lightning lit the whole sky.",
+        "閂電|閃雷|門電"
+      ],
+      [
+        "暴風",
+        "bào fēng",
+        "A gale, a storm",
+        "bible|general",
+        "海上颳起了暴風。",
+        "Hǎi shàng guā qǐ le bàofēng.",
+        "A gale blew up on the sea.",
+        "暴鳳|暴楓"
+      ],
+      [
+        "洪水",
+        "hóng shuǐ",
+        "A flood",
+        "bible|general",
+        "洪水淹沒了整個村子。",
+        "Hóngshuǐ yānmò le zhěnggè cūnzi.",
+        "The flood swallowed the whole village.",
+        "洪永|洪冰"
+      ],
+      [
+        "日出",
+        "rì chū",
+        "Sunrise",
+        "general",
+        "我們上山看日出。",
+        "Wǒmen shàng shān kàn rìchū.",
+        "We went up the mountain to see the sunrise.",
+        "口出|日山|曰出"
+      ],
+      [
+        "日落",
+        "rì luò",
+        "Sunset",
+        "general",
+        "日落以後就冷了。",
+        "Rìluò yǐhòu jiù lěng le.",
+        "It gets cold after sunset.",
+        "口落|曰落|目落"
+      ],
+      [
+        "月亮",
+        "yuè liàng",
+        "The moon",
+        "general",
+        "今晚的月亮很圓。",
+        "Jīnwǎn de yuèliàng hěn yuán.",
+        "The moon is full tonight.",
+        "用亮|舟亮"
+      ],
+      [
+        "白日",
+        "bái rì",
+        "Daytime",
+        "written",
+        "白日做夢是不行的。",
+        "Báirì zuòmèng shì bù xíng de.",
+        "Daydreaming won't do.",
+        "自日|白口|百日"
+      ],
+      [
+        "野地",
+        "yě dì",
+        "Open country, the fields",
+        "bible|written",
+        "野地的花不勞苦。",
+        "Yědì de huā bù láokǔ.",
+        "The flowers of the field do not toil.",
+        "墅地|野池|埜地"
+      ],
+      [
+        "草場",
+        "cǎo chǎng",
+        "A pasture",
+        "bible|written",
+        "羊在青草場上吃草。",
+        "Yáng zài qīng cǎochǎng shàng chī cǎo.",
+        "The sheep graze in green pastures.",
+        "早場|草湯|卓場"
+      ],
+      [
+        "鴿子",
+        "gē zi",
+        "A dove, a pigeon",
+        "bible|general",
+        "鴿子啣著橄欖枝回來。",
+        "Gēzi xián zhe gǎnlǎn zhī huílái.",
+        "The dove came back with an olive branch.",
+        "鴿了|鴿孑"
+      ],
+      [
+        "柏樹",
+        "bó shù",
+        "A cypress",
+        "bible|general",
+        "路旁種了一排柏樹。",
+        "Lù páng zhòng le yì pái bóshù.",
+        "A row of cypresses is planted by the road.",
+        "相樹|柏對|柑樹"
+      ],
+      [
+        "乳香",
+        "rǔ xiāng",
+        "Frankincense",
+        "christian|bible",
+        "他們獻上黃金和乳香。",
+        "Tāmen xiàn shàng huángjīn hé rǔxiāng.",
+        "They offered gold and frankincense.",
+        "孔香|乳杳|亂香"
+      ],
+      [
+        "麻衣",
+        "má yī",
+        "Sackcloth",
+        "bible|written",
+        "他披麻衣坐在灰中。",
+        "Tā pī máyī zuò zài huī zhōng.",
+        "He sat in ashes wearing sackcloth.",
+        "摩衣|磨衣|嘛衣"
+      ],
+      [
+        "外衣",
+        "wài yī",
+        "An outer garment, a coat",
+        "general",
+        "他把外衣脫下來。",
+        "Tā bǎ wàiyī tuō xiàlái.",
+        "He took off his coat.",
+        "死衣|夕衣"
+      ],
+      [
+        "腰帶",
+        "yāo dài",
+        "A belt",
+        "general",
+        "這條腰帶是皮的。",
+        "Zhè tiáo yāodài shì pí de.",
+        "This belt is leather.",
+        "腰滯|腰蒂"
+      ],
+      [
+        "繩子",
+        "shéng zi",
+        "A rope",
+        "general",
+        "用繩子把箱子綁好。",
+        "Yòng shéngzi bǎ xiāngzi bǎng hǎo.",
+        "Tie the box up with rope.",
+        "繩了|繩孑"
+      ],
+      [
+        "木頭",
+        "mù tóu",
+        "Wood, a piece of timber",
+        "general",
+        "這張桌子是實木頭做的。",
+        "Zhè zhāng zhuōzi shì shí mùtóu zuò de.",
+        "This table is made of solid wood.",
+        "米頭|木預|本頭"
+      ],
+      [
+        "木偶",
+        "mù ǒu",
+        "A wooden puppet",
+        "folk|taiwan",
+        "布袋戲用的是木偶。",
+        "Bùdàixì yòng de shì mù'ǒu.",
+        "Glove puppet theatre uses wooden puppets.",
+        "米偶|本偶"
+      ],
+      [
+        "貨物",
+        "huò wù",
+        "Goods, cargo",
+        "general",
+        "船上載滿了貨物。",
+        "Chuán shàng zài mǎn le huòwù.",
+        "The ship is loaded with cargo.",
+        "貸物|賃物"
+      ],
+      [
+        "錢財",
+        "qián cái",
+        "Money and possessions",
+        "bible|written",
+        "錢財是身外之物。",
+        "Qiáncái shì shēnwài zhī wù.",
+        "Money is a thing outside oneself.",
+        "淺財|賤財"
+      ],
+      [
+        "工價",
+        "gōng jià",
+        "Wages",
+        "bible|written",
+        "當天要付工價。",
+        "Dāngtiān yào fù gōngjià.",
+        "The wages must be paid the same day.",
+        "土價|士價"
+      ],
+      [
+        "工人",
+        "gōng rén",
+        "A worker",
+        "general",
+        "工人天亮就到了。",
+        "Gōngrén tiān liàng jiù dào le.",
+        "The workers arrived at daybreak.",
+        "土人|工入|士人"
+      ],
+      [
+        "謀士",
+        "móu shì",
+        "A counsellor, an adviser",
+        "bible|history",
+        "王身邊有幾位謀士。",
+        "Wáng shēnbiān yǒu jǐ wèi móushì.",
+        "The king has several counsellors.",
+        "謀土|謀工"
+      ],
+      [
+        "元帥",
+        "yuán shuài",
+        "A marshal, a supreme commander",
+        "history|folk",
+        "這位神被稱為元帥。",
+        "Zhè wèi shén bèi chēng wéi yuánshuài.",
+        "This deity is titled Marshal.",
+        "原帥|元師"
+      ],
+      [
+        "騎馬",
+        "qí mǎ",
+        "To ride a horse",
+        "general",
+        "他們騎馬進城。",
+        "Tāmen qí mǎ jìn chéng.",
+        "They rode into the city.",
+        "騎鳥|騎焉"
+      ],
+      [
+        "瞎眼",
+        "xiā yǎn",
+        "Blind",
+        "bible|written",
+        "那人生來就瞎眼。",
+        "Nà rén shēnglái jiù xiāyǎn.",
+        "That man was born blind.",
+        "嚇眼|瞎眠|暇眼"
       ]
     ],
     "slang": [
@@ -16809,6 +17430,686 @@
         "Xiànchǎng yǒu liǎngqiān rén.",
         "There were two thousand people at the venue.",
         "規場|現湯|視場"
+      ],
+      [
+        "作業",
+        "zuò yè",
+        "Homework; an operation",
+        "general",
+        "作業還沒寫完。",
+        "Zuòyè hái méi xiě wán.",
+        "The homework isn't finished.",
+        "做業|昨業|詐業"
+      ],
+      [
+        "認證",
+        "rèn zhèng",
+        "Certification; to verify",
+        "tech|online",
+        "帳號需要認證。",
+        "Zhànghào xūyào rènzhèng.",
+        "The account needs verifying.",
+        "認誑|認澄|認燈"
+      ],
+      [
+        "同步",
+        "tóng bù",
+        "To sync; simultaneous",
+        "tech|acg",
+        "台灣和日本同步播出。",
+        "Táiwān hé Rìběn tóngbù bōchū.",
+        "It airs in Taiwan and Japan at the same time.",
+        "冋步|同涉|向步"
+      ],
+      [
+        "回合",
+        "huí hé",
+        "A round, a turn",
+        "gaming",
+        "這場打了十個回合。",
+        "Zhè chǎng dǎ le shí ge huíhé.",
+        "This match went ten rounds.",
+        "囚合|回契|因合"
+      ],
+      [
+        "副本",
+        "fù běn",
+        "A dungeon instance; a duplicate copy",
+        "gaming",
+        "我們去打副本。",
+        "Wǒmen qù dǎ fùběn.",
+        "Let's go run the dungeon.",
+        "福本|副木|副未"
+      ],
+      [
+        "分數",
+        "fēn shù",
+        "A score, a mark",
+        "gaming|general",
+        "這次的分數比較高。",
+        "Zhè cì de fēnshù bǐjiào gāo.",
+        "The score is higher this time.",
+        "公數|分樓"
+      ],
+      [
+        "入門",
+        "rù mén",
+        "To get started; a beginner's guide",
+        "general",
+        "這本很適合入門。",
+        "Zhè běn hěn shìhé rùmén.",
+        "This one is good for getting started.",
+        "人門|入閃|八門"
+      ],
+      [
+        "作弊",
+        "zuò bì",
+        "To cheat",
+        "gaming|general",
+        "考試作弊會被記過。",
+        "Kǎoshì zuòbì huì bèi jìguò.",
+        "Cheating in the exam gets you a demerit.",
+        "做弊|昨弊|詐弊"
+      ],
+      [
+        "操控",
+        "cāo kòng",
+        "To control, to manipulate",
+        "gaming",
+        "這台機器很難操控。",
+        "Zhè tái jīqì hěn nán cāokòng.",
+        "This machine is hard to control.",
+        "操空|操腔"
+      ],
+      [
+        "驅動",
+        "qū dòng",
+        "A driver; to drive",
+        "tech",
+        "顯卡驅動要更新。",
+        "Xiǎnkǎ qūdòng yào gēngxīn.",
+        "The graphics driver needs updating.",
+        "驅働|驅勤"
+      ],
+      [
+        "輸入",
+        "shū rù",
+        "To enter, to input",
+        "tech",
+        "請輸入你的密碼。",
+        "Qǐng shūrù nǐ de mìmǎ.",
+        "Please enter your password.",
+        "輸人|輸八"
+      ],
+      [
+        "信箱",
+        "xìn xiāng",
+        "A mailbox, an inbox",
+        "tech|general",
+        "獎品會寄到信箱。",
+        "Jiǎngpǐn huì jì dào xìnxiāng.",
+        "The prize goes to your inbox.",
+        "佶箱|信筍|訊箱"
+      ],
+      [
+        "文件",
+        "wén jiàn",
+        "A document, a file",
+        "tech|general",
+        "這個文件打不開。",
+        "Zhège wénjiàn dǎ bù kāi.",
+        "This file won't open.",
+        "父件|交件"
+      ],
+      [
+        "字體",
+        "zì tǐ",
+        "A typeface, a font",
+        "tech|language",
+        "這個字體很好看。",
+        "Zhège zìtǐ hěn hǎokàn.",
+        "This typeface is lovely.",
+        "宇體|字禮|守體"
+      ],
+      [
+        "發布",
+        "fā bù",
+        "To announce, to release",
+        "media|tech",
+        "官方發布了新消息。",
+        "Guānfāng fābù le xīn xiāoxi.",
+        "The publisher released new information.",
+        "髮布|發有|廢布"
+      ],
+      [
+        "限量",
+        "xiàn liàng",
+        "Limited edition",
+        "acg",
+        "這是限量版的。",
+        "Zhè shì xiànliàng bǎn de.",
+        "This is a limited edition.",
+        "限暈|限重"
+      ],
+      [
+        "贈品",
+        "zèng pǐn",
+        "A free gift with purchase",
+        "acg",
+        "預購有贈品。",
+        "Yùgòu yǒu zèngpǐn.",
+        "Pre-orders come with a gift.",
+        "贈晶|贈區"
+      ],
+      [
+        "畫冊",
+        "huà cè",
+        "An art book",
+        "acg",
+        "這本畫冊收了很多原稿。",
+        "Zhè běn huàcè shōu le hěn duō yuángǎo.",
+        "This art book collects a lot of original art.",
+        "劃冊|書冊"
+      ],
+      [
+        "輕小說",
+        "qīng xiǎo shuō",
+        "A light novel",
+        "acg|loanword",
+        "他在看輕小說。",
+        "Tā zài kàn qīng xiǎoshuō.",
+        "He's reading a light novel.",
+        "經小說|輕少說|輕小悅"
+      ],
+      [
+        "短篇小說",
+        "duǎn piān xiǎo shuō",
+        "A short story",
+        "literature",
+        "這是一本短篇小說集。",
+        "Zhè shì yì běn duǎnpiān xiǎoshuō jí.",
+        "This is a short story collection.",
+        "知篇小說|短篇少說|短篇小悅"
+      ],
+      [
+        "散文",
+        "sǎn wén",
+        "Prose, an essay",
+        "literature",
+        "她的散文寫得很細。",
+        "Tā de sǎnwén xiě de hěn xì.",
+        "Her prose is finely observed.",
+        "散父|散交"
+      ],
+      [
+        "書籍",
+        "shū jí",
+        "Books",
+        "general",
+        "這區的書籍都打折。",
+        "Zhè qū de shūjí dōu dǎzhé.",
+        "The books in this section are all discounted.",
+        "晝籍|畫籍"
+      ],
+      [
+        "文獻",
+        "wén xiàn",
+        "Literature, source documents",
+        "general",
+        "他查了很多文獻。",
+        "Tā chá le hěn duō wénxiàn.",
+        "He looked through a lot of sources.",
+        "父獻|文戲|交獻"
+      ],
+      [
+        "列傳",
+        "liè zhuàn",
+        "Biographies (a history genre)",
+        "history|literature",
+        "史記裡有很多列傳。",
+        "Shǐjì lǐ yǒu hěn duō lièzhuàn.",
+        "The Shiji contains many biographies.",
+        "列傅|列轉"
+      ],
+      [
+        "史記",
+        "shǐ jì",
+        "The Records of the Grand Historian",
+        "history|literature",
+        "史記是司馬遷寫的。",
+        "Shǐjì shì Sīmǎ Qiān xiě de.",
+        "The Shiji was written by Sima Qian.",
+        "事記|史紀|史計"
+      ],
+      [
+        "前傳",
+        "qián zhuàn",
+        "A prequel",
+        "acg",
+        "前傳講的是二十年前。",
+        "Qiánzhuàn jiǎng de shì èrshí nián qián.",
+        "The prequel is set twenty years earlier.",
+        "剪傳|前傅|前轉"
+      ],
+      [
+        "預告片",
+        "yù gào piàn",
+        "A trailer",
+        "media",
+        "預告片已經上線了。",
+        "Yùgàopiàn yǐjīng shàngxiàn le.",
+        "The trailer is already up.",
+        "頭告片|預害片|預告爿"
+      ],
+      [
+        "恐怖片",
+        "kǒng bù piàn",
+        "A horror film",
+        "media",
+        "我不敢看恐怖片。",
+        "Wǒ bù gǎn kàn kǒngbùpiàn.",
+        "I can't watch horror films.",
+        "恐怖爿|恐怖斤"
+      ],
+      [
+        "電視劇",
+        "diàn shì jù",
+        "A television drama",
+        "media",
+        "這齣電視劇很紅。",
+        "Zhè chū diànshìjù hěn hóng.",
+        "This TV drama is very popular.",
+        "雷視劇|電現劇|電視據"
+      ],
+      [
+        "電視",
+        "diàn shì",
+        "Television",
+        "media|general",
+        "他把電視關掉了。",
+        "Tā bǎ diànshì guān diào le.",
+        "He turned the television off.",
+        "雷視|電現|雲視"
+      ],
+      [
+        "歌仔戲",
+        "gē zǐ xì",
+        "Taiwanese opera",
+        "acg|taiwan",
+        "阿嬤最愛看歌仔戲。",
+        "Āmà zuì ài kàn gēzǐxì.",
+        "Grandma loves Taiwanese opera.",
+        "哥仔戲|歌仟戲|歌仔獻"
+      ],
+      [
+        "交響樂",
+        "jiāo xiǎng yuè",
+        "A symphony",
+        "media",
+        "這是動畫的交響樂版。",
+        "Zhè shì dònghuà de jiāoxiǎngyuè bǎn.",
+        "This is the symphonic version of the anime score.",
+        "文響樂|交響藥"
+      ],
+      [
+        "聲帶",
+        "shēng dài",
+        "A soundtrack; vocal cords",
+        "media",
+        "原聲帶下個月發行。",
+        "Yuánshēngdài xià ge yuè fāxíng.",
+        "The original soundtrack comes out next month.",
+        "殼帶|聲滯|罄帶"
+      ],
+      [
+        "歌星",
+        "gē xīng",
+        "A singing star",
+        "media",
+        "她以前是歌星。",
+        "Tā yǐqián shì gēxīng.",
+        "She used to be a singer.",
+        "哥星|欹星"
+      ],
+      [
+        "素描",
+        "sù miáo",
+        "A pencil sketch",
+        "acg",
+        "他每天練素描。",
+        "Tā měitiān liàn sùmiáo.",
+        "He practises sketching every day.",
+        "索描|素貓|紊描"
+      ],
+      [
+        "奇幻",
+        "qí huàn",
+        "Fantasy (the genre)",
+        "acg",
+        "我比較喜歡奇幻題材。",
+        "Wǒ bǐjiào xǐhuān qíhuàn tícái.",
+        "I prefer fantasy stories.",
+        "寄幻|崎幻"
+      ],
+      [
+        "法術",
+        "fǎ shù",
+        "A spell, sorcery",
+        "acg|gaming",
+        "他會一些法術。",
+        "Tā huì yìxiē fǎshù.",
+        "He knows a few spells.",
+        "怯術|法行|劫術"
+      ],
+      [
+        "術士",
+        "shù shì",
+        "A sorcerer",
+        "acg|gaming",
+        "隊上缺一個術士。",
+        "Duì shàng quē yí ge shùshì.",
+        "The party needs a sorcerer.",
+        "行士|術土|術工"
+      ],
+      [
+        "妖精",
+        "yāo jīng",
+        "A fairy, a sprite",
+        "acg",
+        "森林裡有妖精。",
+        "Sēnlín lǐ yǒu yāojīng.",
+        "There are fairies in the forest.",
+        "妖情|妖清"
+      ],
+      [
+        "領主",
+        "lǐng zhǔ",
+        "A lord of a domain",
+        "acg",
+        "這座城的領主很年輕。",
+        "Zhè zuò chéng de lǐngzhǔ hěn niánqīng.",
+        "The lord of this city is young.",
+        "領王|領住"
+      ],
+      [
+        "神兵",
+        "shén bīng",
+        "A divine weapon; celestial troops",
+        "acg",
+        "他拿到了傳說中的神兵。",
+        "Tā ná dào le chuánshuō zhōng de shénbīng.",
+        "He obtained the legendary weapon.",
+        "伸兵|祖兵"
+      ],
+      [
+        "頭盔",
+        "tóu kuī",
+        "A helmet",
+        "gaming|general",
+        "騎車要戴頭盔。",
+        "Qí chē yào dài tóukuī.",
+        "Wear a helmet when you ride.",
+        "預盔|頑盔"
+      ],
+      [
+        "合金",
+        "hé jīn",
+        "An alloy",
+        "acg|tech",
+        "這是特殊合金做的。",
+        "Zhè shì tèshū héjīn zuò de.",
+        "This is made of a special alloy.",
+        "契金|合全|令金"
+      ],
+      [
+        "骰子",
+        "tóu zi",
+        "Dice",
+        "gaming",
+        "輪到你擲骰子。",
+        "Lún dào nǐ zhì tóuzi.",
+        "It's your turn to roll the dice.",
+        "骰了|骰孑"
+      ],
+      [
+        "傳送",
+        "chuán sòng",
+        "To teleport; to transmit",
+        "gaming|tech",
+        "用卷軸可以傳送。",
+        "Yòng juànzhóu kěyǐ chuánsòng.",
+        "You can teleport with a scroll.",
+        "傅送|轉送"
+      ],
+      [
+        "戰爭",
+        "zhàn zhēng",
+        "War",
+        "general|acg",
+        "戰爭持續了十年。",
+        "Zhànzhēng chíxù le shí nián.",
+        "The war lasted ten years.",
+        "獸爭|彈爭"
+      ],
+      [
+        "殺手",
+        "shā shǒu",
+        "An assassin",
+        "acg",
+        "這部片的主角是殺手。",
+        "Zhè bù piàn de zhǔjué shì shāshǒu.",
+        "The lead in this film is an assassin.",
+        "剎手|殺毛|設手"
+      ],
+      [
+        "城鎮",
+        "chéng zhèn",
+        "A town",
+        "acg|general",
+        "他們到了下一個城鎮。",
+        "Tāmen dào le xià yí ge chéngzhèn.",
+        "They reached the next town.",
+        "成鎮|誠鎮"
+      ],
+      [
+        "沙漠",
+        "shā mò",
+        "A desert",
+        "general",
+        "他們穿過沙漠。",
+        "Tāmen chuān guò shāmò.",
+        "They crossed the desert.",
+        "砂漠|紗漠|炒漠"
+      ],
+      [
+        "地帶",
+        "dì dài",
+        "A zone, a belt",
+        "general",
+        "這是危險地帶。",
+        "Zhè shì wéixiǎn dìdài.",
+        "This is a danger zone.",
+        "池帶|地滯|他帶"
+      ],
+      [
+        "能源",
+        "néng yuán",
+        "Energy (as a resource)",
+        "general|tech",
+        "能源快用完了。",
+        "Néngyuán kuài yòng wán le.",
+        "The energy is nearly used up.",
+        "態源|熊源"
+      ],
+      [
+        "科技",
+        "kē jì",
+        "Technology",
+        "tech",
+        "這是最新的科技。",
+        "Zhè shì zuì xīn de kējì.",
+        "This is the latest technology.",
+        "和技|料技"
+      ],
+      [
+        "電子",
+        "diàn zǐ",
+        "Electronic",
+        "tech",
+        "這是電子版的。",
+        "Zhè shì diànzǐ bǎn de.",
+        "This is the electronic edition.",
+        "雷子|電了|雲子"
+      ],
+      [
+        "壓力",
+        "yā lì",
+        "Pressure, stress",
+        "general",
+        "他最近壓力很大。",
+        "Tā zuìjìn yālì hěn dà.",
+        "He's been under a lot of stress lately.",
+        "押力|壓刀|壓九"
+      ],
+      [
+        "心情",
+        "xīn qíng",
+        "Mood",
+        "general",
+        "今天心情不錯。",
+        "Jīntiān xīnqíng búcuò.",
+        "I'm in a good mood today.",
+        "必情|心精|心晴"
+      ],
+      [
+        "生活",
+        "shēng huó",
+        "Life, daily living",
+        "general",
+        "他的生活很規律。",
+        "Tā de shēnghuó hěn guīlǜ.",
+        "He leads a very regular life.",
+        "牛活|生話|生括"
+      ],
+      [
+        "看法",
+        "kàn fǎ",
+        "A view, an opinion",
+        "general",
+        "我想聽聽你的看法。",
+        "Wǒ xiǎng tīngtīng nǐ de kànfǎ.",
+        "I'd like to hear your view.",
+        "眷法|看怯|看劫"
+      ],
+      [
+        "手段",
+        "shǒu duàn",
+        "Means, methods",
+        "general",
+        "他不擇手段。",
+        "Tā bù zé shǒuduàn.",
+        "He stops at nothing.",
+        "毛段|才段"
+      ],
+      [
+        "原因",
+        "yuán yīn",
+        "A reason, a cause",
+        "general",
+        "原因還在調查。",
+        "Yuányīn hái zài diàochá.",
+        "The cause is still being investigated.",
+        "元因|原音|原回"
+      ],
+      [
+        "回覆",
+        "huí fù",
+        "To reply",
+        "online|general",
+        "他一直沒有回覆。",
+        "Tā yìzhí méiyǒu huífù.",
+        "He still hasn't replied.",
+        "囚覆|因覆"
+      ],
+      [
+        "報名",
+        "bào míng",
+        "To sign up",
+        "general",
+        "報名到月底截止。",
+        "Bàomíng dào yuèdǐ jiézhǐ.",
+        "Sign-ups close at the end of the month.",
+        "服名|報多|執名"
+      ],
+      [
+        "紅包",
+        "hóng bāo",
+        "A red envelope of money",
+        "general|festival|taiwan",
+        "過年小孩會拿到紅包。",
+        "Guònián xiǎohái huì ná dào hóngbāo.",
+        "Children get red envelopes at New Year.",
+        "江包|缸包|紅句"
+      ],
+      [
+        "計程車",
+        "jì chéng chē",
+        "A taxi",
+        "general|taiwan",
+        "我們搭計程車回去。",
+        "Wǒmen dā jìchéngchē huíqù.",
+        "Let's take a taxi back.",
+        "記程車|計程軍|計程東"
+      ],
+      [
+        "體育館",
+        "tǐ yù guǎn",
+        "A sports hall, an arena",
+        "general",
+        "演唱會在體育館。",
+        "Yǎnchànghuì zài tǐyùguǎn.",
+        "The concert is at the arena.",
+        "禮育館|體育官|豐育館"
+      ],
+      [
+        "英語",
+        "yīng yǔ",
+        "English (spoken)",
+        "language",
+        "他的英語很流利。",
+        "Tā de yīngyǔ hěn liúlì.",
+        "His English is fluent.",
+        "英悟|英梧"
+      ],
+      [
+        "亞洲",
+        "yà zhōu",
+        "Asia",
+        "general",
+        "這是亞洲首賣。",
+        "Zhè shì Yàzhōu shǒu mài.",
+        "This is the Asian premiere sale.",
+        "惡洲|亞州|亞酬"
+      ],
+      [
+        "羅馬",
+        "luó mǎ",
+        "Rome",
+        "general|history",
+        "這個場景仿羅馬。",
+        "Zhège chǎngjǐng fǎng Luómǎ.",
+        "This setting imitates Rome.",
+        "囉馬|羅鳥|蘿馬"
+      ],
+      [
+        "俄羅斯",
+        "é luó sī",
+        "Russia",
+        "general",
+        "故事的背景在俄羅斯。",
+        "Gùshì de bèijǐng zài Éluósī.",
+        "The story is set in Russia.",
+        "俄囉斯|俄蘿斯"
       ]
     ]
   }

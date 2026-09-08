@@ -58,7 +58,12 @@
     "天公生": "Thinn-kong-senn",
     "蚵仔麵線": "ô-á-mī-suànn",
     "蚵仔酥": "ô-á-soo",
-    "日頭": "ji̍t-thâu"
+    "日頭": "ji̍t-thâu",
+    "牽手": "khan-tshiú",
+    "阿嬤": "a-má",
+    "角頭": "kak-thâu",
+    "漏氣": "làu-khuì",
+    "鐵馬": "thih-bé"
   },
   "notes": {
     "母湯": "Spells the sound of Taiwanese 毋通 m̄-thang, \"must not\" — the characters are only the sound.",
@@ -86,7 +91,9 @@
     "甜不辣": "From the Japanese てんぷら, written with characters that carry the sound.",
     "乳酪": "Taiwan says rǔ luò where the mainland says rǔ lào.",
     "佛跳牆": "The name says even a monk would climb the wall for it.",
-    "垃圾桶": "Taiwan says lèsè where the mainland says lājī."
+    "垃圾桶": "Taiwan says lèsè where the mainland says lājī.",
+    "牽手": "In Taiwanese 牽手 is the word for a wife — the one whose hand you took.",
+    "垃圾": "lèsè in Taiwan, lājī on the mainland — the same two characters."
   },
   "variantNotes": {
     "藉口": "藉口 is the Taiwan standard spelling; 借口 is what most people type online.",
@@ -8366,6 +8373,1056 @@
         "Zhè shì dàrén de shì.",
         "This is a matter for grown-ups.",
         "太人|大入|犬人"
+      ],
+      [
+        "牽手",
+        "qiān shǒu",
+        "Spouse (Taiwanese); to hold hands",
+        "taigi|family",
+        "這位是我的牽手。",
+        "Zhè wèi shì wǒ de qiānshǒu.",
+        "This is my other half.",
+        "牽毛|牽才"
+      ],
+      [
+        "阿嬤",
+        "ā mà",
+        "Grandmother",
+        "taigi|family",
+        "阿嬤煮的菜最好吃。",
+        "Āmà zhǔ de cài zuì hǎochī.",
+        "Grandma's cooking is the best.",
+        "呵嬤|何嬤"
+      ],
+      [
+        "外公",
+        "wài gōng",
+        "Maternal grandfather",
+        "family",
+        "外公住在台南。",
+        "Wàigōng zhù zài Táinán.",
+        "My grandfather lives in Tainan.",
+        "死公|外分|夕公"
+      ],
+      [
+        "弟妹",
+        "dì mèi",
+        "Younger brother's wife; younger siblings",
+        "family",
+        "弟妹剛生了小孩。",
+        "Dìmèi gāng shēng le xiǎohái.",
+        "My brother's wife has just had a baby.",
+        "第妹|弟姝|弟味"
+      ],
+      [
+        "哥哥",
+        "gē gē",
+        "Older brother",
+        "family",
+        "我哥哥在當兵。",
+        "Wǒ gēgē zài dāngbīng.",
+        "My older brother is doing military service.",
+        "歌哥|哥歌|可哥"
+      ],
+      [
+        "媽媽",
+        "mā mā",
+        "Mum",
+        "family",
+        "媽媽叫我早點回家。",
+        "Māma jiào wǒ zǎodiǎn huí jiā.",
+        "Mum told me to come home early.",
+        "嗎媽|媽嗎|螞媽"
+      ],
+      [
+        "姑娘",
+        "gū niáng",
+        "A young woman",
+        "colloquial",
+        "那位姑娘很有禮貌。",
+        "Nà wèi gūniáng hěn yǒu lǐmào.",
+        "That young woman is very polite.",
+        "姑郎|姑狼"
+      ],
+      [
+        "妹子",
+        "mèi zi",
+        "A girl, a young woman",
+        "colloquial",
+        "隔壁的妹子在念高中。",
+        "Gébì de mèizi zài niàn gāozhōng.",
+        "The girl next door is in high school.",
+        "姝子|妹了|味子"
+      ],
+      [
+        "帥哥",
+        "shuài gē",
+        "A good-looking guy; mate",
+        "colloquial",
+        "帥哥，這個多少錢？",
+        "Shuàigē, zhège duōshǎo qián?",
+        "Mate, how much is this?",
+        "師哥|帥歌|帥可"
+      ],
+      [
+        "大小姐",
+        "dà xiǎo jiě",
+        "A pampered young lady",
+        "colloquial",
+        "她從小就是大小姐。",
+        "Tā cóngxiǎo jiùshì dàxiǎojiě.",
+        "She's been a princess since childhood.",
+        "太小姐|大少姐|犬小姐"
+      ],
+      [
+        "老大",
+        "lǎo dà",
+        "The boss; the eldest",
+        "colloquial",
+        "他是我們這裡的老大。",
+        "Tā shì wǒmen zhèlǐ de lǎodà.",
+        "He's the boss around here.",
+        "考大|老太|孝大"
+      ],
+      [
+        "老娘",
+        "lǎo niáng",
+        "This lady (said of oneself, brusquely)",
+        "colloquial",
+        "老娘才不吃這一套。",
+        "Lǎoniáng cái bù chī zhè yí tào.",
+        "I'm not falling for that.",
+        "考娘|老郎|孝娘"
+      ],
+      [
+        "老爺",
+        "lǎo yé",
+        "The master of the house; grandfather",
+        "colloquial",
+        "戲裡的老爺很嚴肅。",
+        "Xì lǐ de lǎoyé hěn yánsù.",
+        "The old master in the play is very stern.",
+        "考爺|孝爺"
+      ],
+      [
+        "老外",
+        "lǎo wài",
+        "A foreigner",
+        "colloquial",
+        "隔壁搬來一個老外。",
+        "Gébì bān lái yí ge lǎowài.",
+        "A foreigner has moved in next door.",
+        "考外|老死|孝外"
+      ],
+      [
+        "阿兵哥",
+        "ā bīng gē",
+        "A conscript soldier",
+        "colloquial|taiwan",
+        "車站有很多阿兵哥。",
+        "Chēzhàn yǒu hěn duō ābīnggē.",
+        "There are a lot of young soldiers at the station.",
+        "呵兵哥|阿兵歌|何兵哥"
+      ],
+      [
+        "打工仔",
+        "dǎ gōng zǐ",
+        "Someone working a wage job",
+        "colloquial|workplace",
+        "我只是個打工仔。",
+        "Wǒ zhǐshì ge dǎgōngzǐ.",
+        "I'm just a wage worker.",
+        "釘工仔|打土仔|打工仟"
+      ],
+      [
+        "角頭",
+        "jiǎo tóu",
+        "A local gang boss",
+        "colloquial|taiwan",
+        "這一帶有角頭在管。",
+        "Zhè yídài yǒu jiǎotóu zài guǎn.",
+        "This area is run by a local boss.",
+        "腳頭|角預|角頑"
+      ],
+      [
+        "渣男",
+        "zhā nán",
+        "A cad, a man who treats women badly",
+        "colloquial|relationships",
+        "她終於看清那個渣男。",
+        "Tā zhōngyú kàn qīng nàge zhānán.",
+        "She finally saw through that cad.",
+        "渣界|渣勇"
+      ],
+      [
+        "小三",
+        "xiǎo sān",
+        "The other woman",
+        "colloquial|relationships",
+        "這齣戲又是小三的劇情。",
+        "Zhè chū xì yòu shì xiǎosān de jùqíng.",
+        "This drama is another other-woman plot.",
+        "少三|小二|小王"
+      ],
+      [
+        "小白",
+        "xiǎo bái",
+        "A clueless newcomer",
+        "colloquial|online",
+        "新來的小白問了很多問題。",
+        "Xīn lái de xiǎobái wèn le hěn duō wèntí.",
+        "The new kid asked a lot of questions.",
+        "少白|小自|小百"
+      ],
+      [
+        "草包",
+        "cǎo bāo",
+        "A useless person, all show",
+        "colloquial",
+        "大家說他是個草包。",
+        "Dàjiā shuō tā shì ge cǎobāo.",
+        "People say he's all show and no substance.",
+        "早包|草色|卓包"
+      ],
+      [
+        "吃醋",
+        "chī cù",
+        "To be jealous",
+        "colloquial|relationships",
+        "他很容易吃醋。",
+        "Tā hěn róngyì chīcù.",
+        "He gets jealous very easily.",
+        "屹醋|訖醋"
+      ],
+      [
+        "冷戰",
+        "lěng zhàn",
+        "The silent treatment; the Cold War",
+        "colloquial|relationships",
+        "他們冷戰了一個禮拜。",
+        "Tāmen lěngzhàn le yí ge lǐbài.",
+        "They gave each other the silent treatment for a week.",
+        "冷獸|冷彈"
+      ],
+      [
+        "告吹",
+        "gào chuī",
+        "To fall through",
+        "colloquial",
+        "這樁生意告吹了。",
+        "Zhè zhuāng shēngyì gàochuī le.",
+        "That deal has fallen through.",
+        "害吹|告吠|告炊"
+      ],
+      [
+        "倒貼",
+        "dào tiē",
+        "To pay out to keep someone interested",
+        "colloquial|relationships",
+        "她不想再倒貼了。",
+        "Tā bù xiǎng zài dàotiē le.",
+        "She doesn't want to keep paying out any more.",
+        "到貼|側貼"
+      ],
+      [
+        "放鴿子",
+        "fàng gē zi",
+        "To stand someone up",
+        "colloquial",
+        "他約人常常放鴿子。",
+        "Tā yuē rén chángcháng fànggēzi.",
+        "He makes plans and then stands people up.",
+        "攻鴿子|放鴿了|效鴿子"
+      ],
+      [
+        "拍馬屁",
+        "pāi mǎ pì",
+        "To flatter, to suck up",
+        "colloquial|workplace",
+        "他很會拍馬屁。",
+        "Tā hěn huì pāi mǎpì.",
+        "He's very good at sucking up.",
+        "怕馬屁|拍鳥屁|拍馬尼"
+      ],
+      [
+        "吃豆腐",
+        "chī dòu fǔ",
+        "To take liberties with someone",
+        "colloquial",
+        "他這樣講是在吃豆腐。",
+        "Tā zhèyàng jiǎng shì zài chī dòufǔ.",
+        "Saying that is taking liberties.",
+        "屹豆腐|吃豈腐|吃豆府"
+      ],
+      [
+        "漏氣",
+        "lòu qì",
+        "To lose face, to be shown up",
+        "colloquial|taigi",
+        "當眾出錯很漏氣。",
+        "Dāngzhòng chūcuò hěn lòuqì.",
+        "Getting it wrong in public is embarrassing.",
+        "滷氣|漏汽|漏氧"
+      ],
+      [
+        "糟糕",
+        "zāo gāo",
+        "Oh no; awful",
+        "colloquial",
+        "糟糕，我忘了帶鑰匙。",
+        "Zāogāo, wǒ wàng le dài yàoshi.",
+        "Oh no, I've forgotten my keys.",
+        "糟羔|糟糊"
+      ],
+      [
+        "該死",
+        "gāi sǐ",
+        "Damn it",
+        "colloquial",
+        "該死，趕不上車了。",
+        "Gāisǐ, gǎn bú shàng chē le.",
+        "Damn, I've missed the bus.",
+        "孩死|該外|刻死"
+      ],
+      [
+        "倒霉",
+        "dǎo méi",
+        "Unlucky",
+        "colloquial",
+        "今天真倒霉。",
+        "Jīntiān zhēn dǎoméi.",
+        "Today has been rotten luck.",
+        "到霉|側霉"
+      ],
+      [
+        "發飆",
+        "fā biāo",
+        "To blow up, to lose it",
+        "colloquial",
+        "老闆昨天發飆了。",
+        "Lǎobǎn zuótiān fābiāo le.",
+        "The boss blew up yesterday.",
+        "髮飆|廢飆"
+      ],
+      [
+        "無所謂",
+        "wú suǒ wèi",
+        "It doesn't matter",
+        "colloquial",
+        "去不去我無所謂。",
+        "Qù bú qù wǒ wúsuǒwèi.",
+        "I don't mind whether we go.",
+        "舞所謂|無折謂|蕪所謂"
+      ],
+      [
+        "差不多",
+        "chà bù duō",
+        "About right, more or less",
+        "colloquial",
+        "差不多可以出發了。",
+        "Chàbùduō kěyǐ chūfā le.",
+        "We're about ready to set off.",
+        "差丕多|差不夕|差不名"
+      ],
+      [
+        "待會",
+        "dāi huì",
+        "In a little while",
+        "colloquial",
+        "待會再打給你。",
+        "Dāihuì zài dǎ gěi nǐ.",
+        "I'll ring you back in a bit.",
+        "得會|待曾|待倉"
+      ],
+      [
+        "怎麼辦",
+        "zěn me bàn",
+        "What do we do now",
+        "colloquial",
+        "下雨了怎麼辦？",
+        "Xià yǔ le zěnmebàn?",
+        "It's raining — what do we do?",
+        "怎麼辨|怎麼辯"
+      ],
+      [
+        "沒事",
+        "méi shì",
+        "It's nothing; to be free",
+        "colloquial",
+        "沒事，我自己來。",
+        "Méishì, wǒ zìjǐ lái.",
+        "It's fine, I'll do it myself.",
+        "沒吏|沒史"
+      ],
+      [
+        "要是",
+        "yào shì",
+        "If, supposing that",
+        "colloquial",
+        "要是下雨就不去了。",
+        "Yàoshì xià yǔ jiù bú qù le.",
+        "If it rains we won't go.",
+        "耍是|要足|票是"
+      ],
+      [
+        "要臉",
+        "yào liǎn",
+        "To have some shame",
+        "colloquial",
+        "做人要臉。",
+        "Zuòrén yào liǎn.",
+        "Have some self-respect.",
+        "耍臉|票臉"
+      ],
+      [
+        "做人",
+        "zuò rén",
+        "To conduct oneself among people",
+        "colloquial",
+        "他做人很成功。",
+        "Tā zuòrén hěn chénggōng.",
+        "He gets on well with everyone.",
+        "作人|做入|做仁"
+      ],
+      [
+        "殺價",
+        "shā jià",
+        "To haggle the price down",
+        "colloquial|taiwan",
+        "在夜市可以殺價。",
+        "Zài yèshì kěyǐ shājià.",
+        "You can haggle at the night market.",
+        "剎價|設價"
+      ],
+      [
+        "掏錢",
+        "tāo qián",
+        "To fork out money",
+        "colloquial",
+        "最後還是他掏錢。",
+        "Zuìhòu háishì tā tāoqián.",
+        "In the end he was the one who paid.",
+        "掏淺|掏賤"
+      ],
+      [
+        "爆棚",
+        "bào péng",
+        "Packed out",
+        "colloquial",
+        "今天店裡人氣爆棚。",
+        "Jīntiān diàn lǐ rénqì bàopéng.",
+        "The shop is heaving today.",
+        "曝棚|瀑棚"
+      ],
+      [
+        "走紅",
+        "zǒu hóng",
+        "To become popular",
+        "colloquial|media",
+        "這首歌突然走紅。",
+        "Zhè shǒu gē túrán zǒuhóng.",
+        "This song suddenly took off.",
+        "足紅|走江|走缸"
+      ],
+      [
+        "吹爆",
+        "chuī bào",
+        "To rave about something",
+        "colloquial|online",
+        "這部片被網友吹爆。",
+        "Zhè bù piàn bèi wǎngyǒu chuībào.",
+        "People online are raving about this film.",
+        "吠爆|吹曝|炊爆"
+      ],
+      [
+        "炎上",
+        "yán shàng",
+        "For a post to blow up in flames",
+        "online|loanword",
+        "他那則貼文炎上了。",
+        "Tā nà zé tiēwén yánshàng le.",
+        "That post of his went up in flames.",
+        "淡上|炎止|炎卡"
+      ],
+      [
+        "直球",
+        "zhí qiú",
+        "A straight pitch; being direct",
+        "colloquial|relationships",
+        "他直球告白很有勇氣。",
+        "Tā zhíqiú gàobái hěn yǒu yǒngqì.",
+        "Confessing that directly took courage.",
+        "真球|直求|值球"
+      ],
+      [
+        "果粉",
+        "guǒ fěn",
+        "An Apple fan",
+        "colloquial|tech",
+        "他是標準的果粉。",
+        "Tā shì biāozhǔn de guǒfěn.",
+        "He's a proper Apple fan.",
+        "杲粉|果紛|東粉"
+      ],
+      [
+        "愛瘋",
+        "ài fēng",
+        "An iPhone",
+        "colloquial|tech",
+        "他換了新的愛瘋。",
+        "Tā huàn le xīn de àifēng.",
+        "He's got a new iPhone.",
+        "受瘋|憂瘋"
+      ],
+      [
+        "網咖",
+        "wǎng kā",
+        "An internet cafe",
+        "colloquial|taiwan",
+        "他們在網咖打了一整夜。",
+        "Tāmen zài wǎngkā dǎ le yì zhěng yè.",
+        "They played at the internet café all night.",
+        "網加|網珈|網茄"
+      ],
+      [
+        "行動電源",
+        "xíng dòng diàn yuán",
+        "A power bank",
+        "tech|taiwan",
+        "我帶了行動電源。",
+        "Wǒ dài le xíngdòng diànyuán.",
+        "I've brought a power bank.",
+        "術動電源|行働電源|行動雷源"
+      ],
+      [
+        "雲玩家",
+        "yún wán jiā",
+        "Someone who only watches others play",
+        "gaming|online",
+        "他是雲玩家，沒真的玩過。",
+        "Tā shì yúnwánjiā, méi zhēn de wán guò.",
+        "He's an armchair player; he's never actually played it.",
+        "電玩家|雲玩豕|雲玩冢"
+      ],
+      [
+        "斷片",
+        "duàn piàn",
+        "To black out from drinking",
+        "colloquial",
+        "他昨晚喝到斷片。",
+        "Tā zuówǎn hē dào duànpiàn.",
+        "He drank until he blacked out last night.",
+        "斷爿|斷斤"
+      ],
+      [
+        "洗腎",
+        "xǐ shèn",
+        "Dialysis; to lose a fortune",
+        "colloquial",
+        "抽卡抽到要洗腎。",
+        "Chōu kǎ chōu dào yào xǐshèn.",
+        "Pulling for cards until it costs you a kidney.",
+        "先腎|洋腎"
+      ],
+      [
+        "拉肚子",
+        "lā dù zi",
+        "To have diarrhoea",
+        "colloquial",
+        "他吃壞肚子在拉肚子。",
+        "Tā chī huài dùzi zài lā dùzi.",
+        "He ate something bad and has an upset stomach.",
+        "垃肚子|拉肚了|泣肚子"
+      ],
+      [
+        "開刀",
+        "kāi dāo",
+        "To operate; to make an example of",
+        "colloquial",
+        "他下星期要開刀。",
+        "Tā xià xīngqí yào kāidāo.",
+        "He's having an operation next week.",
+        "閉刀|開力|關刀"
+      ],
+      [
+        "眼皮",
+        "yǎn pí",
+        "Eyelid",
+        "general",
+        "我眼皮一直跳。",
+        "Wǒ yǎnpí yìzhí tiào.",
+        "My eyelid keeps twitching.",
+        "眠皮|眼波|根皮"
+      ],
+      [
+        "地中海",
+        "dì zhōng hǎi",
+        "The Mediterranean; a bald patch",
+        "colloquial",
+        "他的頭已經地中海了。",
+        "Tā de tóu yǐjīng dìzhōnghǎi le.",
+        "He's going bald on top.",
+        "池中海|地巾海|地中悔"
+      ],
+      [
+        "高跟",
+        "gāo gēn",
+        "High-heeled",
+        "general",
+        "她穿高跟鞋走很久。",
+        "Tā chuān gāogēnxié zǒu hěn jiǔ.",
+        "She walked a long way in heels.",
+        "亭跟|膏跟"
+      ],
+      [
+        "鏡子",
+        "jìng zi",
+        "A mirror",
+        "general",
+        "浴室的鏡子起霧了。",
+        "Yùshì de jìngzi qǐwù le.",
+        "The bathroom mirror has steamed up.",
+        "鏡了|鏡孑"
+      ],
+      [
+        "刀子",
+        "dāo zi",
+        "A knife",
+        "general",
+        "這把刀子很利。",
+        "Zhè bǎ dāozi hěn lì.",
+        "This knife is very sharp.",
+        "力子|刀了|刀孑"
+      ],
+      [
+        "電話",
+        "diàn huà",
+        "A telephone; a phone call",
+        "general",
+        "剛剛有人打電話來。",
+        "Gānggāng yǒu rén dǎ diànhuà lái.",
+        "Someone just rang.",
+        "雷話|電活|雲話"
+      ],
+      [
+        "停車場",
+        "tíng chē chǎng",
+        "A car park",
+        "general",
+        "停車場已經滿了。",
+        "Tíngchēchǎng yǐjīng mǎn le.",
+        "The car park is full.",
+        "停軍場|停車湯|停東場"
+      ],
+      [
+        "公車",
+        "gōng chē",
+        "A bus",
+        "general|taiwan",
+        "我搭公車上班。",
+        "Wǒ dā gōngchē shàngbān.",
+        "I take the bus to work.",
+        "分車|公軍|兮車"
+      ],
+      [
+        "鐵馬",
+        "tiě mǎ",
+        "A bicycle (Taiwanese)",
+        "taigi|taiwan",
+        "他騎鐵馬環島。",
+        "Tā qí tiěmǎ huándǎo.",
+        "He cycled round the island.",
+        "銅馬|鐵鳥|銀馬"
+      ],
+      [
+        "火車頭",
+        "huǒ chē tóu",
+        "A locomotive; the driving force",
+        "general",
+        "他是這個團隊的火車頭。",
+        "Tā shì zhège tuánduì de huǒchētóu.",
+        "He's the engine of this team.",
+        "火軍頭|火車預|火東頭"
+      ],
+      [
+        "牛仔",
+        "niú zǎi",
+        "A cowboy; denim",
+        "general",
+        "他穿了一條牛仔褲。",
+        "Tā chuān le yì tiáo niúzǎikù.",
+        "He's wearing jeans.",
+        "午仔|牛仟|半仔"
+      ],
+      [
+        "狗仔",
+        "gǒu zǎi",
+        "Paparazzi",
+        "media|taiwan",
+        "門口守著一群狗仔。",
+        "Ménkǒu shǒu zhe yì qún gǒuzǎi.",
+        "A pack of paparazzi is waiting outside.",
+        "狼仔|狗仟|夠仔"
+      ],
+      [
+        "貓咪",
+        "māo mī",
+        "A cat, kitty",
+        "colloquial",
+        "她養了兩隻貓咪。",
+        "Tā yǎng le liǎng zhī māomī.",
+        "She keeps two cats.",
+        "描咪|貓迷"
+      ],
+      [
+        "烏龜",
+        "wū guī",
+        "A tortoise",
+        "general",
+        "烏龜走得很慢。",
+        "Wūguī zǒu de hěn màn.",
+        "Tortoises move slowly.",
+        "鳥龜|烏歸|焉龜"
+      ],
+      [
+        "漁夫",
+        "yú fū",
+        "A fisherman",
+        "general",
+        "漁夫天沒亮就出海。",
+        "Yúfū tiān méi liàng jiù chūhǎi.",
+        "The fishermen put to sea before dawn.",
+        "魚夫|漁大|漁天"
+      ],
+      [
+        "鬼壓床",
+        "guǐ yā chuáng",
+        "Sleep paralysis",
+        "colloquial|folk",
+        "我昨晚鬼壓床。",
+        "Wǒ zuówǎn guǐ yā chuáng.",
+        "I had sleep paralysis last night.",
+        "塊壓床|鬼押床|魂壓床"
+      ],
+      [
+        "鬼扯",
+        "guǐ chě",
+        "Talking rubbish",
+        "colloquial",
+        "他講的都是鬼扯。",
+        "Tā jiǎng de dōu shì guǐchě.",
+        "Everything he says is rubbish.",
+        "塊扯|魂扯"
+      ],
+      [
+        "邪門",
+        "xié mén",
+        "Uncanny, weird",
+        "colloquial",
+        "這件事真的很邪門。",
+        "Zhè jiàn shì zhēn de hěn xiémén.",
+        "This whole thing is really uncanny.",
+        "邪閃|邪閂|邪鬥"
+      ],
+      [
+        "顛倒",
+        "diān dǎo",
+        "Upside down, reversed",
+        "general",
+        "這張照片放顛倒了。",
+        "Zhè zhāng zhàopiàn fàng diāndǎo le.",
+        "This photo has been put in upside down.",
+        "顛到|顛側"
+      ],
+      [
+        "倒數",
+        "dào shǔ",
+        "To count down; counting from the bottom",
+        "general",
+        "大家一起倒數。",
+        "Dàjiā yìqǐ dàoshǔ.",
+        "Everyone counted down together.",
+        "到數|倒樓|側數"
+      ],
+      [
+        "養活",
+        "yǎng huó",
+        "To support, to feed (a family)",
+        "colloquial",
+        "他一個人養活全家。",
+        "Tā yí ge rén yǎnghuó quánjiā.",
+        "He supports the whole family by himself.",
+        "養話|養括"
+      ],
+      [
+        "字眼",
+        "zì yǎn",
+        "A choice of word",
+        "general",
+        "他很在意用什麼字眼。",
+        "Tā hěn zàiyì yòng shénme zìyǎn.",
+        "He cares a lot about which word is used.",
+        "宇眼|字眠|守眼"
+      ],
+      [
+        "言語",
+        "yán yǔ",
+        "Words, speech",
+        "general",
+        "言語有時候很傷人。",
+        "Yányǔ yǒu shíhòu hěn shāng rén.",
+        "Words can wound.",
+        "音語|言悟|信語"
+      ],
+      [
+        "國語",
+        "guó yǔ",
+        "Mandarin (as taught in Taiwan)",
+        "taiwan|language",
+        "阿嬤的國語有台灣腔。",
+        "Āmà de guóyǔ yǒu Táiwān qiāng.",
+        "Grandma's Mandarin has a Taiwanese accent.",
+        "圖語|國悟|園語"
+      ],
+      [
+        "八點檔",
+        "bā diǎn dàng",
+        "The eight o'clock soap opera",
+        "media|taiwan",
+        "阿嬤每天看八點檔。",
+        "Āmà měitiān kàn bādiǎndàng.",
+        "Grandma watches the eight o'clock soap every day.",
+        "人點檔|八典檔|入點檔"
+      ],
+      [
+        "禮拜天",
+        "lǐ bài tiān",
+        "Sunday",
+        "general|taiwan",
+        "禮拜天我們去爬山。",
+        "Lǐbàitiān wǒmen qù páshān.",
+        "On Sunday we're going hiking.",
+        "體拜天|禮敗天|禮拜夭"
+      ],
+      [
+        "一輩子",
+        "yí bèi zi",
+        "A whole lifetime",
+        "colloquial",
+        "他做了一輩子的老師。",
+        "Tā zuò le yíbèizi de lǎoshī.",
+        "He was a teacher his whole life.",
+        "一輩了|一輩孑"
+      ],
+      [
+        "當時",
+        "dāng shí",
+        "At that time",
+        "general",
+        "我當時還很小。",
+        "Wǒ dāngshí hái hěn xiǎo.",
+        "I was still very young at the time.",
+        "噹時|當持|富時"
+      ],
+      [
+        "夜裡",
+        "yè lǐ",
+        "During the night",
+        "general",
+        "夜裡很安靜。",
+        "Yè lǐ hěn ānjìng.",
+        "It's very quiet at night.",
+        "亦裡|夜理|液裡"
+      ],
+      [
+        "裡頭",
+        "lǐ tóu",
+        "Inside",
+        "colloquial",
+        "箱子裡頭是什麼？",
+        "Xiāngzi lǐtóu shì shénme?",
+        "What's inside the box?",
+        "理頭|裡預|裡頑"
+      ],
+      [
+        "山頂",
+        "shān dǐng",
+        "The summit",
+        "general",
+        "我們爬到山頂了。",
+        "Wǒmen pá dào shāndǐng le.",
+        "We made it to the summit.",
+        "出頂|山項|山頸"
+      ],
+      [
+        "風光",
+        "fēng guāng",
+        "Scenery; glorious",
+        "general",
+        "這裡的風光很美。",
+        "Zhèlǐ de fēngguāng hěn měi.",
+        "The scenery here is beautiful.",
+        "鳳光|風先|楓光"
+      ],
+      [
+        "官司",
+        "guān sī",
+        "A lawsuit",
+        "general",
+        "這場官司打了三年。",
+        "Zhè chǎng guānsī dǎ le sān nián.",
+        "This lawsuit went on for three years.",
+        "宮司|官同|館司"
+      ],
+      [
+        "手工",
+        "shǒu gōng",
+        "Handmade; handiwork",
+        "general",
+        "這是手工做的。",
+        "Zhè shì shǒugōng zuò de.",
+        "This is handmade.",
+        "毛工|手土|才工"
+      ],
+      [
+        "寶貝",
+        "bǎo bèi",
+        "A treasure; darling",
+        "colloquial",
+        "這台相機是他的寶貝。",
+        "Zhè tái xiàngjī shì tā de bǎobèi.",
+        "This camera is his pride and joy.",
+        "實貝|寶見|寶目"
+      ],
+      [
+        "垃圾",
+        "lè sè",
+        "Rubbish; worthless",
+        "general|taiwan",
+        "垃圾車七點來。",
+        "Lèsè chē qī diǎn lái.",
+        "The bin lorry comes at seven.",
+        "拉圾|垃級|垃汲"
+      ],
+      [
+        "回家",
+        "huí jiā",
+        "To go home",
+        "general",
+        "我八點才回家。",
+        "Wǒ bā diǎn cái huí jiā.",
+        "I didn't get home until eight.",
+        "囚家|回豕|因家"
+      ],
+      [
+        "男人",
+        "nán rén",
+        "A man",
+        "general",
+        "這個男人我沒見過。",
+        "Zhège nánrén wǒ méi jiàn guò.",
+        "I've never seen this man before.",
+        "界人|男入|勇人"
+      ],
+      [
+        "物理",
+        "wù lǐ",
+        "Physics",
+        "general",
+        "他物理考得很好。",
+        "Tā wùlǐ kǎo de hěn hǎo.",
+        "He did well in the physics exam.",
+        "物埋|物裡"
+      ],
+      [
+        "保險",
+        "bǎo xiǎn",
+        "Insurance; safe",
+        "general",
+        "他在賣保險。",
+        "Tā zài mài bǎoxiǎn.",
+        "He sells insurance.",
+        "堡險|呆險"
+      ],
+      [
+        "勞動",
+        "láo dòng",
+        "Labour, physical work",
+        "general",
+        "勞動節放一天假。",
+        "Láodòngjié fàng yì tiān jià.",
+        "There's a day off for Labour Day.",
+        "勞働|勞勤"
+      ],
+      [
+        "刑法",
+        "xíng fǎ",
+        "Criminal law",
+        "general",
+        "這條在刑法裡有規定。",
+        "Zhè tiáo zài xíngfǎ lǐ yǒu guīdìng.",
+        "This is set out in the criminal code.",
+        "刑怯|刑劫"
+      ],
+      [
+        "月份",
+        "yuè fèn",
+        "A month (of the year)",
+        "general",
+        "這個月份雨比較多。",
+        "Zhège yuèfèn yǔ bǐjiào duō.",
+        "This month tends to be rainy.",
+        "用份|月粉|舟份"
+      ],
+      [
+        "三高",
+        "sān gāo",
+        "High blood pressure, sugar and lipids",
+        "health|taiwan",
+        "他有三高要控制飲食。",
+        "Tā yǒu sāngāo yào kòngzhì yǐnshí.",
+        "He has the three highs and has to watch his diet.",
+        "二高|三亭|王高"
+      ],
+      [
+        "好事",
+        "hǎo shì",
+        "A good thing",
+        "colloquial",
+        "這對他來說是好事。",
+        "Zhè duì tā láishuō shì hǎoshì.",
+        "This is a good thing for him.",
+        "如事|好吏|好史"
+      ],
+      [
+        "真是",
+        "zhēn shì",
+        "Really, honestly",
+        "colloquial",
+        "你真是太客氣了。",
+        "Nǐ zhēnshì tài kèqì le.",
+        "You really are too kind.",
+        "直是|真足|具是"
+      ],
+      [
+        "立馬",
+        "lì mǎ",
+        "Right away",
+        "colloquial",
+        "他立馬就答應了。",
+        "Tā lìmǎ jiù dāying le.",
+        "He agreed straight away.",
+        "立鳥|立焉"
+      ],
+      [
+        "手車",
+        "shǒu chē",
+        "A cart, a handcart",
+        "general",
+        "老闆推著手車來了。",
+        "Lǎobǎn tuī zhe shǒuchē lái le.",
+        "The vendor came pushing his cart.",
+        "毛車|手軍|才車"
       ]
     ],
     "anime": [

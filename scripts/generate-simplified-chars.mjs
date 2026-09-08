@@ -32,6 +32,8 @@ const TAIWAN_ALLOWLIST = [
   '\u75f4', // 痴 — 白痴; OpenCC prefers 癡
   '\u79d8', // 秘 — 秘書; OpenCC prefers 祕
   '\u7cbd', // 粽 — 肉粽; OpenCC prefers 糉
+  '\u9709', // 霉 — 發霉, 倒霉; OpenCC prefers 黴
+  '\u5e8a', // 床 — 起床; OpenCC prefers the older 牀
 ];
 
 const here = path.dirname(fileURLToPath(import.meta.url));

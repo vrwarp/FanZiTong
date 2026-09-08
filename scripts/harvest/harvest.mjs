@@ -40,7 +40,77 @@ const ATTESTATION_FLOOR = { slang: 3, food: 1, church: 1, anime: 1 };
 const THIN = 3;
 
 const floorFor = (domains) => Math.min(...domains.map((d) => ATTESTATION_FLOOR[d] ?? 3));
-const passes = (row, hits) => (hits[row.word] ?? 0) >= floorFor(row.domains);
+
+/**
+ * How many verses a scripture word needs. Its own book is the attestation.
+ *
+ * PTT's search reads thread titles, so it answers "would someone headline a
+ * thread with this" rather than "do people use this". That is a good question
+ * for 滷肉飯 and a useless one for 摩西, 耶路撒冷, 基督 and 祭司, which are
+ * beyond argument church vocabulary and score zero. It is not only names:
+ * 一切, 看見, 眾人 and 於是 score zero too, which is plainly wrong about
+ * Taiwanese and worth remembering wherever these numbers are read.
+ *
+ * So a word mined from the 和合本 is judged by the 和合本. Eight verses is
+ * enough to be vocabulary rather than an accident of segmentation.
+ */
+const SCRIPTURE_VERSES = 8;
+
+/**
+ * A caution that belongs with any number derived from this rule: verse count
+ * proves a word is in the Bible, not that it is church vocabulary. A sample of
+ * thirty at this floor gave roughly a third worth teaching — 大祭司, 稱頌,
+ * 倚靠, 舉哀 — against plain Mandarin that merely occurs in scripture (帶來,
+ * 尊敬, 除掉) and segmentation debris (巴人, 米羅, 日內). Separating those needs
+ * a general-frequency reference this harvest does not have, so the church pool
+ * is a candidate list to be read down, not a vetted one to author straight
+ * from. It is reported as such rather than counted as a domain that is done.
+ */
+
+/**
+ * The words scripture shares with everyday Mandarin. They are real, and they
+ * are not what someone opens a church deck to learn, so they do not get in on
+ * a verse count alone.
+ */
+const GENERAL_IN_SCRIPTURE = new Set([
+  '一切',
+  '面前',
+  '看見',
+  '如此',
+  '於是',
+  '直到',
+  '眾人',
+  '聽見',
+  '他說',
+  '為我',
+  '這樣',
+  '那時',
+  '因為',
+  '所以',
+  '不可',
+  '可以',
+  '沒有',
+  '什麼',
+  '我們',
+  '你們',
+  '他們',
+  '出來',
+  '進去',
+  '回來',
+  '起來',
+  '知道',
+  '告訴',
+  '一同',
+  '就是',
+  '若是',
+]);
+
+const passes = (row, hits) => {
+  if (row.verse && row.domains.includes('church')) {
+    return !GENERAL_IN_SCRIPTURE.has(row.word) && (row.verses ?? 0) >= SCRIPTURE_VERSES;
+  }
+  return (hits[row.word] ?? 0) >= floorFor(row.domains);
+};
 
 async function load(name, fallback) {
   try {
@@ -167,7 +237,9 @@ async function report() {
       bucket.total += 1;
       if (passes(row, hits)) {
         bucket.attested += 1;
-        if (n < THIN) bucket.thin += 1;
+        // A scripture word's PTT score says nothing, so it cannot say "thin"
+        // either; what is thin there is the verse count.
+        if (row.verse ? (row.verses ?? 0) < 20 : n < THIN) bucket.thin += 1;
         if (readingsByWord[row.word]?.mandarin) bucket.withReading += 1;
         if (readingsByWord[row.word]?.taigi) bucket.taigi += 1;
       }

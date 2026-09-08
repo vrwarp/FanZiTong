@@ -82,22 +82,46 @@ Not every domain has a thousand attested words in it, and the harvest says so
 rather than padding quietly. Run `node scripts/harvest/harvest.mjs report` for
 current numbers.
 
+### What PTT attestation actually measures
+
+Its search reads **thread titles**, so it answers "would somebody headline a
+thread with this word" rather than "do people use this word". For content words
+that is close enough to the same question — 滷肉飯 returns a full page, 丹貝
+none. For everything else it is not: 一切, 看見, 眾人 and 於是 all return zero,
+which is plainly false about Taiwanese.
+
+So a high score is strong evidence and a zero is weak evidence, and the numbers
+below should be read that way. It also means the pools lean toward nouns and
+topics, which suits a vocabulary deck but is a bias rather than an accident.
+
+Scripture words are judged by scripture for this reason: 摩西, 耶路撒冷, 基督
+and 祭司 score zero on PTT and are beyond argument church vocabulary. A word
+mined from the 和合本 passes on its verse count instead.
+
+**That rule is loose, and the church figure below is inflated.** Verse count
+proves a word is in the Bible, not that it is church vocabulary. A random
+sample of thirty at the current floor gave roughly a third worth teaching —
+大祭司, 稱頌, 倚靠, 舉哀 — against plain Mandarin that merely occurs in
+scripture (帶來, 尊敬, 除掉) and segmentation debris (巴人, 米羅, 日內).
+Separating those wants a general-frequency reference this harvest does not
+have. Church is a candidate list to be read down, not a vetted one to author
+straight from.
+
 As of the September 2026 pass:
 
-| domain | candidates | attested | thinly (1–2 threads) | MOE reading | Tâi-lô |
-| ------ | ---------- | -------- | -------------------- | ----------- | ------ |
-| food   | 1780       | **1250** | 393                  | 595         | 243    |
-| slang  | 2896       | **1140** | 23                   | 567         | 268    |
-| church | 1029       | 689      | 175                  | 488         | 131    |
-| anime  | 687        | 400      | 82                   | 247         | 122    |
+| domain | candidates | attested   | thinly | MOE reading | Tâi-lô |
+| ------ | ---------- | ---------- | ------ | ----------- | ------ |
+| food   | 1780       | **1250**   | 393    | 595         | 243    |
+| slang  | 2896       | **1140**   | 23     | 567         | 268    |
+| anime  | 2093       | **1801**   | 123    | 1648        | 913    |
+| church | 3917       | 3564 (raw) | 1550   | 537         | 154    |
 
-Food and slang have the supply for a thousand cards each. Church is 311 short
-and **anime is 600 short** — Wiktionary has almost no ACG vocabulary (`漢語 動畫`
-has four members), so that domain leans on Japanese loanwords and on mining
-C_Chat for the words posters type, and 400 is close to the honest ceiling for
-genuinely ACG-specific vocabulary. Reaching a thousand there means widening into
-gaming and general entertainment; cards resting on thin attestation are marked
-so they can be pruned later.
+Food, slang and anime have the supply for a thousand cards each. Anime was the
+domain I called capped at four hundred; 巴哈姆特 took it to 1801 and to 91 %
+MOE reading coverage, which says the ceiling was Wiktionary's coverage rather
+than the language's. Church's 3564 is a raw pool on the loose rule above, and
+on a one-in-three sample rate the vetted figure is nearer a thousand — enough,
+but only after reading it down.
 
 Only about half the attested words have an MOE reading, because compounds like
 炒飯 and 義大利麵 are not dictionary headwords. The rest have their reading

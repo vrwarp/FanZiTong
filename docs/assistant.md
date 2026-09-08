@@ -282,6 +282,7 @@ rather than guessed at.
 | `FZT_AGENT_MAX_BUDGET_USD`  | none               | Optional per-turn spend cap.                                              |
 | `CLAUDE_CODE_OAUTH_TOKEN`   | none               | Operator-supplied credential; needs `FZT_AGENT_TOKEN` too.                |
 | `CLAUDE_CONFIG_DIR`         | `/data/claude`     | Where credentials and transcripts live.                                   |
+| `FZT_AGENT_WORKSPACE`       | `/data/workspace`  | The directory a conversation runs in. Created at startup; holds nothing.  |
 
 ## What the model cannot do
 
@@ -290,3 +291,23 @@ tools exist: no shell, no file access, no web fetch. The only things it can
 call are the deck tools, every one of which is answered by your browser. It
 also runs with `settingSources: []`, so nothing in your own Claude Code
 configuration reaches it. Deleting and merging are not auto-approved.
+
+## When it says the binary failed to launch
+
+The Agent SDK reports every failed `spawn` the same way: if the file is on
+disk and the call returns `ENOENT`, `EACCES`, `EPERM`, `ENOTDIR`, `ELOOP`,
+`ENAMETOOLONG` or `EROFS`, it says the Claude Code binary "exists but failed
+to launch" and offers a mismatched libc as the likely reason. That covers
+several different faults, and the one it names is not the commonest.
+
+A missing working directory is also `ENOENT` from `spawn` — the errno is about
+the call, not the file — so a binary that runs perfectly well produces a
+message about a musl loader that was never involved. The sidecar creates
+`FZT_AGENT_WORKSPACE` before it listens, which is what a bind-mounted `/data`
+needs: the image's `/data/workspace` is replaced by the host directory, and
+before this the conversation was the only thing that used it, so signing in
+worked and every question failed.
+
+When the sidecar cannot explain a launch failure by the working directory, the
+binary's presence, its permissions or its architecture, it passes the SDK's
+message through unchanged rather than inventing a better-sounding one.

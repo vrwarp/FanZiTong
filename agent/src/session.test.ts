@@ -218,3 +218,73 @@ describe('AgentSession', () => {
     await session.close('test');
   });
 });
+
+/**
+ * The SDK's message for a spawn that failed names the binary and guesses at
+ * libc, whatever the errno was actually about. A missing working directory
+ * produces exactly that sentence with a binary that runs perfectly well, and
+ * the learner reads it in the chat.
+ */
+describe('when Claude Code will not start', () => {
+  const SDK_MESSAGE =
+    "Claude Code native binary at /app/node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude exists but failed to launch. This usually means the binary does not match this system's libc — e.g. spawning a musl-linked binary on a glibc Linux host fails because the musl dynamic loader (/lib/ld-musl-*) is missing.";
+
+  /** An SDK whose query throws on the first message, the way a failed spawn does. */
+  function failingSdk(message: string) {
+    const { sdk } = fakeSdk([]);
+    return {
+      ...sdk,
+      query: (() => {
+        const iterator = (async function* () {
+          // What a failed spawn looks like from here: the stream throws before
+          // it ever yields a message.
+          if (message) throw new Error(message);
+          yield undefined as never;
+        })();
+        return Object.assign(iterator, {
+          interrupt: async () => undefined,
+          setModel: async () => undefined,
+          return: async () => ({ done: true, value: undefined }),
+        }) as never;
+      }) as SdkApi['query'],
+    } as SdkApi;
+  }
+
+  async function failWith(message: string, workspace: string) {
+    const frames: ServerFrame[] = [];
+    const session = new AgentSession(
+      'conv-fail',
+      {
+        sdk: failingSdk(message),
+        config: { ...config, workspace },
+        log,
+        facts: {},
+        claudeBinary: process.execPath,
+      },
+      () => {},
+    );
+    session.attach((frame) => frames.push(frame));
+    await session.send('hi', 'turn-1', 'quick');
+    await new Promise((r) => setTimeout(r, 10));
+    await session.close('test');
+    return frames.find((f) => f.type === 'result') as { ok: boolean; error: string };
+  }
+
+  it('says the working directory is missing instead of repeating the libc guess', async () => {
+    const result = await failWith(SDK_MESSAGE, '/data/workspace-that-is-not-there');
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/working directory \/data\/workspace-that-is-not-there/);
+    // The original is kept: it is evidence, just not the headline.
+    expect(result.error).toContain('exists but failed to launch');
+  });
+
+  it('leaves the message alone when nothing it can check is wrong', async () => {
+    const result = await failWith(SDK_MESSAGE, process.cwd());
+    expect(result.error).toBe(SDK_MESSAGE);
+  });
+
+  it('never rewrites an error that is not about starting', async () => {
+    const result = await failWith('Claude API error: 429', '/data/gone');
+    expect(result.error).toBe('Claude API error: 429');
+  });
+});

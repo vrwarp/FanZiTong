@@ -1,7 +1,11 @@
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import type { AddressInfo } from 'node:net';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import WebSocket from 'ws';
+import { createLogger } from './log';
 import { loadConfig } from './config';
-import { platformCandidates, startServer } from './server';
+import { ensureWorkspace, platformCandidates, startServer } from './server';
 
 /** Talk to a real socket on an ephemeral port; nothing spawns Claude Code. */
 function connect(port: number, origin?: string): WebSocket {
@@ -236,5 +240,45 @@ describe('choosing the Claude Code binary', () => {
     expect(platformCandidates({ platform: 'darwin', arch: 'arm64' }, true)).toEqual([
       'darwin-arm64',
     ]);
+  });
+});
+
+/**
+ * The bug this pins: a conversation is spawned with the workspace as its
+ * working directory, and a missing working directory is an ENOENT against the
+ * command — which the SDK reports as the Claude Code binary failing to launch,
+ * libc and all. The binary was never the problem, and the container's
+ * /data/workspace is exactly what a bind-mounted /data does not have.
+ */
+describe('the workspace conversations run in', () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'fzt-workspace-'));
+  const log = createLogger('error');
+
+  it('creates it when it is not there', () => {
+    const dir = path.join(root, 'data', 'workspace');
+    expect(existsSync(dir)).toBe(false);
+    expect(ensureWorkspace(dir, log)).toBe(dir);
+    expect(existsSync(dir)).toBe(true);
+  });
+
+  it('leaves one that already exists alone', () => {
+    const dir = path.join(root, 'again');
+    ensureWorkspace(dir, log);
+    expect(ensureWorkspace(dir, log)).toBe(dir);
+  });
+
+  it('answers with a directory that exists rather than refusing to serve', () => {
+    // A file where the directory should be: creating it cannot work, and every
+    // turn failing is a worse answer than running somewhere else.
+    const taken = path.join(root, 'taken');
+    writeFileSync(taken, 'not a directory');
+    expect(ensureWorkspace(taken, log)).toBe(process.cwd());
+  });
+
+  it('is created by the time the sidecar is listening', async () => {
+    const dir = path.join(root, 'on-boot');
+    const { stop } = await boot({ FZT_AGENT_WORKSPACE: dir });
+    expect(existsSync(dir)).toBe(true);
+    await stop();
   });
 });

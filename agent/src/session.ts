@@ -14,6 +14,7 @@ import { LIMITS, type ServerFrame } from '@/lib/assistant/protocol';
 import type { AgentConfig } from './config';
 import type { Logger } from './log';
 import { ClientBridge } from './bridge';
+import { explainLaunchFailure } from './diagnose';
 import { buildHooks } from './hooks';
 import { buildDeckServer } from './tools';
 import { buildSystemPrompt, type SessionFacts } from './prompt';
@@ -270,7 +271,13 @@ export class AgentSession {
         this.route(message as Record<string, unknown>);
       }
     } catch (error) {
-      const text = error instanceof Error ? error.message : String(error);
+      // The SDK reports every spawn errno as the binary failing to launch and
+      // suggests a libc mismatch. That is one of several possibilities and not
+      // the likeliest, so say which one it is before the learner reads it.
+      const text = explainLaunchFailure(error instanceof Error ? error.message : String(error), {
+        binary: this.deps.claudeBinary,
+        cwd: this.deps.config.workspace,
+      });
       this.deps.log.error('conversation failed', { id: this.id, error: text });
       this.emit({ type: 'result', turnId: this.currentTurn ?? undefined, ok: false, error: text });
     } finally {

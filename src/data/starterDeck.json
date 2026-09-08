@@ -111,7 +111,8 @@
     "牽手": "In Taiwanese 牽手 is the word for a wife — the one whose hand you took.",
     "垃圾": "lèsè in Taiwan, lājī on the mainland — the same two characters.",
     "黑白切": "Literally \"cut at random\": you point and the boss slices.",
-    "般若": "Read bō rě, not bān ruò: a Sanskrit sound kept in old characters."
+    "般若": "Read bō rě, not bān ruò: a Sanskrit sound kept in old characters.",
+    "數位": "Taiwan says 數位 where the mainland says 數字."
   },
   "variantNotes": {
     "藉口": "藉口 is the Taiwan standard spelling; 借口 is what most people type online.",
@@ -19303,6 +19304,506 @@
         "Gùshì de bèijǐng zài Éluósī.",
         "The story is set in Russia.",
         "俄囉斯|俄蘿斯"
+      ],
+      [
+        "御宅族",
+        "yù zhái zú",
+        "Otaku, devoted hobbyists",
+        "acg|loanword",
+        "他自認是御宅族。",
+        "Tā zìrèn shì yùzháizú.",
+        "He counts himself an otaku.",
+        "御它族|御宝族"
+      ],
+      [
+        "同人誌",
+        "tóng rén zhì",
+        "A fan-made publication",
+        "acg|loanword",
+        "她在賣自己的同人誌。",
+        "Tā zài mài zìjǐ de tóngrénzhì.",
+        "She's selling her own fanzine.",
+        "冋人誌|同入誌|向人誌"
+      ],
+      [
+        "同人女",
+        "tóng rén nǚ",
+        "A woman in fan-creation circles",
+        "acg|loanword",
+        "這場活動同人女很多。",
+        "Zhè chǎng huódòng tóngrénnǚ hěn duō.",
+        "There are a lot of fan creators at this event.",
+        "冋人女|同入女|向人女"
+      ],
+      [
+        "聖地巡禮",
+        "shèng dì xún lǐ",
+        "Visiting the real places a work is set",
+        "acg|loanword",
+        "他去日本聖地巡禮。",
+        "Tā qù Rìběn shèngdì xúnlǐ.",
+        "He went to Japan to visit the story's locations.",
+        "望地巡禮|聖池巡禮|聖地巡體"
+      ],
+      [
+        "攻略本",
+        "gōng lüè běn",
+        "A strategy guide",
+        "gaming|loanword",
+        "我照攻略本破關。",
+        "Wǒ zhào gōnglüèběn pòguān.",
+        "I finished the game following the guide.",
+        "放略本|攻路本|攻略木"
+      ],
+      [
+        "開放世界",
+        "kāi fàng shì jiè",
+        "An open world game",
+        "gaming",
+        "這是一款開放世界遊戲。",
+        "Zhè shì yì kuǎn kāifàng shìjiè yóuxì.",
+        "This is an open-world game.",
+        "閉放世界|開攻世界|開放世男"
+      ],
+      [
+        "主線",
+        "zhǔ xiàn",
+        "The main storyline",
+        "gaming|acg",
+        "主線我還沒破。",
+        "Zhǔxiàn wǒ hái méi pò.",
+        "I haven't finished the main story yet.",
+        "王線|主綿|住線"
+      ],
+      [
+        "支線",
+        "zhī xiàn",
+        "A side quest, a subplot",
+        "gaming|acg",
+        "支線任務比主線好玩。",
+        "Zhīxiàn rènwù bǐ zhǔxiàn hǎowán.",
+        "The side quests are better than the main story.",
+        "攴線|支綿|丈線"
+      ],
+      [
+        "連擊",
+        "lián jí",
+        "A combo",
+        "gaming",
+        "他打出了十連擊。",
+        "Tā dǎ chū le shí liánjí.",
+        "He pulled off a ten-hit combo.",
+        "運擊|蓮擊"
+      ],
+      [
+        "二周目",
+        "èr zhōu mù",
+        "A second playthrough",
+        "gaming|loanword",
+        "二周目有隱藏結局。",
+        "Èr zhōumù yǒu yǐncáng jiéjú.",
+        "The second playthrough has a hidden ending.",
+        "三周目|二周日|二周貝"
+      ],
+      [
+        "人機對戰",
+        "rén jī duì zhàn",
+        "Playing against the computer",
+        "gaming",
+        "先練人機對戰。",
+        "Xiān liàn rénjī duìzhàn.",
+        "Practise against the computer first.",
+        "入機對戰|人幾對戰|人機封戰"
+      ],
+      [
+        "官方網站",
+        "guān fāng wǎng zhàn",
+        "The official website",
+        "online",
+        "官方網站有詳細說明。",
+        "Guānfāng wǎngzhàn yǒu xiángxì shuōmíng.",
+        "There's a full explanation on the official site.",
+        "宮方網站|館方網站"
+      ],
+      [
+        "交流區",
+        "jiāo liú qū",
+        "A discussion area",
+        "online",
+        "交流區有人在問這題。",
+        "Jiāoliú qū yǒu rén zài wèn zhè tí.",
+        "Someone's asking about this in the discussion area.",
+        "文流區|交流品"
+      ],
+      [
+        "虛擬歌手",
+        "xū nǐ gē shǒu",
+        "A virtual singer",
+        "acg",
+        "這首是虛擬歌手唱的。",
+        "Zhè shǒu shì xūnǐ gēshǒu chàng de.",
+        "This song is sung by a virtual singer.",
+        "戲擬歌手|虛擬哥手|虛擬歌毛"
+      ],
+      [
+        "中之人",
+        "zhōng zhī rén",
+        "The performer behind a virtual character",
+        "acg|loanword",
+        "大家在猜中之人是誰。",
+        "Dàjiā zài cāi zhōngzhīrén shì shéi.",
+        "Everyone is guessing who the performer is.",
+        "巾之人|中之入|申之人"
+      ],
+      [
+        "原聲帶",
+        "yuán shēng dài",
+        "An original soundtrack",
+        "acg|media",
+        "我買了這部的原聲帶。",
+        "Wǒ mǎi le zhè bù de yuánshēngdài.",
+        "I bought this show's soundtrack.",
+        "元聲帶|原殼帶|原聲滯"
+      ],
+      [
+        "試映會",
+        "shì yìng huì",
+        "A preview screening",
+        "media",
+        "他去參加試映會。",
+        "Tā qù cānjiā shìyìnghuì.",
+        "He went to the preview screening.",
+        "試映曾|試映倉"
+      ],
+      [
+        "默片",
+        "mò piàn",
+        "A silent film",
+        "media",
+        "這是一部老默片。",
+        "Zhè shì yí bù lǎo mòpiàn.",
+        "This is an old silent film.",
+        "黑片|默爿|默斤"
+      ],
+      [
+        "製片",
+        "zhì piàn",
+        "A producer; film production",
+        "media",
+        "製片決定換導演。",
+        "Zhìpiàn juédìng huàn dǎoyǎn.",
+        "The producer decided to change director.",
+        "製爿|製斤"
+      ],
+      [
+        "戲服",
+        "xì fú",
+        "A stage costume",
+        "acg|media",
+        "這套戲服很重。",
+        "Zhè tào xìfú hěn zhòng.",
+        "This costume is heavy.",
+        "獻服|戲報|虛服"
+      ],
+      [
+        "皮影戲",
+        "pí yǐng xì",
+        "Shadow puppet theatre",
+        "acg|taiwan",
+        "高雄有皮影戲館。",
+        "Gāoxióng yǒu píyǐngxì guǎn.",
+        "Kaohsiung has a shadow puppet museum.",
+        "波影戲|皮影獻|坡影戲"
+      ],
+      [
+        "粵劇",
+        "yuè jù",
+        "Cantonese opera",
+        "acg",
+        "她從小學粵劇。",
+        "Tā cóngxiǎo xué yuèjù.",
+        "She has studied Cantonese opera since childhood.",
+        "粵據|粵遽"
+      ],
+      [
+        "能劇",
+        "néng jù",
+        "Noh theatre",
+        "acg|loanword",
+        "能劇的面具很有特色。",
+        "Néngjù de miànjù hěn yǒu tèsè.",
+        "Noh masks are very distinctive.",
+        "態劇|能據|熊劇"
+      ],
+      [
+        "獨白",
+        "dú bái",
+        "A monologue",
+        "acg|media",
+        "最後一段獨白很長。",
+        "Zuìhòu yí duàn dúbái hěn cháng.",
+        "The final monologue is long.",
+        "獨自|獨百"
+      ],
+      [
+        "獨角戲",
+        "dú jiǎo xì",
+        "A one-man show",
+        "acg",
+        "整場變成他的獨角戲。",
+        "Zhěng chǎng biàn chéng tā de dújiǎoxì.",
+        "The whole thing became his one-man show.",
+        "獨腳戲|獨角獻|獨角虛"
+      ],
+      [
+        "劍士",
+        "jiàn shì",
+        "A swordsman",
+        "acg|gaming",
+        "他選了劍士。",
+        "Tā xuǎn le jiànshì.",
+        "He picked the swordsman class.",
+        "劍土|劍工"
+      ],
+      [
+        "龍神",
+        "lóng shén",
+        "A dragon god",
+        "acg",
+        "傳說中有一位龍神。",
+        "Chuánshuō zhōng yǒu yí wèi lóngshén.",
+        "The legend speaks of a dragon god.",
+        "寵神|龍伸|籠神"
+      ],
+      [
+        "反英雄",
+        "fǎn yīng xióng",
+        "An antihero",
+        "acg",
+        "這個角色是反英雄。",
+        "Zhège juésè shì fǎn yīngxióng.",
+        "This character is an antihero.",
+        "返英雄|友英雄"
+      ],
+      [
+        "聖歌",
+        "shèng gē",
+        "A sacred song, a chorale",
+        "acg|christian",
+        "配樂用了聖歌。",
+        "Pèiyuè yòng le shènggē.",
+        "The score uses a chorale.",
+        "望歌|聖哥|聖欹"
+      ],
+      [
+        "小說集",
+        "xiǎo shuō jí",
+        "A collection of stories",
+        "literature",
+        "這本小說集有八篇。",
+        "Zhè běn xiǎoshuō jí yǒu bā piān.",
+        "This collection has eight stories.",
+        "少說集|小悅集|小脫集"
+      ],
+      [
+        "意識流",
+        "yì shí liú",
+        "Stream of consciousness",
+        "literature",
+        "這段是意識流的寫法。",
+        "Zhè duàn shì yìshíliú de xiěfǎ.",
+        "This passage is stream of consciousness.",
+        "竟識流|憶識流"
+      ],
+      [
+        "源氏物語",
+        "yuán shì wù yǔ",
+        "The Tale of Genji",
+        "literature",
+        "源氏物語是日本古典。",
+        "Yuánshì Wùyǔ shì Rìběn gǔdiǎn.",
+        "The Tale of Genji is a Japanese classic.",
+        "源民物語|源氏物悟|源氏物梧"
+      ],
+      [
+        "詩文",
+        "shī wén",
+        "Poetry and prose",
+        "literature",
+        "他喜歡讀古人的詩文。",
+        "Tā xǐhuān dú gǔrén de shīwén.",
+        "He likes reading the old poets.",
+        "時文|詩父|詩交"
+      ],
+      [
+        "字形",
+        "zì xíng",
+        "The shape of a character",
+        "language",
+        "這兩個字的字形很像。",
+        "Zhè liǎng ge zì de zìxíng hěn xiàng.",
+        "These two characters look very alike.",
+        "宇形|守形"
+      ],
+      [
+        "相容",
+        "xiāng róng",
+        "Compatible",
+        "tech|taiwan",
+        "這個版本不相容。",
+        "Zhège bǎnběn bù xiāngróng.",
+        "This version isn't compatible.",
+        "柏容|相榮|想容"
+      ],
+      [
+        "數位",
+        "shù wèi",
+        "Digital",
+        "tech|taiwan",
+        "這是數位修復版。",
+        "Zhè shì shùwèi xiūfù bǎn.",
+        "This is the digitally restored version.",
+        "樓位|數泣|摟位"
+      ],
+      [
+        "黏土",
+        "nián tǔ",
+        "Clay",
+        "acg|general",
+        "這個模型是黏土做的。",
+        "Zhège móxíng shì niántǔ zuò de.",
+        "This model is made of clay.",
+        "黏士|黏工"
+      ],
+      [
+        "生日派對",
+        "shēng rì pài duì",
+        "A birthday party",
+        "general",
+        "週末有她的生日派對。",
+        "Zhōumò yǒu tā de shēngrì pàiduì.",
+        "Her birthday party is at the weekend.",
+        "牛日派對|生口派對|生日脈對"
+      ],
+      [
+        "楚楚可憐",
+        "chǔ chǔ kě lián",
+        "Delicately pitiable",
+        "acg|idiom",
+        "她演得楚楚可憐。",
+        "Tā yǎn de chǔchǔ kělián.",
+        "She played it touchingly fragile.",
+        "楚楚哥憐|楚楚可鄰|楚楚可磷"
+      ],
+      [
+        "意氣",
+        "yì qì",
+        "Spirit, temper",
+        "written",
+        "兩人是意氣之爭。",
+        "Liǎng rén shì yìqì zhī zhēng.",
+        "The two are quarrelling out of pride.",
+        "竟氣|意汽|憶氣"
+      ],
+      [
+        "大志",
+        "dà zhì",
+        "Great ambition",
+        "written",
+        "少年應該有大志。",
+        "Shàonián yīnggāi yǒu dàzhì.",
+        "The young should have great ambitions.",
+        "太志|犬志|夫志"
+      ],
+      [
+        "革新",
+        "gé xīn",
+        "Reform, innovation",
+        "general",
+        "這個做法是一種革新。",
+        "Zhège zuòfǎ shì yì zhǒng géxīn.",
+        "This approach is a kind of innovation.",
+        "革親|革薪"
+      ],
+      [
+        "新紀元",
+        "xīn jì yuán",
+        "A new era",
+        "acg|written",
+        "這開啟了新紀元。",
+        "Zhè kāiqǐ le xīn jìyuán.",
+        "This opened a new era.",
+        "親紀元|新記元|新紀原"
+      ],
+      [
+        "同好",
+        "tóng hào",
+        "Fellow enthusiasts",
+        "acg",
+        "他找到一群同好。",
+        "Tā zhǎo dào yì qún tónghào.",
+        "He found a group of fellow enthusiasts.",
+        "冋好|同如|向好"
+      ],
+      [
+        "影畫",
+        "yǐng huà",
+        "Moving pictures, cinema (old term)",
+        "media|written",
+        "那個年代叫影畫。",
+        "Nàge niándài jiào yǐnghuà.",
+        "In those days they called it moving pictures.",
+        "影劃|影書"
+      ],
+      [
+        "雙星",
+        "shuāng xīng",
+        "A binary star; a famous pair",
+        "acg",
+        "他們被稱為雙星。",
+        "Tāmen bèi chēng wéi shuāngxīng.",
+        "They are known as the twin stars.",
+        "隻星|雋星"
+      ],
+      [
+        "赤色",
+        "chì sè",
+        "Crimson",
+        "acg|written",
+        "畫面染成赤色。",
+        "Huàmiàn rǎn chéng chìsè.",
+        "The screen turned crimson.",
+        "赤包|赤邑"
+      ],
+      [
+        "靈光",
+        "líng guāng",
+        "A flash of inspiration; an aura",
+        "written",
+        "他忽然靈光一閃。",
+        "Tā hūrán língguāng yì shǎn.",
+        "He had a sudden flash of inspiration.",
+        "靄光|靈先"
+      ],
+      [
+        "工房",
+        "gōng fáng",
+        "A workshop, an atelier",
+        "acg|loanword",
+        "這是他的個人工房。",
+        "Zhè shì tā de gèrén gōngfáng.",
+        "This is his personal workshop.",
+        "土房|士房"
+      ],
+      [
+        "疑難雜症",
+        "yí nán zá zhèng",
+        "Knotty problems of every kind",
+        "idiom|general",
+        "這個版專解疑難雜症。",
+        "Zhège bǎn zhuān jiě yínán zázhèng.",
+        "This board specialises in tricky problems.",
+        "疑雞雜症|疑難染症|疑難離症"
       ]
     ]
   }

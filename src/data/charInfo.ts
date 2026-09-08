@@ -1532,6 +1532,7 @@ export const CHAR_INFO: Record<string, CharInfo> = {
   飴: { pinyin: 'yí', gloss: 'malt sugar', tell: '飴 has 飠 beside 台' },
   麴: { pinyin: 'qú', gloss: 'yeast, ferment', tell: '麴 has 麥 beside 匊' },
   鰱: { pinyin: 'lián', gloss: 'silver carp', tell: '鰱 has 魚 beside 連' },
+  位: { pinyin: 'wèi', gloss: 'a place; a polite measure word', tell: '位 has 亻 beside 立' },
 };
 
 export function charInfo(ch: string): CharInfo | undefined {

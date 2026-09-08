@@ -116,16 +116,65 @@ As of the September 2026 pass:
 | anime  | 2093       | **1801**   | 123    | 1648        | 913    |
 | church | 3917       | 3564 (raw) | 1550   | 537         | 154    |
 
-Food, slang and anime have the supply for a thousand cards each. Anime was the
-domain I called capped at four hundred; 巴哈姆特 took it to 1801 and to 91 %
-MOE reading coverage, which says the ceiling was Wiktionary's coverage rather
-than the language's. Church's 3564 is a raw pool on the loose rule above, and
-on a one-in-three sample rate the vetted figure is nearer a thousand — enough,
-but only after reading it down.
-
 Only about half the attested words have an MOE reading, because compounds like
 炒飯 and 義大利麵 are not dictionary headwords. The rest have their reading
 composed per character and flagged for review rather than guessed silently.
+
+## From an attested word to a card
+
+Attestation gets a word onto a list. Everything after that is writing, and
+three things repeat often enough to be worth a tool.
+
+```bash
+node scripts/harvest/harvest.mjs pool     # attested rows -> out/pool.json
+node scripts/deck/pick.mjs slang 120      # candidates not yet in the deck
+node scripts/deck/add.mjs batch.json      # merge an authored batch
+node scripts/deck/foils.mjs fill          # give every new card its foils
+npx vitest run src/data                   # the real gate
+```
+
+**Foils come from a table of character pairs, not from invention.** Every card
+ships at least two look-alike foils, and the app can only explain a wrong pick
+when it has a note for both characters involved — so writing foils per card
+would mean writing two character notes per card, several thousand of them.
+Writing them per _pair_ instead means one note serves every word that character
+appears in. `scripts/deck/lookAlikes.json` holds 1060 characters with a
+look-alike; `chars.mjs` merges a batch of pairs into it and writes the notes
+into `src/data/charInfo.ts`.
+
+The pairs follow the words rather than the other way round: a batch is authored
+first, and the characters it turns out to be short of get their pairs
+afterwards. A word is never dropped because the table has not met it yet.
+
+## What the deck actually holds, and why it is not a thousand a domain
+
+The target was a thousand cards a domain. The deck holds 1967, and the gap is
+a fact about the sources rather than about the writing.
+
+| domain | authored | what the pool could still give                        |
+| ------ | -------- | ----------------------------------------------------- |
+| food   | 576      | the most, and the cleanest: dish names are dish names |
+| church | 573      | deep, but a third of the tail is segmentation debris  |
+| anime  | 510      | thins fast past the ACG vocabulary                    |
+| slang  | 308      | effectively exhausted of teachable material           |
+
+Attestation proves a word is used. It does not prove a word is worth teaching,
+and four kinds of attested word are deliberately not here:
+
+- **Words from another category.** The slang pool is full of food — 包子, 炒飯,
+  米粉, 龍蝦 — because Wiktionary's 漢語俚語 is not a clean set.
+- **PRC-internet coinage.** 內卷, 安利, 撒幣, 帶貨, 學霸, 木有, 屌絲, 打工人.
+  This deck's whole reason for a Taiwan-first rule is to keep them out.
+- **Sexual slang and ethnic or political abuse.** A large share of what remains
+  in the slang and ACG pools below the line already authored.
+- **Segmentation debris.** 不在, 中看, 得以, 所生, 還沒有, 說話的 pass the
+  verse-count rule and are not words a learner needs.
+
+The anime pool needs its own note. It was mined from 巴哈姆特 thread titles, so
+its most frequent entries are function words — 就是, 沒有, 可能, 覺得, 時候 —
+and not ACG vocabulary at all. The cards here are the vocabulary a reader
+actually meets; where a general word earns a place on its own merits it is
+tagged `general` so a later pass can lift it out without guessing.
 
 ## Running it
 

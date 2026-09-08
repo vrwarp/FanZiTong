@@ -1397,6 +1397,7 @@ export const CHAR_INFO: Record<string, CharInfo> = {
   醋: { pinyin: 'cù', gloss: 'vinegar', tell: '醋 has 酉 beside 昔' },
   鏟: { pinyin: 'chǎn', gloss: 'spatula, shovel', tell: '鏟 has 釒 beside 產' },
   綿: { pinyin: 'mián', gloss: 'continuous; cotton wool', tell: '綿 has 糹 beside 帛' },
+  通: { pinyin: 'tōng', gloss: 'to go through; general', tell: '通 has 辶 under 甬' },
 };
 
 export function charInfo(ch: string): CharInfo | undefined {

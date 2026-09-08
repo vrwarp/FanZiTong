@@ -231,6 +231,15 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 60,
     fillers: [
+      { label: '車輪餅', price: 25, pinyin: 'chē lún bǐng', gloss: 'a wheel cake with red bean' },
+      { label: '烤香腸', price: 25, pinyin: 'kǎo xiāng cháng', gloss: 'grilled sausage' },
+      { label: '燒烤拼盤', price: 150, pinyin: 'shāo kǎo pīn pán', gloss: 'a mixed grill platter' },
+      {
+        label: '東山鴨頭',
+        price: 60,
+        pinyin: 'dōng shān yā tóu',
+        gloss: 'braised duck head and offal',
+      },
       { label: '蒸餃', price: 60, pinyin: 'zhēng jiǎo', gloss: 'steamed dumplings' },
       { label: '薯餅', price: 30, pinyin: 'shǔ bǐng', gloss: 'hash brown' },
       {
@@ -296,6 +305,20 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 30,
     fillers: [
+      { label: '台灣啤酒', price: 60, pinyin: 'tái wān pí jiǔ', gloss: 'Taiwan Beer' },
+      { label: '米酒頭', price: 80, pinyin: 'mǐ jiǔ tóu', gloss: 'strong rice liquor' },
+      { label: '冰拿鐵', price: 65, pinyin: 'bīng ná tiě', gloss: 'iced latte' },
+      {
+        label: '鐵觀音奶茶',
+        price: 55,
+        pinyin: 'tiě guān yīn nǎi chá',
+        gloss: 'tieguanyin milk tea',
+      },
+      { label: '乳酸飲料', price: 30, pinyin: 'rǔ suān yǐn liào', gloss: 'cultured milk drink' },
+      { label: '威士忌可樂', price: 120, pinyin: 'wēi shì jì kě lè', gloss: 'whisky and cola' },
+      { label: '香片茶', price: 40, pinyin: 'xiāng piàn chá', gloss: 'jasmine tea' },
+      { label: '高粱酒', price: 150, pinyin: 'gāo liáng jiǔ', gloss: 'kaoliang liquor' },
+      { label: '清酒一合', price: 180, pinyin: 'qīng jiǔ yì gě', gloss: 'a measure of sake' },
       { label: '紅茶', price: 25, pinyin: 'hóng chá', gloss: 'black tea' },
       { label: '冬瓜茶', price: 25, pinyin: 'dōng guā chá', gloss: 'winter-melon tea' },
       { label: '青草茶', price: 25, pinyin: 'qīng cǎo chá', gloss: 'herbal tea' },
@@ -333,6 +356,9 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 60,
     fillers: [
+      { label: '糖炒栗子', price: 70, pinyin: 'táng chǎo lì zi', gloss: 'sugar-roasted chestnuts' },
+      { label: '李鹹', price: 40, pinyin: 'lǐ xián', gloss: 'salted preserved plum' },
+      { label: '龍眼乾', price: 90, pinyin: 'lóng yǎn gān', gloss: 'dried longan' },
       { label: '切盤水果', price: 80, pinyin: 'qiē pán shuǐ guǒ', gloss: 'a cut fruit platter' },
       { label: '芭樂', price: 50, pinyin: 'bā lè', gloss: 'guava', spoken: 'pua̍t-á' },
       { label: '蓮霧', price: 70, pinyin: 'lián wù', gloss: 'wax apple' },
@@ -435,10 +461,13 @@ export function categoryTemplate(id: MenuCategoryId): MenuCategoryTemplate {
 }
 
 const BREAKFAST_RE =
-  /(蛋餅|蘿蔔糕|飯糰|吐司|漢堡|三明治|抓餅|鐵板麵|燒餅|油條|熱狗|包子|肉包|菜包)/;
-const SNACK_RE = /(煎|圓|雞|豆腐|甜不辣|包小腸|粿|嗲|排|串|餃|粽|薯條|羹)/;
-const FRUIT_RE = /(瓜|果|梨|蕉|桃|柚|旦|椰|檸|莓|葡萄|荔枝|蓮霧|釋迦|芭樂|柳丁|番茄|水果)/;
-const GREENS_RE = /([菜葉筍芽蔥椒茄]|蘿蔔|玉米|地瓜|苦瓜|冬瓜|絲瓜|黃瓜|南瓜)/;
+  /(蛋餅|蘿蔔糕|飯糰|吐司|漢堡|三明治|抓餅|鐵板麵|燒餅|油條|熱狗|包子|肉包|菜包|刈包)/;
+const SNACK_RE = /(煎|圓|雞|豆腐|甜不辣|包小腸|粿|嗲|排|串|餃|粽|薯條|羹|香腸|關東煮|胡椒餅)/;
+const FRUIT_RE =
+  /(瓜|果|梨|蕉|桃|柚|旦|椰|檸|莓|栗|李|龍眼|葡萄|荔枝|蓮霧|釋迦|芭樂|柳丁|番茄|水果)/;
+/** A slip sells 啤酒 and 拿鐵 at the same counter as 紅茶; they are all drinks. */
+const DRINK_RE = /([茶漿奶汁乳酒]|咖啡|拿鐵|檳|可樂|汽水|鐵觀音|高粱|威士忌|烏龍|凍頂)/;
+const GREENS_RE = /([菜葉筍芽蔥茄]|辣椒|青椒|蘿蔔|玉米|地瓜|苦瓜|冬瓜|絲瓜|黃瓜|南瓜)/;
 const SWEET_RE = /(糖|糕|凍|布丁|甜點|點心|冰淇淋|巧克力|愛玉|仙草|月餅|麻糬|豆花|甜甜圈)/;
 /**
  * Words that name food without naming a dish.
@@ -449,14 +478,14 @@ const SWEET_RE = /(糖|糕|凍|布丁|甜點|點心|冰淇淋|巧克力|愛玉|�
  * the menu.
  */
 const NOT_A_DISH_RE =
-  /^(美食|素食|食品|中餐|小吃|日料|日本料理|料理|海鮮|水產|海產|糧食|油脂|乳酪|奶油|麻油|豬油|沙拉油|橄欖油|佛跳牆|天婦羅|天麩羅|米飯|白米|小米|大麥|生魚片|魚生|魚肉|牛肉|豬肉|羊肉|瘦肉|精肉|鮮肉|滷肉|魚鮮|豆腐渣)$/;
+  /^(美食|素食|食品|中餐|小吃|日料|日本料理|料理|海鮮|水產|海產|糧食|油脂|乳酪|奶油|麻油|豬油|沙拉油|橄欖油|佛跳牆|天婦羅|天麩羅|米飯|白米|小米|大麥|生魚片|魚生|魚肉|牛肉|豬肉|羊肉|瘦肉|精肉|鮮肉|滷肉|魚鮮|豆腐渣|香油|牛油|豆油|筷子|叉子|湯匙|餐具|茶壺|砂鍋|鏟子|微波|油炸|做菜|做飯|喝茶|辦桌|生食|甜食|麵食|食鹽|味精|八角|香草|麥片|麵粉|大蒜|蔥頭|海苔|椒鹽|糖醋|滷汁|辣椒醬|比薩|口條|魚市場|咖啡豆|茶葉|生鮮|魚類|堅果|杏仁|瓜子|開心果)$/;
 
 /** Heuristically place a dish name into a slip category by its characters. */
 export function categorizeDish(name: string): MenuCategoryId {
   if (NOT_A_DISH_RE.test(name) || /火鍋|醬$/.test(name)) return 'other';
   if (/便當/.test(name)) return 'bento';
   if (BREAKFAST_RE.test(name)) return 'breakfast';
-  if (/[茶漿奶汁]/.test(name)) return 'drink';
+  if (DRINK_RE.test(name)) return 'drink';
   if (/湯$/.test(name)) return 'soup';
   if (SWEET_RE.test(name)) return 'sweet';
   if (/[麵粉]/.test(name)) return 'noodle';

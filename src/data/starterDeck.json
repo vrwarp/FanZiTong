@@ -47,7 +47,12 @@
     "媽祖": "Má-tsóo",
     "土地公": "Thóo-tī-kong",
     "天公": "Thinn-kong",
-    "惡意": "ok-ì"
+    "惡意": "ok-ì",
+    "刈包": "kuah-pau",
+    "麵線": "mī-suànn",
+    "粿仔": "kué-á",
+    "辦桌": "pān-toh",
+    "豆油": "tāu-iû"
   },
   "notes": {
     "母湯": "Spells the sound of Taiwanese 毋通 m̄-thang, \"must not\" — the characters are only the sound.",
@@ -1318,6 +1323,1076 @@
         "Tā bǐjiào xǐhuān chī zhōngcān.",
         "He prefers Chinese food.",
         "巾餐|中参|申餐"
+      ],
+      [
+        "奶茶",
+        "nǎi chá",
+        "Milk tea",
+        "drink|taiwan",
+        "我要一杯奶茶少糖。",
+        "Wǒ yào yì bēi nǎichá shǎo táng.",
+        "One milk tea, less sugar, please.",
+        "妨茶|奶荼|仍茶"
+      ],
+      [
+        "綠茶",
+        "lǜ chá",
+        "Green tea",
+        "drink",
+        "他習慣早上喝綠茶。",
+        "Tā xíguàn zǎoshàng hē lǜchá.",
+        "He usually drinks green tea in the morning.",
+        "緣茶|綠荼|綠茱"
+      ],
+      [
+        "抹茶",
+        "mǒ chá",
+        "Matcha",
+        "drink|loanword",
+        "這支冰淇淋是抹茶的。",
+        "Zhè zhī bīngqílín shì mǒchá de.",
+        "This ice cream is matcha.",
+        "抹荼|抹茱"
+      ],
+      [
+        "茶葉",
+        "chá yè",
+        "Tea leaves",
+        "drink|taiwan",
+        "阿里山的茶葉很香。",
+        "Ālǐshān de cháyè hěn xiāng.",
+        "Alishan tea leaves are very fragrant.",
+        "荼葉|茶蝶|茱葉"
+      ],
+      [
+        "鐵觀音",
+        "tiě guān yīn",
+        "Tieguanyin oolong tea",
+        "drink|taiwan",
+        "木柵的鐵觀音很出名。",
+        "Mùzhà de tiěguānyīn hěn chūmíng.",
+        "Muzha tieguanyin is well known.",
+        "銅觀音|鐵觀因|銀觀音"
+      ],
+      [
+        "麵茶",
+        "miàn chá",
+        "Sweet toasted flour drink",
+        "drink|taiwan",
+        "冬天喝一碗麵茶。",
+        "Dōngtiān hē yì wǎn miànchá.",
+        "You have a bowl of toasted flour drink in winter.",
+        "麯茶|麵荼|麵茱"
+      ],
+      [
+        "拿鐵",
+        "ná tiě",
+        "A latte",
+        "drink|loanword",
+        "她點了一杯熱拿鐵。",
+        "Tā diǎn le yì bēi rè nátiě.",
+        "She ordered a hot latte.",
+        "拿銅|拿銀"
+      ],
+      [
+        "咖啡豆",
+        "kā fēi dòu",
+        "Coffee beans",
+        "drink",
+        "這包咖啡豆是新烘的。",
+        "Zhè bāo kāfēidòu shì xīn hōng de.",
+        "This bag of coffee beans is freshly roasted.",
+        "加啡豆|咖非豆|咖啡豈"
+      ],
+      [
+        "鮮奶",
+        "xiān nǎi",
+        "Fresh milk",
+        "drink",
+        "冰箱裡還有鮮奶。",
+        "Bīngxiāng lǐ hái yǒu xiānnǎi.",
+        "There's still fresh milk in the fridge.",
+        "鱻奶|鮮妨|羴奶"
+      ],
+      [
+        "啤酒",
+        "pí jiǔ",
+        "Beer",
+        "drink",
+        "熱炒配啤酒最對味。",
+        "Rèchǎo pèi píjiǔ zuì duìwèi.",
+        "Stir-fry with beer is the right pairing.",
+        "啤酌|啤酬"
+      ],
+      [
+        "米酒",
+        "mǐ jiǔ",
+        "Rice wine",
+        "drink|taiwan",
+        "麻油雞要加米酒。",
+        "Máyóu jī yào jiā mǐjiǔ.",
+        "Sesame oil chicken needs rice wine.",
+        "木酒|米酌|采酒"
+      ],
+      [
+        "高粱",
+        "gāo liáng",
+        "Kaoliang sorghum liquor",
+        "drink|taiwan",
+        "金門的高粱很烈。",
+        "Jīnmén de gāoliáng hěn liè.",
+        "Kinmen kaoliang is strong stuff.",
+        "亭粱|膏粱"
+      ],
+      [
+        "清酒",
+        "qīng jiǔ",
+        "Sake",
+        "drink|loanword",
+        "這瓶清酒要冰過。",
+        "Zhè píng qīngjiǔ yào bīng guò.",
+        "This bottle of sake should be chilled.",
+        "精酒|清酌|清酬"
+      ],
+      [
+        "威士忌",
+        "wēi shì jì",
+        "Whisky",
+        "drink|loanword",
+        "他不喝威士忌。",
+        "Tā bù hē wēishìjì.",
+        "He doesn't drink whisky.",
+        "威土忌|威工忌"
+      ],
+      [
+        "香檳",
+        "xiāng bīn",
+        "Champagne",
+        "drink|loanword",
+        "開一瓶香檳慶祝。",
+        "Kāi yì píng xiāngbīn qìngzhù.",
+        "Open a bottle of champagne to celebrate.",
+        "杳檳|昏檳"
+      ],
+      [
+        "小籠包",
+        "xiǎo lóng bāo",
+        "Soup dumplings",
+        "dish|taiwan",
+        "小籠包要小心燙嘴。",
+        "Xiǎolóngbāo yào xiǎoxīn tàng zuǐ.",
+        "Mind you don't burn your mouth on the soup dumplings.",
+        "少籠包|小龍包|小籠色"
+      ],
+      [
+        "水煎包",
+        "shuǐ jiān bāo",
+        "Pan-fried stuffed bun",
+        "street|taiwan",
+        "市場口的水煎包很好吃。",
+        "Shìchǎng kǒu de shuǐjiānbāo hěn hǎochī.",
+        "The pan-fried buns at the market entrance are good.",
+        "永煎包|水剪包|水煎色"
+      ],
+      [
+        "刈包",
+        "guà bāo",
+        "Steamed bun with braised pork",
+        "street|taiwan",
+        "尾牙要吃刈包。",
+        "Wěiyá yào chī guàbāo.",
+        "You eat gua bao at the year-end company dinner.",
+        "刈色|刈句|刈勺"
+      ],
+      [
+        "湯包",
+        "tāng bāo",
+        "Soup-filled bun",
+        "dish",
+        "這籠湯包剛蒸好。",
+        "Zhè lóng tāngbāo gāng zhēng hǎo.",
+        "This basket of soup buns is freshly steamed.",
+        "場包|湯色|揚包"
+      ],
+      [
+        "香腸",
+        "xiāng cháng",
+        "Taiwanese sweet sausage",
+        "street|taiwan",
+        "夜市的香腸配大蒜。",
+        "Yèshì de xiāngcháng pèi dàsuàn.",
+        "Night market sausage comes with raw garlic.",
+        "杳腸|香揚|昏腸"
+      ],
+      [
+        "豬血糕",
+        "zhū xiě gāo",
+        "Pork blood rice cake on a stick",
+        "street|taiwan",
+        "他敢吃豬血糕嗎？",
+        "Tā gǎn chī zhūxiěgāo ma?",
+        "Does he dare eat pork blood cake?",
+        "諸血糕|豬皿糕|豬血羔"
+      ],
+      [
+        "米糕",
+        "mǐ gāo",
+        "Steamed glutinous rice with pork",
+        "dish|taiwan",
+        "清水的米糕很有名。",
+        "Qīngshuǐ de mǐgāo hěn yǒumíng.",
+        "Qingshui is known for its glutinous rice.",
+        "木糕|米羔|采糕"
+      ],
+      [
+        "筒仔米糕",
+        "tǒng zǐ mǐ gāo",
+        "Glutinous rice steamed in a small tub",
+        "dish|taiwan",
+        "一份筒仔米糕加湯。",
+        "Yí fèn tǒngzǐmǐgāo jiā tāng.",
+        "One tub rice with soup.",
+        "筍仔米糕|筒仟米糕|筒仔木糕"
+      ],
+      [
+        "肉羹",
+        "ròu gēng",
+        "Thick pork soup",
+        "street|taiwan",
+        "中午吃了一碗肉羹。",
+        "Zhōngwǔ chī le yì wǎn ròugēng.",
+        "I had a bowl of thick pork soup at noon.",
+        "內羹|肉羔|肉羨"
+      ],
+      [
+        "肉燥飯",
+        "ròu zào fàn",
+        "Minced pork rice (Tainan name)",
+        "dish|taiwan",
+        "台南叫肉燥飯，台北叫滷肉飯。",
+        "Táinán jiào ròuzàofàn, Táiběi jiào lǔròufàn.",
+        "Tainan calls it rouzao rice, Taipei calls it luroufan.",
+        "內燥飯|肉燥飲"
+      ],
+      [
+        "排骨飯",
+        "pái gǔ fàn",
+        "Pork chop rice",
+        "bento|taiwan",
+        "排骨飯是最常見的便當。",
+        "Páigǔfàn shì zuì chángjiàn de biàndāng.",
+        "Pork chop rice is the commonest lunchbox.",
+        "啡骨飯|排胃飯|排骨飲"
+      ],
+      [
+        "鴨肉飯",
+        "yā ròu fàn",
+        "Sliced duck over rice",
+        "dish|taiwan",
+        "嘉義的鴨肉飯很有名。",
+        "Jiāyì de yāròufàn hěn yǒumíng.",
+        "Chiayi is known for its duck rice.",
+        "鴉肉飯|鴨內飯|鴨肉飲"
+      ],
+      [
+        "涼麵",
+        "liáng miàn",
+        "Cold sesame noodles",
+        "dish|taiwan",
+        "夏天中午吃涼麵。",
+        "Xiàtiān zhōngwǔ chī liángmiàn.",
+        "We have cold noodles at midday in summer.",
+        "諒麵|涼麯|景麵"
+      ],
+      [
+        "陽春麵",
+        "yáng chūn miàn",
+        "Plain noodle soup",
+        "dish|noodle",
+        "一碗陽春麵四十元。",
+        "Yì wǎn yángchūnmiàn sìshí yuán.",
+        "A bowl of plain noodles is forty dollars.",
+        "陽奉麵|陽春麯|陽秦麵"
+      ],
+      [
+        "麵線",
+        "miàn xiàn",
+        "Very fine wheat noodles",
+        "street|taiwan",
+        "這碗麵線加了香菜。",
+        "Zhè wǎn miànxiàn jiā le xiāngcài.",
+        "This bowl of thin noodles has coriander in it.",
+        "麯線|麵綿|麵緣"
+      ],
+      [
+        "粉圓",
+        "fěn yuán",
+        "Tapioca pearls",
+        "drink|taiwan",
+        "這杯的粉圓煮得剛好。",
+        "Zhè bēi de fěnyuán zhǔ de gānghǎo.",
+        "The pearls in this cup are cooked just right.",
+        "紛圓|粉圍|份圓"
+      ],
+      [
+        "愛玉冰",
+        "ài yù bīng",
+        "Aiyu jelly on ice",
+        "dessert|taiwan",
+        "熱天來一碗愛玉冰。",
+        "Rè tiān lái yì wǎn àiyùbīng.",
+        "A bowl of aiyu jelly on a hot day.",
+        "受玉冰|愛玉水|憂玉冰"
+      ],
+      [
+        "雪糕",
+        "xuě gāo",
+        "An ice lolly, ice cream bar",
+        "dessert",
+        "小孩吵著要吃雪糕。",
+        "Xiǎohái chǎo zhe yào chī xuěgāo.",
+        "The child is clamouring for an ice lolly.",
+        "雪羔|雪糊"
+      ],
+      [
+        "太陽餅",
+        "tài yáng bǐng",
+        "Taichung sun cake",
+        "dessert|taiwan",
+        "台中的太陽餅是名產。",
+        "Táizhōng de tàiyángbǐng shì míngchǎn.",
+        "Sun cakes are Taichung's speciality.",
+        "大陽餅|太陽拼"
+      ],
+      [
+        "胡椒餅",
+        "hú jiāo bǐng",
+        "Pepper bun baked in a clay oven",
+        "street|taiwan",
+        "胡椒餅剛出爐最好吃。",
+        "Hújiāobǐng gāng chūlú zuì hǎochī.",
+        "Pepper buns are best straight from the oven.",
+        "胡叔餅|胡椒拼"
+      ],
+      [
+        "煎餅",
+        "jiān bǐng",
+        "A savoury pancake; a cracker",
+        "snack",
+        "這種煎餅很脆。",
+        "Zhè zhǒng jiānbǐng hěn cuì.",
+        "This kind of cracker is very crisp.",
+        "剪餅|煎拼"
+      ],
+      [
+        "麻花",
+        "má huā",
+        "A twisted fried dough snack",
+        "snack",
+        "她買了一包麻花。",
+        "Tā mǎi le yì bāo máhuā.",
+        "She bought a packet of fried dough twists.",
+        "摩花|麻化|磨花"
+      ],
+      [
+        "粿仔",
+        "guǒ zǐ",
+        "Flat rice noodle sheets",
+        "dish|taiwan",
+        "這攤賣粿仔湯。",
+        "Zhè tān mài guǒzǐ tāng.",
+        "This stall sells rice sheet soup.",
+        "課仔|粿仟|粿仁"
+      ],
+      [
+        "粉粿",
+        "fěn guǒ",
+        "Yellow sweet potato jelly",
+        "dessert|taiwan",
+        "剉冰要加粉粿。",
+        "Cuòbīng yào jiā fěnguǒ.",
+        "Add the yellow jelly to the shaved ice.",
+        "紛粿|粉課|份粿"
+      ],
+      [
+        "草仔粿",
+        "cǎo zǐ guǒ",
+        "Mugwort rice cake",
+        "festival|taiwan",
+        "掃墓的時候吃草仔粿。",
+        "Sǎomù de shíhòu chī cǎozǐguǒ.",
+        "You eat mugwort cakes at grave-sweeping.",
+        "早仔粿|草仟粿|草仔課"
+      ],
+      [
+        "辦桌",
+        "bàn zhuō",
+        "An outdoor banquet in the street",
+        "taiwan|festival",
+        "他們在廟埕辦桌。",
+        "Tāmen zài miàochéng bànzhuō.",
+        "They're holding the banquet in the temple square.",
+        "辨桌|辯桌"
+      ],
+      [
+        "羊肉爐",
+        "yáng ròu lú",
+        "Mutton hotpot",
+        "dish|taiwan",
+        "冬天吃羊肉爐進補。",
+        "Dōngtiān chī yángròulú jìnbǔ.",
+        "You eat mutton hotpot in winter to build yourself up.",
+        "羌肉爐|羊內爐|羊肉盧"
+      ],
+      [
+        "薑母鴨",
+        "jiāng mǔ yā",
+        "Ginger duck stew",
+        "dish|taiwan",
+        "天冷就想吃薑母鴨。",
+        "Tiān lěng jiù xiǎng chī jiāngmǔyā.",
+        "Cold weather makes you want ginger duck.",
+        "薑毋鴨|薑母鴉"
+      ],
+      [
+        "麻油雞",
+        "má yóu jī",
+        "Sesame oil chicken",
+        "dish|taiwan",
+        "她生完孩子天天吃麻油雞。",
+        "Tā shēng wán háizi tiāntiān chī máyóujī.",
+        "After the birth she ate sesame oil chicken every day.",
+        "摩油雞|麻柚雞|麻油難"
+      ],
+      [
+        "關東煮",
+        "guān dōng zhǔ",
+        "Oden, simmered snacks",
+        "street|loanword",
+        "超商的關東煮很方便。",
+        "Chāoshāng de guāndōngzhǔ hěn fāngbiàn.",
+        "Convenience store oden is very handy.",
+        "開東煮|關車煮|關果煮"
+      ],
+      [
+        "串燒",
+        "chuàn shāo",
+        "Grilled skewers",
+        "street|loanword",
+        "我們去吃串燒喝啤酒。",
+        "Wǒmen qù chī chuànshāo hē píjiǔ.",
+        "Let's go for skewers and beer.",
+        "甲燒|串燃|由燒"
+      ],
+      [
+        "糖醋",
+        "táng cù",
+        "Sweet and sour",
+        "dish",
+        "糖醋排骨是招牌菜。",
+        "Tángcù páigǔ shì zhāopái cài.",
+        "Sweet and sour ribs is the house dish.",
+        "塘醋|唐醋"
+      ],
+      [
+        "椒鹽",
+        "jiāo yán",
+        "Salt and pepper (seasoning)",
+        "dish",
+        "椒鹽豆腐外酥內軟。",
+        "Jiāoyán dòufǔ wài sū nèi ruǎn.",
+        "Salt and pepper tofu is crisp outside and soft inside.",
+        "叔鹽|椒滷"
+      ],
+      [
+        "辣椒醬",
+        "là jiāo jiàng",
+        "Chilli sauce",
+        "condiment",
+        "桌上有辣椒醬。",
+        "Zhuō shàng yǒu làjiāojiàng.",
+        "There's chilli sauce on the table.",
+        "剌椒醬|辣叔醬|辣椒將"
+      ],
+      [
+        "滷汁",
+        "lǔ zhī",
+        "Braising liquid",
+        "ingredient|taiwan",
+        "這鍋滷汁用了十年。",
+        "Zhè guō lǔzhī yòng le shí nián.",
+        "This braising pot has been going for ten years.",
+        "鹽汁|滷什|漏汁"
+      ],
+      [
+        "味精",
+        "wèi jīng",
+        "MSG",
+        "ingredient",
+        "他們家不放味精。",
+        "Tāmen jiā bú fàng wèijīng.",
+        "They don't use MSG.",
+        "妹精|味情|昧精"
+      ],
+      [
+        "食鹽",
+        "shí yán",
+        "Table salt",
+        "ingredient",
+        "加一點食鹽提味。",
+        "Jiā yìdiǎn shíyán tíwèi.",
+        "Add a little salt to bring out the flavour.",
+        "良鹽|食滷"
+      ],
+      [
+        "香油",
+        "xiāng yóu",
+        "Sesame oil (for finishing)",
+        "ingredient",
+        "起鍋前淋一點香油。",
+        "Qǐguō qián lín yìdiǎn xiāngyóu.",
+        "Drizzle a little sesame oil before serving.",
+        "杳油|香柚|昏油"
+      ],
+      [
+        "麵粉",
+        "miàn fěn",
+        "Flour",
+        "ingredient",
+        "櫃子裡的麵粉用完了。",
+        "Guìzi lǐ de miànfěn yòng wán le.",
+        "The flour in the cupboard has run out.",
+        "麯粉|麵紛|麵份"
+      ],
+      [
+        "大蒜",
+        "dà suàn",
+        "Garlic",
+        "ingredient",
+        "這道菜要放大蒜。",
+        "Zhè dào cài yào fàng dàsuàn.",
+        "This dish needs garlic.",
+        "太蒜|犬蒜|夫蒜"
+      ],
+      [
+        "蔥頭",
+        "cōng tóu",
+        "Shallot",
+        "ingredient|taiwan",
+        "油蔥頭是台菜的靈魂。",
+        "Yóucōngtóu shì táicài de línghún.",
+        "Fried shallot is the soul of Taiwanese cooking.",
+        "匆頭|蔥預|聰頭"
+      ],
+      [
+        "八角",
+        "bā jiǎo",
+        "Star anise",
+        "ingredient",
+        "滷肉要放兩顆八角。",
+        "Lǔ ròu yào fàng liǎng kē bājiǎo.",
+        "Braised pork wants two star anise.",
+        "人角|八腳|入角"
+      ],
+      [
+        "海苔",
+        "hǎi tái",
+        "Dried seaweed sheets",
+        "ingredient|loanword",
+        "飯糰外面包海苔。",
+        "Fàntuán wàimiàn bāo hǎitái.",
+        "The rice ball is wrapped in seaweed.",
+        "悔苔|梅苔"
+      ],
+      [
+        "筷子",
+        "kuài zi",
+        "Chopsticks",
+        "tableware",
+        "筷子不可以插在飯上。",
+        "Kuàizi bù kěyǐ chā zài fàn shàng.",
+        "You must not stand chopsticks upright in rice.",
+        "筷了|筷孑"
+      ],
+      [
+        "湯匙",
+        "tāng chí",
+        "A spoon",
+        "tableware",
+        "麻煩給我一支湯匙。",
+        "Máfán gěi wǒ yì zhī tāngchí.",
+        "Could I have a spoon, please.",
+        "場匙|揚匙"
+      ],
+      [
+        "叉子",
+        "chā zi",
+        "A fork",
+        "tableware",
+        "小孩還不會用叉子。",
+        "Xiǎohái hái bú huì yòng chāzi.",
+        "The child can't use a fork yet.",
+        "叉了|叉孑"
+      ],
+      [
+        "餐具",
+        "cān jù",
+        "Tableware, cutlery",
+        "tableware",
+        "請自備環保餐具。",
+        "Qǐng zìbèi huánbǎo cānjù.",
+        "Please bring your own reusable cutlery.",
+        "参具|餐真|餮具"
+      ],
+      [
+        "茶壺",
+        "chá hú",
+        "A teapot",
+        "tableware",
+        "這個茶壺是阿公留下的。",
+        "Zhège cháhú shì āgōng liú xià de.",
+        "Grandpa left this teapot behind.",
+        "荼壺|茱壺"
+      ],
+      [
+        "砂鍋",
+        "shā guō",
+        "An earthenware pot",
+        "tableware",
+        "砂鍋燉湯特別香。",
+        "Shāguō dùn tāng tèbié xiāng.",
+        "Soup stewed in a clay pot smells wonderful.",
+        "沙鍋|砂過|砂渦"
+      ],
+      [
+        "鏟子",
+        "chǎn zi",
+        "A wok spatula",
+        "tableware",
+        "她拿鏟子翻了一下。",
+        "Tā ná chǎnzi fān le yíxià.",
+        "She turned it once with the spatula.",
+        "鏟了|鏟孑"
+      ],
+      [
+        "料理",
+        "liào lǐ",
+        "Cuisine; to cook",
+        "general|loanword",
+        "這家做的是日本料理。",
+        "Zhè jiā zuò de shì Rìběn liàolǐ.",
+        "This place does Japanese cuisine.",
+        "科理|料埋|斗理"
+      ],
+      [
+        "做菜",
+        "zuò cài",
+        "To cook a meal",
+        "general",
+        "他假日喜歡做菜。",
+        "Tā jiàrì xǐhuān zuòcài.",
+        "He likes to cook at weekends.",
+        "作菜|做采"
+      ],
+      [
+        "油炸",
+        "yóu zhá",
+        "To deep-fry",
+        "technique",
+        "油炸的東西不要吃太多。",
+        "Yóuzhá de dōngxi bú yào chī tài duō.",
+        "Don't eat too much deep-fried food.",
+        "柚炸|軸炸"
+      ],
+      [
+        "微波",
+        "wéi bō",
+        "To microwave",
+        "technique",
+        "便當微波兩分鐘。",
+        "Biàndāng wéibō liǎng fēnzhōng.",
+        "Microwave the lunchbox for two minutes.",
+        "微頗|微玻|微皮"
+      ],
+      [
+        "鮭魚",
+        "guī yú",
+        "Salmon",
+        "ingredient",
+        "這片鮭魚很新鮮。",
+        "Zhè piàn guīyú hěn xīnxiān.",
+        "This piece of salmon is very fresh.",
+        "鮭魯|鮭漁"
+      ],
+      [
+        "鯖魚",
+        "qīng yú",
+        "Mackerel",
+        "ingredient|taiwan",
+        "南方澳以鯖魚出名。",
+        "Nánfāng'ào yǐ qīngyú chūmíng.",
+        "Nanfangao is known for its mackerel.",
+        "鯖魯|鯖漁"
+      ],
+      [
+        "鱈魚",
+        "xuě yú",
+        "Cod",
+        "ingredient",
+        "鱈魚肉質很細。",
+        "Xuěyú ròuzhì hěn xì.",
+        "Cod has a very fine texture.",
+        "鱈魯|鱈漁"
+      ],
+      [
+        "秋刀魚",
+        "qiū dāo yú",
+        "Pacific saury",
+        "ingredient",
+        "秋刀魚烤過最好吃。",
+        "Qiūdāoyú kǎo guò zuì hǎochī.",
+        "Saury is best grilled.",
+        "揪刀魚|秋力魚|秋刀魯"
+      ],
+      [
+        "鹹魚",
+        "xián yú",
+        "Salted fish",
+        "ingredient",
+        "鹹魚炒飯味道很重。",
+        "Xiányú chǎofàn wèidào hěn zhòng.",
+        "Salted fish fried rice has a strong flavour.",
+        "咸魚|鹹魯|鹼魚"
+      ],
+      [
+        "魚市場",
+        "yú shì chǎng",
+        "A fish market",
+        "general|taiwan",
+        "清晨的魚市場很熱鬧。",
+        "Qīngchén de yúshìchǎng hěn rènào.",
+        "The fish market is busy at dawn.",
+        "魯市場|魚市湯|漁市場"
+      ],
+      [
+        "開心果",
+        "kāi xīn guǒ",
+        "Pistachio",
+        "snack",
+        "她一邊看電視一邊剝開心果。",
+        "Tā yìbiān kàn diànshì yìbiān bō kāixīnguǒ.",
+        "She shells pistachios while watching television.",
+        "閉心果|開必果|開心杲"
+      ],
+      [
+        "杏仁",
+        "xìng rén",
+        "Almond",
+        "ingredient",
+        "這杯是杏仁茶。",
+        "Zhè bēi shì xìngrén chá.",
+        "This cup is almond tea.",
+        "杏人|杏什|杏仔"
+      ],
+      [
+        "栗子",
+        "lì zi",
+        "Chestnut",
+        "snack",
+        "冬天路邊有賣糖炒栗子。",
+        "Dōngtiān lùbiān yǒu mài tángchǎo lìzi.",
+        "They sell roast chestnuts by the road in winter.",
+        "栗了|栗孑"
+      ],
+      [
+        "瓜子",
+        "guā zǐ",
+        "Melon seeds",
+        "snack|festival",
+        "過年大家邊聊天邊嗑瓜子。",
+        "Guònián dàjiā biān liáotiān biān kè guāzǐ.",
+        "At New Year everyone chats and cracks melon seeds.",
+        "爪子|瓜了|瓜孑"
+      ],
+      [
+        "堅果",
+        "jiān guǒ",
+        "Nuts",
+        "snack",
+        "她每天吃一把堅果。",
+        "Tā měitiān chī yì bǎ jiānguǒ.",
+        "She eats a handful of nuts every day.",
+        "堅杲|堅東"
+      ],
+      [
+        "桃子",
+        "táo zi",
+        "Peach",
+        "fruit",
+        "這顆桃子還沒熟。",
+        "Zhè kē táozi hái méi shú.",
+        "This peach isn't ripe yet.",
+        "挑子|桃了|跳子"
+      ],
+      [
+        "李子",
+        "lǐ zi",
+        "Plum",
+        "fruit",
+        "李子有一點酸。",
+        "Lǐzi yǒu yìdiǎn suān.",
+        "Plums are a bit sour.",
+        "李了|李孑"
+      ],
+      [
+        "龍眼",
+        "lóng yǎn",
+        "Longan",
+        "fruit|taiwan",
+        "八月的龍眼最甜。",
+        "Bāyuè de lóngyǎn zuì tián.",
+        "August longans are the sweetest.",
+        "寵眼|龍眠|籠眼"
+      ],
+      [
+        "火龍果",
+        "huǒ lóng guǒ",
+        "Dragon fruit",
+        "fruit|taiwan",
+        "紅肉的火龍果比較甜。",
+        "Hóng ròu de huǒlóngguǒ bǐjiào tián.",
+        "Red-fleshed dragon fruit is sweeter.",
+        "火寵果|火龍杲|火籠果"
+      ],
+      [
+        "冬瓜",
+        "dōng guā",
+        "Winter melon",
+        "vegetable|taiwan",
+        "冬瓜茶很退火。",
+        "Dōngguā chá hěn tuìhuǒ.",
+        "Winter melon tea cools you down.",
+        "終瓜|冬爪|咚瓜"
+      ],
+      [
+        "小黃瓜",
+        "xiǎo huáng guā",
+        "Cucumber",
+        "vegetable",
+        "涼拌小黃瓜很爽口。",
+        "Liángbàn xiǎohuángguā hěn shuǎngkǒu.",
+        "Cold dressed cucumber is refreshing.",
+        "少黃瓜|小寅瓜|小黃爪"
+      ],
+      [
+        "生菜",
+        "shēng cài",
+        "Lettuce, salad greens",
+        "vegetable",
+        "漢堡裡夾了生菜。",
+        "Hànbǎo lǐ jiá le shēngcài.",
+        "There's lettuce in the burger.",
+        "牛菜|生采"
+      ],
+      [
+        "空心菜",
+        "kōng xīn cài",
+        "Water spinach",
+        "vegetable|taiwan",
+        "炒空心菜要大火。",
+        "Chǎo kōngxīncài yào dà huǒ.",
+        "Water spinach needs a high flame.",
+        "控心菜|空必菜|空心采"
+      ],
+      [
+        "優酪乳",
+        "yōu luò rǔ",
+        "Drinking yoghurt",
+        "drink",
+        "她早餐喝優酪乳。",
+        "Tā zǎocān hē yōuluòrǔ.",
+        "She drinks yoghurt at breakfast.",
+        "憂酪乳|優酪孔|尤酪乳"
+      ],
+      [
+        "羊乳",
+        "yáng rǔ",
+        "Goat's milk",
+        "drink|taiwan",
+        "以前學校有訂羊乳。",
+        "Yǐqián xuéxiào yǒu dìng yángrǔ.",
+        "School used to have a goat's milk order.",
+        "羌乳|羊孔|洋乳"
+      ],
+      [
+        "糖水",
+        "táng shuǐ",
+        "Sugar syrup; sweet soup",
+        "dessert",
+        "這碗甜湯的糖水太甜。",
+        "Zhè wǎn tiántāng de tángshuǐ tài tián.",
+        "The syrup in this sweet soup is too sweet.",
+        "塘水|糖永|唐水"
+      ],
+      [
+        "東坡肉",
+        "dōng pō ròu",
+        "Dongpo braised pork belly",
+        "dish",
+        "東坡肉燉得入口即化。",
+        "Dōngpōròu dùn de rùkǒu jí huà.",
+        "The Dongpo pork is stewed until it melts.",
+        "車坡肉|東皮肉|東坡內"
+      ],
+      [
+        "番茄炒蛋",
+        "fān qié chǎo dàn",
+        "Tomato with scrambled egg",
+        "dish",
+        "番茄炒蛋人人都會做。",
+        "Fānqié chǎo dàn rénrén dōu huì zuò.",
+        "Everyone can make tomato with egg.",
+        "番咖炒蛋|番茄沙蛋|番架炒蛋"
+      ],
+      [
+        "咖哩",
+        "kā lǐ",
+        "Curry",
+        "dish|loanword",
+        "今天晚餐煮咖哩。",
+        "Jīntiān wǎncān zhǔ kālǐ.",
+        "We're cooking curry for dinner.",
+        "加哩|珈哩|茄哩"
+      ],
+      [
+        "比薩",
+        "bǐ sà",
+        "Pizza",
+        "dish|loanword",
+        "他們叫了一個大比薩。",
+        "Tāmen jiào le yí ge dà bǐsà.",
+        "They ordered a large pizza.",
+        "北薩|此薩|七薩"
+      ],
+      [
+        "生食",
+        "shēng shí",
+        "Raw food; sashimi grade",
+        "general",
+        "這批是生食等級的。",
+        "Zhè pī shì shēngshí děngjí de.",
+        "This batch is sashimi grade.",
+        "牛食|生良"
+      ],
+      [
+        "甜食",
+        "tián shí",
+        "Sweet things",
+        "general",
+        "他不太喜歡甜食。",
+        "Tā bú tài xǐhuān tiánshí.",
+        "He doesn't much care for sweet things.",
+        "甘食|甜良|舌食"
+      ],
+      [
+        "麵食",
+        "miàn shí",
+        "Wheat-based food",
+        "general",
+        "北方人比較常吃麵食。",
+        "Běifāng rén bǐjiào cháng chī miànshí.",
+        "Northerners eat more wheat-based food.",
+        "麯食|麵良"
+      ],
+      [
+        "喝茶",
+        "hē chá",
+        "To drink tea",
+        "general",
+        "我們坐下來喝茶。",
+        "Wǒmen zuò xiàlái hē chá.",
+        "Let's sit down and have some tea.",
+        "喝荼|喝茱"
+      ],
+      [
+        "做飯",
+        "zuò fàn",
+        "To cook a meal",
+        "general",
+        "今天輪到我做飯。",
+        "Jīntiān lún dào wǒ zuòfàn.",
+        "It's my turn to cook today.",
+        "作飯|做飲"
+      ],
+      [
+        "口條",
+        "kǒu tiáo",
+        "Pig tongue; a way of speaking",
+        "ingredient|taiwan",
+        "這盤滷口條很嫩。",
+        "Zhè pán lǔ kǒutiáo hěn nèn.",
+        "This plate of braised tongue is tender.",
+        "日條|口修"
+      ],
+      [
+        "雞爪",
+        "jī zhǎo",
+        "Chicken feet",
+        "ingredient",
+        "滷雞爪是下酒菜。",
+        "Lǔ jīzhǎo shì xiàjiǔ cài.",
+        "Braised chicken feet go with a drink.",
+        "難爪|雞瓜|雛爪"
+      ],
+      [
+        "魚卵",
+        "yú luǎn",
+        "Fish roe",
+        "ingredient",
+        "這道菜有魚卵。",
+        "Zhè dào cài yǒu yúluǎn.",
+        "This dish has fish roe in it.",
+        "魯卵|漁卵"
+      ],
+      [
+        "麥片",
+        "mài piàn",
+        "Oats, cereal flakes",
+        "breakfast",
+        "他早上泡麥片吃。",
+        "Tā zǎoshàng pào màipiàn chī.",
+        "He has cereal in the morning.",
+        "麥爿|麥斤"
+      ],
+      [
+        "香草",
+        "xiāng cǎo",
+        "Vanilla; herbs",
+        "ingredient",
+        "我要香草口味的。",
+        "Wǒ yào xiāngcǎo kǒuwèi de.",
+        "I'd like the vanilla flavour.",
+        "杳草|香早|昏草"
+      ],
+      [
+        "豆油",
+        "dòu yóu",
+        "Soy sauce (Taiwanese term)",
+        "ingredient|taigi",
+        "倒一點豆油進去。",
+        "Dào yìdiǎn dòuyóu jìnqù.",
+        "Pour a little soy sauce in.",
+        "豈油|豆柚|豆軸"
+      ],
+      [
+        "牛油",
+        "niú yóu",
+        "Butter; beef tallow",
+        "ingredient",
+        "鍋裡先放一塊牛油。",
+        "Guō lǐ xiān fàng yí kuài niúyóu.",
+        "Put a knob of butter in the pan first.",
+        "午油|牛柚|半油"
       ]
     ],
     "church": [

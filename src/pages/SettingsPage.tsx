@@ -9,6 +9,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { META_KEYS, repository } from '@/db/repository';
 import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useSettings } from '@/hooks/useSettings';
+import { buildAnalyticsExport, serializeAnalyticsExport } from '@/lib/analytics/export';
 import { downloadTextFile, timestampForFilename } from '@/lib/io/download';
 import { serializeJsonDeck, toJsonDeck } from '@/lib/io/json';
 import { cn } from '@/lib/util/cn';
@@ -79,6 +80,26 @@ export default function SettingsPage() {
       `fanzitong-backup-${timestampForFilename()}.json`,
       serializeJsonDeck(deck),
       'application/json',
+    );
+  };
+
+  /**
+   * A diagnostic file, not a backup: studied cards, what happened during study
+   * and the patterns the app found in it. Small enough to read whole, so it can
+   * be handed to someone who is asked why the app behaves the way it does.
+   */
+  const exportAnalytics = async () => {
+    const events = await repository.getAllStudyEvents();
+    const report = buildAnalyticsExport({ cards, reviewLogs: logs, settings, events });
+    downloadTextFile(
+      `fanzitong-analytics-${timestampForFilename()}.json`,
+      serializeAnalyticsExport(report),
+      'application/json',
+    );
+    setNotice(
+      `Analytics exported: ${report.report.cards.length} studied cards, ` +
+        `${report.report.activity.totalAnswers} answers, ` +
+        `${report.report.diagnostics.length} finding(s).`,
     );
   };
 
@@ -253,7 +274,9 @@ export default function SettingsPage() {
         <h2 className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400">Data</h2>
         <p className="text-sm text-stone-600 dark:text-stone-300">
           Everything lives in this browser. Back up regularly: the JSON backup contains cards, FSRS
-          state, review history and settings.{' '}
+          state, review history and settings. The analytics export is a much smaller, separate file
+          — only the cards you have studied, what happened while you studied them, and what the app
+          makes of it — for asking someone why the app behaves as it does.{' '}
           {storage && <span className="text-stone-500">{storage}.</span>}
         </p>
         <p className="text-sm font-semibold" data-testid="last-backup">
@@ -285,6 +308,13 @@ export default function SettingsPage() {
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={exportBackup} data-testid="export-backup">
             ⬇️ Export full backup
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => void exportAnalytics()}
+            data-testid="export-analytics"
+          >
+            📊 Export study analytics
           </Button>
           <Button
             variant="outline"

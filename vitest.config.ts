@@ -52,6 +52,7 @@ export default defineConfig({
         'src/hooks/useSettings.ts',
         'src/hooks/useNow.ts',
         'src/hooks/useStudyEngine.ts',
+        'src/lib/analytics/recorder.ts',
         'src/lib/io/download.ts',
       ],
       thresholds: {

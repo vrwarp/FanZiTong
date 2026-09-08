@@ -79,7 +79,9 @@ describe('parseJsonDeck', () => {
 
   it('carries review logs and settings from a full backup', () => {
     const card = makeCard();
-    const log = makeLog({ cardId: card.id });
+    // stateBefore is what tells a review apart from a new card's learning
+    // steps; a restore that drops it miscounts the daily review budget.
+    const log = makeLog({ cardId: card.id, stateBefore: 2 });
     const deck = toJsonDeck([card], {
       deckName: 'backup',
       reviewLogs: [log],
@@ -92,6 +94,7 @@ describe('parseJsonDeck', () => {
     expect(parsed.issues).toEqual([]);
     expect(parsed.rows[0].fsrs).toEqual(card.fsrs);
     expect(parsed.reviewLogs).toEqual([log]);
+    expect(parsed.reviewLogs[0].stateBefore).toBe(2);
     expect(parsed.settings?.targetRetention).toBe(0.85);
   });
 

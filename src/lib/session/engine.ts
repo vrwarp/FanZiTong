@@ -8,11 +8,13 @@ import { buildMenuExercise, companionsFor } from '@/lib/exercises/menu';
 import { fromFsrsCard, toFsrsCard, type RatingPreview } from '@/lib/fsrs/scheduler';
 import {
   DRILL_EVERY_N_CARDS,
+  MAX_SESSION_REQUEUES,
   chooseDrillType,
   hasClozeSentence,
   isDrillCandidate,
   shouldRequeue,
 } from '@/lib/queue/session';
+import type { SessionMode, StudyEvent, StudyEventSink } from '@/lib/analytics/events';
 import { uuid } from '@/lib/util/id';
 import { type Rng } from '@/lib/util/random';
 import { formatInterval } from '@/lib/util/time';
@@ -38,6 +40,10 @@ export interface DrillOutcome {
    * counted as an answer, no schedule change.
    */
   applyRating?: boolean;
+  /** The wrong option the learner picked, for the analytics event log. */
+  picked?: string;
+  /** How many misses it took before the shape was found. */
+  misses?: number;
 }
 
 export interface SessionResultEntry {
@@ -90,7 +96,8 @@ export interface EngineOptions {
   /** Interleave a contextual drill after every 5th answered card (daily session). */
   interleaveDrills: boolean;
   /**
-   * Re-show cards still in (re)learning later in this session (learn-ahead).
+   * Re-show cards still in (re)learning later in this session (learn-ahead),
+   * up to `MAX_SESSION_REQUEUES` times per card.
    * Defaults to `interleaveDrills`, i.e. on for daily sessions, off for standalone drills.
    */
   requeueLearning?: boolean;
@@ -100,6 +107,15 @@ export interface EngineOptions {
   previewReuseMs?: number;
   /** Progress of a session paused earlier today, so counts and time carry on. */
   restore?: SessionProgress;
+  /** Stable id for this session; generated when the caller does not supply one. */
+  sessionId?: string;
+  /** Which drill a standalone session is running, for the event log. */
+  drillType?: ExerciseType;
+  /**
+   * Receives one event per session boundary, answer and skip — including the
+   * answers FSRS ignores, which never reach the review log.
+   */
+  onEvent?: StudyEventSink;
 }
 
 /** The part of a session worth carrying across a pause (see `serialize`). */
@@ -111,6 +127,8 @@ export interface SessionProgress {
   drilled: string[];
   nextDrillAt: number;
   lastDrillType?: ExerciseType;
+  /** Re-queue counts per card, so a resumed session cannot restart the loop. */
+  requeues?: Record<string, number>;
 }
 
 export interface EngineSnapshot {
@@ -152,12 +170,22 @@ export class StudyEngine {
   private readonly drillQueue: DrillExercise[];
   private drillTotal: number;
   private readonly requeuedDrills = new Set<string>();
+  /** Times each card has been put back into the queue this session (see MAX_SESSION_REQUEUES). */
+  private readonly requeues = new Map<string, number>();
   private readonly scheduler: FSRS;
   private readonly interleave: boolean;
   private readonly requeueLearning: boolean;
   private readonly now: () => Date;
   private readonly rng: Rng;
   private readonly previewReuseMs: number;
+  private readonly sessionId: string;
+  private readonly mode: SessionMode;
+  private readonly drillType: ExerciseType | undefined;
+  private readonly onEvent: StudyEventSink | undefined;
+  private eventSeq = 0;
+  private sessionEnded = false;
+  /** Answers given per card this session, so an event can carry its repeat index. */
+  private readonly answersByCard = new Map<string, number>();
 
   private status: 'active' | 'complete' = 'active';
   private step: SessionStep | null = null;
@@ -186,6 +214,10 @@ export class StudyEngine {
     this.now = options.now ?? (() => new Date());
     this.rng = options.rng ?? Math.random;
     this.previewReuseMs = options.previewReuseMs ?? 60_000;
+    this.sessionId = options.sessionId ?? uuid();
+    this.mode = options.interleaveDrills ? 'daily' : 'drill';
+    this.drillType = options.drillType;
+    this.onEvent = options.onEvent;
     const restore = options.restore;
     // A resumed session counts from where it stopped: the clock excludes the pause.
     this.startedAt = this.now().getTime() - (restore?.elapsedMs ?? 0);
@@ -194,9 +226,21 @@ export class StudyEngine {
       this.answered = restore.answered;
       this.results.push(...restore.results);
       for (const id of restore.drilled) this.drilled.add(id);
+      for (const [id, count] of Object.entries(restore.requeues ?? {})) {
+        this.requeues.set(id, count);
+      }
       this.nextDrillAt = restore.nextDrillAt;
       this.lastDrillType = restore.lastDrillType;
+      for (const result of restore.results) {
+        this.answersByCard.set(result.cardId, (this.answersByCard.get(result.cardId) ?? 0) + 1);
+      }
     }
+    this.emit({
+      kind: 'session_start',
+      planned: this.queue.length,
+      plannedDrills: this.drillTotal,
+      resumed: Boolean(restore),
+    });
     this.advance();
   }
 
@@ -209,6 +253,7 @@ export class StudyEngine {
       drilled: Array.from(this.drilled),
       nextDrillAt: this.nextDrillAt,
       lastDrillType: this.lastDrillType,
+      requeues: Object.fromEntries(this.requeues),
     };
   }
 
@@ -281,7 +326,16 @@ export class StudyEngine {
       this.preview && now.getTime() - this.preview.at <= this.previewReuseMs
         ? this.preview.log[rating as Grade]
         : null;
-    const persisted = this.applyRating(cardId, rating, 'rapid_recognition', now, cached?.card);
+    const detail: Pick<StudyEvent, 'correct' | 'revealLatencyMs'> = { correct: rating !== 1 };
+    if (this.revealLatencyMs !== null) detail.revealLatencyMs = this.revealLatencyMs;
+    const persisted = this.applyRating(
+      cardId,
+      rating,
+      'rapid_recognition',
+      now,
+      cached?.card,
+      detail,
+    );
     this.answered += 1;
     this.revealed = false;
     this.revealLatencyMs = null;
@@ -307,17 +361,42 @@ export class StudyEngine {
       const rating =
         outcome.applyRating === false || companion ? null : drillRatingFor(card, outcome.correct);
       if (rating === null) {
+        const timeMs = Math.max(0, now.getTime() - this.stepStartedAt);
         this.results.push({
           cardId: card.id,
           rating: outcome.correct ? 3 : 2,
           exerciseType,
-          timeMs: Math.max(0, now.getTime() - this.stepStartedAt),
+          timeMs,
           timestamp: now.toISOString(),
           applied: false,
         });
+        // The review log never sees this answer, because FSRS did not act on
+        // it. Without the event there would be no record that it happened.
+        this.emit({
+          kind: 'answer',
+          cardId: card.id,
+          exerciseType,
+          applied: false,
+          latencyMs: timeMs,
+          repeatIndex: this.bumpAnswerCount(card.id),
+          stateBefore: card.fsrs.state,
+          stateAfter: card.fsrs.state,
+          stabilityBefore: card.fsrs.stability,
+          difficultyBefore: card.fsrs.difficulty,
+          ...this.answerDetail(outcome.correct, outcome),
+        });
         continue;
       }
-      persisted.push(this.applyRating(card.id, rating, exerciseType, now));
+      persisted.push(
+        this.applyRating(
+          card.id,
+          rating,
+          exerciseType,
+          now,
+          undefined,
+          this.answerDetail(outcome.correct, outcome),
+        ),
+      );
     }
     // In a standalone drill a missed item comes back once before the end: the
     // learner should leave having found the shape, not having been told it.
@@ -342,6 +421,13 @@ export class StudyEngine {
   /** Skip the active drill without rating anything. */
   skipDrill(): void {
     if (this.step?.kind !== 'drill') return;
+    const exercise = this.step.exercise;
+    this.emit({
+      kind: 'drill_skip',
+      exerciseType: exercise.type,
+      cardId: exercise.type === 'realia_menu' ? exercise.cardIds[0] : exercise.cardId,
+      latencyMs: Math.max(0, this.now().getTime() - this.stepStartedAt),
+    });
     this.advance();
     this.touch();
   }
@@ -353,14 +439,62 @@ export class StudyEngine {
     this.step = null;
     this.revealed = false;
     this.completedAt = this.now().getTime();
+    this.endSession(false);
     this.touch();
   }
 
   // ---- internals -------------------------------------------------------
 
+  /** Stamp and forward one event; the caller decides whether to store it. */
+  private emit(fields: Partial<StudyEvent> & Pick<StudyEvent, 'kind'>): void {
+    if (!this.onEvent) return;
+    const event: StudyEvent = {
+      id: uuid(),
+      sessionId: this.sessionId,
+      seq: this.eventSeq,
+      at: this.now().toISOString(),
+      mode: this.mode,
+      ...fields,
+    };
+    this.eventSeq += 1;
+    if (this.drillType) event.drillType = this.drillType;
+    this.onEvent(event);
+  }
+
+  private endSession(completed: boolean): void {
+    if (this.sessionEnded) return;
+    this.sessionEnded = true;
+    this.emit({
+      kind: 'session_end',
+      completed,
+      answered: this.results.length,
+      elapsedMs: (this.completedAt ?? this.now().getTime()) - this.startedAt,
+    });
+  }
+
+  /** Answers this card has had before now, and count this one. */
+  private bumpAnswerCount(cardId: string): number {
+    const seen = this.answersByCard.get(cardId) ?? 0;
+    this.answersByCard.set(cardId, seen + 1);
+    return seen;
+  }
+
   private touch(): void {
     this.cached = null;
     for (const listener of this.listeners) listener();
+  }
+
+  /** What only the exercise knows: whether it was right, and what was picked. */
+  private answerDetail(
+    correct: boolean,
+    outcome?: DrillOutcome,
+  ): Pick<StudyEvent, 'correct' | 'picked' | 'misses' | 'revealLatencyMs'> {
+    const detail: Pick<StudyEvent, 'correct' | 'picked' | 'misses' | 'revealLatencyMs'> = {
+      correct,
+    };
+    if (outcome?.picked !== undefined) detail.picked = outcome.picked;
+    if (outcome?.misses !== undefined) detail.misses = outcome.misses;
+    return detail;
   }
 
   private applyRating(
@@ -369,6 +503,7 @@ export class StudyEngine {
     exerciseType: ExerciseType,
     now: Date,
     precomputed?: Card,
+    detail?: Pick<StudyEvent, 'correct' | 'picked' | 'misses' | 'revealLatencyMs'>,
   ): PersistedReview {
     const card = this.cards.get(cardId)!;
     const nextCard =
@@ -398,7 +533,32 @@ export class StudyEngine {
       timestamp: nowIso,
       applied: true,
     });
-    if (this.requeueLearning && shouldRequeue(next.due, now) && !this.queue.includes(cardId)) {
+    this.emit({
+      kind: 'answer',
+      cardId,
+      exerciseType,
+      rating,
+      applied: true,
+      latencyMs: log.timeSpentMs,
+      repeatIndex: this.bumpAnswerCount(cardId),
+      stateBefore: card.fsrs.state,
+      stateAfter: next.state,
+      stabilityBefore: card.fsrs.stability,
+      stabilityAfter: next.stability,
+      difficultyBefore: card.fsrs.difficulty,
+      difficultyAfter: next.difficulty,
+      scheduledDaysAfter: next.scheduled_days,
+      elapsedDaysBefore: card.fsrs.elapsed_days,
+      ...(detail ?? { correct: rating !== 1 }),
+    });
+    const requeuesSoFar = this.requeues.get(cardId) ?? 0;
+    if (
+      this.requeueLearning &&
+      requeuesSoFar < MAX_SESSION_REQUEUES &&
+      shouldRequeue(next.due, now) &&
+      !this.queue.includes(cardId)
+    ) {
+      this.requeues.set(cardId, requeuesSoFar + 1);
       this.queue.push(cardId);
     }
     return { card: updated, log };
@@ -426,6 +586,7 @@ export class StudyEngine {
     this.status = 'complete';
     this.step = null;
     this.completedAt = this.now().getTime();
+    this.endSession(true);
   }
 
   /**

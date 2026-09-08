@@ -69,13 +69,21 @@ test.describe('Settings and Stats (Journey 3)', () => {
     );
   });
 
-  test('full backup export and reset', async ({ page }) => {
+  test('backup and analytics export, then reset', async ({ page }) => {
     await openApp(page, '/settings');
     const [download] = await Promise.all([
       page.waitForEvent('download'),
       page.getByTestId('export-backup').click(),
     ]);
     expect(download.suggestedFilename()).toMatch(/^fanzitong-backup-.*\.json$/);
+
+    // The analytics export is a separate, much smaller diagnostic file.
+    const [analytics] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByTestId('export-analytics').click(),
+    ]);
+    expect(analytics.suggestedFilename()).toMatch(/^fanzitong-analytics-.*\.json$/);
+    await expect(page.getByTestId('settings-notice')).toContainText('Analytics exported');
 
     await page.getByTestId('reset-data').click();
     await page.getByTestId('confirm-reset').click();

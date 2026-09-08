@@ -60,6 +60,8 @@ export const MAX_FOIL_MISSES = 3;
 export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseViewProps) {
   const [phase, setPhase] = useState<Phase>('pick');
   const [picked, setPicked] = useState<string | null>(null);
+  /** The first wrong shape taken for the word; `picked` is overwritten by the retry. */
+  const [firstMiss, setFirstMiss] = useState<string | null>(null);
   const [misses, setMisses] = useState(0);
   const [retryOrder, setRetryOrder] = useState(0);
   const options = useMemo(
@@ -87,6 +89,7 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
       return;
     }
     setMisses((m) => m + 1);
+    setFirstMiss((first) => first ?? option);
     setPhase('wrong');
   };
 
@@ -230,7 +233,16 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
           <Button
             block
             size="lg"
-            onClick={() => onComplete([{ cardId: exercise.cardId, correct }])}
+            onClick={() =>
+              onComplete([
+                {
+                  cardId: exercise.cardId,
+                  correct,
+                  misses,
+                  ...(firstMiss ? { picked: firstMiss } : {}),
+                },
+              ])
+            }
             data-testid="drill-continue"
           >
             Continue

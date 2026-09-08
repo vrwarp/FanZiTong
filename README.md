@@ -15,7 +15,7 @@
 | **Mode 4 · Foil discrimination** (§5.4) | Sound + meaning cue, 2×2 grid of look-alike shapes (radical/component swaps). Leeches can be drilled directly from the Stats tab.                                                                                                                                                                                                                                                        |
 | **Vocab management** (Journey 2)        | Searchable, domain-filtered card list (pinyin hidden by default), inline editor with pinyin tone-number conversion, CSV/JSON import with preview table, duplicate flagging (against the deck and within the file), domain override and skip/overwrite policy. JSON/CSV export. Starter deck of 88 curated cards.                                                                         |
 | **Diagnostics** (Journey 3, §8)         | Average retrievability gauge vs. target, 30-day reviews/retention chart, card-state distribution, domain-mastery bars (stability > 30 d), lapse counter and leech list (≥ threshold) with "Practice Difficult Characters".                                                                                                                                                               |
-| **Settings** (§3.3, §6)                 | Target retention slider, daily review/new limits, leech threshold, pinyin reveal delay, active domains, light/dark/system theme, full JSON backup (cards + FSRS state + review history + settings), restore, reset.                                                                                                                                                                      |
+| **Settings** (§3.3, §6)                 | Target retention slider, daily review/new limits, leech threshold, pinyin reveal delay, active domains, light/dark/system theme, full JSON backup (cards + FSRS state + review history + settings), restore, reset, and a separate [analytics export](docs/analytics-export.md) for diagnosis.                                                                                           |
 | **PWA / offline** (§9, AC-4)            | Workbox precache of the whole app (CacheFirst), navigation fallback, install prompt, update banner, offline indicator, persistent-storage request, iOS/Android home-screen metadata and generated icons.                                                                                                                                                                                 |
 
 ## Tech stack
@@ -73,7 +73,8 @@ Key design decisions:
 
 - **`StudyEngine` is pure.** It owns the queue, reveal/rate cycle, in-session re-queueing and drill interleaving and returns `{card, log}` pairs for the caller to persist. React binds to it through `useSyncExternalStore`, so the whole session logic is unit-tested without a DOM.
 - **FSRS fidelity (AC-1).** Scheduling is delegated entirely to `ts-fsrs` (FSRS-5 weights, short-term learning steps on, target retention from settings, 365-day cap). The interval printed on a rating button is the schedule that gets applied when the button is pressed within 60 s of the reveal; afterwards it is recomputed at rating time.
-- **Learn-ahead re-queue.** After a rating, a card whose next due time falls within 20 minutes (i.e. still in a learning/relearning step) is pushed to the back of the session queue, so _Again_ really does come back in the same session and the queue only clears when every card has passed a step.
+- **Learn-ahead re-queue.** After a rating, a card whose next due time falls within 20 minutes (i.e. still in a learning/relearning step) is pushed to the back of the session queue, so _Again_ really does come back in the same session and the queue only clears when every card has passed a step — up to three re-queues per card, after which the word is left for the next session rather than taking over this one.
+- **New cards round-robin the domains.** The deck is authored in per-domain blocks, so introducing new cards in creation order alone would spend weeks of daily limits on one domain. New cards keep their order within a domain and take turns across the active ones.
 - **Drill interleaving.** After every 5th answered card the engine looks for a card seen this session that is in Learning/Relearning or has lapses, rotates the modality (cloze → menu → foil) for variety, and never drills the same card twice per session.
 - **Visual foils.** Foils are authored as full-length look-alikes (`魯肉飯`) or single characters (`魯`); single characters are substituted into the head position of the word (`滷肉飯 → 魯肉飯`), which is where the confusable radical lives in all the PRD examples.
 - **Local-first data sovereignty.** Everything lives in IndexedDB; JSON export is the PRD §7.1 format plus optional `reviewLogs` and `settings` for a complete backup; CSV export uses the PRD §7.2 columns plus two optional trailing columns (`example_pinyin`, `example_translation`) so sentences round-trip. Files are UTF-8 (CSV with BOM for spreadsheet compatibility; the importer strips it).
@@ -83,6 +84,8 @@ Key design decisions:
 **JSON** (`version: "1.0"`): exactly PRD §7.1 (`cards[]` with the `fsrs` block), plus optional `reviewLogs[]` and `settings` for backups. A bare array of cards is also accepted. Missing `fsrs` → card starts as New; missing/unknown `domain` → `custom` (or the domain chosen at import).
 
 **CSV** header: `traditional,pinyin,definition,domain,tags,example_sentence,foils[,example_pinyin,example_translation]`. Lists use `|`. Header aliases (`hanzi`, `meaning`, `category`, `繁體`, …) and tone-number pinyin (`lu3 rou4 fan4`) are accepted.
+
+**Analytics export** (`schema: "fanzitong.analytics"`): a separate, much smaller diagnostic file — only the cards that have been studied, what happened while they were studied, and the patterns the app found in its own data. Not a backup, and never read back. Format and diagnostic codes: [`docs/analytics-export.md`](docs/analytics-export.md).
 
 ## Testing strategy
 
@@ -163,6 +166,9 @@ and the content rules it is held to: [`docs/assistant.md`](docs/assistant.md).
 
 - `.npmrc` sets `legacy-peer-deps=true` because npm 10's resolver crashes on an optional peer (`jsdom → canvas`); the lockfile is generated in that mode, so `npm ci` must use it too.
 - Data is per browser profile. Export a backup from _Settings_ before clearing site data or switching devices.
+- "Export study analytics", next to the backup button, is for asking someone why
+  the app is behaving the way it is — it is a fraction of the size and carries
+  no card you have not studied.
 - Reset in _Settings_ wipes the database and reloads the starter deck. "Reset app
   cache", next to it, is a different thing: it reinstalls the app files only and
   never touches what you have studied.

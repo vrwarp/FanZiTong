@@ -5,6 +5,7 @@ import {
   chooseDrillType,
   hasClozeSentence,
   hasFoils,
+  interleaveByDomain,
   isDrillCandidate,
   LEARN_AHEAD_MS,
   shouldRequeue,
@@ -39,6 +40,51 @@ describe('buildSessionQueue', () => {
     expect(plan.newCardCount).toBe(2);
     expect(plan.totalDueCount).toBe(2);
     expect(plan.estimatedMinutes).toBeGreaterThanOrEqual(1);
+  });
+
+  it('round-robins new cards across the active domains', () => {
+    // The deck is authored in blocks: without interleaving, the daily limit
+    // would be spent on food for weeks before church was ever offered.
+    const cards = [
+      ...Array.from({ length: 5 }, (_, i) =>
+        makeCard({
+          id: `food${i}`,
+          domain: 'food',
+          createdAt: `2026-09-01T00:00:0${i}.000Z`,
+        }),
+      ),
+      ...Array.from({ length: 2 }, (_, i) =>
+        makeCard({
+          id: `church${i}`,
+          domain: 'church',
+          createdAt: `2026-09-02T00:00:0${i}.000Z`,
+        }),
+      ),
+    ];
+    const plan = buildSessionQueue({
+      cards,
+      settings: { ...DEFAULT_SETTINGS, maxDailyNewCards: 6 },
+      now,
+      reviewsDoneToday: 0,
+      newCardsIntroducedToday: 0,
+    });
+    expect(plan.queue).toEqual(['food0', 'church0', 'food1', 'church1', 'food2', 'food3']);
+  });
+
+  it('leaves a single-domain deck in creation order', () => {
+    const cards = [
+      makeCard({ id: 'b', createdAt: '2026-09-02T00:00:00.000Z' }),
+      makeCard({ id: 'a', createdAt: '2026-09-01T00:00:00.000Z' }),
+    ];
+    expect(interleaveByDomain(cards).map((c) => c.id)).toEqual(['b', 'a']);
+    const plan = buildSessionQueue({
+      cards,
+      settings: DEFAULT_SETTINGS,
+      now,
+      reviewsDoneToday: 0,
+      newCardsIntroducedToday: 0,
+    });
+    expect(plan.queue).toEqual(['a', 'b']);
   });
 
   it('honours daily limits minus what was already done today', () => {

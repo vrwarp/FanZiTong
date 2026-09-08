@@ -1429,6 +1429,12 @@ export const CHAR_INFO: Record<string, CharInfo> = {
   鯊: { pinyin: 'shā', gloss: 'shark', tell: '鯊 has 魚 under 沙' },
   鱔: { pinyin: 'shàn', gloss: 'eel', tell: '鱔 has 魚 beside 善' },
   椪: { pinyin: 'pèng', gloss: 'ponkan (in 椪柑)', tell: '椪 has 木 beside 並' },
+  祭: { pinyin: 'jì', gloss: 'to offer sacrifice', tell: '祭 has 示 under the hand and meat' },
+  察: { pinyin: 'chá', gloss: 'to examine', tell: '察 puts 宀 over 祭' },
+  蔡: { pinyin: 'cài', gloss: 'a surname', tell: '蔡 wears 艹 over 祭' },
+  壇: { pinyin: 'tán', gloss: 'altar, platform', tell: '壇 has 土 beside 亶' },
+  檀: { pinyin: 'tán', gloss: 'sandalwood', tell: '檀 has 木 beside 亶' },
+  顫: { pinyin: 'chàn', gloss: 'to tremble', tell: '顫 has 頁 beside 亶' },
 };
 
 export function charInfo(ch: string): CharInfo | undefined {

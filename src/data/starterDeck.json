@@ -101,7 +101,8 @@
     "垃圾桶": "Taiwan says lèsè where the mainland says lājī.",
     "牽手": "In Taiwanese 牽手 is the word for a wife — the one whose hand you took.",
     "垃圾": "lèsè in Taiwan, lājī on the mainland — the same two characters.",
-    "黑白切": "Literally \"cut at random\": you point and the boss slices."
+    "黑白切": "Literally \"cut at random\": you point and the boss slices.",
+    "般若": "Read bō rě, not bān ruò: a Sanskrit sound kept in old characters."
   },
   "variantNotes": {
     "藉口": "藉口 is the Taiwan standard spelling; 借口 is what most people type online.",
@@ -8038,6 +8039,1126 @@
         "Tā de sīxiǎng hěn zìyóu.",
         "His thinking is very free.",
         "恩想|思相"
+      ],
+      [
+        "摩西",
+        "mó xī",
+        "Moses",
+        "christian|bible",
+        "摩西帶百姓出埃及。",
+        "Móxī dài bǎixìng chū Āijí.",
+        "Moses led the people out of Egypt.",
+        "麻西|摩酉"
+      ],
+      [
+        "基督",
+        "jī dū",
+        "Christ, the anointed one",
+        "christian",
+        "基督的意思是受膏者。",
+        "Jīdū de yìsi shì shòugāo zhě.",
+        "Christ means the anointed one.",
+        "墓督|其督"
+      ],
+      [
+        "亞伯拉罕",
+        "yà bó lā hǎn",
+        "Abraham",
+        "christian|bible",
+        "亞伯拉罕離開了本地。",
+        "Yàbólāhǎn líkāi le běndì.",
+        "Abraham left his own country.",
+        "惡伯拉罕|亞伯垃罕|亞伯泣罕"
+      ],
+      [
+        "施洗約翰",
+        "shī xǐ yuē hàn",
+        "John the Baptist",
+        "christian|bible",
+        "施洗約翰住在曠野。",
+        "Shīxǐ Yuēhàn zhù zài kuàngyě.",
+        "John the Baptist lived in the wilderness.",
+        "施先約翰|施洗釣翰|施洋約翰"
+      ],
+      [
+        "出埃及記",
+        "chū āi jí jì",
+        "The book of Exodus",
+        "christian|bible",
+        "出埃及記講離開為奴之地。",
+        "Chū Āijí Jì jiǎng líkāi wéinú zhī dì.",
+        "Exodus tells of leaving the land of slavery.",
+        "山埃及記|出埃級記|出埃及紀"
+      ],
+      [
+        "新約",
+        "xīn yuē",
+        "The New Testament",
+        "christian|bible",
+        "新約有二十七卷。",
+        "Xīnyuē yǒu èrshíqī juàn.",
+        "The New Testament has twenty-seven books.",
+        "親約|新釣|薪約"
+      ],
+      [
+        "雅歌",
+        "yǎ gē",
+        "The Song of Songs",
+        "christian|bible",
+        "雅歌是一首情詩。",
+        "Yǎgē shì yì shǒu qíngshī.",
+        "The Song of Songs is a love poem.",
+        "雅哥|雅欹"
+      ],
+      [
+        "哈利路亞",
+        "hā lì lù yà",
+        "Hallelujah",
+        "christian",
+        "詩班唱了一聲哈利路亞。",
+        "Shībān chàng le yì shēng hālìlùyà.",
+        "The choir sang out a hallelujah.",
+        "蛤利路亞|哈刺路亞|哈利略亞"
+      ],
+      [
+        "安息日",
+        "ān xí rì",
+        "The sabbath",
+        "christian|bible",
+        "安息日不可以做工。",
+        "Ānxírì bù kěyǐ zuògōng.",
+        "No work may be done on the sabbath.",
+        "宋息日|安息口|宗息日"
+      ],
+      [
+        "割禮",
+        "gē lǐ",
+        "Circumcision",
+        "christian|bible",
+        "割禮是立約的記號。",
+        "Gēlǐ shì lìyuē de jìhào.",
+        "Circumcision is the sign of the covenant.",
+        "害禮|割體"
+      ],
+      [
+        "聖水",
+        "shèng shuǐ",
+        "Holy water",
+        "christian",
+        "門口有一盆聖水。",
+        "Ménkǒu yǒu yì pén shèngshuǐ.",
+        "There's a basin of holy water at the door.",
+        "望水|聖永|聖冰"
+      ],
+      [
+        "執事",
+        "zhí shì",
+        "A deacon",
+        "christian",
+        "執事在門口招呼大家。",
+        "Zhíshì zài ménkǒu zhāohū dàjiā.",
+        "The deacon greets everyone at the door.",
+        "報事|執吏|執史"
+      ],
+      [
+        "永生",
+        "yǒng shēng",
+        "Eternal life",
+        "christian",
+        "他們相信有永生。",
+        "Tāmen xiāngxìn yǒu yǒngshēng.",
+        "They believe in eternal life.",
+        "水生|永牛"
+      ],
+      [
+        "預言",
+        "yù yán",
+        "A prophecy; to foretell",
+        "christian|bible",
+        "這段預言後來應驗了。",
+        "Zhè duàn yùyán hòulái yìngyàn le.",
+        "This prophecy was later fulfilled.",
+        "頭言|預音|預信"
+      ],
+      [
+        "憐憫",
+        "lián mǐn",
+        "Compassion, mercy",
+        "christian|bible",
+        "他對窮人很有憐憫。",
+        "Tā duì qióngrén hěn yǒu liánmǐn.",
+        "He has great compassion for the poor.",
+        "鄰憫|磷憫"
+      ],
+      [
+        "安慰",
+        "ān wèi",
+        "To comfort",
+        "christian|general",
+        "她的話安慰了我。",
+        "Tā de huà ānwèi le wǒ.",
+        "Her words comforted me.",
+        "宋慰|宗慰"
+      ],
+      [
+        "誠實",
+        "chéng shí",
+        "Honest",
+        "general",
+        "做人要誠實。",
+        "Zuòrén yào chéngshí.",
+        "Be honest in your dealings.",
+        "城實|誠寶"
+      ],
+      [
+        "正直",
+        "zhèng zhí",
+        "Upright, of integrity",
+        "christian|general",
+        "他是個正直的人。",
+        "Tā shì ge zhèngzhí de rén.",
+        "He is an upright man.",
+        "正真|正值"
+      ],
+      [
+        "聰明",
+        "cōng míng",
+        "Clever",
+        "general",
+        "這孩子很聰明。",
+        "Zhè háizi hěn cōngmíng.",
+        "This child is very clever.",
+        "蔥明|聰朋|總明"
+      ],
+      [
+        "磐石",
+        "pán shí",
+        "A great rock, a firm foundation",
+        "christian|bible",
+        "房子蓋在磐石上。",
+        "Fángzi gài zài pánshí shàng.",
+        "The house is built on rock.",
+        "盤石|磐右|磐后"
+      ],
+      [
+        "曠野",
+        "kuàng yě",
+        "The wilderness",
+        "christian|bible",
+        "他們在曠野走了四十年。",
+        "Tāmen zài kuàngyě zǒu le sìshí nián.",
+        "They wandered forty years in the wilderness.",
+        "廣野|曠墅|礦野"
+      ],
+      [
+        "寄居",
+        "jì jū",
+        "To live as a sojourner",
+        "bible|written",
+        "他們在那地寄居。",
+        "Tāmen zài nà dì jìjū.",
+        "They lived as sojourners in that land.",
+        "奇居|寄局"
+      ],
+      [
+        "離棄",
+        "lí qì",
+        "To forsake",
+        "bible|written",
+        "他從未離棄自己的百姓。",
+        "Tā cóngwèi líqì zìjǐ de bǎixìng.",
+        "He never forsook his own people.",
+        "雜棄|璃棄"
+      ],
+      [
+        "焚燒",
+        "fén shāo",
+        "To burn up",
+        "bible|written",
+        "那座城被火焚燒。",
+        "Nà zuò chéng bèi huǒ fénshāo.",
+        "That city was burned with fire.",
+        "焚燃|焚澆|焚繞"
+      ],
+      [
+        "怒氣",
+        "nù qì",
+        "Anger",
+        "general|bible",
+        "他的怒氣消了。",
+        "Tā de nùqì xiāo le.",
+        "His anger has cooled.",
+        "怒汽|怒氧"
+      ],
+      [
+        "施行",
+        "shī xíng",
+        "To carry out, to enact",
+        "bible|written",
+        "新法從明年施行。",
+        "Xīn fǎ cóng míngnián shīxíng.",
+        "The new law takes effect next year.",
+        "施術|施衍"
+      ],
+      [
+        "城門",
+        "chéng mén",
+        "A city gate",
+        "bible|history",
+        "城門天黑就關了。",
+        "Chéngmén tiān hēi jiù guān le.",
+        "The city gate closes at dark.",
+        "成門|城閃|誠門"
+      ],
+      [
+        "荒涼",
+        "huāng liáng",
+        "Desolate",
+        "bible|written",
+        "那地變得很荒涼。",
+        "Nà dì biàn de hěn huāngliáng.",
+        "That land became desolate.",
+        "荒諒|荒景"
+      ],
+      [
+        "性命",
+        "xìng mìng",
+        "One's life",
+        "general|bible",
+        "他救了三條性命。",
+        "Tā jiù le sān tiáo xìngmìng.",
+        "He saved three lives.",
+        "姓命|牲命"
+      ],
+      [
+        "世人",
+        "shì rén",
+        "People of the world",
+        "bible|written",
+        "世人都愛看熱鬧。",
+        "Shìrén dōu ài kàn rènào.",
+        "People love a spectacle.",
+        "世入|世仁|世八"
+      ],
+      [
+        "少年人",
+        "shào nián rén",
+        "A young person",
+        "bible|written",
+        "少年人要有志氣。",
+        "Shàoniánrén yào yǒu zhìqì.",
+        "Young people should have ambition.",
+        "小年人|少年入|少年仁"
+      ],
+      [
+        "女人",
+        "nǚ rén",
+        "A woman",
+        "general",
+        "那個女人站在門外。",
+        "Nàge nǚrén zhàn zài mén wài.",
+        "That woman is standing outside the door.",
+        "女入|女仁|女八"
+      ],
+      [
+        "綿羊",
+        "mián yáng",
+        "A sheep",
+        "bible|general",
+        "山坡上有一群綿羊。",
+        "Shānpō shàng yǒu yì qún miányáng.",
+        "There's a flock of sheep on the hillside.",
+        "線羊|綿羌|綿洋"
+      ],
+      [
+        "山羊",
+        "shān yáng",
+        "A goat",
+        "bible|general",
+        "山羊會爬很陡的坡。",
+        "Shānyáng huì pá hěn dǒu de pō.",
+        "Goats can climb very steep slopes.",
+        "出羊|山羌|山洋"
+      ],
+      [
+        "牛犢",
+        "niú dú",
+        "A calf",
+        "bible",
+        "他們造了一隻金牛犢。",
+        "Tāmen zào le yì zhī jīn niúdú.",
+        "They made a golden calf.",
+        "午犢|半犢|生犢"
+      ],
+      [
+        "遇見",
+        "yù jiàn",
+        "To run into, to encounter",
+        "general",
+        "我在路上遇見他。",
+        "Wǒ zài lùshàng yùjiàn tā.",
+        "I ran into him on the road.",
+        "遇建|遇兒|遇貝"
+      ],
+      [
+        "緣故",
+        "yuán gù",
+        "A reason, on account of",
+        "written",
+        "因為天氣的緣故延期。",
+        "Yīnwèi tiānqì de yuángù yánqí.",
+        "It was postponed on account of the weather.",
+        "綠故|線故"
+      ],
+      [
+        "實在",
+        "shí zài",
+        "Really, truly",
+        "general",
+        "這實在太難了。",
+        "Zhè shízài tài nán le.",
+        "This really is too hard.",
+        "寶在|實再|實存"
+      ],
+      [
+        "其中",
+        "qí zhōng",
+        "Among them",
+        "written",
+        "其中有三個是新的。",
+        "Qízhōng yǒu sān ge shì xīn de.",
+        "Three of them are new.",
+        "基中|其巾|其申"
+      ],
+      [
+        "心中",
+        "xīn zhōng",
+        "In one's heart",
+        "written",
+        "他心中有數。",
+        "Tā xīnzhōng yǒu shù.",
+        "He knows in his heart where things stand.",
+        "必中|心巾|心申"
+      ],
+      [
+        "眼前",
+        "yǎn qián",
+        "Before one's eyes",
+        "written",
+        "眼前的問題比較急。",
+        "Yǎnqián de wèntí bǐjiào jí.",
+        "The problem in front of us is more urgent.",
+        "眠前|眼剪|根前"
+      ],
+      [
+        "後來",
+        "hòu lái",
+        "Later, afterwards",
+        "general",
+        "後來他就搬走了。",
+        "Hòulái tā jiù bān zǒu le.",
+        "Afterwards he moved away.",
+        "復來|後夾|徒來"
+      ],
+      [
+        "剛才",
+        "gāng cái",
+        "Just now",
+        "general",
+        "剛才有人來找你。",
+        "Gāngcái yǒu rén lái zhǎo nǐ.",
+        "Someone came looking for you just now.",
+        "鋼才|剛手"
+      ],
+      [
+        "紛紛",
+        "fēn fēn",
+        "One after another",
+        "written",
+        "大家紛紛站起來。",
+        "Dàjiā fēnfēn zhàn qǐlái.",
+        "One after another everyone stood up.",
+        "粉紛|紛粉"
+      ],
+      [
+        "回答",
+        "huí dá",
+        "To answer",
+        "general",
+        "他沒有回答我的問題。",
+        "Tā méiyǒu huídá wǒ de wèntí.",
+        "He didn't answer my question.",
+        "囚答|因答"
+      ],
+      [
+        "許多",
+        "xǔ duō",
+        "Many",
+        "written",
+        "許多人來參加。",
+        "Xǔduō rén lái cānjiā.",
+        "Many people came.",
+        "許夕|許名"
+      ],
+      [
+        "日子",
+        "rì zi",
+        "Days, a way of life",
+        "general",
+        "那段日子過得很快。",
+        "Nà duàn rìzi guò de hěn kuài.",
+        "Those days went by quickly.",
+        "口子|日了|曰子"
+      ],
+      [
+        "心裡",
+        "xīn lǐ",
+        "Inside, in one's mind",
+        "general",
+        "他心裡很難過。",
+        "Tā xīnlǐ hěn nánguò.",
+        "He is very upset inside.",
+        "必裡|心理"
+      ],
+      [
+        "家裡",
+        "jiā lǐ",
+        "At home",
+        "general",
+        "我家裡有三隻貓。",
+        "Wǒ jiā lǐ yǒu sān zhī māo.",
+        "There are three cats at my house.",
+        "豕裡|家理|冢裡"
+      ],
+      [
+        "中間",
+        "zhōng jiān",
+        "In the middle",
+        "general",
+        "他坐在中間。",
+        "Tā zuò zài zhōngjiān.",
+        "He sat in the middle.",
+        "巾間|中問|申間"
+      ],
+      [
+        "經營",
+        "jīng yíng",
+        "To run (a business)",
+        "general",
+        "這家店經營三十年了。",
+        "Zhè jiā diàn jīngyíng sānshí nián le.",
+        "This shop has been running for thirty years.",
+        "輕營|徑營"
+      ],
+      [
+        "回報",
+        "huí bào",
+        "To repay; a return",
+        "general",
+        "他不求任何回報。",
+        "Tā bù qiú rènhé huíbào.",
+        "He asks for nothing in return.",
+        "囚報|回服|因報"
+      ],
+      [
+        "仁愛",
+        "rén ài",
+        "Benevolence, loving kindness",
+        "general",
+        "仁愛路很長。",
+        "Rén'ài Lù hěn cháng.",
+        "Ren'ai Road is very long.",
+        "人愛|仁受|什愛"
+      ],
+      [
+        "修身",
+        "xiū shēn",
+        "To cultivate oneself",
+        "general",
+        "古人講修身齊家。",
+        "Gǔrén jiǎng xiūshēn qíjiā.",
+        "The ancients spoke of cultivating oneself and ordering the family.",
+        "休身|修躬|條身"
+      ],
+      [
+        "中庸",
+        "zhōng yōng",
+        "The Doctrine of the Mean",
+        "general|literature",
+        "中庸是四書之一。",
+        "Zhōngyōng shì sìshū zhī yī.",
+        "The Doctrine of the Mean is one of the Four Books.",
+        "巾庸|申庸|甲庸"
+      ],
+      [
+        "孟子",
+        "mèng zǐ",
+        "Mencius",
+        "general|literature",
+        "孟子講人性本善。",
+        "Mèngzǐ jiǎng rénxìng běn shàn.",
+        "Mencius taught that human nature is good.",
+        "孟了|孟孑"
+      ],
+      [
+        "莊子",
+        "zhuāng zǐ",
+        "Zhuangzi",
+        "general|literature",
+        "莊子的故事很有趣。",
+        "Zhuāngzǐ de gùshì hěn yǒuqù.",
+        "The Zhuangzi stories are delightful.",
+        "莊了|莊孑"
+      ],
+      [
+        "道德經",
+        "dào dé jīng",
+        "The Tao Te Ching",
+        "folk|literature",
+        "道德經只有五千字。",
+        "Dàodéjīng zhǐyǒu wǔqiān zì.",
+        "The Tao Te Ching is only five thousand characters.",
+        "首德經|道得經|道德輕"
+      ],
+      [
+        "盤古",
+        "pán gǔ",
+        "Pangu, who separated heaven and earth",
+        "folk",
+        "傳說盤古開天闢地。",
+        "Chuánshuō Pángǔ kāitiān pìdì.",
+        "The legend says Pangu split heaven from earth.",
+        "盆古|盤苦|磐古"
+      ],
+      [
+        "西王母",
+        "xī wáng mǔ",
+        "The Queen Mother of the West",
+        "folk",
+        "西王母有蟠桃園。",
+        "Xīwángmǔ yǒu pántáo yuán.",
+        "The Queen Mother of the West has a peach garden.",
+        "酉王母|西主母|西王毋"
+      ],
+      [
+        "城隍爺",
+        "chéng huáng yé",
+        "The city god",
+        "folk|taiwan",
+        "城隍爺負責管地方。",
+        "Chénghuángyé fùzé guǎn dìfāng.",
+        "The city god looks after the district.",
+        "成隍爺|誠隍爺"
+      ],
+      [
+        "地基主",
+        "dì jī zhǔ",
+        "The house's original land spirit",
+        "folk|taiwan",
+        "初二十六要拜地基主。",
+        "Chū'èr shíliù yào bài dìjīzhǔ.",
+        "You make offerings to the land spirit on the second and sixteenth.",
+        "池基主|地墓主|地基王"
+      ],
+      [
+        "媽祖婆",
+        "mā zǔ pó",
+        "Mazu, affectionately",
+        "folk|taiwan",
+        "阿嬤叫她媽祖婆。",
+        "Āmà jiào tā Māzǔpó.",
+        "Grandma calls her Grandma Mazu.",
+        "嗎祖婆|媽神婆|媽祖娑"
+      ],
+      [
+        "開光",
+        "kāi guāng",
+        "To consecrate a new statue",
+        "folk|taiwan",
+        "新的神像要開光。",
+        "Xīn de shénxiàng yào kāiguāng.",
+        "A new statue has to be consecrated.",
+        "閉光|開先|關光"
+      ],
+      [
+        "清香",
+        "qīng xiāng",
+        "A light fragrance; a stick of incense",
+        "folk",
+        "廟裡有一股清香。",
+        "Miào lǐ yǒu yì gǔ qīngxiāng.",
+        "There's a light fragrance in the temple.",
+        "精香|清杳|清昏"
+      ],
+      [
+        "神殿",
+        "shén diàn",
+        "A temple hall of a god",
+        "folk",
+        "神殿裡點著燈。",
+        "Shéndiàn lǐ diǎn zhe dēng.",
+        "Lamps are lit in the temple hall.",
+        "伸殿|祖殿"
+      ],
+      [
+        "道場",
+        "dào chǎng",
+        "A place of practice, a monastery",
+        "buddhist",
+        "這是一個清修的道場。",
+        "Zhè shì yí ge qīngxiū de dàochǎng.",
+        "This is a quiet place of practice.",
+        "首場|道湯|導場"
+      ],
+      [
+        "佛寺",
+        "fó sì",
+        "A Buddhist temple",
+        "buddhist",
+        "山上有一座佛寺。",
+        "Shān shàng yǒu yí zuò fósì.",
+        "There's a Buddhist temple up the hill.",
+        "拂寺|彿寺"
+      ],
+      [
+        "山門",
+        "shān mén",
+        "The main gate of a monastery",
+        "buddhist",
+        "山門前有兩隻石獅。",
+        "Shānmén qián yǒu liǎng zhī shí shī.",
+        "There are two stone lions before the gate.",
+        "出門|山閃|山閂"
+      ],
+      [
+        "比丘尼",
+        "bǐ qiū ní",
+        "A Buddhist nun",
+        "buddhist",
+        "寺裡有幾位比丘尼。",
+        "Sì lǐ yǒu jǐ wèi bǐqiūní.",
+        "There are several nuns at the temple.",
+        "北丘尼|比丘屁|此丘尼"
+      ],
+      [
+        "沙彌",
+        "shā mí",
+        "A novice monk",
+        "buddhist",
+        "小沙彌在掃地。",
+        "Xiǎo shāmí zài sǎodì.",
+        "The young novice is sweeping.",
+        "砂彌|紗彌|炒彌"
+      ],
+      [
+        "舍利子",
+        "shè lì zǐ",
+        "Relic beads left after cremation",
+        "buddhist",
+        "塔裡供著舍利子。",
+        "Tǎ lǐ gòng zhe shèlìzǐ.",
+        "The relics are enshrined in the pagoda.",
+        "舍刺子|舍利了|舍利孑"
+      ],
+      [
+        "往生",
+        "wǎng shēng",
+        "To pass on to the next life",
+        "buddhist|taiwan",
+        "老人家上個月往生了。",
+        "Lǎorénjiā shàng ge yuè wǎngshēng le.",
+        "The old gentleman passed away last month.",
+        "狂生|往牛"
+      ],
+      [
+        "苦海",
+        "kǔ hǎi",
+        "The sea of suffering",
+        "buddhist|idiom",
+        "經上說回頭是岸，苦海無邊。",
+        "Jīng shàng shuō huítóu shì àn, kǔhǎi wúbiān.",
+        "The sutra says the sea of suffering is boundless.",
+        "若海|苦悔|古海"
+      ],
+      [
+        "般若",
+        "bō rě",
+        "Prajna, transcendent wisdom",
+        "buddhist",
+        "般若是佛教的智慧。",
+        "Bōrě shì fójiào de zhìhuì.",
+        "Prajna is the wisdom of Buddhism.",
+        "船若|般苦|服若"
+      ],
+      [
+        "法華經",
+        "fǎ huá jīng",
+        "The Lotus Sutra",
+        "buddhist",
+        "她每天誦法華經。",
+        "Tā měitiān sòng Fǎhuájīng.",
+        "She recites the Lotus Sutra daily.",
+        "怯華經|法華輕|劫華經"
+      ],
+      [
+        "華嚴經",
+        "huá yán jīng",
+        "The Avatamsaka Sutra",
+        "buddhist",
+        "華嚴經非常長。",
+        "Huáyánjīng fēicháng cháng.",
+        "The Avatamsaka Sutra is very long.",
+        "華嚴輕|華嚴徑"
+      ],
+      [
+        "念力",
+        "niàn lì",
+        "The power of concentrated thought",
+        "buddhist",
+        "他相信念力的作用。",
+        "Tā xiāngxìn niànlì de zuòyòng.",
+        "He believes in the power of the mind.",
+        "念刀|念九"
+      ],
+      [
+        "心性",
+        "xīn xìng",
+        "One's nature, the mind's ground",
+        "buddhist|general",
+        "修行是在磨心性。",
+        "Xiūxíng shì zài mó xīnxìng.",
+        "Practice is the polishing of one's nature.",
+        "必性|心姓|心牲"
+      ],
+      [
+        "機緣",
+        "jī yuán",
+        "A fortunate turn of circumstances",
+        "buddhist|general",
+        "這是難得的機緣。",
+        "Zhè shì nándé de jīyuán.",
+        "This is a rare turn of fortune.",
+        "幾緣|機綠|譏緣"
+      ],
+      [
+        "圓融",
+        "yuán róng",
+        "Harmonious, accommodating",
+        "buddhist|general",
+        "他處事很圓融。",
+        "Tā chǔshì hěn yuánróng.",
+        "He handles things smoothly.",
+        "圍融|團融"
+      ],
+      [
+        "喇嘛",
+        "lǎ ma",
+        "A lama",
+        "buddhist",
+        "這位喇嘛從西藏來。",
+        "Zhè wèi lǎma cóng Xīzàng lái.",
+        "This lama came from Tibet.",
+        "剌嘛|喇麻|辣嘛"
+      ],
+      [
+        "大乘",
+        "dà shèng",
+        "Mahayana Buddhism",
+        "buddhist",
+        "台灣多是大乘佛教。",
+        "Táiwān duō shì dàshèng fójiào.",
+        "Buddhism in Taiwan is mostly Mahayana.",
+        "太乘|犬乘|夫乘"
+      ],
+      [
+        "苦行僧",
+        "kǔ xíng sēng",
+        "An ascetic",
+        "buddhist",
+        "他過得像苦行僧。",
+        "Tā guò de xiàng kǔxíngsēng.",
+        "He lives like an ascetic.",
+        "若行僧|苦術僧|古行僧"
+      ],
+      [
+        "盂蘭盆節",
+        "yú lán pén jié",
+        "The Ullambana festival",
+        "buddhist|festival",
+        "盂蘭盆節在七月。",
+        "Yúlánpénjié zài qīyuè.",
+        "The Ullambana festival falls in the seventh month.",
+        "盂蘭盤節|盂蘭盒節"
+      ],
+      [
+        "異教徒",
+        "yì jiào tú",
+        "A heretic, an unbeliever",
+        "christian|history",
+        "當時他們被當成異教徒。",
+        "Dāngshí tāmen bèi dàng chéng yìjiàotú.",
+        "At the time they were treated as heretics.",
+        "異效徒|異教後|異救徒"
+      ],
+      [
+        "宗教自由",
+        "zōng jiào zì yóu",
+        "Freedom of religion",
+        "general",
+        "憲法保障宗教自由。",
+        "Xiànfǎ bǎozhàng zōngjiào zìyóu.",
+        "The constitution protects freedom of religion.",
+        "安教自由|宗效自由|宗教白由"
+      ],
+      [
+        "無神論者",
+        "wú shén lùn zhě",
+        "An atheist",
+        "general",
+        "他是個無神論者。",
+        "Tā shì ge wúshénlùnzhě.",
+        "He is an atheist.",
+        "舞神論者|無伸論者|無神倫者"
+      ],
+      [
+        "耶誕夜",
+        "yē dàn yè",
+        "Christmas Eve",
+        "christian|festival",
+        "耶誕夜街上很熱鬧。",
+        "Yēdànyè jiē shàng hěn rènào.",
+        "The streets are lively on Christmas Eve.",
+        "耶誕亦|耶誕液"
+      ],
+      [
+        "耶穌會",
+        "yē sū huì",
+        "The Society of Jesus",
+        "christian|history",
+        "耶穌會辦了很多學校。",
+        "Yēsūhuì bàn le hěn duō xuéxiào.",
+        "The Jesuits founded many schools.",
+        "耶酥會|耶穌曾|耶穌倉"
+      ],
+      [
+        "教區",
+        "jiào qū",
+        "A parish, a diocese",
+        "christian",
+        "這個教區有五間堂。",
+        "Zhège jiàoqū yǒu wǔ jiān táng.",
+        "This diocese has five churches.",
+        "效區|教品|救區"
+      ],
+      [
+        "傳道",
+        "chuán dào",
+        "To preach",
+        "christian",
+        "他到鄉下傳道。",
+        "Tā dào xiāngxià chuándào.",
+        "He went to the countryside to preach.",
+        "傅道|傳首|轉道"
+      ],
+      [
+        "至聖所",
+        "zhì shèng suǒ",
+        "The Holy of Holies",
+        "christian|bible",
+        "至聖所在幔子後面。",
+        "Zhìshèngsuǒ zài mànzi hòumiàn.",
+        "The Holy of Holies is behind the veil.",
+        "至望所|至聖折"
+      ],
+      [
+        "約櫃",
+        "yuē guì",
+        "The Ark of the Covenant",
+        "christian|bible",
+        "約櫃放在至聖所。",
+        "Yuēguì fàng zài zhìshèngsuǒ.",
+        "The ark stands in the Holy of Holies.",
+        "釣櫃|納櫃"
+      ],
+      [
+        "七宗罪",
+        "qī zōng zuì",
+        "The seven deadly sins",
+        "christian",
+        "七宗罪包括貪吃。",
+        "Qīzōngzuì bāokuò tān chī.",
+        "Gluttony is one of the seven deadly sins.",
+        "匕宗罪|七安罪|七宗置"
+      ],
+      [
+        "絆倒",
+        "bàn dǎo",
+        "To trip up; to cause to stumble",
+        "christian|general",
+        "他被石頭絆倒了。",
+        "Tā bèi shítóu bàndǎo le.",
+        "He tripped over a stone.",
+        "絆到|絆側"
+      ],
+      [
+        "求和",
+        "qiú hé",
+        "To sue for peace",
+        "bible|history",
+        "敗方派人求和。",
+        "Bàifāng pài rén qiúhé.",
+        "The losing side sent envoys to sue for peace.",
+        "球和|求私|求科"
+      ],
+      [
+        "下令",
+        "xià lìng",
+        "To give an order",
+        "general",
+        "王下令關城門。",
+        "Wáng xiàlìng guān chéngmén.",
+        "The king ordered the gates shut.",
+        "卡令|下合|上令"
+      ],
+      [
+        "美事",
+        "měi shì",
+        "A fine thing",
+        "written",
+        "這是一樁美事。",
+        "Zhè shì yì zhuāng měishì.",
+        "This is a fine thing.",
+        "羔事|美吏|美史"
+      ],
+      [
+        "仙子",
+        "xiān zǐ",
+        "A fairy, a female immortal",
+        "folk",
+        "故事裡有七位仙子。",
+        "Gùshì lǐ yǒu qī wèi xiānzǐ.",
+        "There are seven fairies in the story.",
+        "們子|仙了|仞子"
+      ],
+      [
+        "人子",
+        "rén zǐ",
+        "The Son of Man",
+        "christian|bible",
+        "人子來是要服事人。",
+        "Rénzǐ lái shì yào fúshì rén.",
+        "The Son of Man came to serve.",
+        "入子|人了|仁子"
+      ],
+      [
+        "聖所",
+        "shèng suǒ",
+        "The sanctuary",
+        "christian|bible",
+        "祭司在聖所裡服事。",
+        "Jìsī zài shèngsuǒ lǐ fúshì.",
+        "The priests serve in the sanctuary.",
+        "望所|聖折"
+      ],
+      [
+        "祭司",
+        "jì sī",
+        "A priest",
+        "christian|bible",
+        "祭司獻上了祭物。",
+        "Jìsī xiàn shàng le jìwù.",
+        "The priest offered the sacrifice.",
+        "察司|祭同|蔡司"
+      ],
+      [
+        "讚美歌",
+        "zàn měi gē",
+        "A hymn of praise",
+        "christian",
+        "她會彈很多讚美歌。",
+        "Tā huì tán hěn duō zànměigē.",
+        "She can play many hymns.",
+        "譖美歌|讚羔歌|讚美哥"
+      ],
+      [
+        "聖書",
+        "shèng shū",
+        "A sacred book",
+        "christian|taiwan",
+        "這本聖書是台語的。",
+        "Zhè běn shèngshū shì Táiyǔ de.",
+        "This scripture is in Taiwanese.",
+        "望書|聖晝|聖畫"
+      ],
+      [
+        "新教",
+        "xīn jiào",
+        "Protestantism",
+        "christian",
+        "新教和天主教有分別。",
+        "Xīnjiào hé tiānzhǔjiào yǒu fēnbié.",
+        "Protestantism and Catholicism differ.",
+        "親教|新效|薪教"
+      ],
+      [
+        "教名",
+        "jiào míng",
+        "A baptismal name",
+        "christian",
+        "她的教名是瑪利亞。",
+        "Tā de jiàomíng shì Mǎlìyà.",
+        "Her baptismal name is Maria.",
+        "效名|教多|救名"
+      ],
+      [
+        "信教",
+        "xìn jiào",
+        "To hold a religious faith",
+        "general",
+        "他們全家都信教。",
+        "Tāmen quánjiā dōu xìnjiào.",
+        "His whole family are believers.",
+        "佶教|信效|訊教"
+      ],
+      [
+        "分身",
+        "fēn shēn",
+        "A double, a second self",
+        "folk|acg",
+        "我又沒有分身。",
+        "Wǒ yòu méiyǒu fēnshēn.",
+        "It's not as if I can be in two places at once.",
+        "公身|分躬"
+      ],
+      [
+        "前身",
+        "qián shēn",
+        "A previous incarnation; a predecessor",
+        "general",
+        "這間學校的前身是書院。",
+        "Zhè jiān xuéxiào de qiánshēn shì shūyuàn.",
+        "This school began as an academy.",
+        "剪身|前躬"
+      ],
+      [
+        "虛無",
+        "xū wú",
+        "Nothingness, nihilism",
+        "general",
+        "他有一種虛無的感覺。",
+        "Tā yǒu yì zhǒng xūwú de gǎnjué.",
+        "He has a feeling of emptiness.",
+        "戲無|虛舞|虛蕪"
+      ],
+      [
+        "獅子座",
+        "shī zi zuò",
+        "Leo (the constellation)",
+        "general",
+        "她是獅子座的。",
+        "Tā shì shīzizuò de.",
+        "She's a Leo.",
+        "獅了座|獅孑座"
       ]
     ],
     "slang": [

@@ -1480,6 +1480,14 @@ export const CHAR_INFO: Record<string, CharInfo> = {
     tell: '巴 has 勹-like strokes over 巳',
   },
   鱒: { pinyin: 'zùn', gloss: 'trout', tell: '鱒 has 魚 beside 尊' },
+  曠: { pinyin: 'kuàng', gloss: 'vast, empty', tell: '曠 has 日 beside 廣' },
+  廣: { pinyin: 'guǎng', gloss: 'broad, wide', tell: '廣 has no 日 in front' },
+  礦: { pinyin: 'kuàng', gloss: 'an ore, a mine', tell: '礦 has 石 beside 廣' },
+  野: { pinyin: 'yě', gloss: 'wild, open country', tell: '野 has 里 beside 予' },
+  墅: { pinyin: 'shù', gloss: 'a villa', tell: '墅 puts 土 under 野' },
+  埜: { pinyin: 'yě', gloss: 'wilderness (old form)', tell: '埜 is two 木 over 土' },
+  喇: { pinyin: 'lǎ', gloss: 'a horn; a transliteration syllable', tell: '喇 has 口 beside 剌' },
+  嘛: { pinyin: 'ma', gloss: 'a softening particle', tell: '嘛 has 口 beside 麻' },
 };
 
 export function charInfo(ch: string): CharInfo | undefined {

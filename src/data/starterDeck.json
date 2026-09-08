@@ -54,7 +54,8 @@
     "辦桌": "pān-toh",
     "豆油": "tāu-iû",
     "心得": "sim-tik",
-    "活動": "ua̍h-tāng"
+    "活動": "ua̍h-tāng",
+    "天公生": "Thinn-kong-senn"
   },
   "notes": {
     "母湯": "Spells the sound of Taiwanese 毋通 m̄-thang, \"must not\" — the characters are only the sound.",
@@ -3649,6 +3650,1116 @@
         "Jiàotáng dǐng shàng yǒu ge shízìjià.",
         "There's a cross on top of the church.",
         "十宇架|十字茄|十守架"
+      ],
+      [
+        "耶穌基督",
+        "yē sū jī dū",
+        "Jesus Christ",
+        "christian",
+        "他奉耶穌基督的名禱告。",
+        "Tā fèng Yēsū Jīdū de míng dǎogào.",
+        "He prays in the name of Jesus Christ.",
+        "耶酥基督|耶穌墓督|耶穌其督"
+      ],
+      [
+        "門徒",
+        "mén tú",
+        "A disciple",
+        "christian|bible",
+        "他呼召了十二個門徒。",
+        "Tā hūzhào le shí'èr ge méntú.",
+        "He called twelve disciples.",
+        "閃徒|門後|閂徒"
+      ],
+      [
+        "律法",
+        "lǜ fǎ",
+        "The Law",
+        "christian|bible",
+        "律法是摩西傳下來的。",
+        "Lǜfǎ shì Móxī chuán xiàlái de.",
+        "The Law was handed down through Moses.",
+        "律怯|律劫"
+      ],
+      [
+        "公義",
+        "gōng yì",
+        "Righteousness, justice",
+        "christian|bible",
+        "聖經說神是公義的。",
+        "Shèngjīng shuō shén shì gōngyì de.",
+        "Scripture says God is just.",
+        "分義|兮義"
+      ],
+      [
+        "義人",
+        "yì rén",
+        "A righteous person",
+        "christian|bible",
+        "義人的路像光一樣。",
+        "Yìrén de lù xiàng guāng yíyàng.",
+        "The path of the righteous is like light.",
+        "義入|義仁|義八"
+      ],
+      [
+        "罪孽",
+        "zuì niè",
+        "Iniquity, guilt",
+        "christian|bible",
+        "他承認自己的罪孽。",
+        "Tā chéngrèn zìjǐ de zuìniè.",
+        "He admits his own guilt.",
+        "置孽|罰孽"
+      ],
+      [
+        "惡人",
+        "è rén",
+        "A wicked person",
+        "christian|bible",
+        "惡人的道路必消滅。",
+        "Èrén de dàolù bì xiāomiè.",
+        "The way of the wicked will perish.",
+        "亞人|惡入|惡仁"
+      ],
+      [
+        "事奉",
+        "shì fèng",
+        "To serve (in ministry)",
+        "christian",
+        "她在教會事奉十年了。",
+        "Tā zài jiàohuì shìfèng shí nián le.",
+        "She has served in the church for ten years.",
+        "吏奉|事捧|史奉"
+      ],
+      [
+        "安息",
+        "ān xí",
+        "To rest; the sabbath rest",
+        "christian|bible",
+        "第七日是安息日。",
+        "Dì qī rì shì ānxírì.",
+        "The seventh day is the sabbath.",
+        "宋息|宗息"
+      ],
+      [
+        "會眾",
+        "huì zhòng",
+        "The congregation",
+        "christian",
+        "會眾一起站起來。",
+        "Huìzhòng yìqǐ zhàn qǐlái.",
+        "The congregation rose together.",
+        "曾眾|會從|倉眾"
+      ],
+      [
+        "讚美",
+        "zàn měi",
+        "To praise",
+        "christian",
+        "我們用詩歌讚美神。",
+        "Wǒmen yòng shīgē zànměi shén.",
+        "We praise God in song.",
+        "譖美|讚羔|讜美"
+      ],
+      [
+        "慈愛",
+        "cí ài",
+        "Lovingkindness",
+        "christian|bible",
+        "他的慈愛永遠長存。",
+        "Tā de cí'ài yǒngyuǎn chángcún.",
+        "His lovingkindness endures for ever.",
+        "磁愛|慈受|滋愛"
+      ],
+      [
+        "錫安",
+        "xí ān",
+        "Zion",
+        "christian|bible",
+        "詩篇提到錫安山。",
+        "Shīpiān tí dào Xí'ān shān.",
+        "The Psalms speak of Mount Zion.",
+        "錫宋|錫宗"
+      ],
+      [
+        "後裔",
+        "hòu yì",
+        "Descendants, offspring",
+        "christian|bible",
+        "他的後裔多如天上的星。",
+        "Tā de hòuyì duō rú tiān shàng de xīng.",
+        "His descendants are as many as the stars.",
+        "復裔|徒裔"
+      ],
+      [
+        "長老",
+        "zhǎng lǎo",
+        "An elder of the church",
+        "christian",
+        "長老在會議上發言。",
+        "Zhǎnglǎo zài huìyì shàng fāyán.",
+        "The elder spoke at the meeting.",
+        "長考|長孝"
+      ],
+      [
+        "僕人",
+        "pú rén",
+        "A servant",
+        "christian|bible",
+        "他自稱是神的僕人。",
+        "Tā zìchēng shì shén de púrén.",
+        "He calls himself a servant of God.",
+        "撲人|僕入|樸人"
+      ],
+      [
+        "百姓",
+        "bǎi xìng",
+        "The common people",
+        "bible|general",
+        "百姓聚集在城門口。",
+        "Bǎixìng jùjí zài chéng ménkǒu.",
+        "The people gathered at the city gate.",
+        "白姓|百性"
+      ],
+      [
+        "子孫",
+        "zǐ sūn",
+        "Descendants",
+        "bible|family",
+        "這塊地留給子孫。",
+        "Zhè kuài dì liú gěi zǐsūn.",
+        "This land is left for the descendants.",
+        "了孫|孑孫"
+      ],
+      [
+        "君王",
+        "jūn wáng",
+        "A king, a monarch",
+        "bible",
+        "君王坐在寶座上。",
+        "Jūnwáng zuò zài bǎozuò shàng.",
+        "The king sits on the throne.",
+        "君主|君三"
+      ],
+      [
+        "勇士",
+        "yǒng shì",
+        "A warrior, a brave man",
+        "bible",
+        "大衛是有名的勇士。",
+        "Dàwèi shì yǒumíng de yǒngshì.",
+        "David was a famous warrior.",
+        "男士|勇土|勇工"
+      ],
+      [
+        "耶路撒冷",
+        "yē lù sā lěng",
+        "Jerusalem",
+        "christian|bible",
+        "他們上耶路撒冷去過節。",
+        "Tāmen shàng Yēlùsālěng qù guòjié.",
+        "They went up to Jerusalem for the feast.",
+        "耶略撒冷|耶絡撒冷"
+      ],
+      [
+        "巴比倫",
+        "bā bǐ lún",
+        "Babylon",
+        "christian|bible",
+        "百姓被擄到巴比倫。",
+        "Bǎixìng bèi lǔ dào Bābǐlún.",
+        "The people were carried off to Babylon.",
+        "巴北倫|巴比論|巴此倫"
+      ],
+      [
+        "約旦河",
+        "yuē dàn hé",
+        "The river Jordan",
+        "christian|bible",
+        "他們過了約旦河。",
+        "Tāmen guò le Yuēdàn Hé.",
+        "They crossed the Jordan.",
+        "釣旦河|納旦河"
+      ],
+      [
+        "以利亞",
+        "yǐ lì yà",
+        "Elijah",
+        "christian|bible",
+        "以利亞在山上禱告。",
+        "Yǐlìyà zài shān shàng dǎogào.",
+        "Elijah prayed on the mountain.",
+        "似利亞|以刺亞|以利惡"
+      ],
+      [
+        "箴言",
+        "zhēn yán",
+        "The book of Proverbs; a maxim",
+        "christian|bible",
+        "箴言講的是智慧。",
+        "Zhēnyán jiǎng de shì zhìhuì.",
+        "Proverbs is about wisdom.",
+        "箴音|箴信"
+      ],
+      [
+        "詩經",
+        "shī jīng",
+        "The Book of Songs",
+        "general|literature",
+        "詩經是最早的詩歌集。",
+        "Shījīng shì zuì zǎo de shīgē jí.",
+        "The Book of Songs is the earliest poetry collection.",
+        "時經|詩輕|詩徑"
+      ],
+      [
+        "舊約",
+        "jiù yuē",
+        "The Old Testament",
+        "christian|bible",
+        "舊約有三十九卷。",
+        "Jiùyuē yǒu sānshíjiǔ juàn.",
+        "The Old Testament has thirty-nine books.",
+        "舊釣|舊納"
+      ],
+      [
+        "福音書",
+        "fú yīn shū",
+        "The Gospels",
+        "christian|bible",
+        "福音書一共有四卷。",
+        "Fúyīnshū yígòng yǒu sì juàn.",
+        "There are four Gospels in all.",
+        "副音書|福因書|福音晝"
+      ],
+      [
+        "經書",
+        "jīng shū",
+        "A scripture, a canonical text",
+        "general",
+        "櫃子裡放著幾本經書。",
+        "Guìzi lǐ fàng zhe jǐ běn jīngshū.",
+        "There are several scriptures in the cabinet.",
+        "輕書|經晝|徑書"
+      ],
+      [
+        "講堂",
+        "jiǎng táng",
+        "A lecture hall; a preaching hall",
+        "general",
+        "講堂裡坐滿了人。",
+        "Jiǎngtáng lǐ zuò mǎn le rén.",
+        "The hall is full of people.",
+        "講掌|講常"
+      ],
+      [
+        "殉教",
+        "xùn jiào",
+        "To be martyred",
+        "christian",
+        "早期有很多人殉教。",
+        "Zǎoqí yǒu hěn duō rén xùnjiào.",
+        "Many were martyred in the early days.",
+        "殉效|殉救"
+      ],
+      [
+        "東正教",
+        "dōng zhèng jiào",
+        "Eastern Orthodoxy",
+        "christian",
+        "他改信了東正教。",
+        "Tā gǎi xìn le dōngzhèngjiào.",
+        "He converted to Orthodoxy.",
+        "車正教|東正效|果正教"
+      ],
+      [
+        "長老會",
+        "zhǎng lǎo huì",
+        "The Presbyterian church",
+        "christian|taiwan",
+        "這間是長老會的醫院。",
+        "Zhè jiān shì zhǎnglǎohuì de yīyuàn.",
+        "This is a Presbyterian hospital.",
+        "長考會|長老曾|長孝會"
+      ],
+      [
+        "民間信仰",
+        "mín jiān xìn yǎng",
+        "Folk religion",
+        "folk|taiwan",
+        "民間信仰在台灣很有力量。",
+        "Mínjiān xìnyǎng zài Táiwān hěn yǒu lìliàng.",
+        "Folk religion is a strong force in Taiwan.",
+        "氏間信仰|民問信仰|民間佶仰"
+      ],
+      [
+        "孝道",
+        "xiào dào",
+        "Filial duty",
+        "folk|general",
+        "長輩很重視孝道。",
+        "Zhǎngbèi hěn zhòngshì xiàodào.",
+        "The older generation set great store by filial duty.",
+        "老道|孝首|孝導"
+      ],
+      [
+        "化緣",
+        "huà yuán",
+        "To beg alms as a monk",
+        "buddhist",
+        "和尚到村裡化緣。",
+        "Héshàng dào cūn lǐ huàyuán.",
+        "The monk went to the village to beg alms.",
+        "花緣|化綠|化線"
+      ],
+      [
+        "超度",
+        "chāo dù",
+        "To perform rites for the dead",
+        "buddhist|folk",
+        "家屬請法師來超度。",
+        "Jiāshǔ qǐng fǎshī lái chāodù.",
+        "The family asked a master to perform the rites.",
+        "趙度|越度"
+      ],
+      [
+        "圓寂",
+        "yuán jì",
+        "For a monk to pass away",
+        "buddhist",
+        "老和尚上個月圓寂。",
+        "Lǎo héshàng shàng ge yuè yuánjì.",
+        "The old monk passed away last month.",
+        "圍寂|團寂"
+      ],
+      [
+        "施主",
+        "shī zhǔ",
+        "A lay donor (how a monk addresses you)",
+        "buddhist",
+        "師父叫他一聲施主。",
+        "Shīfù jiào tā yì shēng shīzhǔ.",
+        "The master addressed him as benefactor.",
+        "施王|施住"
+      ],
+      [
+        "木魚",
+        "mù yú",
+        "A wooden fish drum",
+        "buddhist",
+        "他一邊念經一邊敲木魚。",
+        "Tā yìbiān niànjīng yìbiān qiāo mùyú.",
+        "He chants and taps the wooden fish.",
+        "米魚|木魯|本魚"
+      ],
+      [
+        "佛珠",
+        "fó zhū",
+        "A string of prayer beads",
+        "buddhist",
+        "她手上戴著佛珠。",
+        "Tā shǒu shàng dài zhe fózhū.",
+        "She wears prayer beads on her wrist.",
+        "拂珠|彿珠"
+      ],
+      [
+        "三界",
+        "sān jiè",
+        "The three realms of existence",
+        "buddhist",
+        "經上說要跳出三界。",
+        "Jīng shàng shuō yào tiào chū sānjiè.",
+        "The sutra speaks of escaping the three realms.",
+        "二界|三男|王界"
+      ],
+      [
+        "無我",
+        "wú wǒ",
+        "Non-self",
+        "buddhist",
+        "無我是佛法的核心。",
+        "Wúwǒ shì fófǎ de héxīn.",
+        "Non-self is at the heart of the teaching.",
+        "舞我|蕪我"
+      ],
+      [
+        "生老病死",
+        "shēng lǎo bìng sǐ",
+        "Birth, age, sickness and death",
+        "buddhist|idiom",
+        "生老病死誰也躲不掉。",
+        "Shēng lǎo bìng sǐ shéi yě duǒ bú diào.",
+        "Nobody escapes birth, age, sickness and death.",
+        "牛老病死|生考病死|生老疾死"
+      ],
+      [
+        "大慈大悲",
+        "dà cí dà bēi",
+        "Infinitely merciful",
+        "buddhist|idiom",
+        "大慈大悲的觀世音菩薩。",
+        "Dàcí dàbēi de Guānshìyīn Púsà.",
+        "The infinitely merciful Guanyin.",
+        "太慈大悲|大磁大悲|大慈太悲"
+      ],
+      [
+        "五體投地",
+        "wǔ tǐ tóu dì",
+        "To prostrate oneself; utterly impressed",
+        "buddhist|idiom",
+        "我對他佩服得五體投地。",
+        "Wǒ duì tā pèifú de wǔtǐtóudì.",
+        "I'm bowled over with admiration for him.",
+        "互體投地|五禮投地|五體投池"
+      ],
+      [
+        "邪魔外道",
+        "xié mó wài dào",
+        "Heresy and deviltry",
+        "buddhist|idiom",
+        "他說那是邪魔外道。",
+        "Tā shuō nà shì xiémó wàidào.",
+        "He calls that heresy and deviltry.",
+        "邪魔死道|邪魔外首|邪魔夕道"
+      ],
+      [
+        "孤魂野鬼",
+        "gū hún yě guǐ",
+        "Wandering ghosts with no one to tend them",
+        "folk|idiom|taiwan",
+        "普渡是為了孤魂野鬼。",
+        "Pǔdù shì wèile gūhún yěguǐ.",
+        "The rite is for the wandering ghosts.",
+        "孤鬼野鬼|孤魂野塊|孤魂野魂"
+      ],
+      [
+        "點石成金",
+        "diǎn shí chéng jīn",
+        "To turn stone to gold; a magic touch",
+        "folk|idiom",
+        "他有點石成金的本事。",
+        "Tā yǒu diǎnshí chéngjīn de běnshì.",
+        "He has the knack of turning stone to gold.",
+        "典石成金|點右成金|點石城金"
+      ],
+      [
+        "無中生有",
+        "wú zhōng shēng yǒu",
+        "To make something out of nothing",
+        "idiom",
+        "這件事根本是無中生有。",
+        "Zhè jiàn shì gēnběn shì wúzhōng shēngyǒu.",
+        "This whole thing was made up out of nothing.",
+        "舞中生有|無巾生有|無中牛有"
+      ],
+      [
+        "在劫難逃",
+        "zài jié nán táo",
+        "Doomed, unable to escape fate",
+        "folk|idiom",
+        "他覺得自己在劫難逃。",
+        "Tā juéde zìjǐ zài jié nán táo.",
+        "He feels there's no escaping it.",
+        "再劫難逃|在法難逃|在劫雞逃"
+      ],
+      [
+        "月下老人",
+        "yuè xià lǎo rén",
+        "The god who ties couples together",
+        "folk|taiwan",
+        "很多人去拜月下老人。",
+        "Hěn duō rén qù bài Yuèxià Lǎorén.",
+        "Many people go to pray to the matchmaker god.",
+        "用下老人|月卡老人|月下考人"
+      ],
+      [
+        "千里眼",
+        "qiān lǐ yǎn",
+        "Thousand-mile eyes, Mazu's attendant",
+        "folk|taiwan",
+        "媽祖旁邊站著千里眼。",
+        "Māzǔ pángbiān zhàn zhe Qiānlǐyǎn.",
+        "Thousand-mile Eyes stands beside Mazu.",
+        "千里眠|千里根"
+      ],
+      [
+        "天上聖母",
+        "tiān shàng shèng mǔ",
+        "Mazu's formal title",
+        "folk|taiwan",
+        "匾額寫著天上聖母。",
+        "Biǎn'é xiě zhe Tiānshàng Shèngmǔ.",
+        "The plaque reads Holy Mother of Heaven.",
+        "夭上聖母|天止聖母|天上望母"
+      ],
+      [
+        "天公生",
+        "tiān gōng shēng",
+        "The Jade Emperor's birthday",
+        "folk|taiwan|festival",
+        "天公生要拜三牲。",
+        "Tiāngōngshēng yào bài sānshēng.",
+        "You offer three meats on the Jade Emperor's birthday.",
+        "夭公生|天分生|天公牛"
+      ],
+      [
+        "風獅爺",
+        "fēng shī yé",
+        "The wind-lion god of Kinmen",
+        "folk|taiwan",
+        "金門到處是風獅爺。",
+        "Jīnmén dàochù shì Fēngshīyé.",
+        "Kinmen is full of wind-lion statues.",
+        "鳳獅爺|楓獅爺"
+      ],
+      [
+        "觀音媽",
+        "guān yīn mā",
+        "Guanyin, as she is addressed at home",
+        "folk|taiwan",
+        "廳裡供著觀音媽。",
+        "Tīng lǐ gòng zhe Guānyīnmā.",
+        "Guanyin is enshrined in the main room.",
+        "觀因媽|觀音嗎|觀言媽"
+      ],
+      [
+        "太上老君",
+        "tài shàng lǎo jūn",
+        "Laozi as a Taoist deity",
+        "folk",
+        "廟裡也拜太上老君。",
+        "Miào lǐ yě bài Tàishàng Lǎojūn.",
+        "The temple also venerates Taishang Laojun.",
+        "大上老君|太止老君|太上考君"
+      ],
+      [
+        "閻羅",
+        "yán luó",
+        "Yama, judge of the dead",
+        "folk|buddhist",
+        "故事說閻羅王管生死簿。",
+        "Gùshì shuō Yánluó Wáng guǎn shēngsǐ bù.",
+        "The story says Yama keeps the ledger of life and death.",
+        "閻囉|閻蘿"
+      ],
+      [
+        "黃泉",
+        "huáng quán",
+        "The Yellow Springs, the land of the dead",
+        "folk",
+        "古人說死後到黃泉。",
+        "Gǔrén shuō sǐ hòu dào huángquán.",
+        "The ancients said the dead go to the Yellow Springs.",
+        "寅泉|黃皇|橫泉"
+      ],
+      [
+        "神祇",
+        "shén qí",
+        "Deities",
+        "folk",
+        "這座廟供奉多位神祇。",
+        "Zhè zuò miào gòngfèng duō wèi shénqí.",
+        "This temple enshrines several deities.",
+        "伸祇|祖祇"
+      ],
+      [
+        "道姑",
+        "dào gū",
+        "A Taoist nun",
+        "folk",
+        "山上住著一位道姑。",
+        "Shān shàng zhù zhe yí wèi dàogū.",
+        "A Taoist nun lives up the mountain.",
+        "首姑|導姑"
+      ],
+      [
+        "金童玉女",
+        "jīn tóng yù nǚ",
+        "The attendant boy and girl; a golden couple",
+        "folk|idiom",
+        "大家說他們是金童玉女。",
+        "Dàjiā shuō tāmen shì jīntóng yùnǚ.",
+        "People call them a golden couple.",
+        "全童玉女|金重玉女"
+      ],
+      [
+        "畫符",
+        "huà fú",
+        "To draw a Taoist talisman",
+        "folk",
+        "道士在紙上畫符。",
+        "Dàoshì zài zhǐ shàng huàfú.",
+        "The Taoist draws a talisman on paper.",
+        "劃符|書符"
+      ],
+      [
+        "奉祀",
+        "fèng sì",
+        "To enshrine and make offerings to",
+        "folk",
+        "這裡奉祀關聖帝君。",
+        "Zhèlǐ fèngsì Guānshèng Dìjūn.",
+        "Lord Guan is enshrined here.",
+        "捧祀|奉祠|春祀"
+      ],
+      [
+        "儒教",
+        "rú jiào",
+        "Confucianism as a religion",
+        "general",
+        "有人把儒教當宗教看。",
+        "Yǒu rén bǎ rújiào dàng zōngjiào kàn.",
+        "Some treat Confucianism as a religion.",
+        "儒效|儒救"
+      ],
+      [
+        "四書",
+        "sì shū",
+        "The Four Books",
+        "general|literature",
+        "以前讀書要背四書。",
+        "Yǐqián dúshū yào bèi sìshū.",
+        "Students used to memorise the Four Books.",
+        "四晝|四畫"
+      ],
+      [
+        "宗教學",
+        "zōng jiào xué",
+        "Religious studies",
+        "general",
+        "他大學念宗教學。",
+        "Tā dàxué niàn zōngjiàoxué.",
+        "He read religious studies at university.",
+        "安教學|宗效學|宗教覺"
+      ],
+      [
+        "平安",
+        "píng ān",
+        "Peace, safety",
+        "general|christian",
+        "願你一路平安。",
+        "Yuàn nǐ yí lù píng'ān.",
+        "May you have a safe journey.",
+        "平宋|平宗"
+      ],
+      [
+        "父親",
+        "fù qīn",
+        "Father",
+        "general|family",
+        "他的父親是牧師。",
+        "Tā de fùqīn shì mùshī.",
+        "His father is a pastor.",
+        "文親|父新"
+      ],
+      [
+        "母親",
+        "mǔ qīn",
+        "Mother",
+        "general|family",
+        "母親節在五月。",
+        "Mǔqīnjié zài wǔyuè.",
+        "Mother's Day is in May.",
+        "毋親|母新"
+      ],
+      [
+        "丈夫",
+        "zhàng fū",
+        "Husband",
+        "general|family",
+        "她的丈夫在教書。",
+        "Tā de zhàngfū zài jiāoshū.",
+        "Her husband teaches.",
+        "支夫|丈大|丈天"
+      ],
+      [
+        "妻子",
+        "qī zi",
+        "Wife",
+        "general|family",
+        "他和妻子一起來的。",
+        "Tā hé qīzi yìqǐ lái de.",
+        "He came with his wife.",
+        "妻了|妻孑"
+      ],
+      [
+        "兒女",
+        "ér nǚ",
+        "Sons and daughters",
+        "general|family",
+        "他把兒女都養大了。",
+        "Tā bǎ érnǚ dōu yǎng dà le.",
+        "He raised all his children.",
+        "見女|兄女"
+      ],
+      [
+        "主人",
+        "zhǔ rén",
+        "The master, the host",
+        "general",
+        "主人請大家入座。",
+        "Zhǔrén qǐng dàjiā rùzuò.",
+        "The host asked everyone to sit down.",
+        "王人|主入|住人"
+      ],
+      [
+        "教訓",
+        "jiào xùn",
+        "A lesson; to reprimand",
+        "general",
+        "這次是個很好的教訓。",
+        "Zhè cì shì ge hěn hǎo de jiàoxùn.",
+        "This has been a good lesson.",
+        "效訓|救訓"
+      ],
+      [
+        "果子",
+        "guǒ zi",
+        "Fruit",
+        "general|bible",
+        "樹上結了很多果子。",
+        "Shù shàng jié le hěn duō guǒzi.",
+        "The tree has borne a lot of fruit.",
+        "杲子|果了|東子"
+      ],
+      [
+        "石頭",
+        "shí tóu",
+        "A stone",
+        "general",
+        "路上有一塊大石頭。",
+        "Lùshàng yǒu yí kuài dà shítóu.",
+        "There's a big stone in the road.",
+        "右頭|石預|后頭"
+      ],
+      [
+        "銀子",
+        "yín zi",
+        "Silver, money",
+        "bible|general",
+        "他們用銀子買了那塊地。",
+        "Tāmen yòng yínzi mǎi le nà kuài dì.",
+        "They bought that land with silver.",
+        "鐵子|銀了|銀孑"
+      ],
+      [
+        "衣服",
+        "yī fú",
+        "Clothes",
+        "general",
+        "他把衣服洗乾淨了。",
+        "Tā bǎ yīfú xǐ gānjìng le.",
+        "He washed the clothes clean.",
+        "衣報|衣般"
+      ],
+      [
+        "聲音",
+        "shēng yīn",
+        "A sound, a voice",
+        "general",
+        "外面有奇怪的聲音。",
+        "Wàimiàn yǒu qíguài de shēngyīn.",
+        "There's a strange noise outside.",
+        "殼音|聲因|罄音"
+      ],
+      [
+        "居民",
+        "jū mín",
+        "Residents",
+        "general",
+        "附近的居民都反對。",
+        "Fùjìn de jūmín dōu fǎnduì.",
+        "The local residents are all against it.",
+        "局民|居氏"
+      ],
+      [
+        "列國",
+        "liè guó",
+        "The nations",
+        "bible",
+        "先知向列國說話。",
+        "Xiānzhī xiàng lièguó shuōhuà.",
+        "The prophet speaks to the nations.",
+        "列圖|列園"
+      ],
+      [
+        "城邑",
+        "chéng yì",
+        "A walled town",
+        "bible",
+        "他們攻下了那座城邑。",
+        "Tāmen gōng xià le nà zuò chéngyì.",
+        "They took that town.",
+        "成邑|城色|誠邑"
+      ],
+      [
+        "爭戰",
+        "zhēng zhàn",
+        "To wage war",
+        "bible",
+        "那些年不斷爭戰。",
+        "Nàxiē nián búduàn zhēngzhàn.",
+        "Those were years of constant war.",
+        "爭獸|爭彈"
+      ],
+      [
+        "支派",
+        "zhī pài",
+        "A tribe",
+        "bible",
+        "以色列有十二支派。",
+        "Yǐsèliè yǒu shí'èr zhīpài.",
+        "Israel has twelve tribes.",
+        "攴派|支脈|丈派"
+      ],
+      [
+        "遵行",
+        "zūn xíng",
+        "To observe, to keep (a command)",
+        "bible",
+        "他們遵行神的話。",
+        "Tāmen zūnxíng shén de huà.",
+        "They keep God's word.",
+        "遵術|遵衍"
+      ],
+      [
+        "聽從",
+        "tīng cóng",
+        "To obey",
+        "bible|general",
+        "孩子要聽從父母。",
+        "Háizi yào tīngcóng fùmǔ.",
+        "Children should obey their parents.",
+        "聽縱|聽眾"
+      ],
+      [
+        "脫離",
+        "tuō lí",
+        "To break away from",
+        "general",
+        "他終於脫離了困境。",
+        "Tā zhōngyú tuōlí le kùnjìng.",
+        "He finally got out of that difficulty.",
+        "說離|脫雜|脫璃"
+      ],
+      [
+        "發怒",
+        "fā nù",
+        "To become angry",
+        "general|bible",
+        "他很少發怒。",
+        "Tā hěn shǎo fānù.",
+        "He rarely loses his temper.",
+        "髮怒|廢怒"
+      ],
+      [
+        "明白",
+        "míng bái",
+        "To understand; clear",
+        "general",
+        "我還是不太明白。",
+        "Wǒ háishì bú tài míngbái.",
+        "I still don't quite understand.",
+        "朋白|明自|朗白"
+      ],
+      [
+        "經過",
+        "jīng guò",
+        "To pass by; the course of events",
+        "general",
+        "我每天經過那間教堂。",
+        "Wǒ měitiān jīngguò nà jiān jiàotáng.",
+        "I pass that church every day.",
+        "輕過|經鍋|徑過"
+      ],
+      [
+        "居住",
+        "jū zhù",
+        "To reside",
+        "general",
+        "他們居住在山區。",
+        "Tāmen jūzhù zài shānqū.",
+        "They live in the mountains.",
+        "局住|居主"
+      ],
+      [
+        "滿意",
+        "mǎn yì",
+        "Satisfied",
+        "general",
+        "他對結果很滿意。",
+        "Tā duì jiéguǒ hěn mǎnyì.",
+        "He's very pleased with the result.",
+        "兩意|滿竟|滿憶"
+      ],
+      [
+        "相遇",
+        "xiāng yù",
+        "To meet by chance",
+        "general",
+        "他們在車站相遇。",
+        "Tāmen zài chēzhàn xiāngyù.",
+        "They ran into each other at the station.",
+        "柏遇|想遇"
+      ],
+      [
+        "借貸",
+        "jiè dài",
+        "To borrow and lend",
+        "general",
+        "借貸要看清楚合約。",
+        "Jièdài yào kàn qīngchǔ héyuē.",
+        "Read the contract carefully when borrowing.",
+        "借代|借貨"
+      ],
+      [
+        "泥土",
+        "ní tǔ",
+        "Soil, earth",
+        "general|bible",
+        "人是用泥土造的。",
+        "Rén shì yòng nítǔ zào de.",
+        "Man was formed from the earth.",
+        "泥士|泥工"
+      ],
+      [
+        "放鬆",
+        "fàng sōng",
+        "To relax",
+        "general",
+        "週末讓自己放鬆一下。",
+        "Zhōumò ràng zìjǐ fàngsōng yíxià.",
+        "Let yourself relax at the weekend.",
+        "攻鬆|效鬆"
+      ],
+      [
+        "流行",
+        "liú xíng",
+        "Popular, in fashion",
+        "general",
+        "這首歌很流行。",
+        "Zhè shǒu gē hěn liúxíng.",
+        "This song is very popular.",
+        "流術|流衍"
+      ],
+      [
+        "然而",
+        "rán ér",
+        "However",
+        "general|written",
+        "然而事情沒那麼簡單。",
+        "Rán'ér shìqíng méi nàme jiǎndān.",
+        "However, it isn't that simple.",
+        "燃而|然面"
+      ],
+      [
+        "因此",
+        "yīn cǐ",
+        "Therefore",
+        "general|written",
+        "因此他決定留下來。",
+        "Yīncǐ tā juédìng liú xiàlái.",
+        "He therefore decided to stay.",
+        "音此|因比|回此"
+      ],
+      [
+        "無論",
+        "wú lùn",
+        "No matter, regardless",
+        "general|written",
+        "無論如何我都會去。",
+        "Wúlùn rúhé wǒ dōu huì qù.",
+        "I'll go no matter what.",
+        "舞論|無倫|蕪論"
+      ],
+      [
+        "應當",
+        "yīng dāng",
+        "Ought to",
+        "general|written",
+        "我們應當彼此幫助。",
+        "Wǒmen yīngdāng bǐcǐ bāngzhù.",
+        "We ought to help one another.",
+        "應噹|應富"
+      ],
+      [
+        "如同",
+        "rú tóng",
+        "Just like",
+        "general|written",
+        "他的話如同一把刀。",
+        "Tā de huà rútóng yì bǎ dāo.",
+        "His words are like a knife.",
+        "恕同|如冋|好同"
+      ],
+      [
+        "從前",
+        "cóng qián",
+        "Once upon a time, formerly",
+        "general",
+        "從前這裡是一片田。",
+        "Cóngqián zhèlǐ shì yí piàn tián.",
+        "This used to be all fields.",
+        "縱前|從剪|眾前"
+      ],
+      [
+        "如今",
+        "rú jīn",
+        "Nowadays",
+        "general|written",
+        "如今已經不一樣了。",
+        "Rújīn yǐjīng bù yíyàng le.",
+        "Things are different now.",
+        "恕今|好今"
+      ],
+      [
+        "交給",
+        "jiāo gěi",
+        "To hand over to",
+        "general",
+        "這件事交給我。",
+        "Zhè jiàn shì jiāo gěi wǒ.",
+        "Leave this one to me.",
+        "文給|交蛤|交結"
+      ],
+      [
+        "打發",
+        "dǎ fā",
+        "To send someone off; to pass the time",
+        "general",
+        "他被打發去買東西。",
+        "Tā bèi dǎfā qù mǎi dōngxi.",
+        "He was sent off to buy things.",
+        "釘發|打髮|汀發"
+      ],
+      [
+        "婦人",
+        "fù rén",
+        "A woman (literary)",
+        "bible|written",
+        "有一個婦人來找他。",
+        "Yǒu yí ge fùrén lái zhǎo tā.",
+        "A woman came to see him.",
+        "婦入|婦仁|婦八"
+      ],
+      [
+        "羊羔",
+        "yáng gāo",
+        "A lamb",
+        "christian|bible",
+        "他像羊羔一樣安靜。",
+        "Tā xiàng yánggāo yíyàng ānjìng.",
+        "He was as quiet as a lamb.",
+        "羌羔|羊糕|洋羔"
+      ],
+      [
+        "免得",
+        "miǎn de",
+        "So as to avoid",
+        "general",
+        "早點出門免得遲到。",
+        "Zǎodiǎn chūmén miǎnde chídào.",
+        "Leave early so you're not late.",
+        "免德|免待"
       ]
     ],
     "slang": [

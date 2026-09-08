@@ -1515,6 +1515,23 @@ export const CHAR_INFO: Record<string, CharInfo> = {
   錦: { pinyin: 'jǐn', gloss: 'brocade', tell: '錦 has 釒 beside 帛' },
   鼠: { pinyin: 'shǔ', gloss: 'rat, mouse', tell: '鼠 has claws under the head' },
   物: { pinyin: 'wù', gloss: 'thing, object', tell: '物 has 牜 beside 勿' },
+  橙: { pinyin: 'chéng', gloss: 'orange (the fruit)', tell: '橙 has 木 beside 登' },
+  港: { pinyin: 'gǎng', gloss: 'harbour, port', tell: '港 has 氵 beside 巷' },
+  燉: { pinyin: 'dùn', gloss: 'to stew', tell: '燉 has 火 beside 敦' },
+  穀: { pinyin: 'gǔ', gloss: 'grain', tell: '穀 has 禾 inside the frame' },
+  簽: { pinyin: 'qiān', gloss: 'to sign; a slip', tell: '簽 has 竹 over 僉' },
+  肚: { pinyin: 'dù', gloss: 'belly; tripe', tell: '肚 has 月 beside 土' },
+  肥: { pinyin: 'féi', gloss: 'fat', tell: '肥 has 月 beside 巴' },
+  葵: { pinyin: 'kuí', gloss: 'sunflower, mallow', tell: '葵 wears 艹 over 癸' },
+  蓬: { pinyin: 'péng', gloss: 'fluffy; a kind of grass', tell: '蓬 wears 艹 over 逢' },
+  藻: { pinyin: 'zǎo', gloss: 'algae, seaweed', tell: '藻 wears 艹 over 澡' },
+  蘋: { pinyin: 'píng', gloss: 'apple (in 蘋果)', tell: '蘋 wears 艹 over 頻' },
+  蠣: { pinyin: 'lì', gloss: 'oyster', tell: '蠣 has 虫 beside 厲' },
+  里: { pinyin: 'lǐ', gloss: 'a village ward; a mile', tell: '里 is 田 over 土' },
+  露: { pinyin: 'lù', gloss: 'dew; to expose', tell: '露 has 路 under the rain' },
+  飴: { pinyin: 'yí', gloss: 'malt sugar', tell: '飴 has 飠 beside 台' },
+  麴: { pinyin: 'qú', gloss: 'yeast, ferment', tell: '麴 has 麥 beside 匊' },
+  鰱: { pinyin: 'lián', gloss: 'silver carp', tell: '鰱 has 魚 beside 連' },
 };
 
 export function charInfo(ch: string): CharInfo | undefined {

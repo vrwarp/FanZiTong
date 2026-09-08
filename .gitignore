@@ -36,3 +36,5 @@ agent/tailscale/state/
 
 # harvest caches: re-runnable, and large
 scripts/harvest/out/
+# MOE reading cache; the authored pair table next to it is committed
+scripts/deck/out/

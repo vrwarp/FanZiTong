@@ -6,7 +6,22 @@
     "盤子": "phân-á",
     "母湯": "m̄-thang",
     "歸剛": "kui-kang",
-    "阿雜": "a-tsa̍p"
+    "阿雜": "a-tsa̍p",
+    "拍謝": "pháinn-sè",
+    "撇步": "phiat-pōo",
+    "鐵齒": "thih-khí",
+    "摃龜": "kòng-ku",
+    "抓耙仔": "jiàu-pê-á",
+    "踹共": "tshuài-kāng",
+    "鬱卒": "ut-tsut",
+    "漢草": "hàn-tsháu",
+    "犁田": "lê-tshân",
+    "總鋪師": "tsóng-phòo-sai",
+    "田僑仔": "tshân-kiâu-á",
+    "阿祖": "a-tsóo",
+    "電風": "tiān-hong",
+    "豬公": "ti-kong",
+    "俗辣": "sio̍k-la"
   },
   "notes": {
     "母湯": "Spells the sound of Taiwanese 毋通 m̄-thang, \"must not\" — the characters are only the sound.",
@@ -21,7 +36,14 @@
     "飯糰": "Sticky rice wrapped around 油條 youtiao, pickled radish and pork floss.",
     "有雷": "The warning tag on PTT / Dcard threads; 防雷 marks a spoiler-free zone.",
     "是在哈囉": "Sarcastic; Dcard / PTT slang from around 2019.",
-    "泡麵番": "As long as it takes to cook instant noodles: a three-minute episode."
+    "泡麵番": "As long as it takes to cook instant noodles: a three-minute episode.",
+    "機車": "Literally a scooter. Calling someone 機車 has nothing to do with riding one.",
+    "拍謝": "A Taiwanese apology written with Mandarin characters for the sound; nobody reads it as pāixiè.",
+    "秀逗": "From the English \"short\" by way of Japanese ショート — a short circuit.",
+    "踹共": "出來講 said fast in Taiwanese, then written back in Mandarin characters.",
+    "犁田": "Literally ploughing a field — what your body does to the tarmac.",
+    "北七": "白痴 said in Taiwanese, then written back with the characters that carry the sound.",
+    "沙發": "From the English \"sofa\": the first person to sit down in the thread."
   },
   "variantNotes": {
     "藉口": "藉口 is the Taiwan standard spelling; 借口 is what most people type online.",
@@ -771,6 +793,506 @@
         "Zhège lǐyóu pǒ hē.",
         "That excuse is pretty lol.",
         "頗ㄎ|波ㄏ|頗厂"
+      ],
+      [
+        "龜毛",
+        "guī máo",
+        "Fussy, picky about small things",
+        "colloquial|taiwan",
+        "他很龜毛，點菜要想十分鐘。",
+        "Tā hěn guīmáo, diǎn cài yào xiǎng shí fēnzhōng.",
+        "He's so fussy it takes him ten minutes to order.",
+        "歸毛|龜手"
+      ],
+      [
+        "機車",
+        "jī chē",
+        "Annoying, hard to deal with (of a person)",
+        "colloquial|taiwan",
+        "你不要那麼機車好不好？",
+        "Nǐ búyào nàme jīchē hǎo bù hǎo?",
+        "Do you have to be so difficult?",
+        "幾車|機軍|譏車"
+      ],
+      [
+        "擺爛",
+        "bǎi làn",
+        "To stop trying and let things rot",
+        "colloquial|workplace",
+        "他最後乾脆擺爛，什麼都不做。",
+        "Tā zuìhòu gāncuì bǎilàn, shénme dōu bú zuò.",
+        "In the end he just gave up and did nothing at all.",
+        "罷爛|擺瀾|襬爛"
+      ],
+      [
+        "淡定",
+        "dàn dìng",
+        "Calm, unfazed",
+        "colloquial",
+        "出這麼大的事，他還是很淡定。",
+        "Chū zhème dà de shì, tā háishì hěn dàndìng.",
+        "Something this big happened and he's still calm.",
+        "炎定|淡是|談定"
+      ],
+      [
+        "工具人",
+        "gōng jù rén",
+        "Someone kept around only to do favours",
+        "colloquial|relationships",
+        "她只把他當工具人，需要才找他。",
+        "Tā zhǐ bǎ tā dàng gōngjùrén, xūyào cái zhǎo tā.",
+        "She only treats him as a useful tool, calling when she needs something.",
+        "土具人|工真人|工具入"
+      ],
+      [
+        "怪咖",
+        "guài kā",
+        "An oddball",
+        "colloquial|taiwan",
+        "班上那個怪咖其實人很好。",
+        "Bānshàng nàge guàikā qíshí rén hěn hǎo.",
+        "That oddball in our class is actually a nice person.",
+        "怪加|怪珈"
+      ],
+      [
+        "大咖",
+        "dà kā",
+        "A big name, a major figure",
+        "colloquial|taiwan",
+        "今天來的都是業界大咖。",
+        "Jīntiān lái de dōu shì yèjiè dàkā.",
+        "Everyone who came today is a big name in the industry.",
+        "太咖|大加|犬咖"
+      ],
+      [
+        "媽寶",
+        "mā bǎo",
+        "A grown man who still defers to his mother",
+        "colloquial|relationships",
+        "他三十歲了還是個媽寶。",
+        "Tā sānshí suì le háishì ge mābǎo.",
+        "He's thirty and still a mummy's boy.",
+        "嗎寶|媽實|螞寶"
+      ],
+      [
+        "吸睛",
+        "xī jīng",
+        "Eye-catching",
+        "colloquial|media",
+        "這個廣告很吸睛，大家都在看。",
+        "Zhège guǎnggào hěn xījīng, dàjiā dōu zài kàn.",
+        "This ad is eye-catching; everyone's looking at it.",
+        "級睛|吸晴|汲睛"
+      ],
+      [
+        "潛水",
+        "qián shuǐ",
+        "To lurk in a group without posting",
+        "colloquial|online",
+        "他在群組裡潛水很久了。",
+        "Tā zài qúnzǔ lǐ qiánshuǐ hěn jiǔ le.",
+        "He's been lurking in the group chat for ages.",
+        "潛永|潛冰"
+      ],
+      [
+        "拍謝",
+        "pāi xiè",
+        "Sorry; excuse me",
+        "colloquial|taigi",
+        "拍謝，我來晚了。",
+        "Pāixiè, wǒ lái wǎn le.",
+        "Sorry, I'm late.",
+        "怕謝|拍射|泊謝"
+      ],
+      [
+        "撇步",
+        "piē bù",
+        "A knack, a trick of the trade",
+        "colloquial|taigi",
+        "阿嬤煮菜有很多撇步。",
+        "Āmà zhǔ cài yǒu hěn duō piēbù.",
+        "Grandma has a lot of tricks for cooking.",
+        "瞥步|撇涉|蔽步"
+      ],
+      [
+        "鐵齒",
+        "tiě chǐ",
+        "Stubbornly refusing to believe something",
+        "colloquial|taigi",
+        "你不要這麼鐵齒，還是去看醫生。",
+        "Nǐ búyào zhème tiěchǐ, háishì qù kàn yīshēng.",
+        "Don't be so stubborn about it; go and see a doctor.",
+        "銅齒|銀齒"
+      ],
+      [
+        "摃龜",
+        "gòng guī",
+        "To come away with nothing",
+        "colloquial|taigi",
+        "這期樂透我又摃龜了。",
+        "Zhè qī lètòu wǒ yòu gòngguī le.",
+        "I came up empty on the lottery again this round.",
+        "貢龜|摃歸|槓龜"
+      ],
+      [
+        "秀逗",
+        "xiù dòu",
+        "Not working right in the head; on the blink",
+        "colloquial|loanword",
+        "我今天腦袋有點秀逗。",
+        "Wǒ jīntiān nǎodài yǒudiǎn xiùdòu.",
+        "My brain isn't quite working today.",
+        "透逗|秀痘|誘逗"
+      ],
+      [
+        "兩光",
+        "liǎng guāng",
+        "Useless, unreliable",
+        "colloquial|taiwan",
+        "這支手機很兩光，常常當機。",
+        "Zhè zhī shǒujī hěn liǎngguāng, chángcháng dāngjī.",
+        "This phone is useless; it crashes all the time.",
+        "雨光|兩先|滿光"
+      ],
+      [
+        "抓耙仔",
+        "zhuā pá zǐ",
+        "A snitch, an informer",
+        "colloquial|taigi",
+        "公司裡有抓耙仔，什麼都傳出去。",
+        "Gōngsī lǐ yǒu zhuāpázǐ, shénme dōu chuán chūqù.",
+        "There's a snitch in the company; everything gets out.",
+        "爬耙仔|抓把仔|抓耙仟"
+      ],
+      [
+        "踹共",
+        "chuài gòng",
+        "To come out and explain yourself",
+        "colloquial|ptt",
+        "網友要那個老闆出來踹共。",
+        "Wǎngyǒu yào nàge lǎobǎn chūlái chuàigòng.",
+        "People online want that boss to come out and explain himself.",
+        "端共|踹恭|喘共"
+      ],
+      [
+        "歪樓",
+        "wāi lóu",
+        "For a thread to drift off topic",
+        "colloquial|online",
+        "這篇討論串又歪樓了。",
+        "Zhè piān tǎolùn chuàn yòu wāilóu le.",
+        "This thread has gone off the rails again.",
+        "歷樓|歪摟|歪數"
+      ],
+      [
+        "慣老闆",
+        "guàn lǎo bǎn",
+        "A boss who exploits staff and expects gratitude",
+        "colloquial|workplace",
+        "遇到慣老闆只能早點離職。",
+        "Yùdào guànlǎobǎn zhǐ néng zǎodiǎn lízhí.",
+        "If you get a boss like that, the only answer is to leave early.",
+        "慣考闆|慣孝闆"
+      ],
+      [
+        "薪水小偷",
+        "xīn shuǐ xiǎo tōu",
+        "Someone who draws a wage and does nothing",
+        "colloquial|workplace",
+        "他整天在滑手機，根本是薪水小偷。",
+        "Tā zhěngtiān zài huá shǒujī, gēnběn shì xīnshuǐxiǎotōu.",
+        "He scrolls his phone all day; he's stealing his salary.",
+        "新水小偷|薪永小偷|薪水少偷"
+      ],
+      [
+        "鬱卒",
+        "yù zú",
+        "Down, frustrated, bottled up",
+        "colloquial|taigi",
+        "考試沒過，他心裡很鬱卒。",
+        "Kǎoshì méi guò, tā xīnlǐ hěn yùzú.",
+        "He didn't pass the exam and feels wretched about it.",
+        "欝卒|鬱率|鬱碎"
+      ],
+      [
+        "漢草",
+        "hàn cǎo",
+        "Physique, build",
+        "colloquial|taigi",
+        "他漢草不錯，一看就有在健身。",
+        "Tā hàncǎo búcuò, yí kàn jiù yǒu zài jiànshēn.",
+        "He's well built; you can tell he works out.",
+        "漢早|漢卓"
+      ],
+      [
+        "犁田",
+        "lí tián",
+        "To come off a scooter and slide along the road",
+        "colloquial|taigi",
+        "他昨天騎車犁田，手擦傷了。",
+        "Tā zuótiān qí chē lítián, shǒu cāshāng le.",
+        "He came off his scooter yesterday and grazed his hand.",
+        "黎田|犁由|犁甲"
+      ],
+      [
+        "總鋪師",
+        "zǒng pù shī",
+        "The head chef of a banquet kitchen",
+        "colloquial|taigi|food",
+        "辦桌的總鋪師手藝很好。",
+        "Bànzhuō de zǒngpùshī shǒuyì hěn hǎo.",
+        "The banquet chef really knows his craft.",
+        "聰鋪師|總補師|總鋪帥"
+      ],
+      [
+        "田僑仔",
+        "tián qiáo zǐ",
+        "A farmer made rich when his land was rezoned",
+        "colloquial|taigi",
+        "他家是田僑仔，土地都在重劃區。",
+        "Tā jiā shì tiánqiáozǐ, tǔdì dōu zài chónghuàqū.",
+        "His family struck it rich on land; their fields are all in the rezoning area.",
+        "由僑仔|田橋仔|田僑仟"
+      ],
+      [
+        "菜瓜布",
+        "cài guā bù",
+        "A loofah scourer for washing up",
+        "colloquial|taigi|household",
+        "洗碗要用菜瓜布才刷得乾淨。",
+        "Xǐ wǎn yào yòng càiguābù cái shuā de gānjìng.",
+        "You need a loofah scourer to get the dishes properly clean.",
+        "采瓜布|菜爪布|菜瓜有"
+      ],
+      [
+        "阿祖",
+        "ā zǔ",
+        "Great-grandmother or great-grandfather",
+        "colloquial|taigi|family",
+        "阿祖今年九十歲了。",
+        "Āzǔ jīnnián jiǔshí suì le.",
+        "Great-grandma is ninety this year.",
+        "呵祖|阿神|何祖"
+      ],
+      [
+        "電風",
+        "diàn fēng",
+        "An electric fan",
+        "colloquial|taigi|household",
+        "天氣好熱，把電風開大一點。",
+        "Tiānqì hǎo rè, bǎ diànfēng kāi dà yìdiǎn.",
+        "It's boiling; turn the fan up a bit.",
+        "雷風|電鳳|雲風"
+      ],
+      [
+        "豬公",
+        "zhū gōng",
+        "A piggy bank",
+        "colloquial|taigi",
+        "我從小存錢在豬公裡。",
+        "Wǒ cóngxiǎo cún qián zài zhūgōng lǐ.",
+        "I've saved money in a piggy bank since I was little.",
+        "諸公|豬分|豬兮"
+      ],
+      [
+        "圍爐",
+        "wéi lú",
+        "The family reunion dinner on New Year's Eve",
+        "colloquial|festival",
+        "除夕全家人一起圍爐。",
+        "Chúxì quánjiārén yìqǐ wéilú.",
+        "On New Year's Eve the whole family eats together.",
+        "圓爐|圍盧|團爐"
+      ],
+      [
+        "三不五時",
+        "sān bù wǔ shí",
+        "Every so often, now and then",
+        "colloquial|taiwan",
+        "他三不五時就來找我聊天。",
+        "Tā sānbùwǔshí jiù lái zhǎo wǒ liáotiān.",
+        "He drops by for a chat every so often.",
+        "二不五時|三丕五時|三不互時"
+      ],
+      [
+        "揪團",
+        "jiū tuán",
+        "To get a group together to buy or go somewhere",
+        "colloquial|online",
+        "同事揪團訂下午茶。",
+        "Tóngshì jiūtuán dìng xiàwǔchá.",
+        "My colleagues got a group order together for afternoon tea.",
+        "秋團|揪圓|啾團"
+      ],
+      [
+        "有夠",
+        "yǒu gòu",
+        "Really, so (before an adjective)",
+        "colloquial|taiwan",
+        "今天有夠熱，走一下就流汗。",
+        "Jīntiān yǒugòu rè, zǒu yíxià jiù liú hàn.",
+        "It's so hot today you sweat after a short walk.",
+        "又夠|有狗|右夠"
+      ],
+      [
+        "俗辣",
+        "sú là",
+        "A coward",
+        "colloquial|taigi",
+        "敢做不敢當，真是俗辣。",
+        "Gǎn zuò bù gǎn dāng, zhēnshì súlà.",
+        "Willing to do it but not to own it — what a coward.",
+        "浴辣|俗剌|裕辣"
+      ],
+      [
+        "北七",
+        "běi qī",
+        "Idiotic; an idiot",
+        "colloquial|taigi",
+        "你不要那麼北七好不好。",
+        "Nǐ búyào nàme běiqī hǎo bù hǎo.",
+        "Could you not be such an idiot.",
+        "比七|北匕|北比"
+      ],
+      [
+        "酸民",
+        "suān mín",
+        "People who post to sneer at everything",
+        "colloquial|online",
+        "底下留言都是酸民在酸。",
+        "Dǐxià liúyán dōu shì suānmín zài suān.",
+        "The comments below are all trolls sniping.",
+        "俊民|酸氏|峻民"
+      ],
+      [
+        "肉搜",
+        "ròu sōu",
+        "To hunt down someone's identity online",
+        "colloquial|online",
+        "那個人被網友肉搜出來了。",
+        "Nàge rén bèi wǎngyǒu ròusōu chūlái le.",
+        "People online tracked down who that was.",
+        "內搜|肉瘦|肉嫂"
+      ],
+      [
+        "玻璃心",
+        "bō lí xīn",
+        "A fragile ego that breaks at a word",
+        "colloquial|online",
+        "說他一句就生氣，玻璃心。",
+        "Shuō tā yí jù jiù shēngqì, bōlíxīn.",
+        "One word and he's upset — made of glass.",
+        "波璃心|玻離心|玻璃必"
+      ],
+      [
+        "沙發",
+        "shā fā",
+        "The first comment on a new post",
+        "colloquial|online",
+        "他每次都搶到沙發。",
+        "Tā měicì dōu qiǎng dào shāfā.",
+        "He always gets the first comment.",
+        "砂發|沙髮|沙廢"
+      ],
+      [
+        "考古",
+        "kǎo gǔ",
+        "To dig up an old post and repost it",
+        "colloquial|online",
+        "有人考古十年前的文章。",
+        "Yǒu rén kǎogǔ shí nián qián de wénzhāng.",
+        "Someone dug up a post from ten years ago.",
+        "老古|考苦"
+      ],
+      [
+        "秒回",
+        "miǎo huí",
+        "To reply the second a message arrives",
+        "colloquial|online",
+        "她訊息都秒回，很有禮貌。",
+        "Tā xùnxí dōu miǎohuí, hěn yǒu lǐmào.",
+        "She replies instantly; it's very courteous.",
+        "秒囚|秒因"
+      ],
+      [
+        "雙標",
+        "shuāng biāo",
+        "A double standard",
+        "colloquial|online",
+        "同一件事他雙標得很明顯。",
+        "Tóngyí jiàn shì tā shuāngbiāo de hěn míngxiǎn.",
+        "On the very same issue his double standard is obvious.",
+        "隻標|雙漂|雋標"
+      ],
+      [
+        "顏值",
+        "yán zhí",
+        "How good-looking someone is",
+        "colloquial|media",
+        "這部戲的顏值很高。",
+        "Zhè bù xì de yánzhí hěn gāo.",
+        "The cast of this show is very good-looking.",
+        "顧值|顏直|額值"
+      ],
+      [
+        "草莓族",
+        "cǎo méi zú",
+        "The generation said to bruise easily under pressure",
+        "colloquial|taiwan",
+        "老一輩常說年輕人是草莓族。",
+        "Lǎo yíbèi cháng shuō niánqīngrén shì cǎoméizú.",
+        "The older generation likes to call young people the strawberry generation.",
+        "早莓族|卓莓族"
+      ],
+      [
+        "跳票",
+        "tiào piào",
+        "To break a promise; for a cheque to bounce",
+        "colloquial|politics",
+        "他的承諾又跳票了。",
+        "Tā de chéngnuò yòu tiàopiào le.",
+        "He's broken his promise again.",
+        "挑票|跳要|逃票"
+      ],
+      [
+        "抓狂",
+        "zhuā kuáng",
+        "To go berserk with frustration",
+        "colloquial",
+        "塞車塞到我快抓狂了。",
+        "Sāichē sāi dào wǒ kuài zhuākuáng le.",
+        "The traffic is driving me up the wall.",
+        "爬狂|抓往|抓狙"
+      ],
+      [
+        "活該",
+        "huó gāi",
+        "Serves you right",
+        "colloquial",
+        "不聽勸才會這樣，活該。",
+        "Bù tīng quàn cái huì zhèyàng, huógāi.",
+        "That's what you get for not listening — serves you right.",
+        "話該|活孩|括該"
+      ],
+      [
+        "泡湯",
+        "pào tāng",
+        "To fall through, to come to nothing",
+        "colloquial",
+        "下大雨，我們的行程泡湯了。",
+        "Xià dàyǔ, wǒmen de xíngchéng pàotāng le.",
+        "It poured, and our plans fell through.",
+        "抱湯|泡場|泡揚"
+      ],
+      [
+        "當機",
+        "dāng jī",
+        "To freeze or crash (of a computer)",
+        "colloquial|tech",
+        "電腦又當機，報告還沒存。",
+        "Diànnǎo yòu dāngjī, bàogào hái méi cún.",
+        "The computer crashed again and the report wasn't saved.",
+        "噹機|當幾|富機"
       ]
     ],
     "anime": [

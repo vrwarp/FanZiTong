@@ -422,8 +422,43 @@ async function cchat() {
   console.log(`${added.length} new ACG candidates kept (of ${mined.length} mined)`);
 }
 
+/**
+ * The attested rows, in one file the authoring pass can read.
+ *
+ * `report` counts them and throws the rows away; writing a card needs the rows
+ * themselves — the word, what attested it, its MOE reading and, for scripture,
+ * the verse it was mined from.
+ */
+async function pool() {
+  const rows = await load('candidates.json', []);
+  const hits = await load('attestation.json', {});
+  const boardHits = await load('attestation-boards.json', {});
+  const readingsByWord = await load('readings.json', {});
+  const out = [];
+  for (const row of rows) {
+    if (!passes(row, hits)) continue;
+    const reading = readingsByWord[row.word] ?? {};
+    out.push({
+      word: row.word,
+      domains: row.domains,
+      threads: hits[row.word] ?? 0,
+      boardThreads: boardHits[row.word] ?? 0,
+      verses: row.verses ?? 0,
+      verse: row.verse ?? null,
+      mandarin: reading.mandarin ?? null,
+      taigi: reading.taigi ?? null,
+      source: row.source,
+    });
+  }
+  // Best-attested first, so a domain that has to be cut short keeps its
+  // strongest words rather than an alphabetical slice of them.
+  out.sort((a, b) => b.threads + b.boardThreads - (a.threads + a.boardThreads));
+  await save('pool.json', out);
+  console.log(`${out.length} attested rows written to out/pool.json`);
+}
+
 const stage = process.argv[2];
-const stages = { candidates, cchat, bahamut, bible, attest, boards, readings, report };
+const stages = { candidates, cchat, bahamut, bible, attest, boards, readings, report, pool };
 if (!stages[stage]) {
   console.error(`usage: harvest.mjs <${Object.keys(stages).join('|')}>`);
   process.exit(1);

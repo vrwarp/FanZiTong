@@ -53,3 +53,21 @@ describe('countSyllables with an apostrophe', () => {
     expect(countSyllables("jīn'é")).toBe(2);
   });
 });
+
+describe('a reading that starts with a tone mark', () => {
+  // A sentence reading is written as a sentence, so a word whose first
+  // syllable carries a tone mark starts with a capital that carries it too.
+  // Those letters were being stripped as punctuation, which cost the syllable
+  // and made the whole sentence fail to line up.
+  it('counts the first syllable of Āmà, Èrshí and Ōu', () => {
+    expect(countSyllables('Āmà')).toBe(2);
+    expect(countSyllables('Èrshí')).toBe(2);
+    expect(countSyllables('Ōu')).toBe(1);
+  });
+
+  it('aligns a sentence whose first word is tone-marked', () => {
+    const words = alignSentenceReadings('阿嬤煮菜有很多撇步。', 'Āmà zhǔ cài yǒu hěn duō piēbù.');
+    expect(words).not.toBeNull();
+    expect(words![0]).toMatchObject({ text: '阿嬤', reading: 'Āmà' });
+  });
+});

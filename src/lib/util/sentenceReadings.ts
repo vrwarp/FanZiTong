@@ -2,13 +2,27 @@ import { hanChars } from './pinyin';
 
 const VOWELS = 'aeiouüvāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ';
 const SYLLABLE_RE = new RegExp(`^(?:[zcs]h|[bpmfdtnlgkhjqxzcsrywv])?[${VOWELS}]+(?:ng|n|r)?`, 'i');
+/**
+ * Letters a reading may be written with, in either case.
+ *
+ * The uppercase half is not decoration: a sentence reading is written as a
+ * sentence, so any word whose first syllable carries a tone mark starts with
+ * one of these — Āmà, Èrshí, Ōu. Keeping only the lowercase forms silently
+ * dropped that first letter, which cost the syllable and made the whole
+ * sentence fail to line up with its characters.
+ */
+const LETTERS = `a-zA-Z${VOWELS}${VOWELS.toUpperCase()}`;
+/** Everything that is not a letter or the syllable-splitting apostrophe. */
+const NON_LETTER_RE = new RegExp(`[^${LETTERS}']`, 'g');
+/** Leading punctuation (no apostrophe) and trailing punctuation, around a token. */
+const TRIM_RE = new RegExp(`^[^${LETTERS}]+|[^${LETTERS}']+$`, 'g');
 
 /** Count the Mandarin syllables in a pinyin token such as "lǔròufàn" (→ 3). */
 export function countSyllables(token: string): number {
   // The apostrophe marks a syllable boundary between vowels (zuì'ài, xī'ān):
   // count each side on its own so the vowel run cannot swallow both.
   return token
-    .replace(/[^a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ']/g, '')
+    .replace(NON_LETTER_RE, '')
     .split("'")
     .reduce((sum, part) => sum + countRun(part), 0);
 }
@@ -31,7 +45,7 @@ function countRun(letters: string): number {
 
 /** "Lǎobǎn," → "lǎo bǎn": the house style of every headword, syllable by syllable. */
 export function displayReading(token: string): string {
-  const letters = token.replace(/[^a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ']/g, '').toLowerCase();
+  const letters = token.replace(NON_LETTER_RE, '').toLowerCase();
   const syllables: string[] = [];
   for (const part of letters.split("'")) {
     let rest = part;
@@ -65,12 +79,7 @@ export interface WordReading {
 export function alignSentenceReadings(sentence: string, pinyin: string): WordReading[] | null {
   const tokens = pinyin
     .split(/\s+/)
-    .map((t) =>
-      t.replace(
-        /^[^a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]+|[^a-zA-ZüÜāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ']+$/g,
-        '',
-      ),
-    )
+    .map((t) => t.replace(TRIM_RE, ''))
     .filter(Boolean);
   const chars = Array.from(sentence);
   const hanCount = hanChars(sentence).length;

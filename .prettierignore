@@ -10,3 +10,5 @@ agent/dist
 agent/node_modules
 agent/package-lock.json
 src/data/simplifiedChars.ts
+# One long line by design: a generated index, not something anyone reads.
+scripts/deck/lookAlikes.json

@@ -59,9 +59,15 @@ let pending: Promise<StarterDeckData> | null = null;
 export function loadStarterDeckData(): Promise<StarterDeckData> {
   // The JSON's inferred type widens the fixed-arity rows to string[], so the
   // shape is asserted here once rather than at every use.
-  pending ??= import('./starterDeck.json').then(
-    (m) => (m.default ?? m) as unknown as StarterDeckData,
-  );
+  pending ??= import('./starterDeck.json')
+    .then((m) => (m.default ?? m) as unknown as StarterDeckData)
+    .catch((err: unknown) => {
+      // A failed fetch must not become the cached answer. Keeping the rejected
+      // promise would mean the chunk is never asked for again in this session,
+      // so a tab that was offline for one moment stays broken for all of them.
+      pending = null;
+      throw err;
+    });
   return pending;
 }
 
@@ -126,16 +132,117 @@ export async function buildStarterDeck(
 }
 
 /**
- * How the "restore starter deck" control should read.
+ * Which starter rows a deck is missing, and which it has in a drifted form.
  *
- * `missing` is null until the rows have loaded, and that is not the same as
- * zero. The two were conflated once and the button said "complete" before it
- * had looked — a claim made out of missing data, and a permanent one if the
- * chunk never arrives. Not knowing yet is its own state, and it says nothing.
+ * "Restore" used to mean "add the headwords you do not have", which quietly
+ * made it a no-op for anybody who already had them: the button went grey and
+ * there was no way back to the shipped text. But a starter card drifts for two
+ * ordinary reasons — the learner edited it, or a later release corrected it —
+ * and neither was reachable. So the plan names both halves, and the control can
+ * always say what tapping it would do.
  */
-export function starterRestoreLabel(missing: number | null): string {
-  if (missing === null) return 'Restore starter deck';
-  return missing > 0 ? `Restore starter deck (adds ${missing})` : 'Restore starter deck (complete)';
+export interface StarterRestorePlan {
+  /** Starter words this deck does not have at all. */
+  add: VocabCard[];
+  /** Cards whose content no longer matches the shipped row, rebuilt from it. */
+  repair: VocabCard[];
+}
+
+/**
+ * The authored fields. `id`, `fsrs`, `createdAt` and `updatedAt` are the
+ * learner's rather than the deck's, so they are neither compared nor replaced.
+ */
+const CONTENT_KEYS = [
+  'traditional',
+  'pinyin',
+  'spoken',
+  'definition',
+  'domain',
+  'tags',
+  'exampleSentenceTraditional',
+  'exampleSentencePinyin',
+  'exampleSentenceTranslation',
+  'visualFoils',
+  'variants',
+  'variantNote',
+  'notes',
+  'clozeDistractors',
+] as const satisfies readonly (keyof VocabCard)[];
+
+function sameContent(held: VocabCard, shipped: VocabCard): boolean {
+  // An absent field and an empty one are the same card, and the seed rows spell
+  // "nothing here" both ways depending on the column.
+  const norm = (value: unknown) =>
+    value === undefined || value === null || (Array.isArray(value) && value.length === 0)
+      ? null
+      : value;
+  return CONTENT_KEYS.every(
+    (key) => JSON.stringify(norm(held[key])) === JSON.stringify(norm(shipped[key])),
+  );
+}
+
+export function planStarterRestore(
+  deck: VocabCard[],
+  starter: VocabCard[],
+  options: { now?: Date } = {},
+): StarterRestorePlan {
+  const held = new Map(deck.map((card) => [card.traditional, card]));
+  const updatedAt = (options.now ?? new Date()).toISOString();
+  const add: VocabCard[] = [];
+  const repair: VocabCard[] = [];
+  for (const shipped of starter) {
+    const mine = held.get(shipped.traditional);
+    if (!mine) {
+      add.push(shipped);
+    } else if (!sameContent(mine, shipped)) {
+      // The words come back; the schedule stays the learner's. Restoring a
+      // card must never cost the reviews that were done on it.
+      repair.push({
+        ...shipped,
+        id: mine.id,
+        fsrs: mine.fsrs,
+        createdAt: mine.createdAt,
+        updatedAt,
+      });
+    }
+  }
+  return { add, repair };
+}
+
+/**
+ * How the control should read.
+ *
+ * `null` is "not known yet", which is not "nothing to do": the rows arrive as a
+ * chunk, and if that chunk never arrives the answer is unknown for good. Saying
+ * "complete" out of missing data was a claim the button had not earned — and
+ * "complete" was the wrong word besides, since it sounded like a verdict on the
+ * deck's size rather than on whether this copy matches the shipped one.
+ */
+export function starterRestoreLabel(plan: StarterRestorePlan | null): string {
+  if (!plan) return 'Restore starter deck';
+  const parts: string[] = [];
+  if (plan.add.length > 0) parts.push(`adds ${plan.add.length}`);
+  if (plan.repair.length > 0) parts.push(`repairs ${plan.repair.length}`);
+  return parts.length > 0
+    ? `Restore starter deck (${parts.join(', ')})`
+    : 'Restore starter deck (up to date)';
+}
+
+const plural = (n: number) => (n === 1 ? 'card' : 'cards');
+
+/** What to say once it has run. */
+export function starterRestoreNotice(plan: StarterRestorePlan): string {
+  const parts: string[] = [];
+  if (plan.add.length > 0) parts.push(`Added ${plan.add.length} ${plural(plan.add.length)}`);
+  if (plan.repair.length > 0) {
+    parts.push(
+      `restored ${plan.repair.length} ${plural(plan.repair.length)} to the shipped version`,
+    );
+  }
+  if (parts.length === 0) {
+    return `Your copy of \u201c${STARTER_DECK_NAME}\u201d already matches the shipped one.`;
+  }
+  return `${parts.join(', ')} from \u201c${STARTER_DECK_NAME}\u201d.`;
 }
 
 /** How many cards the starter deck ships, without materializing any of them. */

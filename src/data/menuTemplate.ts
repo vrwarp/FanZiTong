@@ -16,7 +16,9 @@ export type MenuCategoryId =
   | 'snack'
   | 'drink'
   | 'bento'
-  /** Not something a slip can order (a sauce, a hot-pot night). */
+  | 'fruit'
+  | 'sweet'
+  /** Not something a slip can order (a sauce, a hot-pot night, a whole cuisine). */
   | 'other';
 
 export type ShopType = 'rice-noodle' | 'breakfast' | 'night-market' | 'bento';
@@ -62,6 +64,18 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: true,
     defaultPrice: [35, 50],
     fillers: [
+      {
+        label: '木桶排骨飯',
+        price: 120,
+        pinyin: 'mù tǒng pái gǔ fàn',
+        gloss: 'wooden-tub pork chop rice',
+      },
+      {
+        label: '香菇煲仔飯',
+        price: 110,
+        pinyin: 'xiāng gū bāo zǎi fàn',
+        gloss: 'mushroom clay pot rice',
+      },
       { label: '雞肉飯', price: [35, 50], pinyin: 'jī ròu fàn', gloss: 'shredded chicken rice' },
       { label: '地瓜粥', price: [30, 45], pinyin: 'dì guā zhōu', gloss: 'sweet-potato congee' },
       { label: '排骨飯', price: [90, 110], pinyin: 'pái gǔ fàn', gloss: 'pork-chop rice' },
@@ -88,6 +102,8 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: true,
     defaultPrice: [45, 60],
     fillers: [
+      { label: '米苔目', price: 45, pinyin: 'mǐ tāi mù', gloss: 'thick rice noodles' },
+      { label: '冬粉', price: 40, pinyin: 'dōng fěn', gloss: 'glass noodles' },
       { label: '乾拌麵', price: [40, 55], pinyin: 'gān bàn miàn', gloss: 'dry tossed noodles' },
       { label: '陽春麵', price: [35, 45], pinyin: 'yáng chūn miàn', gloss: 'plain noodle soup' },
       {
@@ -125,6 +141,7 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 30,
     fillers: [
+      { label: '四物湯', price: 70, pinyin: 'sì wù tāng', gloss: 'four-herb tonic soup' },
       { label: '蛋花湯', price: 25, pinyin: 'dàn huā tāng', gloss: 'egg-drop soup' },
       { label: '魚丸湯', price: 30, pinyin: 'yú wán tāng', gloss: 'fish-ball soup' },
       { label: '味噌湯', price: 25, pinyin: 'wèi zēng tāng', gloss: 'miso soup' },
@@ -137,6 +154,7 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
         pinyin: 'kǔ guā pái gǔ tāng',
         gloss: 'bitter-melon pork-rib soup',
       },
+      { label: '味噌魚湯', price: 55, pinyin: 'wèi cēng yú tāng', gloss: 'miso fish soup' },
     ],
   },
   {
@@ -145,6 +163,8 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 35,
     fillers: [
+      { label: '山蘇', price: 60, pinyin: 'shān sū', gloss: 'bird-nest fern shoots' },
+      { label: '甜椒沙拉', price: 60, pinyin: 'tián jiāo shā lā', gloss: 'bell pepper salad' },
       { label: '空心菜', price: 35, pinyin: 'kōng xīn cài', gloss: 'water spinach' },
       { label: '高麗菜', price: 35, pinyin: 'gāo lì cài', gloss: 'cabbage' },
       { label: '青江菜', price: 35, pinyin: 'qīng jiāng cài', gloss: 'bok choy' },
@@ -152,6 +172,17 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
       { label: '龍鬚菜', price: 45, pinyin: 'lóng xū cài', gloss: 'chayote shoots' },
       { label: '豆芽菜', price: 30, pinyin: 'dòu yá cài', gloss: 'bean sprouts' },
       { label: '菠菜', price: 40, pinyin: 'bō cài', gloss: 'spinach' },
+      { label: '筊白筍', price: 55, pinyin: 'jiāo bái sǔn', gloss: 'water bamboo' },
+      { label: '玉米筍', price: 45, pinyin: 'yù mǐ sǔn', gloss: 'baby corn' },
+      { label: '涼拌茄子', price: 50, pinyin: 'liáng bàn qié zi', gloss: 'cold dressed aubergine' },
+      { label: '醃蘿蔔', price: 30, pinyin: 'yān luó bo', gloss: 'pickled radish' },
+      { label: '洋蔥圈', price: 45, pinyin: 'yáng cōng quān', gloss: 'onion rings' },
+      {
+        label: '番茄炒蛋',
+        price: 60,
+        pinyin: 'fān qié chǎo dàn',
+        gloss: 'tomato with scrambled egg',
+      },
     ],
   },
   {
@@ -160,6 +191,8 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 30,
     fillers: [
+      { label: '滷豬頭皮', price: 55, pinyin: 'lǔ zhū tóu pí', gloss: 'braised pig head skin' },
+      { label: '白斬雞', price: 120, pinyin: 'bái zhǎn jī', gloss: 'poached sliced chicken' },
       { label: '滷蛋', price: 15, pinyin: 'lǔ dàn', gloss: 'braised egg' },
       { label: '海帶', price: 25, pinyin: 'hǎi dài', gloss: 'kelp' },
       { label: '皮蛋豆腐', price: 40, pinyin: 'pí dàn dòu fǔ', gloss: 'century-egg tofu' },
@@ -172,6 +205,9 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
       { label: '油豆腐', price: 25, pinyin: 'yóu dòu fǔ', gloss: 'fried tofu' },
       { label: '燙花枝', price: 80, pinyin: 'tàng huā zhī', gloss: 'blanched cuttlefish' },
       { label: '嘴邊肉', price: 70, pinyin: 'zuǐ biān ròu', gloss: 'pork cheek' },
+      { label: '豬耳朵', price: 60, pinyin: 'zhū ěr duǒ', gloss: 'sliced pig ear' },
+      { label: '馬鈴薯沙拉', price: 45, pinyin: 'mǎ líng shǔ shā lā', gloss: 'potato salad' },
+      { label: '滷豆干', price: 20, pinyin: 'lǔ dòu gān', gloss: 'braised dried tofu' },
     ],
   },
   {
@@ -180,6 +216,15 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 40,
     fillers: [
+      {
+        label: '燒餅油條',
+        price: 45,
+        pinyin: 'shāo bǐng yóu tiáo',
+        gloss: 'sesame flatbread around a dough stick',
+      },
+      { label: '熱壓吐司', price: 50, pinyin: 'rè yā tǔ sī', gloss: 'pressed toastie' },
+      { label: '菜包', price: 30, pinyin: 'cài bāo', gloss: 'vegetable steamed bun' },
+      { label: '狗不理包子', price: 55, pinyin: 'gǒu bù lǐ bāo zi', gloss: 'Goubuli steamed buns' },
       { label: '燒餅', price: 30, pinyin: 'shāo bǐng', gloss: 'baked sesame flatbread' },
       { label: '飯捲', price: 40, pinyin: 'fàn juǎn', gloss: 'rice roll (sushi-style)' },
       { label: '饅頭', price: 20, pinyin: 'mán tou', gloss: 'steamed bun' },
@@ -203,6 +248,43 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 60,
     fillers: [
+      {
+        label: '鹽酥鳳爪',
+        price: 60,
+        pinyin: 'yán sū fèng zhǎo',
+        gloss: 'salt and pepper chicken feet',
+      },
+      { label: '淡水魚丸', price: 50, pinyin: 'dàn shuǐ yú wán', gloss: 'Tamsui fish balls' },
+      {
+        label: '紅油抄手',
+        price: 70,
+        pinyin: 'hóng yóu chāo shǒu',
+        gloss: 'wontons in chilli oil',
+      },
+      { label: '花枝羹', price: 65, pinyin: 'huā zhī gēng', gloss: 'thick cuttlefish soup' },
+      { label: '車輪餅', price: 25, pinyin: 'chē lún bǐng', gloss: 'a wheel cake with red bean' },
+      { label: '烤香腸', price: 25, pinyin: 'kǎo xiāng cháng', gloss: 'grilled sausage' },
+      { label: '燒烤拼盤', price: 150, pinyin: 'shāo kǎo pīn pán', gloss: 'a mixed grill platter' },
+      {
+        label: '東山鴨頭',
+        price: 60,
+        pinyin: 'dōng shān yā tóu',
+        gloss: 'braised duck head and offal',
+      },
+      { label: '蒸餃', price: 60, pinyin: 'zhēng jiǎo', gloss: 'steamed dumplings' },
+      { label: '薯餅', price: 30, pinyin: 'shǔ bǐng', gloss: 'hash brown' },
+      {
+        label: '麻辣鴨血',
+        price: 60,
+        pinyin: 'má là yā xiě',
+        gloss: 'duck blood curd in chilli broth',
+      },
+      {
+        label: '甜辣魷魚',
+        price: 70,
+        pinyin: 'tián là yóu yú',
+        gloss: 'squid in sweet chilli sauce',
+      },
       { label: '甜不辣', price: 50, pinyin: 'tián bù là', gloss: 'tempura fish cake' },
       {
         label: '大腸包小腸',
@@ -254,6 +336,22 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
     sized: false,
     defaultPrice: 30,
     fillers: [
+      { label: '冰咖啡', price: 60, pinyin: 'bīng kā fēi', gloss: 'iced coffee' },
+      { label: '凍頂烏龍茶', price: 50, pinyin: 'dòng dǐng wū lóng chá', gloss: 'Dongding oolong' },
+      { label: '台灣啤酒', price: 60, pinyin: 'tái wān pí jiǔ', gloss: 'Taiwan Beer' },
+      { label: '米酒頭', price: 80, pinyin: 'mǐ jiǔ tóu', gloss: 'strong rice liquor' },
+      { label: '冰拿鐵', price: 65, pinyin: 'bīng ná tiě', gloss: 'iced latte' },
+      {
+        label: '鐵觀音奶茶',
+        price: 55,
+        pinyin: 'tiě guān yīn nǎi chá',
+        gloss: 'tieguanyin milk tea',
+      },
+      { label: '乳酸飲料', price: 30, pinyin: 'rǔ suān yǐn liào', gloss: 'cultured milk drink' },
+      { label: '威士忌可樂', price: 120, pinyin: 'wēi shì jì kě lè', gloss: 'whisky and cola' },
+      { label: '香片茶', price: 40, pinyin: 'xiāng piàn chá', gloss: 'jasmine tea' },
+      { label: '高粱酒', price: 150, pinyin: 'gāo liáng jiǔ', gloss: 'kaoliang liquor' },
+      { label: '清酒一合', price: 180, pinyin: 'qīng jiǔ yì gě', gloss: 'a measure of sake' },
       { label: '紅茶', price: 25, pinyin: 'hóng chá', gloss: 'black tea' },
       { label: '冬瓜茶', price: 25, pinyin: 'dōng guā chá', gloss: 'winter-melon tea' },
       { label: '青草茶', price: 25, pinyin: 'qīng cǎo chá', gloss: 'herbal tea' },
@@ -282,6 +380,90 @@ export const MENU_CATEGORIES: MenuCategoryTemplate[] = [
       { label: '素食便當', price: 80, pinyin: 'sù shí biàn dāng', gloss: 'vegetarian lunchbox' },
     ],
   },
+  {
+    // A night market has a fruit stall and a dessert stall, and a learner meets
+    // 芒果 and 豆花 standing at one. Before this they fell into 小菜, where
+    // nothing on the counter was anything like them.
+    id: 'fruit',
+    name: '水果',
+    sized: false,
+    defaultPrice: 60,
+    fillers: [
+      { label: '橙子汁', price: 55, pinyin: 'chéng zi zhī', gloss: 'orange juice' },
+      { label: '榴槤', price: 150, pinyin: 'liú lián', gloss: 'durian' },
+      { label: '山楂', price: 45, pinyin: 'shān zhā', gloss: 'hawthorn' },
+      { label: '甜柿', price: 80, pinyin: 'tián shì', gloss: 'sweet persimmon' },
+      { label: '椪柑', price: 50, pinyin: 'pèng gān', gloss: 'ponkan mandarin' },
+      { label: '糖炒栗子', price: 70, pinyin: 'táng chǎo lì zi', gloss: 'sugar-roasted chestnuts' },
+      { label: '李鹹', price: 40, pinyin: 'lǐ xián', gloss: 'salted preserved plum' },
+      { label: '龍眼乾', price: 90, pinyin: 'lóng yǎn gān', gloss: 'dried longan' },
+      { label: '切盤水果', price: 80, pinyin: 'qiē pán shuǐ guǒ', gloss: 'a cut fruit platter' },
+      { label: '芭樂', price: 50, pinyin: 'bā lè', gloss: 'guava', spoken: 'pua̍t-á' },
+      { label: '蓮霧', price: 70, pinyin: 'lián wù', gloss: 'wax apple' },
+      { label: '釋迦', price: 90, pinyin: 'shì jiā', gloss: 'sugar apple' },
+      { label: '荔枝', price: 80, pinyin: 'lì zhī', gloss: 'lychee' },
+      { label: '楊桃', price: 55, pinyin: 'yáng táo', gloss: 'starfruit' },
+      { label: '哈密瓜', price: 90, pinyin: 'hā mì guā', gloss: 'honeydew melon' },
+      { label: '柳丁', price: 45, pinyin: 'liǔ dīng', gloss: 'orange' },
+      { label: '水梨', price: 75, pinyin: 'shuǐ lí', gloss: 'Asian pear' },
+      { label: '香瓜', price: 60, pinyin: 'xiāng guā', gloss: 'muskmelon' },
+      { label: '葡萄柚', price: 65, pinyin: 'pú táo yòu', gloss: 'grapefruit' },
+      { label: '椰子水', price: 60, pinyin: 'yé zi shuǐ', gloss: 'coconut water' },
+      { label: '檸檬愛玉', price: 50, pinyin: 'níng méng ài yù', gloss: 'aiyu jelly with lemon' },
+      {
+        label: '番茄切盤',
+        price: 60,
+        pinyin: 'fān qié qiē pán',
+        gloss: 'sliced tomato with ginger',
+      },
+      { label: '芒果冰', price: 100, pinyin: 'máng guǒ bīng', gloss: 'shaved ice with mango' },
+      { label: '鳳梨酥', price: 40, pinyin: 'fèng lí sū', gloss: 'pineapple cake' },
+      { label: '香蕉牛奶', price: 55, pinyin: 'xiāng jiāo niú nǎi', gloss: 'banana milk' },
+      { label: '酪梨牛奶', price: 75, pinyin: 'luò lí niú nǎi', gloss: 'avocado milkshake' },
+      { label: '文旦柚', price: 80, pinyin: 'wén dàn yòu', gloss: 'wendan pomelo' },
+    ],
+  },
+  {
+    id: 'sweet',
+    name: '甜點',
+    sized: false,
+    defaultPrice: 45,
+    fillers: [
+      { label: '蓮子湯', price: 55, pinyin: 'lián zǐ tāng', gloss: 'lotus seed sweet soup' },
+      { label: '紅豆粄', price: 40, pinyin: 'hóng dòu bǎn', gloss: 'Hakka red bean rice cake' },
+      { label: '紅豆羊羹', price: 45, pinyin: 'hóng dòu yáng gēng', gloss: 'red bean yokan' },
+      { label: '檸檬愛玉凍', price: 50, pinyin: 'níng méng ài yù dòng', gloss: 'lemon aiyu jelly' },
+      { label: '芝麻球', price: 35, pinyin: 'zhī má qiú', gloss: 'sesame ball' },
+      { label: '布丁', price: 35, pinyin: 'bù dīng', gloss: 'crème caramel' },
+      { label: '仙草凍', price: 45, pinyin: 'xiān cǎo dòng', gloss: 'grass jelly' },
+      { label: '芋圓', price: 55, pinyin: 'yù yuán', gloss: 'taro balls' },
+      { label: '花生湯圓', price: 55, pinyin: 'huā shēng tāng yuán', gloss: 'peanut rice balls' },
+      { label: '紅豆餅', price: 20, pinyin: 'hóng dòu bǐng', gloss: 'red bean wheel cake' },
+      { label: '雞蛋糕', price: 40, pinyin: 'jī dàn gāo', gloss: 'egg cakelets' },
+      { label: '麥芽糖', price: 30, pinyin: 'mài yá táng', gloss: 'maltose on a cracker' },
+      { label: '牛軋糖', price: 60, pinyin: 'niú gá táng', gloss: 'nougat' },
+      { label: '巧克力棒', price: 35, pinyin: 'qiǎo kè lì bàng', gloss: 'a chocolate stick' },
+      { label: '烤地瓜', price: 50, pinyin: 'kǎo dì guā', gloss: 'roast sweet potato' },
+      {
+        label: '花生捲冰淇淋',
+        price: 55,
+        pinyin: 'huā shēng juǎn bīng qí lín',
+        gloss: 'peanut ice-cream roll',
+      },
+      { label: '甜甜圈', price: 35, pinyin: 'tián tián quān', gloss: 'doughnut' },
+      { label: '蜂蜜蛋糕', price: 60, pinyin: 'fēng mì dàn gāo', gloss: 'honey castella' },
+      { label: '杏仁豆腐', price: 45, pinyin: 'xìng rén dòu fǔ', gloss: 'almond tofu' },
+      { label: '月光餅', price: 40, pinyin: 'yuè guāng bǐng', gloss: 'a moon-shaped pastry' },
+      { label: '點心盤', price: 60, pinyin: 'diǎn xīn pán', gloss: 'a plate of small sweets' },
+      {
+        label: '棉花糖串',
+        price: 30,
+        pinyin: 'mián huā táng chuàn',
+        gloss: 'candy floss on a stick',
+      },
+      { label: '果凍杯', price: 25, pinyin: 'guǒ dòng bēi', gloss: 'a cup of jelly' },
+    ],
+  },
 ];
 
 export const SHOP_TEMPLATES: Record<ShopType, ShopTemplate> = {
@@ -300,6 +482,7 @@ export const SHOP_TEMPLATES: Record<ShopType, ShopTemplate> = {
     type: 'night-market',
     name: '夜市小吃攤',
     categories: ['snack', 'drink'],
+    alsoSells: ['fruit', 'sweet'],
   },
   bento: {
     type: 'bento',
@@ -319,19 +502,45 @@ export function categoryTemplate(id: MenuCategoryId): MenuCategoryTemplate {
   return MENU_CATEGORIES.find((c) => c.id === id)!;
 }
 
-const BREAKFAST_RE = /(蛋餅|蘿蔔糕|飯糰|吐司|漢堡|三明治|抓餅|鐵板麵|燒餅|油條)/;
-const SNACK_RE = /(煎|圓|雞|豆腐|甜不辣|包小腸|粿|嗲|排|串)/;
+const BREAKFAST_RE =
+  /(蛋餅|蘿蔔糕|飯糰|吐司|漢堡|三明治|抓餅|燒餅|土司|油條|熱狗|包子|肉包|菜包|刈包)/;
+const SNACK_RE =
+  /(煎|圓|雞|豆腐|甜不辣|包小腸|粿|嗲|排|串|餃|粽|薯條|羹|香腸|關東煮|胡椒餅|酥|抄手|阿給|鳳爪|龍鳳腿)/;
+const FRUIT_RE =
+  /(瓜|果|梨|蕉|桃|柚|旦|椰|檸|莓|栗|李|柿|柑|龍眼|山竹|石榴|提子|橙子|葡萄|荔枝|蓮霧|釋迦|芭樂|柳丁|番茄|水果)/;
+/** A slip sells 啤酒 and 拿鐵 at the same counter as 紅茶; they are all drinks. */
+const DRINK_RE = /([茶漿奶汁乳酒]|咖啡|拿鐵|檳|可樂|汽水|鐵觀音|高粱|威士忌|烏龍|凍頂|龍井)/;
+const GREENS_RE = /([菜葉筍芽蔥茄]|辣椒|青椒|甜椒|山藥|蘿蔔|玉米|地瓜|苦瓜|冬瓜|絲瓜|黃瓜|南瓜)/;
+const SWEET_RE =
+  /(糖|糕|凍|布丁|甜點|點心|冰淇淋|巧克力|愛玉|仙草|月餅|老婆餅|麻糬|豆花|甜甜圈|甜筒|羊羹|冰|甜粄|蓮子)/;
+/**
+ * Words that name food without naming a dish.
+ *
+ * 美食, 素食, 中餐 and 海鮮 are food vocabulary a learner wants, but no counter
+ * will take an order for one, and putting them on a slip meant looking for a
+ * neighbouring dish that could never exist. They stay in the deck and stay off
+ * the menu.
+ */
+const NOT_A_DISH_RE =
+  /^(美食|素食|食品|中餐|小吃|日料|日本料理|料理|海鮮|水產|海產|糧食|油脂|乳酪|奶油|麻油|豬油|沙拉油|橄欖油|佛跳牆|天婦羅|天麩羅|米飯|白米|小米|大麥|生魚片|魚生|魚肉|牛肉|豬肉|羊肉|瘦肉|精肉|鮮肉|滷肉|魚鮮|豆腐渣|香油|牛油|豆油|筷子|叉子|湯匙|餐具|茶壺|砂鍋|鏟子|微波|油炸|做菜|做飯|喝茶|辦桌|生食|甜食|麵食|食鹽|味精|八角|香草|麥片|麵粉|大蒜|蔥頭|海苔|椒鹽|糖醋|滷汁|辣椒醬|比薩|口條|魚市場|咖啡豆|茶葉|生鮮|魚類|堅果|杏仁|瓜子|開心果|早餐|午餐|晚餐|宵夜|消夜|三餐|正餐|自助餐|年夜飯|下午茶|早午餐|飲食|飲料|主菜|主廚|刺身|手搖飲料|自來水|破布子|美乃滋|蜂蜜|仙貝|醬油|蠔油|奶粉|冬瓜糖|馬鈴薯|絞肉機|氣炸鍋|大同電鍋|茶園|飯盒|粉絲|麵條|生食|運動飲料|飲品|甜品|香辛料|調味料|羅勒|辛奇|明太子|菲力|起司堡|巨無霸|植物油|大豆油|紅油|滷水|煉奶|即溶咖啡|咖啡師|茶館|魚市|魚類|麵類|素肉|鍋底|煎鍋|台灣小吃|胚芽米|黑豆|葉菜|蛋白|蛋黃|雞蛋|香菜|青蔥|核桃|羅漢果|牛肉乾|魚乾|午餐肉|瑞士捲|威化餅|曲奇|卡布奇諾|摩卡|焙茶|簡餐|什錦|百葉|乾貨|眷村菜|通心粉|糙米|乾貝|柑橘|青檸|榛果|腰果|椰果|柴魚|豆皮|哇沙米|萊姆酒|果酒|米湯|土豆絲|剝皮辣椒|松子|新港飴|穀類|中秋餅|素肚|鮮芋仙|兩相好|海藻|蓬萊米|紅麴米|芝麻醬|芝麻油|烤肉醬|辣油|五香|麵糊|冬菜|鹹菜|韭黃|蓮子)$/;
 
 /** Heuristically place a dish name into a slip category by its characters. */
 export function categorizeDish(name: string): MenuCategoryId {
-  if (/火鍋|醬$/.test(name)) return 'other';
+  if (NOT_A_DISH_RE.test(name) || /火鍋|醬$/.test(name)) return 'other';
   if (/便當/.test(name)) return 'bento';
+  // A noodle is a noodle even when its name starts with a tea or a broth:
+  // 烏龍麵 is not a drink, and 鐵板麵 is not a griddle.
+  if (/麵$/.test(name)) return 'noodle';
   if (BREAKFAST_RE.test(name)) return 'breakfast';
-  if (/[茶漿奶汁]/.test(name)) return 'drink';
+  if (DRINK_RE.test(name)) return 'drink';
   if (/湯$/.test(name)) return 'soup';
-  if (/麵/.test(name)) return 'noodle';
+  if (SWEET_RE.test(name)) return 'sweet';
+  if (/[麵粉]/.test(name)) return 'noodle';
   if (/[飯粥]/.test(name)) return 'rice';
-  if (/[菜葉筍芽]/.test(name)) return 'greens';
+  // Greens before fruit, because a 瓜 is not always a fruit: 地瓜葉 and 苦瓜
+  // grow on the vegetable counter and 西瓜 does not.
+  if (GREENS_RE.test(name)) return 'greens';
+  if (FRUIT_RE.test(name)) return 'fruit';
   if (SNACK_RE.test(name)) return 'snack';
   return 'side';
 }

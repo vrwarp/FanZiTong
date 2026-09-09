@@ -24,6 +24,8 @@ export interface RecognitionCardProps {
   total: number;
   /** At or above the leech threshold: say so on the answer panel, never on the prompt. */
   keepsSlipping?: boolean;
+  /** Already knocked down today: Again/Hard are one more look, not a new verdict. */
+  practice?: boolean;
 }
 
 const COACH_REVEALS = 3;
@@ -62,6 +64,7 @@ export function RecognitionCard({
   position,
   total,
   keepsSlipping = false,
+  practice = false,
 }: RecognitionCardProps) {
   const [revealCount] = useState(readRevealCount);
   const [coachOpen, setCoachOpen] = useState(false);
@@ -253,6 +256,7 @@ export function RecognitionCard({
           visible={revealed}
           latencyMs={revealLatencyMs}
           showCoach={revealCount < COACH_REVEALS || coachOpen}
+          practice={practice}
         />
         {revealed && revealCount >= COACH_REVEALS && (
           <button

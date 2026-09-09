@@ -50,6 +50,8 @@ export const importCardSchema = z.object({
   notes: z.string().optional(),
   clozeDistractors: stringList,
   fsrs: fsrsStateSchema.optional(),
+  /** Carried with the FSRS state: without it a restore forgets today's knock-down. */
+  lastAgainAt: isoDate.optional(),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
 });
@@ -79,6 +81,7 @@ export const settingsSchema = z.object({
   maxDailyNewCards: z.number().int().min(0).optional(),
   leechThreshold: z.number().int().min(1).optional(),
   pinyinRevealDelayMs: z.number().int().min(0).optional(),
+  maxSettlingCards: z.number().int().min(0).optional(),
   activeDomains: z.array(z.enum(DOMAIN_CATEGORIES)).optional(),
   theme: z.enum(['light', 'dark', 'system']).optional(),
 });
@@ -159,6 +162,7 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       variants: c.variants,
       clozeDistractors: c.clozeDistractors,
       fsrs: c.fsrs as FsrsState | undefined,
+      lastAgainAt: c.lastAgainAt,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       warnings,

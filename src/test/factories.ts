@@ -1,5 +1,6 @@
-import { newFsrsState } from '@/lib/fsrs/scheduler';
-import type { FsrsState, ReviewLog, VocabCard } from '@/types';
+import type { FSRS, Grade } from 'ts-fsrs';
+import { fromFsrsCard, newFsrsState, toFsrsCard } from '@/lib/fsrs/scheduler';
+import type { FsrsState, RatingGrade, ReviewLog, VocabCard } from '@/types';
 
 let counter = 0;
 
@@ -123,3 +124,69 @@ export function makePool(): VocabCard[] {
     }),
   ];
 }
+
+export interface StudiedAnswer {
+  at: string;
+  rating: RatingGrade;
+  exercise?: ReviewLog['exerciseType'];
+}
+
+/**
+ * Study a card the way the app did before the one-Again-a-day rule: every
+ * answer goes straight to FSRS and writes a log. What a device holds from
+ * before the rule looks exactly like this.
+ */
+export function studyOldWay(
+  card: VocabCard,
+  answers: StudiedAnswer[],
+  scheduler: FSRS,
+): { card: VocabCard; logs: ReviewLog[] } {
+  let current = card;
+  const logs: ReviewLog[] = [];
+  for (const answer of answers) {
+    const at = new Date(answer.at);
+    const next = fromFsrsCard(
+      scheduler.next(toFsrsCard(current.fsrs), at, answer.rating as Grade).card,
+    );
+    logs.push({
+      id: testId(),
+      cardId: card.id,
+      rating: answer.rating,
+      exerciseType: answer.exercise ?? 'rapid_recognition',
+      reviewTimestamp: answer.at,
+      timeSpentMs: 3000,
+      stateBefore: current.fsrs.state,
+      stability: next.stability,
+      difficulty: next.difficulty,
+      scheduled_days: next.scheduled_days,
+      lapses: next.lapses,
+    });
+    current = { ...current, fsrs: next, updatedAt: answer.at };
+  }
+  return { card: current, logs };
+}
+
+/**
+ * 貢丸湯 as it happened on one learner's phone: four Agains and nine Hards in
+ * ninety seconds on day one, a real lapse on day two, then a foil drill run
+ * twice the same evening. Difficulty 9.95, stability 0.014 days, three lapses.
+ */
+export const GONG_WAN_TANG_HISTORY: StudiedAnswer[] = [
+  { at: '2026-09-07T07:58:42.000Z', rating: 1 },
+  { at: '2026-09-07T07:58:45.000Z', rating: 1 },
+  { at: '2026-09-07T07:58:50.000Z', rating: 1 },
+  { at: '2026-09-07T07:58:53.000Z', rating: 1 },
+  ...Array.from({ length: 9 }, (_, i) => ({
+    at: `2026-09-07T07:59:${String(i * 5).padStart(2, '0')}.000Z`,
+    rating: 2 as RatingGrade,
+  })),
+  { at: '2026-09-07T08:00:24.000Z', rating: 3 },
+  { at: '2026-09-07T08:00:26.000Z', rating: 3 },
+  { at: '2026-09-08T13:58:49.000Z', rating: 1 },
+  { at: '2026-09-08T13:59:35.000Z', rating: 3, exercise: 'realia_menu' },
+  { at: '2026-09-08T14:01:16.000Z', rating: 3 },
+  { at: '2026-09-08T18:44:30.000Z', rating: 1, exercise: 'foil_discrimination' },
+  { at: '2026-09-08T18:45:21.000Z', rating: 3, exercise: 'foil_discrimination' },
+  { at: '2026-09-08T18:46:00.000Z', rating: 1, exercise: 'foil_discrimination' },
+  { at: '2026-09-08T18:47:12.000Z', rating: 3, exercise: 'foil_discrimination' },
+];

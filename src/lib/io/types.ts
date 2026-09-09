@@ -19,6 +19,8 @@ export interface ImportRow {
   notes?: string;
   clozeDistractors: string[];
   fsrs?: FsrsState;
+  /** When the scheduler last heard "Again" (backups only; see VocabCard). */
+  lastAgainAt?: string;
   createdAt?: string;
   updatedAt?: string;
   /** Non-fatal notes produced while parsing this row. */

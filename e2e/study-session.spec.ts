@@ -71,7 +71,7 @@ test.describe('Daily study session (Journey 1)', () => {
   test('a full session interleaves a drill, re-queues lapses and ends with a summary', async ({
     page,
   }) => {
-    await openApp(page);
+    await openApp(page, '/', { fakeClock: true });
     await page.getByTestId('start-session').click();
     const run = await completeSession(page, { firstRating: 1 });
     expect(run.recognitions).toBeGreaterThanOrEqual(11); // 10 new + the re-queued "Again" card
@@ -135,5 +135,40 @@ test.describe('Daily study session (Journey 1)', () => {
     await expect(page.getByTestId('pinyin')).toBeVisible();
     await page.keyboard.press('4');
     await expect(page.getByTestId('session-progress')).toHaveText(/Card 2 of/);
+  });
+});
+
+test.describe('A card waits its minute', () => {
+  test('the session holds a just-failed card back, then serves it after the gap', async ({
+    page,
+  }) => {
+    await openApp(page, '/settings', { fakeClock: true });
+    // One new card a day, so the failed card is the only thing left to show.
+    const maxNew = page.getByTestId('setting-max-new');
+    await maxNew.fill('1');
+    await maxNew.blur();
+    await page.goto('/');
+    await expect(page.getByTestId('due-summary')).toHaveText('0 reviews, 1 new card');
+    await page.getByTestId('start-session').click();
+    await page.getByTestId('recognition-prompt').click();
+    await page.getByTestId('rate-1').click();
+
+    // Nothing else is ready: the countdown shows, and never the word itself.
+    const wait = page.getByTestId('wait-step');
+    await expect(wait).toBeVisible();
+    await expect(page.getByTestId('wait-countdown')).toHaveText(/^0:\d\d$/);
+    await expect(page.getByTestId('prompt-hanzi')).toHaveCount(0);
+    await page.clock.fastForward(61_000);
+    await expect(page.getByTestId('recognition-prompt')).toBeVisible();
+    await expect(page.getByTestId('session-progress')).toHaveText('Card 2 of 2');
+
+    // The retry is practice: the schedule already has today's verdict.
+    await page.getByTestId('recognition-prompt').click();
+    await page.getByTestId('rate-1').click();
+    await expect(wait).toBeVisible();
+    await page.getByTestId('wait-finish').click();
+    await expect(page.getByTestId('session-summary')).toBeVisible();
+    await expect(page.getByTestId('summary-cards')).toHaveText('1');
+    await expect(page.getByTestId('summary-answers')).toHaveText('2');
   });
 });

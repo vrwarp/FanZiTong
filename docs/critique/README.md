@@ -11,3 +11,6 @@ can be regenerated with that script.
 - `iterN/critique-language-expert.md` — orthographic acquisition and spaced repetition.
 - `iterN/critique-heritage-learner.md` — the target learner, in their own voice.
 - `iterN/ideation.md` — the ranked, reconciled plan that followed (iterations 1–3).
+- `analytics-2026-09-09/critique-language-expert.md` — a round run on the
+  [analytics export](../analytics-export.md) rather than on screenshots: what
+  three days of one learner's data showed about the scheduling, and what changed.

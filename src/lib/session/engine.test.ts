@@ -1,11 +1,11 @@
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import type { StudyEvent } from '@/lib/analytics/events';
-import { MAX_SESSION_REQUEUES } from '@/lib/queue/session';
+import { MAX_SESSION_REQUEUES, MIN_RETRY_GAP_MS } from '@/lib/queue/session';
 import { mulberry32 } from '@/lib/util/random';
 import { CardState, type VocabCard } from '@/types';
 import { makeCard, makePool, reviewState } from '@/test/factories';
 import { buildDrillExercises, selectDrillCards } from './drillPlan';
-import { StudyEngine, drillRatingFor, summarizeResults } from './engine';
+import { StudyEngine, describeDrillOutcome, drillRatingFor, summarizeResults } from './engine';
 import { DEFAULT_SETTINGS } from '@/types';
 
 const scheduler = createScheduler({ targetRetention: 0.9 }, { enableFuzz: false });
@@ -31,6 +31,9 @@ function engineFor(
     scheduler,
     interleaveDrills: true,
     rng: mulberry32(1),
+    // The gap between two looks at one card has its own tests; everything
+    // else runs on a still clock and wants the card straight back.
+    retryGapMs: 0,
     ...options,
   });
 }
@@ -67,7 +70,7 @@ describe('StudyEngine — recognition flow', () => {
     const listener = vi.fn();
     engine.subscribe(listener);
     engine.reveal();
-    const { card, log } = engine.rate(4);
+    const { card, log } = engine.rate(4)!;
     expect(card.fsrs.state).toBe(CardState.Review);
     expect(log.rating).toBe(4);
     expect(log.exerciseType).toBe('rapid_recognition');
@@ -109,7 +112,9 @@ describe('StudyEngine — recognition flow', () => {
     expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[0].id });
     engine.rate(1);
     expect(engine.snapshot().status).toBe('complete');
-    expect(engine.getCard(pool[0].id)?.fsrs.reps).toBe(MAX_SESSION_REQUEUES + 1);
+    // Four looks, one verdict: only the first Again of the day reaches FSRS.
+    expect(engine.getCard(pool[0].id)?.fsrs.reps).toBe(1);
+    expect(engine.snapshot().results.filter((r) => r.retry)).toHaveLength(MAX_SESSION_REQUEUES);
   });
 
   it('does not hand a resumed session a fresh set of re-queues', () => {
@@ -133,7 +138,7 @@ describe('StudyEngine — recognition flow', () => {
     engine.reveal();
     const previewDue = engine.snapshot().previews![3].due.toISOString();
     c.advance(5_000);
-    const { card } = engine.rate(3);
+    const { card } = engine.rate(3)!;
     expect(card.fsrs.due).toBe(previewDue);
   });
 
@@ -144,7 +149,7 @@ describe('StudyEngine — recognition flow', () => {
     engine.reveal();
     const previewDue = new Date(engine.snapshot().previews![3].due).getTime();
     c.advance(5 * 60_000);
-    const { card } = engine.rate(3);
+    const { card } = engine.rate(3)!;
     expect(new Date(card.fsrs.due).getTime()).toBeGreaterThan(previewDue);
   });
 
@@ -155,7 +160,7 @@ describe('StudyEngine — recognition flow', () => {
     c.advance(4_000);
     engine.reveal();
     c.advance(2_000);
-    const { log } = engine.rate(4);
+    const { log } = engine.rate(4)!;
     expect(log.timeSpentMs).toBe(6_000);
     expect(engine.snapshot().elapsedMs).toBe(6_000);
   });
@@ -193,9 +198,17 @@ describe('StudyEngine — drill interleaving', () => {
     expect(exercise.type).not.toBe('cloze');
     const cardIds = exercise.type === 'realia_menu' ? exercise.cardIds : [exercise.cardId];
     expect(cardIds).toContain(pool[0].id);
+    // The card was knocked down minutes ago, so this miss is practice: the
+    // drill is recorded with its modality, and nothing is written for FSRS.
     const reviews = engine.answerDrill([{ cardId: pool[0].id, correct: false }]);
-    expect(reviews[0].log.exerciseType).toBe(exercise.type);
-    expect(reviews[0].log.rating).toBe(1);
+    expect(reviews).toEqual([]);
+    expect(engine.snapshot().results.at(-1)).toMatchObject({
+      cardId: pool[0].id,
+      exerciseType: exercise.type,
+      rating: 1,
+      applied: false,
+      retry: true,
+    });
     expect(engine.snapshot().step?.kind).toBe('card');
     expect(engine.snapshot().answered).toBe(5);
   });
@@ -473,6 +486,7 @@ describe('summarizeResults', () => {
       uniqueCards: 0,
       firstTryCorrect: 0,
       weakCardIds: [],
+      retries: 0,
       retention: null,
     });
     const summary = summarizeResults([
@@ -501,8 +515,34 @@ describe('summarizeResults', () => {
       uniqueCards: 3,
       firstTryCorrect: 2,
       weakCardIds: ['a', 'c'],
+      retries: 0,
       retention: 0.75,
     });
+  });
+
+  it('counts a retry as a look at the word, but not a slip companion', () => {
+    const summary = summarizeResults([
+      {
+        cardId: 'a',
+        rating: 1,
+        exerciseType: 'rapid_recognition',
+        timeMs: 1,
+        timestamp: 't',
+        applied: false,
+        retry: true,
+      },
+      {
+        cardId: 'b',
+        rating: 3,
+        exerciseType: 'realia_menu',
+        timeMs: 1,
+        timestamp: 't',
+        applied: false,
+      },
+    ]);
+    expect(summary.uniqueCards).toBe(1);
+    expect(summary.retries).toBe(1);
+    expect(summary.weakCardIds).toEqual(['a']);
   });
 });
 
@@ -529,5 +569,214 @@ describe('StudyEngine — standalone drills', () => {
     s = engine.snapshot();
     expect(s.requeued).toBe(1);
     expect(s.status).toBe('complete');
+  });
+});
+
+describe('StudyEngine — a word is knocked down once a day', () => {
+  it('charges the first Again and treats every later miss that day as a retry', () => {
+    const pool = makePool();
+    const events: StudyEvent[] = [];
+    const c = clock();
+    const engine = engineFor(pool, [pool[0].id], { now: c.now, onEvent: (e) => events.push(e) });
+    const first = engine.rate(1)!;
+    expect(first.log.rating).toBe(1);
+    expect(first.card.lastAgainAt).toBe(c.now().toISOString());
+    const afterFirst = engine.getCard(pool[0].id)!.fsrs;
+
+    c.advance(90_000);
+    expect(engine.rate(1)).toBeNull(); // Again again: a retry
+    c.advance(90_000);
+    expect(engine.rate(2)).toBeNull(); // Hard after an Again: still a retry
+    const card = engine.getCard(pool[0].id)!;
+    expect(card.fsrs).toEqual(afterFirst);
+    expect(card.fsrs.reps).toBe(1);
+    expect(card.fsrs.difficulty).toBe(afterFirst.difficulty);
+
+    const results = engine.snapshot().results;
+    expect(results.map((r) => r.retry ?? false)).toEqual([false, true, true]);
+    const answers = events.filter((e) => e.kind === 'answer');
+    expect(answers.map((e) => e.retry ?? false)).toEqual([false, true, true]);
+    expect(answers[1]).toMatchObject({
+      applied: false,
+      rating: 1,
+      correct: false,
+      repeatIndex: 1,
+      stabilityAfter: afterFirst.stability,
+    });
+    // The card still comes back: a retry is practice, not a dismissal.
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[0].id });
+  });
+
+  it('lets a pass after a retry count, so the card can climb out of its step', () => {
+    const pool = makePool();
+    const c = clock();
+    const engine = engineFor(pool, [pool[0].id], { now: c.now });
+    engine.rate(1);
+    c.advance(90_000);
+    engine.rate(1);
+    c.advance(90_000);
+    const passed = engine.rate(3)!;
+    expect(passed.log.rating).toBe(3);
+    expect(passed.card.fsrs.reps).toBe(2);
+    expect(passed.card.fsrs.stability).toBeGreaterThan(0.212);
+    expect(passed.card.lastAgainAt).toBeDefined();
+  });
+
+  it('charges an Again on a card last knocked down on an earlier day', () => {
+    const pool = makePool();
+    const yesterday = makeCard({
+      id: 'yesterday',
+      fsrs: reviewState({ state: 1, stability: 0.2, due: '2026-09-04T09:00:00.000Z' }),
+      lastAgainAt: '2026-09-04T09:00:00.000Z',
+    });
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor([...pool, yesterday], ['yesterday'], { now: c.now });
+    const review = engine.rate(1);
+    expect(review).not.toBeNull();
+    expect(review!.log.rating).toBe(1);
+    expect(review!.card.lastAgainAt).toBe(c.now().toISOString());
+  });
+
+  it('records drill answers on a word knocked down today as practice', () => {
+    const pool = makePool();
+    const card = makeCard({
+      traditional: '火鍋',
+      fsrs: reviewState({ state: 3, stability: 0.3, lapses: 1 }),
+      exampleSentenceTraditional: '冬天吃火鍋。',
+      visualFoils: ['火渦', '伙鍋'],
+      lastAgainAt: '2026-09-05T07:00:00.000Z',
+    });
+    const all = [...pool, card];
+    const drills = buildDrillExercises('foil_discrimination', [card, card], all, mulberry32(9));
+    const events: StudyEvent[] = [];
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor(all, [], {
+      drills,
+      interleaveDrills: false,
+      now: c.now,
+      onEvent: (e) => events.push(e),
+    });
+    expect(engine.answerDrill([{ cardId: card.id, correct: false }])).toEqual([]);
+    expect(engine.answerDrill([{ cardId: card.id, correct: true }])).toEqual([]);
+    expect(engine.getCard(card.id)?.fsrs).toEqual(card.fsrs);
+    const answers = events.filter((e) => e.kind === 'answer');
+    expect(answers.map((e) => e.retry)).toEqual([true, true]);
+    expect(answers.map((e) => e.rating)).toEqual([1, 3]);
+    expect(describeDrillOutcome(card, false, true, c.now())).toMatch(/^Practice/);
+    expect(describeDrillOutcome(card, true, true, c.now())).toMatch(/^Practice/);
+    // The same card on another day is graded as usual.
+    const tomorrow = new Date('2026-09-06T08:00:00.000Z');
+    expect(describeDrillOutcome(card, false, true, tomorrow)).toMatch(/^Again/);
+  });
+});
+
+describe('StudyEngine — a card waits its turn', () => {
+  it('serves another card first and holds when nothing is ready', () => {
+    const pool = makePool();
+    const c = clock();
+    const engine = engineFor(pool, [pool[0].id, pool[1].id], {
+      now: c.now,
+      retryGapMs: MIN_RETRY_GAP_MS,
+    });
+    engine.rate(1); // card 0 → back of the queue
+    c.advance(5_000);
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[1].id });
+    engine.rate(4);
+    // Card 0 was answered five seconds ago: the session waits rather than show it.
+    let s = engine.snapshot();
+    expect(s.step).toEqual({
+      kind: 'wait',
+      until: c.now().getTime() - 5_000 + MIN_RETRY_GAP_MS,
+      waiting: 1,
+    });
+    expect(s.total).toBe(3);
+    expect(s.remaining).toBe(1);
+    engine.tick(); // too early: still waiting
+    expect(engine.snapshot().step?.kind).toBe('wait');
+    c.advance(MIN_RETRY_GAP_MS);
+    engine.tick();
+    s = engine.snapshot();
+    expect(s.step).toEqual({ kind: 'card', cardId: pool[0].id });
+    expect(engine.rate(3)).not.toBeNull();
+  });
+
+  it('carries the gap across a pause', () => {
+    const pool = makePool();
+    const c = clock();
+    const first = engineFor(pool, [pool[0].id], { now: c.now, retryGapMs: MIN_RETRY_GAP_MS });
+    first.rate(1);
+    const progress = first.serialize();
+    expect(progress.answeredAt?.[pool[0].id]).toBe(c.now().getTime());
+    c.advance(10_000);
+    const resumed = engineFor(pool, first.remainingCardIds(), {
+      now: c.now,
+      retryGapMs: MIN_RETRY_GAP_MS,
+      restore: progress,
+    });
+    expect(resumed.snapshot().step?.kind).toBe('wait');
+    c.advance(MIN_RETRY_GAP_MS);
+    resumed.tick();
+    expect(resumed.snapshot().step).toEqual({ kind: 'card', cardId: pool[0].id });
+  });
+
+  it('fills the gap with a drill on another word when it can', () => {
+    const pool = makePool();
+    // A word still being learned from an earlier day, not part of today's queue.
+    const learning = makeCard({
+      id: 'learning',
+      traditional: '滷味',
+      pinyin: 'lǔ wèi',
+      definition: 'Braised snacks',
+      exampleSentenceTraditional: '晚上去買滷味。',
+      fsrs: reviewState({ state: 1, stability: 0.3 }),
+    });
+    const c = clock();
+    const engine = engineFor([...pool, learning], [pool[0].id], {
+      now: c.now,
+      retryGapMs: MIN_RETRY_GAP_MS,
+    });
+    engine.rate(1);
+    const s = engine.snapshot();
+    if (s.step?.kind !== 'drill' || s.step.exercise.type !== 'cloze') {
+      throw new Error(`expected a cloze drill, got ${JSON.stringify(s.step?.kind)}`);
+    }
+    expect(s.step.exercise.cardId).toBe('learning');
+  });
+
+  it('still drills a just-failed card on the fifth answer: a drill is not a second look', () => {
+    const pool = makePool();
+    const c = clock();
+    const engine = engineFor(
+      pool,
+      pool.map((card) => card.id),
+      { now: c.now, retryGapMs: MIN_RETRY_GAP_MS },
+    );
+    engine.rate(1); // card 0 → learning, the only drill candidate
+    for (let i = 0; i < 4; i += 1) {
+      c.advance(2_000);
+      engine.rate(4);
+    }
+    const s = engine.snapshot();
+    if (s.step?.kind !== 'drill') throw new Error('expected a drill');
+    const ids =
+      s.step.exercise.type === 'realia_menu' ? s.step.exercise.cardIds : [s.step.exercise.cardId];
+    expect(ids).toContain(pool[0].id);
+    // ...but its answer is practice: the word was knocked down minutes ago.
+    expect(engine.answerDrill([{ cardId: pool[0].id, correct: true }])).toEqual([]);
+    expect(engine.snapshot().results.at(-1)).toMatchObject({ retry: true, applied: false });
+  });
+
+  it('never fills the gap with a drill on a card that is waiting it out', () => {
+    const pool = makePool();
+    const c = clock();
+    const engine = engineFor(pool, [pool[0].id, pool[1].id], {
+      now: c.now,
+      retryGapMs: MIN_RETRY_GAP_MS,
+    });
+    engine.rate(1); // card 0 → learning, drillable, and re-queued
+    c.advance(2_000);
+    engine.rate(1); // card 1 likewise; both are now inside their minute
+    // Card 0 is the only foil-able candidate besides card 1, and both are waiting.
+    expect(engine.snapshot().step?.kind).toBe('wait');
   });
 });

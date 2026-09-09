@@ -125,6 +125,7 @@ export function materializeImport(
           : current.clozeDistractors,
         // A backup restore carries FSRS state; a plain vocab file keeps the learner's progress.
         fsrs: row.fsrs ?? current.fsrs,
+        lastAgainAt: row.lastAgainAt ?? current.lastAgainAt,
         updatedAt: nowIso,
       });
       continue;
@@ -143,6 +144,7 @@ export function materializeImport(
       createdAt,
       updatedAt: row.updatedAt ?? createdAt,
     };
+    if (row.lastAgainAt) card.lastAgainAt = row.lastAgainAt;
     if (row.exampleSentenceTraditional)
       card.exampleSentenceTraditional = row.exampleSentenceTraditional;
     if (row.exampleSentencePinyin) card.exampleSentencePinyin = row.exampleSentencePinyin;

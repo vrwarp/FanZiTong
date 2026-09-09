@@ -47,6 +47,8 @@ const README = [
   'events array carries real session boundaries for study done since events shipped.',
   'A review log exists only when a rating moved the schedule, so answers that FSRS',
   'ignored (a correct drill answer on a card already in Review) appear in events only.',
+  'So do retries (retry: true): a word is knocked down at most once a day, and later',
+  'misses that day bring it back without consulting the scheduler.',
 ];
 
 /** Timezone and build details, so timestamps and day boundaries can be read. */
@@ -94,7 +96,7 @@ export function buildAnalyticsExport(input: AnalyticsExportInput): AnalyticsExpo
     generatedAt: now.toISOString(),
     readme: README,
     environment: describeEnvironment(now),
-    report: buildReport(input.cards, input.reviewLogs, input.settings),
+    report: buildReport(input.cards, input.reviewLogs, input.settings, all),
     events: {
       complete: items.length === all.length,
       dropped: all.length - items.length,

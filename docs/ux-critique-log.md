@@ -158,3 +158,36 @@ A verification round of statements 2, 3 and 5. Statement 2 (one definition of "l
 **Final captures (31):** the two states the learner could not verify from earlier rounds are now on screen — the Slang filter of the vocab list, and a 母湯 reveal leading with m̄-thang and its 備註 note.
 
 **Loop closed after four iterations** (the brief allowed up to twenty). Deferred for a later release, unchanged from the iteration-2 plan: realia for church, slang and anime on the slip engine; a second example sentence per card; the full leech remediation view with per-lapse history; persisted neutral-answer logs; latency-based nudges; generated foils for custom cards; per-character stats; a "learn 5 more" beyond the daily new limit; price-reading tasks.
+
+## Analytics round, 2026-09-09
+
+Not a visual round: the material was one device's
+[analytics export](analytics-export.md) — three study days, 193 graded answers,
+50 words — read through the language-expert lens
+([`critique/analytics-2026-09-09/critique-language-expert.md`](critique/analytics-2026-09-09/critique-language-expert.md)).
+
+**Findings**
+
+1. Retention fell 83% → 66% → 55% over three days at 20 new words a day, with
+   54% of new words unknown on first sight and 26 of the 50 words met still
+   under a day of stability.
+2. Same-day repeat loops drove six words to difficulty ≥ 9.5 in single
+   sessions: FSRS-6 treats every same-day _Again_ as a fresh verdict, and a
+   never-seen word retested sixty seconds after the reveal is failed by
+   almost anyone.
+3. A card could be re-served seconds after its reveal, and a pass earned that
+   way graduated it (治癒系: two _Goods_ three seconds apart).
+4. A standalone drill run twice charged the same miss as two lapses.
+
+**Decisions**
+
+- A word is knocked down at most once a day; later same-day misses and drill
+  answers are retries that never reach FSRS. Recognition passes always count.
+- A card is never shown within a minute of its last answer; the session waits
+  in the open when nothing else is ready.
+- New cards are held back while more than 20 (Settings) studied words are
+  still settling.
+- Existing histories are replayed under the rule once, only where the replay
+  reproduces the stored state.
+- The export reads retries from the event log and gains `same_day_retries`
+  and `settling_hold`.

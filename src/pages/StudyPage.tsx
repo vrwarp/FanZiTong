@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { DrillStep } from '@/components/study/DrillStep';
 import { RecognitionCard } from '@/components/study/RecognitionCard';
 import { SessionSummary } from '@/components/study/SessionSummary';
+import { WaitStep } from '@/components/study/WaitStep';
 import { Button } from '@/components/ui/Button';
 import { useAssistant } from '@/lib/assistant/assistantContext';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -14,6 +15,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { recordStudyEvent } from '@/lib/analytics/recorder';
 import { createScheduler } from '@/lib/fsrs/scheduler';
+import { knockedDownToday } from '@/lib/queue/session';
 import { StudyEngine, summarizeResults } from '@/lib/session/engine';
 import {
   clearPausedSession,
@@ -228,6 +230,7 @@ function StudySession({
           position={snapshot.answered + 1}
           total={snapshot.total}
           keepsSlipping={snapshot.card.fsrs.lapses >= settings.leechThreshold}
+          practice={knockedDownToday(snapshot.card, new Date())}
         />
       )}
 
@@ -238,6 +241,16 @@ function StudySession({
           getCard={(id) => engine.getCard(id)}
           onComplete={api.answerDrill}
           onSkip={api.skipDrill}
+        />
+      )}
+
+      {snapshot.step?.kind === 'wait' && (
+        <WaitStep
+          key={`wait-${snapshot.answered}`}
+          until={snapshot.step.until}
+          waiting={snapshot.step.waiting}
+          onReady={api.tick}
+          onFinish={() => setPaused(true)}
         />
       )}
     </div>

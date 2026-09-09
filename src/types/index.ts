@@ -107,6 +107,12 @@ export interface VocabCard {
   /** Authored readable-but-wrong options for the cloze; the generator fills the rest. */
   clozeDistractors?: string[];
   fsrs: FsrsState;
+  /**
+   * When the scheduler last heard "Again" for this card. A word is knocked
+   * down at most once a day: on the same local day, further misses are
+   * retries that come back but never reach FSRS (`isRetry` in lib/queue).
+   */
+  lastAgainAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -156,6 +162,11 @@ export interface UserSettings {
   leechThreshold: number;
   /** 0 = manual tap only; >0 = auto reveal after this many ms. */
   pinyinRevealDelayMs: number;
+  /**
+   * Hold new cards back while this many words are still settling (studied,
+   * but not yet stable for a day). 0 turns the hold off.
+   */
+  maxSettlingCards: number;
   activeDomains: DomainCategory[];
   theme: ThemePreference;
 }
@@ -166,6 +177,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   maxDailyNewCards: 10,
   leechThreshold: 3,
   pinyinRevealDelayMs: 0,
+  maxSettlingCards: 20,
   activeDomains: ['food', 'church', 'slang', 'anime', 'custom'],
   theme: 'system',
 };

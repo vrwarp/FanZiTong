@@ -49,14 +49,15 @@ environment       — app version, build, IANA timezone, UTC offset, locale
 report
   settings        — the learner's scheduling settings, verbatim
   deck            — counts per domain: states, content coverage, what has been
-                    seen; and newQueueAhead, the domains of the next 200 new
-                    cards, run-length encoded
-  activity        — per local day and per inferred session; rating matrices by
-                    exercise and by pre-answer state; answer-time quantiles;
-                    where the lapses came from
+                    seen, how many words are still settling; and newQueueAhead,
+                    the domains of the next 200 new cards, run-length encoded
+  activity        — per local day and per inferred session, plus the sessions
+                    the engine recorded (with their retries); rating matrices
+                    by exercise and by pre-answer state; answer-time quantiles;
+                    where the lapses came from; retries by exercise
   cards[]         — one row per STUDIED card: content coverage, FSRS state,
                     the full answer history with the gap before each answer,
-                    and per-card flags
+                    retries, and per-card flags
   diagnostics[]   — the patterns the app found in its own data
 events            — real session boundaries and answers, including the ones
                     FSRS ignored (see below)
@@ -67,19 +68,21 @@ severity, the numbers behind it, and a handful of examples to open.
 
 ### Diagnostic codes
 
-| code                            | severity | what it means                                                                                                                                                 |
-| ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `in_session_repeat_loop`        | high     | One card took 6+ answers in a single session. A card at the stability floor is always due inside the 20-minute learn-ahead window, so it comes straight back. |
-| `difficulty_saturated`          | high     | Cards at difficulty ≥ 9.5. FSRS has no harsher verdict left, so the card cannot climb out on its own.                                                         |
-| `stability_floor`               | warn     | Stability ≤ 0.05 days: every interval the card is given is measured in minutes.                                                                               |
-| `leech`                         | warn     | At or past the learner's leech threshold, and still scheduled like any other card.                                                                            |
-| `guess_floor_lapse`             | warn     | A lapse charged by a one-in-four multiple-choice drill on a card already in Review. A hit on such a card changes nothing, so drills can only cost it ground.  |
-| `domain_starvation`             | warn     | An active domain that has never had a single card introduced.                                                                                                 |
-| `new_queue_single_domain_run`   | warn     | The upcoming new cards are a long run of one domain — days of study before another domain appears.                                                            |
-| `answered_faster_than_readable` | info     | Answers under 800 ms: reflex, or a card still on screen from a re-queue.                                                                                      |
-| `shared_answer_timing`          | info     | One duration written onto several cards, so time on task is overstated.                                                                                       |
-| `missing_state_before`          | info     | Answers with no pre-answer state, which then count against the daily review budget by default.                                                                |
-| `deck_barely_touched`           | info     | Almost none of the deck has been answered, so deck-wide averages are dominated by cards nobody has met.                                                       |
+| code                            | severity  | what it means                                                                                                                                                                                        |
+| ------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `in_session_repeat_loop`        | high      | One card took 6+ answers in a single session (recorded sessions count retries). The engine now caps a card at three returns a session and a minute between looks, so a loop this size predates that. |
+| `same_day_retries`              | info      | Answers on a word already knocked down that day: recorded, and the word came back, but FSRS was not consulted again. Events only.                                                                    |
+| `settling_hold`                 | warn/info | Studied words still under a day of stability against the new-card hold: how much room is left for new cards today (warn when none), or that the hold is off and the pile is high.                    |
+| `difficulty_saturated`          | high      | Cards at difficulty ≥ 9.5. FSRS has no harsher verdict left, so the card cannot climb out on its own.                                                                                                |
+| `stability_floor`               | warn      | Stability ≤ 0.05 days: every interval the card is given is measured in minutes.                                                                                                                      |
+| `leech`                         | warn      | At or past the learner's leech threshold, and still scheduled like any other card.                                                                                                                   |
+| `guess_floor_lapse`             | warn      | A lapse charged by a one-in-four multiple-choice drill on a card already in Review. A hit on such a card changes nothing, so drills can only cost it ground.                                         |
+| `domain_starvation`             | warn      | An active domain that has never had a single card introduced.                                                                                                                                        |
+| `new_queue_single_domain_run`   | warn      | The upcoming new cards are a long run of one domain — days of study before another domain appears.                                                                                                   |
+| `answered_faster_than_readable` | info      | Answers under 800 ms: reflex, or a card still on screen from a re-queue.                                                                                                                             |
+| `shared_answer_timing`          | info      | One duration written onto several cards, so time on task is overstated.                                                                                                                              |
+| `missing_state_before`          | info      | Answers with no pre-answer state, which then count against the daily review budget by default.                                                                                                       |
+| `deck_barely_touched`           | info      | Almost none of the deck has been answered, so deck-wide averages are dominated by cards nobody has met.                                                                                              |
 
 ### The event log
 
@@ -88,6 +91,11 @@ than 30 minutes are called separate sessions. It is the best that history alone
 allows, and it is what the file falls back on for study done before the event
 log existed.
 
+`report.activity.recordedSessions` is what the event log makes of the same
+question for study done since events shipped: real boundaries, whether the
+session was completed or abandoned, and the retries the review log never sees.
+Where both exist the diagnostics prefer the recorded sessions.
+
 `events` is the real thing. The engine emits one event per session boundary,
 answer and skip, into an IndexedDB table capped at 50,000 rows (oldest dropped
 first); the export carries the newest 5,000 and says how many it left behind.
@@ -95,6 +103,11 @@ An event knows things a review log cannot:
 
 - the session it belongs to, and its position in that session;
 - `applied: false` answers — the ones FSRS ignored and never logged;
+- `retry: true` answers — a word is knocked down at most once a day, so a
+  second Again or Hard that day, or a drill answer on a word already knocked
+  down, brings the word back without consulting the scheduler. These are the
+  answers that used to pin a word at maximum difficulty after one bad session;
+  now they exist only here;
 - `repeatIndex`, how many times this card had already come round this session;
 - `revealLatencyMs`, how long the prompt was studied before the answer was
   asked for, separately from how long the rating took;

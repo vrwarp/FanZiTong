@@ -15,6 +15,8 @@ export const META_KEYS = {
   lastBackupAt: 'lastBackupAt',
   /** Local day (YYYY-MM-DD) on which the learner tapped "Done for today". */
   doneForTodayDate: 'doneForTodayDate',
+  /** JSON summary of the one-time schedule repair (see lib/fsrs/repair); its presence means it ran. */
+  scheduleRepair: 'scheduleRepairV1',
 } as const;
 
 /**

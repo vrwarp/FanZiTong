@@ -176,6 +176,15 @@ export default function SettingsPage() {
             testId="setting-leech"
           />
         </div>
+        <NumberField
+          key={`settling-${settings.maxSettlingCards}`}
+          id="maxSettling"
+          label="Hold new words while this many are still settling"
+          hint="A word is settling until the scheduler trusts it for a whole day. New words wait while the pile is this high, so yesterday's words get learned before more arrive. 0 turns the hold off."
+          value={settings.maxSettlingCards}
+          onChange={(v) => void update({ maxSettlingCards: v })}
+          testId="setting-max-settling"
+        />
       </section>
 
       <section className="card-surface flex flex-col gap-4 p-4">
@@ -443,6 +452,7 @@ export default function SettingsPage() {
 function NumberField({
   id,
   label,
+  hint,
   value,
   onChange,
   min = 0,
@@ -450,6 +460,7 @@ function NumberField({
 }: {
   id: string;
   label: string;
+  hint?: string;
   value: number;
   onChange: (value: number) => void;
   min?: number;
@@ -462,7 +473,7 @@ function NumberField({
     else setDraft(String(value));
   };
   return (
-    <Field label={label} htmlFor={id}>
+    <Field label={label} htmlFor={id} hint={hint}>
       <input
         id={id}
         type="number"

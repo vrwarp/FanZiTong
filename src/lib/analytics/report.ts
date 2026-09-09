@@ -8,10 +8,19 @@ import {
   type UserSettings,
   type VocabCard,
 } from '@/types';
-import { interleaveByDomain, isActiveDomain, LEARN_AHEAD_MS } from '@/lib/queue/session';
+import {
+  interleaveByDomain,
+  isActiveDomain,
+  isSettling,
+  LEARN_AHEAD_MS,
+  MAX_SESSION_REQUEUES,
+  MIN_RETRY_GAP_MS,
+  newCardCapacity,
+  SETTLING_STABILITY_DAYS,
+} from '@/lib/queue/session';
 import { MASTERY_STABILITY_DAYS } from '@/lib/stats/analytics';
 import { dayKey, MINUTE_MS } from '@/lib/util/time';
-import type { StudyEvent } from './events';
+import { sortEvents, type SessionMode, type StudyEvent } from './events';
 
 /** Bumped whenever the report's shape changes incompatibly. */
 export const ANALYTICS_REPORT_VERSION = 1;
@@ -100,6 +109,8 @@ export interface DomainCensus {
   introduced: number;
   /** Stability above 30 days (the app's mastery bar). */
   mastered: number;
+  /** Studied, but not yet stable for a day: the scheduler still brings them back daily. */
+  settling: number;
   leeches: number;
   /** What the authored content supports; a missing sentence means no cloze. */
   content: {
@@ -115,6 +126,8 @@ export interface DeckCensus {
   totalCards: number;
   introducedCards: number;
   neverSeenCards: number;
+  /** Settling words across the active domains — what the new-card hold counts. */
+  settlingCards: number;
   byDomain: DomainCensus[];
   /**
    * The domains of the next new cards the daily queue would introduce, run-length
@@ -140,6 +153,7 @@ export function buildDeckCensus(cards: VocabCard[], settings: UserSettings): Dec
       },
       introduced: count((c) => c.fsrs.reps > 0),
       mastered: count((c) => c.fsrs.stability > MASTERY_STABILITY_DAYS),
+      settling: count(isSettling),
       leeches: count((c) => c.fsrs.lapses >= settings.leechThreshold),
       content: {
         withSentence: count((c) => Boolean(c.exampleSentenceTraditional?.trim())),
@@ -172,6 +186,7 @@ export function buildDeckCensus(cards: VocabCard[], settings: UserSettings): Dec
     totalCards: cards.length,
     introducedCards: cards.filter((c) => c.fsrs.reps > 0).length,
     neverSeenCards: cards.filter((c) => c.fsrs.reps === 0).length,
+    settlingCards: cards.filter((c) => isActiveDomain(c, settings) && isSettling(c)).length,
     byDomain,
     newQueueAhead,
   };
@@ -190,6 +205,8 @@ export interface DayActivity {
   ratings: RatingCounts;
   exercises: ExerciseCounts;
   retention: number | null;
+  /** Answers on words already knocked down that day (events only; never logged). */
+  retries: number;
 }
 
 export interface InferredSession {
@@ -209,6 +226,26 @@ export interface InferredSession {
   busiestCardId: string | null;
 }
 
+/**
+ * A session the engine recorded, with its retries: the answers the review log
+ * never sees. Only study done since events shipped appears here.
+ */
+export interface RecordedSession {
+  sessionId: string;
+  mode: SessionMode;
+  drillType?: ExerciseType;
+  startedAt: string;
+  endedAt: string;
+  day: string;
+  answers: number;
+  retries: number;
+  distinctCards: number;
+  /** Null when the session has no end event (still open, or the app was closed). */
+  completed: boolean | null;
+  maxAnswersOnOneCard: number;
+  busiestCardId: string | null;
+}
+
 export interface Activity {
   firstAnswerAt: string | null;
   lastAnswerAt: string | null;
@@ -217,6 +254,10 @@ export interface Activity {
   reportedTimeMs: number;
   days: DayActivity[];
   sessions: InferredSession[];
+  /** Sessions with real boundaries, from the event log. */
+  recordedSessions: RecordedSession[];
+  /** Retries across the event log: recorded, never scheduled. */
+  retries: { total: number; byExercise: ExerciseCounts };
   ratingsByExercise: Record<ExerciseType, RatingCounts>;
   ratingsByStateBefore: Record<StateName, RatingCounts>;
   latencyMsByExercise: Record<ExerciseType, Quantiles>;
@@ -232,7 +273,7 @@ function chronological(logs: ReviewLog[]): ReviewLog[] {
   return [...logs].sort((a, b) => a.reviewTimestamp.localeCompare(b.reviewTimestamp));
 }
 
-export function buildActivity(logs: ReviewLog[]): Activity {
+export function buildActivity(logs: ReviewLog[], events: StudyEvent[] = []): Activity {
   const ordered = chronological(logs);
   const days = new Map<string, DayActivity & { cardIds: Set<string> }>();
   const firstSeen = new Map<string, string>();
@@ -265,6 +306,7 @@ export function buildActivity(logs: ReviewLog[]): Activity {
         ratings: emptyRatings(),
         exercises: emptyExercises(),
         retention: null,
+        retries: 0,
         cardIds: new Set<string>(),
       };
       days.set(key, day);
@@ -289,6 +331,18 @@ export function buildActivity(logs: ReviewLog[]): Activity {
     }
   }
 
+  // Retries live only in the event log; a day with nothing else gets no row,
+  // because a retry needs a knock-down (logged) earlier the same day.
+  const retriesByExercise = emptyExercises();
+  let retryTotal = 0;
+  for (const event of events) {
+    if (event.kind !== 'answer' || !event.retry || !event.exerciseType) continue;
+    retryTotal += 1;
+    retriesByExercise[event.exerciseType] += 1;
+    const day = days.get(dayKey(new Date(event.at)));
+    if (day) day.retries += 1;
+  }
+
   const dayList = Array.from(days.values())
     .map(({ cardIds, ...rest }) => ({
       ...rest,
@@ -305,6 +359,8 @@ export function buildActivity(logs: ReviewLog[]): Activity {
     reportedTimeMs,
     days: dayList,
     sessions: inferSessions(ordered),
+    recordedSessions: summarizeRecordedSessions(events),
+    retries: { total: retryTotal, byExercise: retriesByExercise },
     ratingsByExercise,
     ratingsByStateBefore,
     latencyMsByExercise: Object.fromEntries(
@@ -378,6 +434,50 @@ export function inferSessions(logs: ReviewLog[]): InferredSession[] {
   return sessions;
 }
 
+/** One row per session the engine recorded, retries included. */
+export function summarizeRecordedSessions(events: StudyEvent[]): RecordedSession[] {
+  const bySession = new Map<string, StudyEvent[]>();
+  for (const event of sortEvents(events)) {
+    const list = bySession.get(event.sessionId);
+    if (list) list.push(event);
+    else bySession.set(event.sessionId, [event]);
+  }
+  const sessions: RecordedSession[] = [];
+  for (const [sessionId, list] of bySession) {
+    const answers = list.filter((e) => e.kind === 'answer');
+    const perCard = new Map<string, number>();
+    for (const answer of answers) {
+      if (!answer.cardId) continue;
+      perCard.set(answer.cardId, (perCard.get(answer.cardId) ?? 0) + 1);
+    }
+    let busiestCardId: string | null = null;
+    let maxAnswers = 0;
+    for (const [cardId, count] of perCard) {
+      if (count > maxAnswers) {
+        maxAnswers = count;
+        busiestCardId = cardId;
+      }
+    }
+    const end = list.find((e) => e.kind === 'session_end');
+    const first = list[0];
+    sessions.push({
+      sessionId,
+      mode: first.mode,
+      ...(first.drillType ? { drillType: first.drillType } : {}),
+      startedAt: first.at,
+      endedAt: list[list.length - 1].at,
+      day: dayKey(new Date(first.at)),
+      answers: answers.length,
+      retries: answers.filter((e) => e.retry).length,
+      distinctCards: perCard.size,
+      completed: end ? (end.completed ?? null) : null,
+      maxAnswersOnOneCard: maxAnswers,
+      busiestCardId: maxAnswers > 1 ? busiestCardId : null,
+    });
+  }
+  return sessions.sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+}
+
 // ---- per-card rows ---------------------------------------------------
 
 export interface CardAnswer {
@@ -419,6 +519,8 @@ export interface CardReport {
   answers: number;
   ratings: RatingCounts;
   exercises: ExerciseCounts;
+  /** Answers on this word while it was already knocked down that day (events only). */
+  retries: number;
   /** Answers the export could not include, once the history cap was hit. */
   historyTruncated: number;
   history: CardAnswer[];
@@ -435,12 +537,18 @@ export function buildCardReports(
   cards: VocabCard[],
   logs: ReviewLog[],
   settings: UserSettings,
+  events: StudyEvent[] = [],
 ): CardReport[] {
   const byCard = new Map<string, ReviewLog[]>();
   for (const log of chronological(logs)) {
     const list = byCard.get(log.cardId);
     if (list) list.push(log);
     else byCard.set(log.cardId, [log]);
+  }
+  const retriesByCard = new Map<string, number>();
+  for (const event of events) {
+    if (event.kind !== 'answer' || !event.retry || !event.cardId) continue;
+    retriesByCard.set(event.cardId, (retriesByCard.get(event.cardId) ?? 0) + 1);
   }
 
   const touched = cards.filter((c) => c.fsrs.reps > 0 || byCard.has(c.id));
@@ -487,6 +595,7 @@ export function buildCardReports(
         answers: history.length,
         ratings,
         exercises,
+        retries: retriesByCard.get(card.id) ?? 0,
         historyTruncated: history.length - kept.length,
         history: kept.map((log, i) => {
           const previous = kept[i - 1];
@@ -541,6 +650,7 @@ export function buildDiagnostics(
   settings: UserSettings,
   deck: DeckCensus,
   activity: Activity,
+  cardReports: CardReport[] = [],
 ): Diagnostic[] {
   const found: Diagnostic[] = [];
   const label = (id: string) => {
@@ -548,7 +658,13 @@ export function buildDiagnostics(
     return card ? `${card.traditional} (${id.slice(0, 8)})` : id.slice(0, 8);
   };
 
-  const loops = activity.sessions.filter((s) => s.maxAnswersOnOneCard >= LOOP_ANSWER_THRESHOLD);
+  // Recorded sessions see retries, which never reach the log; the
+  // reconstruction covers whatever happened before events shipped.
+  const recordedFrom = activity.recordedSessions[0]?.startedAt;
+  const loops = [
+    ...activity.sessions.filter((s) => !recordedFrom || s.endedAt < recordedFrom),
+    ...activity.recordedSessions,
+  ].filter((s) => s.maxAnswersOnOneCard >= LOOP_ANSWER_THRESHOLD);
   if (loops.length > 0) {
     const worst = loops.reduce((a, b) => (b.maxAnswersOnOneCard > a.maxAnswersOnOneCard ? b : a));
     found.push({
@@ -559,9 +675,64 @@ export function buildDiagnostics(
         `${loops.length} session(s) gave a single card ${LOOP_ANSWER_THRESHOLD}+ answers; ` +
         `the worst gave ${label(worst.busiestCardId ?? '')} ${worst.maxAnswersOnOneCard} of ` +
         `${worst.answers} answers. A card at the stability floor is always due inside the ` +
-        `${Math.round(LEARN_AHEAD_MS / MINUTE_MS)}-minute learn-ahead window, so it returns at once.`,
+        `${Math.round(LEARN_AHEAD_MS / MINUTE_MS)}-minute learn-ahead window, so it returns at ` +
+        `once; the engine now caps a card at ${MAX_SESSION_REQUEUES} returns a session and ` +
+        `${Math.round(MIN_RETRY_GAP_MS / 1000)} s between looks, so a loop this size predates that.`,
       count: loops.length,
       examples: loops.map((s) => `${s.startedAt} · ${label(s.busiestCardId ?? '')}`).slice(0, 5),
+    });
+  }
+
+  if (activity.retries.total > 0) {
+    const retriesByCard = new Map<string, number>();
+    for (const card of cardReports) if (card.retries > 0) retriesByCard.set(card.id, card.retries);
+    const top = Array.from(retriesByCard.entries()).sort((a, b) => b[1] - a[1]);
+    found.push({
+      code: 'same_day_retries',
+      severity: 'info',
+      title: 'Answers that never reached the scheduler',
+      detail:
+        `${activity.retries.total} answer(s) were retries on a word already knocked down that ` +
+        `day: recorded, and the word came back, but FSRS was not consulted again. A word is ` +
+        `knocked down at most once a day, so a second same-day miss cannot push its difficulty ` +
+        `toward 10. These answers appear in events only.`,
+      count: activity.retries.total,
+      examples: top.slice(0, 5).map(([id, n]) => `${label(id)} · ${n} retries`),
+    });
+  }
+
+  const hasNewCards = deck.byDomain.some((d) => d.active && d.states.new > 0);
+  if (settings.maxSettlingCards > 0 && hasNewCards) {
+    const capacity = newCardCapacity(settings, deck.settlingCards);
+    if (capacity < settings.maxDailyNewCards) {
+      found.push({
+        code: 'settling_hold',
+        severity: capacity === 0 ? 'warn' : 'info',
+        title: capacity === 0 ? 'New cards on hold' : 'New cards limited by settling words',
+        detail:
+          `${deck.settlingCards} studied word(s) are still settling (stability under ` +
+          `${SETTLING_STABILITY_DAYS} day) against a hold of ${settings.maxSettlingCards}, leaving ` +
+          `room for ${capacity} new card(s) a day instead of the daily limit of ` +
+          `${settings.maxDailyNewCards}. New words return as these stick; the learner can ` +
+          `raise or switch off the hold in Settings.`,
+        count: deck.settlingCards,
+        examples: cards
+          .filter((c) => isActiveDomain(c, settings) && isSettling(c))
+          .sort((a, b) => a.fsrs.stability - b.fsrs.stability)
+          .slice(0, 5)
+          .map((c) => `${label(c.id)} · S=${round(c.fsrs.stability, 3)} d`),
+      });
+    }
+  } else if (settings.maxSettlingCards <= 0 && deck.settlingCards > settings.maxDailyNewCards * 2) {
+    found.push({
+      code: 'settling_hold',
+      severity: 'warn',
+      title: 'Many settling words and no hold',
+      detail:
+        `${deck.settlingCards} studied word(s) are still settling and the hold is switched off, ` +
+        `so new cards keep arriving at ${settings.maxDailyNewCards} a day on top of them.`,
+      count: deck.settlingCards,
+      examples: [],
     });
   }
 
@@ -749,16 +920,18 @@ export function buildReport(
   cards: VocabCard[],
   logs: ReviewLog[],
   settings: UserSettings,
+  events: StudyEvent[] = [],
 ): AnalyticsReport {
   const deck = buildDeckCensus(cards, settings);
-  const activity = buildActivity(logs);
+  const activity = buildActivity(logs, events);
+  const cardReports = buildCardReports(cards, logs, settings, events);
   return {
     reportVersion: ANALYTICS_REPORT_VERSION,
     settings,
     deck,
     activity,
-    cards: buildCardReports(cards, logs, settings),
-    diagnostics: buildDiagnostics(cards, logs, settings, deck, activity),
+    cards: cardReports,
+    diagnostics: buildDiagnostics(cards, logs, settings, deck, activity, cardReports),
   };
 }
 

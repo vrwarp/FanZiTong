@@ -15,6 +15,7 @@ import {
 } from '@/types';
 import type { Repository } from '@/db/repository';
 import { charInfo } from '@/data/charInfo';
+import { breakdown, describeBreakdown, hanziyuanUrl, loadEtymologyTable } from '@/lib/etymology';
 import { categorizeDish, categoryTemplate } from '@/data/menuTemplate';
 import {
   computeStreak,
@@ -526,11 +527,35 @@ export function createToolExecutor(deps: ExecutorDeps) {
     return { result: snapshot };
   }
 
-  function characters(input: unknown): ToolOutcome {
+  async function characters(input: unknown): Promise<ToolOutcome> {
     const args = TOOLS.char_info.input.parse(input) as { chars: string[] };
+    // Unlike the render paths, this one can afford to wait: answering with
+    // "nothing known" because a chunk had not loaded yet would be a lie.
+    await loadEtymologyTable();
     const entries = args.chars.map((char) => {
       const info = charInfo(char);
-      return info ? { char, ...info } : { char, unknown: true };
+      // The composition the app itself shows the learner. Handing it to the
+      // model matters more than it looks: asked where a character comes from,
+      // a language model will happily produce a fluent story, and the popular
+      // stories are mostly folk etymology. This is the same ground truth the
+      // screen is using, so an explanation in chat and an explanation on the
+      // card agree with each other.
+      const built = breakdown(char);
+      const composition = built
+        ? {
+            ids: built.ids,
+            summary: describeBreakdown(built),
+            meaning: built.meaning
+              ? { char: built.meaning.char, gloss: built.meaning.gloss }
+              : null,
+            sound: built.sound
+              ? { char: built.sound.char, match: built.sound.match, reading: built.sound.reading }
+              : null,
+            ancientForms: hanziyuanUrl(char),
+          }
+        : null;
+      if (!info && !composition) return { char, unknown: true };
+      return { char, ...info, composition };
     });
     return { result: { entries } };
   }

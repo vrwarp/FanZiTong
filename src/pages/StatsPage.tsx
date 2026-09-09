@@ -7,6 +7,8 @@ import { RetentionGauge } from '@/components/stats/RetentionGauge';
 import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { charInfo } from '@/data/charInfo';
+import { breakdown, describeBreakdown } from '@/lib/etymology';
+import { useEtymology } from '@/hooks/useEtymology';
 import { diffCharacters, expandFoil } from '@/lib/exercises/foil';
 import { hasFoils } from '@/lib/queue/session';
 import { hanChars, syllablesPerCharacter } from '@/lib/util/pinyin';
@@ -217,6 +219,7 @@ export default function StatsPage() {
  */
 function LeechRow({ card }: { card: VocabCard }) {
   const [showReading, setShowReading] = useState(false);
+  useEtymology();
   const chars = hanChars(card.traditional);
   const syllables = syllablesPerCharacter(card.traditional, card.pinyin);
   const variants = (card.variants ?? []).filter(Boolean);
@@ -258,6 +261,16 @@ function LeechRow({ card }: { card: VocabCard }) {
           );
         })}
       </p>
+      {/* Behind the same tap as the reading: the composition names the sound
+          component's pronunciation, which is half the answer. */}
+      {showReading && (
+        <div className="text-xs text-stone-500 dark:text-stone-400" data-testid="leech-build">
+          {chars.map((ch, i) => {
+            const built = breakdown(ch);
+            return built ? <p key={`${ch}-${i}`}>{describeBreakdown(built)}</p> : null;
+          })}
+        </div>
+      )}
       {(variants.length > 0 || foils.length > 0) && (
         <p className="text-xs text-stone-500 dark:text-stone-400">
           {variants.length > 0 && (

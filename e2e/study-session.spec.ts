@@ -35,6 +35,39 @@ test.describe('Daily study session (Journey 1)', () => {
     await expect(page.getByTestId('session-progress')).toHaveText(/Card 2 of/);
   });
 
+  test('a revealed card breaks its characters down and links out for the history', async ({
+    page,
+  }) => {
+    await openApp(page);
+    await page.getByTestId('start-session').click();
+    await page.getByTestId('recognition-prompt').click();
+
+    // The composition table is a lazily loaded chunk, so this also proves it
+    // arrives in a real browser and not only under the bundler's alias.
+    const chips = page.getByTestId('character-chip');
+    const count = await chips.count();
+    expect(count).toBeGreaterThan(1);
+
+    const panel = page.getByTestId('character-breakdown');
+    let found = false;
+    for (let i = 0; i < count; i += 1) {
+      await chips.nth(i).click();
+      if (await panel.isVisible()) {
+        found = true;
+        break;
+      }
+      await chips.nth(i).click(); // collapse and try the next character
+    }
+    // Every real multi-character word has at least one character that is built
+    // from something; a word where none of them were would be the bug.
+    expect(found).toBe(true);
+
+    const link = page.getByTestId('hanziyuan-link');
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href', /^https:\/\/hanziyuan\.net\/#/);
+    await expect(link).toHaveAttribute('target', '_blank');
+  });
+
   test('a full session interleaves a drill, re-queues lapses and ends with a summary', async ({
     page,
   }) => {

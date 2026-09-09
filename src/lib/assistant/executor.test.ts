@@ -209,6 +209,37 @@ describe('read tools', () => {
   });
 });
 
+describe('char_info', () => {
+  it('hands the model the same composition the card shows', async () => {
+    const out = await executor.execute('char_info', { chars: ['滷'] });
+    const { entries } = out.result as {
+      entries: { char: string; composition: Record<string, unknown> | null }[];
+    };
+    expect(entries[0].char).toBe('滷');
+    expect(entries[0].composition).toMatchObject({
+      ids: '⿰氵鹵',
+      meaning: { char: '氵' },
+      sound: { char: '鹵', match: 'exact' },
+      ancientForms: 'https://hanziyuan.net/#%E6%BB%B7',
+    });
+  });
+
+  it('reports no sound component rather than offering a story', async () => {
+    const out = await executor.execute('char_info', { chars: ['魯'] });
+    const { entries } = out.result as {
+      entries: { composition: { sound: unknown; summary: string } }[];
+    };
+    expect(entries[0].composition.sound).toBeNull();
+    expect(entries[0].composition.summary).not.toContain('reading');
+  });
+
+  it('says so plainly for a character it knows nothing about', async () => {
+    const out = await executor.execute('char_info', { chars: ['𠮷'] });
+    const { entries } = out.result as { entries: { unknown?: boolean }[] };
+    expect(entries[0].unknown).toBe(true);
+  });
+});
+
 describe('study context (AC-2)', () => {
   it('never names the card while it is still hidden', async () => {
     const card = makeCard({});

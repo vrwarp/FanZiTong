@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { charInfo } from '@/data/charInfo';
+import { CharacterBreakdown } from './CharacterBreakdown';
 import { cn } from '@/lib/util/cn';
 import { hanChars, syllablesPerCharacter } from '@/lib/util/pinyin';
 import type { VocabCard } from '@/types';
@@ -18,8 +20,22 @@ export interface CharacterChipsProps {
  * tap the other deck words it appears in — so 滷 is bound to lǔ, not just to
  * the silhouette of 滷肉飯. The selected character is also underlined in the
  * example sentence.
+ *
+ * Tapping also opens the character itself: which part of it carries the
+ * meaning, which part carries the reading, and a link to the ancient forms.
+ * A character that is one indivisible unit simply has nothing extra to show,
+ * which is the honest answer rather than a missing panel.
  */
 export function CharacterChips({ card, pool, selected, onSelect }: CharacterChipsProps) {
+  // Every character the deck contains, so the sound family only ever points at
+  // words this learner is actually studying. Computed before the early return
+  // below, because a hook cannot be skipped for one-character words.
+  const deckChars = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of pool) for (const ch of c.traditional) set.add(ch);
+    return set;
+  }, [pool]);
+
   const chars = hanChars(card.traditional);
   if (chars.length < 2) return null;
   const syllables = syllablesPerCharacter(card.traditional, card.pinyin);
@@ -33,7 +49,7 @@ export function CharacterChips({ card, pool, selected, onSelect }: CharacterChip
   return (
     <div className="flex flex-col gap-1" data-testid="character-chips">
       <p className="text-[11px] text-stone-500 dark:text-stone-400">
-        Tap a character for its meaning and other words with it
+        Tap a character for how it is built and other words with it
       </p>
       <div className="flex flex-wrap gap-1.5">
         {chars.map((ch, i) => {
@@ -70,19 +86,22 @@ export function CharacterChips({ card, pool, selected, onSelect }: CharacterChip
         })}
       </div>
       {selectedIndex >= 0 && (
-        <p className="text-xs text-stone-600 dark:text-stone-300" data-testid="character-also-in">
-          <Hanzi className="font-semibold">{chars[selectedIndex]}</Hanzi>
-          {charInfo(chars[selectedIndex]) &&
-            ` ${charInfo(chars[selectedIndex])!.pinyin} “${charInfo(chars[selectedIndex])!.gloss}”`}
-          {alsoIn(chars[selectedIndex]).length > 0 ? (
-            <>
-              {' '}
-              · also in <Hanzi>{alsoIn(chars[selectedIndex]).join('、')}</Hanzi>
-            </>
-          ) : (
-            ' · no other deck word yet'
-          )}
-        </p>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs text-stone-600 dark:text-stone-300" data-testid="character-also-in">
+            <Hanzi className="font-semibold">{chars[selectedIndex]}</Hanzi>
+            {charInfo(chars[selectedIndex]) &&
+              ` ${charInfo(chars[selectedIndex])!.pinyin} “${charInfo(chars[selectedIndex])!.gloss}”`}
+            {alsoIn(chars[selectedIndex]).length > 0 ? (
+              <>
+                {' '}
+                · also in <Hanzi>{alsoIn(chars[selectedIndex]).join('、')}</Hanzi>
+              </>
+            ) : (
+              ' · no other deck word yet'
+            )}
+          </p>
+          <CharacterBreakdown char={chars[selectedIndex]} deckChars={deckChars} />
+        </div>
       )}
     </div>
   );

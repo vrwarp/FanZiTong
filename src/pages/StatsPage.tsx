@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { charInfo } from '@/data/charInfo';
 import { diffCharacters, expandFoil } from '@/lib/exercises/foil';
+import { hasFoils } from '@/lib/queue/session';
 import { hanChars, syllablesPerCharacter } from '@/lib/util/pinyin';
 import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useNow } from '@/hooks/useNow';
@@ -219,8 +220,10 @@ function LeechRow({ card }: { card: VocabCard }) {
   const chars = hanChars(card.traditional);
   const syllables = syllablesPerCharacter(card.traditional, card.pinyin);
   const variants = (card.variants ?? []).filter(Boolean);
-  const foils = (card.visualFoils ?? []).filter(Boolean);
-  const drill = `/drills/${foils.length > 0 ? 'foil_discrimination' : 'cloze'}?count=1&cards=${card.id}`;
+  // Same-sound foils first: they are what the drill will show, and what the
+  // learner most likely typed by mistake.
+  const foils = [...(card.homophoneFoils ?? []), ...(card.visualFoils ?? [])].filter(Boolean);
+  const drill = `/drills/${hasFoils(card) ? 'foil_discrimination' : 'cloze'}?count=1&cards=${card.id}`;
   return (
     <li className="flex flex-col gap-1 py-2" data-testid="leech-row">
       <div className="flex items-center gap-3">

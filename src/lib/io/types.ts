@@ -12,6 +12,7 @@ export interface ImportRow {
   exampleSentencePinyin?: string;
   exampleSentenceTranslation?: string;
   visualFoils: string[];
+  homophoneFoils: string[];
   variants: string[];
   spoken?: string;
   variantNote?: string;

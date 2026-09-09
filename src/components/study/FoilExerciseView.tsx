@@ -127,7 +127,9 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
       <div className="card-surface px-4 py-3" aria-live="polite" data-testid="foil-feedback">
         {phase === 'pick' && (
           <p className="text-sm text-stone-500 dark:text-stone-400">
-            Look at each character, not the silhouette.
+            {exercise.source === 'homophone'
+              ? 'Every option sounds the same. Go by the meaning.'
+              : 'Look at each character, not the silhouette.'}
           </p>
         )}
         {phase === 'retry' && (
@@ -201,8 +203,11 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
 
       <div className="flex flex-col gap-3">
         <div className="grid grid-cols-2 gap-3" role="group" aria-label="Character options">
-          {options.map((option) => {
+          {options.map((option, i) => {
             const isAnswer = option === exercise.answer;
+            // An odd set is three balanced tiles, not four padded ones: the last
+            // one takes the full width rather than leaving a hole beside it.
+            const wide = options.length % 2 === 1 && i === options.length - 1;
             const isPicked = option === picked;
             const marked = phase === 'done' || phase === 'wrong';
             return (
@@ -215,6 +220,7 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
                 data-correct={isAnswer ? 'true' : 'false'}
                 className={cn(
                   'card-surface flex min-h-28 items-center justify-center px-2 transition-colors',
+                  wide && 'col-span-2',
                   !marked && 'active:bg-stone-100 dark:active:bg-ink-3',
                   (phase === 'done' || phase === 'gate') &&
                     isAnswer &&

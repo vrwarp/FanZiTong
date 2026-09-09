@@ -62,6 +62,16 @@ describe('parseJsonDeck', () => {
     expect(deck.rows[0].warnings).toContain('No definition provided.');
   });
 
+  it('round-trips same-sound foils and defaults them when absent', () => {
+    const deck = parseJsonDeck(
+      '[{"traditional":"豆漿","pinyin":"dòu jiāng","homophoneFoils":["逗","豆醬"]},' +
+        '{"traditional":"火鍋","pinyin":"huǒ guō"}]',
+    );
+    expect(deck.issues).toEqual([]);
+    expect(deck.rows[0].homophoneFoils).toEqual(['逗', '豆醬']);
+    expect(deck.rows[1].homophoneFoils).toEqual([]);
+  });
+
   it('skips invalid cards but keeps the rest', () => {
     const deck = parseJsonDeck(
       '{"cards":[{"pinyin":"x"},{"traditional":"火鍋","fsrs":{"state":9}},{"traditional":"豆漿"}]}',

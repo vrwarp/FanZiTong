@@ -115,6 +115,7 @@ export function materializeImport(
         exampleSentenceTranslation:
           row.exampleSentenceTranslation ?? current.exampleSentenceTranslation,
         visualFoils: row.visualFoils.length ? row.visualFoils : current.visualFoils,
+        homophoneFoils: row.homophoneFoils.length ? row.homophoneFoils : current.homophoneFoils,
         variants: row.variants.length ? row.variants : current.variants,
         spoken: row.spoken ?? current.spoken,
         variantNote: row.variantNote ?? current.variantNote,
@@ -148,6 +149,7 @@ export function materializeImport(
     if (row.exampleSentenceTranslation)
       card.exampleSentenceTranslation = row.exampleSentenceTranslation;
     if (row.visualFoils.length) card.visualFoils = row.visualFoils;
+    if (row.homophoneFoils.length) card.homophoneFoils = row.homophoneFoils;
     if (row.variants.length) card.variants = row.variants;
     if (row.spoken) card.spoken = row.spoken;
     if (row.variantNote) card.variantNote = row.variantNote;

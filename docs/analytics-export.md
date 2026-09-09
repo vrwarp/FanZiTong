@@ -98,7 +98,13 @@ An event knows things a review log cannot:
 - `repeatIndex`, how many times this card had already come round this session;
 - `revealLatencyMs`, how long the prompt was studied before the answer was
   asked for, separately from how long the rating took;
-- `picked` and `misses`: which wrong shape was taken for the word.
+- `picked` and `misses`: which wrong shape was taken for the word;
+- `foilSource` and `foilStrategy`: which confusion a Spot the Character set was
+  built from (`homophone` or `shape`) and how it was balanced (`factorial`,
+  `column` or `pair`). Accuracy is not comparable across these, and events
+  recorded before the generator stopped leaving the answer at the centre of the
+  set carry neither — so a drop at that boundary is the shortcut closing, not
+  the learner regressing.
 
 ## What is not in it
 

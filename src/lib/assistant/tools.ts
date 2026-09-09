@@ -184,7 +184,7 @@ export const TOOLS = {
   },
   char_info: {
     description:
-      'Reading, gloss and shape "tell" for individual characters, plus which deck words use them. Use it before explaining why two characters look alike.',
+      'Reading, gloss, shape "tell" and composition for individual characters: which component carries the meaning, which one still carries the reading, and a link to the ancient forms on 字源. Call it before explaining how a character is built or why two look alike — this is the same breakdown the app shows the learner, so your answer and their screen agree.',
     input: z.object({ chars: z.array(z.string().min(1).max(2)).min(1).max(20) }),
     mutating: false,
     readOnly: true,

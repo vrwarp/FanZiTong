@@ -22,6 +22,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "icons": "node scripts/generate-icons.mjs",
+    "etymology": "node scripts/build-etymology.mjs",
     "simplified": "node scripts/generate-simplified-chars.mjs",
     "agent": "npm run dev --prefix agent",
     "agent:build": "npm run build --prefix agent",

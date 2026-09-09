@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { charInfo } from '@/data/charInfo';
+import { CharacterContrast } from './CharacterContrast';
 import { clozeBlank, type ClozeExercise } from '@/lib/exercises/cloze';
 import { diffCharacters } from '@/lib/exercises/foil';
 import type { DrillOutcome as DrillOutcomeType } from '@/lib/session/engine';
@@ -214,6 +215,7 @@ export function ClozeExerciseView({ exercise, card, onComplete }: ClozeExerciseV
                       {right?.tell && (
                         <span className="block text-xs text-stone-500">{right.tell}</span>
                       )}
+                      <CharacterContrast picked={d.picked} correct={d.correct} />
                     </p>
                   );
                 })}

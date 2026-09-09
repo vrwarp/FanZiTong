@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { META_KEYS, repository } from '@/db/repository';
-import { SECONDS_PER_NEW_CARD, SECONDS_PER_REVIEW } from '@/lib/queue/session';
+import { SECONDS_PER_NEW_CARD, SECONDS_PER_REVIEW, newCardCapacity } from '@/lib/queue/session';
 import { countStudyDays } from '@/lib/stats/analytics';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { RetentionGauge } from '@/components/stats/RetentionGauge';
@@ -12,8 +12,10 @@ import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useNow } from '@/hooks/useNow';
 import { useSettings } from '@/hooks/useSettings';
+import { parseRepairSummary } from '@/hooks/useBootstrap';
 import { clearPausedSession, readPausedSession } from '@/lib/session/pausedSession';
 import { dismissIntro, readIntroDismissed } from '@/lib/util/intro';
+import { dismissRepairNotice, readRepairNoticeDismissed } from '@/lib/util/notices';
 import { dayKey } from '@/lib/util/time';
 import { InstallPrompt } from '@/pwa/InstallPrompt';
 import { DOMAIN_CATEGORIES, DOMAIN_LABELS } from '@/types';
@@ -36,6 +38,14 @@ export default function LearnPage() {
   const doneMeta = useLiveQuery(() => repository.getMeta(META_KEYS.doneForTodayDate), []);
   const markedDone = doneMeta === dayKey(now);
   const lastBackupAt = useLiveQuery(() => repository.getMeta(META_KEYS.lastBackupAt), []);
+  const repairMeta = useLiveQuery(() => repository.getMeta(META_KEYS.scheduleRepair), []);
+  const repair = parseRepairSummary(repairMeta);
+  const [repairDismissed, setRepairDismissed] = useState<string | null>(null);
+  const showRepair =
+    repair !== null &&
+    repair.repaired > 0 &&
+    repairDismissed !== repair.at &&
+    !readRepairNoticeDismissed(repair.at);
   const studyDays = countStudyDays(logs);
   const backupAgeDays = lastBackupAt
     ? Math.floor((now.getTime() - new Date(lastBackupAt).getTime()) / 86_400_000)
@@ -63,10 +73,19 @@ export default function LearnPage() {
   const wordsStudiedToday = new Set(
     logs.filter((l) => dayKey(new Date(l.reviewTimestamp)) === today).map((l) => l.cardId),
   ).size;
+  const freshCount = cards.filter(
+    (c) => c.fsrs.state === 0 && settings.activeDomains.includes(c.domain),
+  ).length;
+  // Tomorrow's new cards are bounded by the same settling hold as today's.
   const newTomorrow = Math.min(
     settings.maxDailyNewCards,
-    cards.filter((c) => c.fsrs.state === 0 && settings.activeDomains.includes(c.domain)).length,
+    newCardCapacity(settings, plan.settlingCount),
+    freshCount,
   );
+  // New words are on hold when the deck has them but the settling pile is full.
+  const settlingHold =
+    plan.newCardsHeldBack > 0 ||
+    (freshCount > 0 && newCardCapacity(settings, plan.settlingCount) === 0);
   const tomorrowMinutes = Math.max(
     1,
     Math.round((model.dueTomorrow * SECONDS_PER_REVIEW + newTomorrow * SECONDS_PER_NEW_CARD) / 60),
@@ -205,6 +224,9 @@ export default function LearnPage() {
             >
               {tomorrowLine}
             </p>
+            {settlingHold && (
+              <SettlingHoldNote settling={plan.settlingCount} limit={settings.maxSettlingCards} />
+            )}
             {canStudy ? (
               <Button
                 block
@@ -246,6 +268,9 @@ export default function LearnPage() {
               {plan.totalDueCount > plan.dueReviewCount &&
                 ` · ${plan.totalDueCount - plan.dueReviewCount} more waiting beyond today's limit`}
             </p>
+            {settlingHold && (
+              <SettlingHoldNote settling={plan.settlingCount} limit={settings.maxSettlingCards} />
+            )}
             <Button
               block
               size="lg"
@@ -271,6 +296,39 @@ export default function LearnPage() {
       </section>
 
       <InstallPrompt />
+
+      {showRepair && (
+        <section
+          className="card-surface flex flex-col gap-2 px-4 py-3 text-sm"
+          data-testid="repair-notice"
+        >
+          <p>
+            <span className="font-semibold">Schedules recomputed.</span>{' '}
+            {repair.repaired === 1 ? 'One word' : `${repair.repaired} words`} had been marked
+            near-impossible after a single bad session — a word is now knocked down at most once a
+            day, and {repair.repaired === 1 ? 'its' : 'their'} history was replayed under that rule
+            {repair.words.length > 0 && (
+              <>
+                {' '}
+                (<span lang="zh-Hant-TW">{repair.words.join('、')}</span>
+                {repair.repaired > repair.words.length ? '…' : ''})
+              </>
+            )}
+            .
+          </p>
+          <button
+            type="button"
+            className="self-start font-semibold text-brand-600 underline dark:text-brand-300"
+            onClick={() => {
+              dismissRepairNotice(repair.at);
+              setRepairDismissed(repair.at);
+            }}
+            data-testid="repair-notice-dismiss"
+          >
+            Got it
+          </button>
+        </section>
+      )}
 
       {needsBackup && (
         <p
@@ -378,5 +436,23 @@ export default function LearnPage() {
         </p>
       </section>
     </div>
+  );
+}
+
+/**
+ * Why there are fewer new words than the daily limit allows: the words already
+ * met have not stuck yet. Said in the learner's terms, with the way out.
+ */
+function SettlingHoldNote({ settling, limit }: { settling: number; limit: number }) {
+  return (
+    <p className="mt-2 text-sm text-stone-600 dark:text-stone-300" data-testid="settling-hold">
+      New words on hold: {settling} {settling === 1 ? 'word is' : 'words are'} still settling{' '}
+      <span lang="zh-Hant-TW">還沒記牢</span> (limit {limit}). Review them first — new ones return
+      as they stick, or raise the limit in{' '}
+      <Link to="/settings" className="font-semibold text-brand-600 underline dark:text-brand-300">
+        Settings
+      </Link>
+      .
+    </p>
   );
 }

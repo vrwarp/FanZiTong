@@ -86,3 +86,22 @@ describe('RecognitionCard (AC-2: no pinyin crutch)', () => {
     }
   });
 });
+
+describe('RatingButtons in practice mode', () => {
+  it('prints no interval on Again and Hard for a word already knocked down today', async () => {
+    const { RatingButtons } = await import('./RatingButtons');
+    const previews = {
+      1: { rating: 1, due: new Date(), intervalLabel: '1m', scheduledDays: 0, state: 1 },
+      2: { rating: 2, due: new Date(), intervalLabel: '6m', scheduledDays: 0, state: 1 },
+      3: { rating: 3, due: new Date(), intervalLabel: '10m', scheduledDays: 0, state: 1 },
+      4: { rating: 4, due: new Date(), intervalLabel: '4d', scheduledDays: 4, state: 2 },
+    } as const;
+    render(<RatingButtons previews={previews} onRate={() => {}} visible practice />);
+    expect(screen.getByTestId('rating-practice')).toHaveTextContent(/a pass still counts/);
+    expect(screen.getByTestId('interval-1')).toHaveTextContent('one more look');
+    expect(screen.getByTestId('interval-2')).toHaveTextContent('one more look');
+    expect(screen.getByTestId('interval-3')).toHaveTextContent('10m');
+    expect(screen.getByTestId('interval-4')).toHaveTextContent('4d');
+    expect(screen.getByTestId('rate-1').getAttribute('aria-label')).toMatch(/one more look/);
+  });
+});

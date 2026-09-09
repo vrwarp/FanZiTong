@@ -6,8 +6,13 @@ export const TONE_MARK_RE = /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/
  * Load a shell route fresh. Each Playwright context starts with an empty
  * IndexedDB, so the starter deck seeds during bootstrap; the bottom navigation
  * only renders once that has finished.
+ *
+ * `fakeClock` installs Playwright's clock before the first navigation, so a
+ * test can jump over the minute a card must wait before it is shown again
+ * (`completeSession` does this whenever the session is waiting).
  */
-export async function openApp(page: Page, path = '/') {
+export async function openApp(page: Page, path = '/', options: { fakeClock?: boolean } = {}) {
+  if (options.fakeClock) await page.clock.install();
   await page.goto(path);
   await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible({ timeout: 20_000 });
   if (path === '/') await expect(page.getByTestId('start-session')).toBeVisible();
@@ -53,11 +58,15 @@ export async function solveDrill(page: Page, opts: { wrong?: boolean } = {}) {
 export interface SessionRunSummary {
   recognitions: number;
   drills: string[];
+  /** Times the session had to wait out a card's minute. */
+  waits?: number;
 }
 
 /**
  * Drive a study session to completion. The first recognition card gets
- * `firstRating`, every other one gets Easy so the session stays short.
+ * `firstRating`, every other one gets Easy so the session stays short. A card
+ * that comes back is not shown within a minute of its last answer; when the
+ * session is waiting that minute out, the fake clock (see `openApp`) jumps it.
  */
 export async function completeSession(
   page: Page,
@@ -66,6 +75,12 @@ export async function completeSession(
   const summary: SessionRunSummary = { recognitions: 0, drills: [] };
   for (let step = 0; step < maxSteps; step += 1) {
     if (await page.getByTestId('session-summary').isVisible()) return summary;
+    if (await page.getByTestId('wait-step').isVisible()) {
+      summary.waits = (summary.waits ?? 0) + 1;
+      await page.clock.fastForward(61_000);
+      await expect(page.getByTestId('wait-step')).toHaveCount(0);
+      continue;
+    }
     if (await page.getByTestId('recognition-prompt').isVisible()) {
       await page.getByTestId('recognition-prompt').click();
       await expect(page.getByTestId('pinyin')).toBeVisible();

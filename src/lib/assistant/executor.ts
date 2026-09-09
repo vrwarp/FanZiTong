@@ -384,6 +384,7 @@ export function createToolExecutor(deps: ExecutorDeps) {
         settings: {
           activeDomains: settings.activeDomains,
           maxDailyNewCards: settings.maxDailyNewCards,
+          maxSettlingCards: settings.maxSettlingCards,
           maxDailyReviews: settings.maxDailyReviews,
           leechThreshold: settings.leechThreshold,
         },

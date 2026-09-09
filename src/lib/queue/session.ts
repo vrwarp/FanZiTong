@@ -2,10 +2,11 @@ import {
   CardState,
   type DomainCategory,
   type ExerciseType,
+  type RatingGrade,
   type UserSettings,
   type VocabCard,
 } from '@/types';
-import { MINUTE_MS } from '@/lib/util/time';
+import { isSameLocalDay, MINUTE_MS } from '@/lib/util/time';
 
 /** Cards still in (re)learning that are due within this window are re-shown in the same session. */
 export const LEARN_AHEAD_MS = 20 * MINUTE_MS;
@@ -21,6 +22,21 @@ export const DRILL_EVERY_N_CARDS = 5;
  * cap the card is left for the next session, where sleep has had a say.
  */
 export const MAX_SESSION_REQUEUES = 3;
+/**
+ * A card is not shown again within this long of its last answer.
+ *
+ * The reveal puts the reading on screen; asked again seconds later, the
+ * learner recites the screen rather than reads the characters, and a pass
+ * earned that way walks the card up its learning steps on no evidence. One
+ * minute is also what the Again button promises. When nothing else is ready
+ * the session waits it out rather than serve the card early.
+ */
+export const MIN_RETRY_GAP_MS = MINUTE_MS;
+/**
+ * Stability (days) below which a word is still "settling": the scheduler is
+ * bringing it back within a day, so it has not yet shown a next-day recall.
+ */
+export const SETTLING_STABILITY_DAYS = 1;
 
 export const SECONDS_PER_REVIEW = 30;
 export const SECONDS_PER_NEW_CARD = 45;
@@ -45,16 +61,45 @@ export interface SessionPlan {
   /** Total new cards available regardless of the daily cap. */
   totalNewCount: number;
   estimatedMinutes: number;
+  /** Studied words the scheduler is still bringing back within a day (active domains). */
+  settlingCount: number;
+  /** New cards the daily limit allowed but the settling hold kept back today. */
+  newCardsHeldBack: number;
 }
 
 export function isActiveDomain(card: VocabCard, settings: UserSettings): boolean {
   return settings.activeDomains.includes(card.domain);
 }
 
+/** A studied word the scheduler is still bringing back within a day. */
+export function isSettling(card: VocabCard): boolean {
+  return card.fsrs.state !== CardState.New && card.fsrs.stability < SETTLING_STABILITY_DAYS;
+}
+
+/**
+ * How many new cards the settling hold leaves room for. Unbounded when the
+ * hold is off (0): the daily limit is then the only cap.
+ */
+export function newCardCapacity(
+  settings: Pick<UserSettings, 'maxSettlingCards'>,
+  settlingCount: number,
+): number {
+  if (settings.maxSettlingCards <= 0) return Number.POSITIVE_INFINITY;
+  return Math.max(0, settings.maxSettlingCards - settlingCount);
+}
+
 /**
  * Build the daily study queue (PRD Journey 1, step 3): due FSRS reviews first,
  * ordered by due date, then new cards in creation order but round-robined
  * across the active domains, both capped by the daily limits remaining today.
+ *
+ * New cards are also held back while too many studied words are still
+ * settling. A heritage reader meets a never-seen word by failing it, so
+ * every new word is a day or three of retries before it sticks; twenty a day
+ * on top of yesterday's twenty is how retention slides while the learner is
+ * doing everything asked of them. The hold is the app's version of the rule
+ * every spaced-repetition community arrives at: no new material while the
+ * pile of not-yet-learned material is high.
  */
 export function buildSessionQueue(input: SessionPlanInput): SessionPlan {
   const { cards, settings, now } = input;
@@ -76,7 +121,9 @@ export function buildSessionQueue(input: SessionPlanInput): SessionPlan {
   );
 
   const reviewBudget = Math.max(0, settings.maxDailyReviews - input.reviewsDoneToday);
-  const newBudget = Math.max(0, settings.maxDailyNewCards - input.newCardsIntroducedToday);
+  const dailyNewBudget = Math.max(0, settings.maxDailyNewCards - input.newCardsIntroducedToday);
+  const settlingCount = active.filter(isSettling).length;
+  const newBudget = Math.min(dailyNewBudget, newCardCapacity(settings, settlingCount));
 
   const dueSlice = due.slice(0, reviewBudget);
   const newSlice = fresh.slice(0, newBudget);
@@ -91,6 +138,8 @@ export function buildSessionQueue(input: SessionPlanInput): SessionPlan {
     totalDueCount: due.length,
     totalNewCount: fresh.length,
     estimatedMinutes: Math.max(1, Math.round(estimatedSeconds / 60)),
+    settlingCount,
+    newCardsHeldBack: Math.max(0, Math.min(dailyNewBudget, fresh.length) - newSlice.length),
   };
 }
 
@@ -126,6 +175,33 @@ export function interleaveByDomain(cards: VocabCard[]): VocabCard[] {
 /** Whether a rated card should be re-queued within the current session. */
 export function shouldRequeue(nextDueIso: string, now: Date): boolean {
   return new Date(nextDueIso).getTime() <= now.getTime() + LEARN_AHEAD_MS;
+}
+
+/** Whether the scheduler has already heard "Again" for this card today (local day). */
+export function knockedDownToday(card: Pick<VocabCard, 'lastAgainAt'>, now: Date): boolean {
+  return Boolean(card.lastAgainAt) && isSameLocalDay(new Date(card.lastAgainAt!), now);
+}
+
+/**
+ * A word is knocked down at most once a day.
+ *
+ * The first Again tells the scheduler what it needs: stability falls,
+ * difficulty rises, the word goes back to its first step. Failing it again
+ * ten minutes later, after five other new words, says nothing more about the
+ * word — it says the learner has not slept on it yet — but FSRS-6 treats
+ * every same-day Again as a fresh verdict, multiplying stability by ~0.4 and
+ * pushing difficulty toward 10 each time. Three misses in three minutes on a
+ * never-seen word left cards pinned at maximum difficulty for good. So after
+ * the first Again of the day, further Again/Hard answers are retries: the
+ * word comes back, but the scheduler is not consulted. A pass always counts,
+ * because that is how the word climbs back out of its step.
+ */
+export function isRetry(
+  card: Pick<VocabCard, 'lastAgainAt'>,
+  rating: RatingGrade,
+  now: Date,
+): boolean {
+  return rating <= 2 && knockedDownToday(card, now);
 }
 
 /** Cards eligible for a contextual drill: in Learning/Relearning, or with lapses. */

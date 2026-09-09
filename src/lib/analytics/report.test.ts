@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS, type ReviewLog, type UserSettings, type VocabCard } from '@/types';
 import { makeCard, makeLog, reviewState } from '@/test/factories';
+import type { StudyEvent } from './events';
 import {
   buildActivity,
   buildCardReports,
@@ -8,12 +9,29 @@ import {
   buildReport,
   inferSessions,
   quantiles,
+  summarizeRecordedSessions,
 } from './report';
 
 const settings: UserSettings = { ...DEFAULT_SETTINGS, maxDailyNewCards: 10, leechThreshold: 3 };
 
 function at(minutes: number): string {
   return new Date(Date.UTC(2026, 8, 7, 8, minutes)).toISOString();
+}
+
+let seq = 0;
+function answerEvent(overrides: Partial<StudyEvent>): StudyEvent {
+  seq += 1;
+  return {
+    id: `e${seq}`,
+    sessionId: 's1',
+    seq,
+    at: at(seq),
+    kind: 'answer',
+    mode: 'daily',
+    exerciseType: 'rapid_recognition',
+    applied: true,
+    ...overrides,
+  };
 }
 
 describe('quantiles', () => {
@@ -129,6 +147,123 @@ describe('buildActivity', () => {
       p90: 5000,
       max: 5000,
     });
+  });
+});
+
+describe('retries and recorded sessions', () => {
+  const card = makeCard({ traditional: '傲嬌', fsrs: reviewState({ state: 1, stability: 0.2 }) });
+  const logs = [makeLog({ cardId: card.id, rating: 1, reviewTimestamp: at(0), stateBefore: 0 })];
+  const events: StudyEvent[] = [
+    { id: 'start', sessionId: 's1', seq: 0, at: at(0), kind: 'session_start', mode: 'daily' },
+    answerEvent({ cardId: card.id, rating: 1, correct: false }),
+    answerEvent({ cardId: card.id, rating: 1, correct: false, applied: false, retry: true }),
+    answerEvent({ cardId: card.id, rating: 2, correct: true, applied: false, retry: true }),
+    answerEvent({
+      cardId: card.id,
+      rating: 3,
+      correct: true,
+      applied: false,
+      retry: true,
+      exerciseType: 'foil_discrimination',
+    }),
+    {
+      id: 'end',
+      sessionId: 's1',
+      seq: 9,
+      at: at(9),
+      kind: 'session_end',
+      mode: 'daily',
+      completed: true,
+    },
+  ];
+
+  it('counts retries per day, per exercise and per card, from events alone', () => {
+    const activity = buildActivity(logs, events);
+    expect(activity.retries).toEqual({
+      total: 3,
+      byExercise: { rapid_recognition: 2, cloze: 0, realia_menu: 0, foil_discrimination: 1 },
+    });
+    expect(activity.days[0].retries).toBe(3);
+    expect(activity.days[0].answers).toBe(1); // the log, not the retries
+    expect(buildCardReports([card], logs, settings, events)[0].retries).toBe(3);
+  });
+
+  it('summarizes recorded sessions with their retries and busiest card', () => {
+    const sessions = summarizeRecordedSessions(events);
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0]).toMatchObject({
+      sessionId: 's1',
+      mode: 'daily',
+      answers: 4,
+      retries: 3,
+      distinctCards: 1,
+      completed: true,
+      maxAnswersOnOneCard: 4,
+      busiestCardId: card.id,
+    });
+    expect(buildActivity(logs, events).recordedSessions).toEqual(sessions);
+  });
+
+  it('reports the retries and sees a loop the review log cannot', () => {
+    const loopEvents = [
+      ...events,
+      answerEvent({ cardId: card.id, rating: 1, applied: false, retry: true }),
+      answerEvent({ cardId: card.id, rating: 1, applied: false, retry: true }),
+    ];
+    const found = buildReport([card], logs, settings, loopEvents).diagnostics;
+    const retries = found.find((d) => d.code === 'same_day_retries')!;
+    expect(retries.count).toBe(5);
+    expect(retries.examples[0]).toContain('傲嬌');
+    // Six answers on one card: invisible in the log (one row), plain in the events.
+    expect(inferSessions(logs)[0].maxAnswersOnOneCard).toBe(1);
+    expect(found.find((d) => d.code === 'in_session_repeat_loop')!.count).toBe(1);
+  });
+});
+
+describe('the settling hold in the census and diagnostics', () => {
+  const settling = Array.from({ length: 12 }, (_, i) =>
+    makeCard({ traditional: `字${i}`, fsrs: reviewState({ stability: 0.3 }) }),
+  );
+  const fresh = makeCard({ traditional: '蛋餅' });
+
+  it('counts settling words per domain and across the active domains', () => {
+    const census = buildDeckCensus(
+      [...settling, makeCard({ domain: 'church', fsrs: reviewState({ stability: 0.3 }) })],
+      { ...settings, activeDomains: ['food'] },
+    );
+    expect(census.byDomain.find((d) => d.domain === 'food')!.settling).toBe(12);
+    expect(census.byDomain.find((d) => d.domain === 'church')!.settling).toBe(1);
+    expect(census.settlingCards).toBe(12);
+  });
+
+  it('warns when the hold has closed the door on new cards', () => {
+    const found = buildReport([...settling, fresh], [], {
+      ...settings,
+      maxSettlingCards: 10,
+    }).diagnostics;
+    const hold = found.find((d) => d.code === 'settling_hold')!;
+    expect(hold.severity).toBe('warn');
+    expect(hold.detail).toContain('room for 0 new card(s)');
+    expect(hold.examples).toHaveLength(5);
+  });
+
+  it('only notes a hold that leaves some room, and says nothing when there is nothing new', () => {
+    const roomy = buildReport([...settling, fresh], [], {
+      ...settings,
+      maxSettlingCards: 15,
+    }).diagnostics;
+    expect(roomy.find((d) => d.code === 'settling_hold')!.severity).toBe('info');
+    const nothingNew = buildReport(settling, [], { ...settings, maxSettlingCards: 10 }).diagnostics;
+    expect(nothingNew.map((d) => d.code)).not.toContain('settling_hold');
+  });
+
+  it('warns when the hold is off and the settling pile is high', () => {
+    const found = buildReport([...settling, ...settling, fresh], [], {
+      ...settings,
+      maxSettlingCards: 0,
+      maxDailyNewCards: 10,
+    }).diagnostics;
+    expect(found.find((d) => d.code === 'settling_hold')!.title).toMatch(/no hold/);
   });
 });
 

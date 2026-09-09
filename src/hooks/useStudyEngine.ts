@@ -14,6 +14,8 @@ export interface StudyEngineApi {
   rate: (rating: RatingGrade) => void;
   answerDrill: (outcomes: DrillOutcome[]) => void;
   skipDrill: () => void;
+  /** Re-check a waiting session once its gap has passed. */
+  tick: () => void;
   finish: () => void;
   saveError: string | null;
 }
@@ -44,7 +46,10 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
   const reveal = useCallback(() => engine?.reveal(), [engine]);
   const rate = useCallback(
     (rating: RatingGrade) => {
-      if (engine) persist([engine.rate(rating)]);
+      if (!engine) return;
+      // A retry on a word already knocked down today changes nothing to save.
+      const review = engine.rate(rating);
+      if (review) persist([review]);
     },
     [engine, persist],
   );
@@ -55,7 +60,8 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
     [engine, persist],
   );
   const skipDrill = useCallback(() => engine?.skipDrill(), [engine]);
+  const tick = useCallback(() => engine?.tick(), [engine]);
   const finish = useCallback(() => engine?.finish(), [engine]);
 
-  return { snapshot, reveal, rate, answerDrill, skipDrill, finish, saveError };
+  return { snapshot, reveal, rate, answerDrill, skipDrill, tick, finish, saveError };
 }

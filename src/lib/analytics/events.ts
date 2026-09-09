@@ -57,6 +57,11 @@ export interface StudyEvent {
   rating?: RatingGrade;
   /** False when the answer was recorded but left the schedule alone. */
   applied?: boolean;
+  /**
+   * True for an answer on a word already knocked down today: practice that
+   * was recorded and brought the word back, but never reached the scheduler.
+   */
+  retry?: boolean;
   correct?: boolean;
   /** Time from the step appearing to the answer. */
   latencyMs?: number;

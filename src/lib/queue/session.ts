@@ -143,7 +143,8 @@ export function hasClozeSentence(card: VocabCard): boolean {
 }
 
 export function hasFoils(card: VocabCard): boolean {
-  return Boolean(card.visualFoils && card.visualFoils.filter((f) => f.trim()).length > 0);
+  const authored = [...(card.homophoneFoils ?? []), ...(card.visualFoils ?? [])];
+  return authored.some((f) => f.trim().length > 0);
 }
 
 /**

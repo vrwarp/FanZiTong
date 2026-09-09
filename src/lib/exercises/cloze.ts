@@ -47,12 +47,19 @@ export interface ClozeDistractors {
 }
 
 /**
- * Distractors for a cloze must be READABLE words that the sentence rules
- * out. Same-domain words too often fit the sentence as well (餛飩湯大碗一碗
- * is a fine order), so the readable slots come from authored distractors
- * first, then deck words from OTHER domains (prefer same length) — never
- * from the same domain while another domain can supply them. One look-alike
- * foil keeps the eyes honest.
+ * Distractors for a cloze must be READABLE words that the sentence rules out.
+ *
+ * They come from the answer's OWN domain, preferring words that share a tag
+ * with it. Drawing them from other domains — as this used to — guarantees no
+ * distractor also fits the sentence, but it hands the learner a shortcut worth
+ * more than reading: with the answer the only food word among church words,
+ * "pick the one about food" beats chance by twenty-eight points. The risk it
+ * was avoiding is already covered downstream: picking a real word that does
+ * not fit is graded as a misreading of the sentence, not of the target, and
+ * changes no schedule.
+ *
+ * One same-sound foil keeps the eyes on the characters — the spelling an IME
+ * would have offered for this reading, when the card names one.
  */
 export function pickClozeDistractors(
   card: VocabCard,
@@ -84,25 +91,33 @@ export function pickClozeDistractors(
   );
   const sameLength = (c: VocabCard) => hanChars(c.traditional).length === targetLength;
   const deckWords = (cards: VocabCard[]) => cards.map((c) => c.traditional);
-  const otherDomain = others.filter((c) => c.domain !== card.domain);
+  const tags = new Set(card.tags);
+  const sameDomain = others.filter((c) => c.domain === card.domain);
+  const sharedTag = sameDomain.filter((c) => c.tags.some((t) => tags.has(t)));
 
-  // Up to count-1 real words first, leaving one slot for a look-alike.
+  // Up to count-1 real words first, leaving one slot for a same-sound foil.
   const wordSlots = Math.max(1, count - 1);
   push(card.clozeDistractors ?? [], wordSlots);
-  push(deckWords(otherDomain.filter(sameLength)), wordSlots);
-  push(deckWords(otherDomain), wordSlots);
-  // Last resort for a single-domain deck only: same-domain words. The view's
-  // evidence-based grading protects the schedule if one of them happens to fit.
+  push(deckWords(sharedTag.filter(sameLength)), wordSlots);
+  push(deckWords(sharedTag), wordSlots);
+  push(deckWords(sameDomain.filter(sameLength)), wordSlots);
+  push(deckWords(sameDomain), wordSlots);
+  // Only when the domain cannot fill the slots does the rest of the deck.
   if (chosen.length < 2) push(deckWords(others), wordSlots);
-  // One look-alike, when the card has one that is not an accepted spelling.
-  const foils = (card.visualFoils ?? [])
-    .map((f) => expandFoil(target, f))
-    .filter((f): f is string => f !== null && !isVariantOf(card, f) && !seen.has(f));
-  const foil = foils.length > 0 ? pick(foils, rng)! : null;
+  // One misspelling, when the card names one that is not an accepted spelling.
+  // The same-sound candidates come first: they are what the learner would have
+  // had to choose between when typing the word.
+  const usable = (authored: readonly string[]) =>
+    authored
+      .map((f) => expandFoil(target, f))
+      .filter((f): f is string => f !== null && !isVariantOf(card, f) && !seen.has(f));
+  const foils = usable(card.homophoneFoils ?? []);
+  const fallback = foils.length > 0 ? foils : usable(card.visualFoils ?? []);
+  const foil = fallback.length > 0 ? pick(fallback, rng)! : null;
   if (foil) seen.add(foil);
   // Without a foil the last slot is one more readable word.
   const wordTarget = count - (foil ? 1 : 0);
-  push(deckWords(otherDomain), wordTarget);
+  push(deckWords(sameDomain), wordTarget);
   if (chosen.length < wordTarget) push(deckWords(others), wordTarget);
   return { words: chosen, foil };
 }

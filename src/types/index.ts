@@ -89,6 +89,13 @@ export interface VocabCard {
   /** Visually confusable characters/words for discrimination drills. */
   visualFoils?: string[];
   /**
+   * Same-sound, wrong-character spellings — what a Zhuyin/Pinyin IME offers for
+   * the word's reading (豆漿 → 豆醬, 便當 → 便檔). Preferred over `visualFoils`
+   * in discrimination drills, because choosing between candidates for a reading
+   * you already know is the mistake a heritage reader actually makes.
+   */
+  homophoneFoils?: string[];
+  /**
    * Accepted alternative spellings seen in the wild (e.g. 滷肉飯 → 魯肉飯,
    * 鹹酥雞 → 鹽酥雞). Never used as "wrong" foils; shown as "also written".
    */

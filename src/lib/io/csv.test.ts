@@ -103,4 +103,25 @@ describe('toCsv', () => {
     });
     expect(rows[1].exampleSentencePinyin).toBeUndefined();
   });
+
+  it('round-trips same-sound foils, so a restore does not silently degrade drills', () => {
+    const card = makeCard({
+      traditional: '豆漿',
+      pinyin: 'dòu jiāng',
+      visualFoils: ['豆槳'],
+      homophoneFoils: ['逗', '豆醬'],
+    });
+    const { rows, issues } = parseCsv(toCsv([card]));
+    expect(issues).toEqual([]);
+    expect(rows[0].homophoneFoils).toEqual(['逗', '豆醬']);
+    expect(rows[0].visualFoils).toEqual(['豆槳']);
+  });
+
+  it('reads a file written before the column existed', () => {
+    const legacy = 'traditional,pinyin,definition,foils\n豆漿,dòu jiāng,Soy milk,豆槳\n';
+    const { rows, issues } = parseCsv(legacy);
+    expect(issues).toEqual([]);
+    expect(rows[0].homophoneFoils).toEqual([]);
+    expect(rows[0].visualFoils).toEqual(['豆槳']);
+  });
 });

@@ -33,6 +33,7 @@ interface FormState {
   exampleSentencePinyin: string;
   exampleSentenceTranslation: string;
   visualFoils: string;
+  homophoneFoils: string;
   variants: string;
   spoken: string;
   variantNote: string;
@@ -50,6 +51,7 @@ const EMPTY_FORM: FormState = {
   exampleSentencePinyin: '',
   exampleSentenceTranslation: '',
   visualFoils: '',
+  homophoneFoils: '',
   variants: '',
   spoken: '',
   variantNote: '',
@@ -68,6 +70,7 @@ function toForm(card: VocabCard): FormState {
     exampleSentencePinyin: card.exampleSentencePinyin ?? '',
     exampleSentenceTranslation: card.exampleSentenceTranslation ?? '',
     visualFoils: (card.visualFoils ?? []).join(' | '),
+    homophoneFoils: (card.homophoneFoils ?? []).join(' | '),
     variants: (card.variants ?? []).join(' | '),
     spoken: card.spoken ?? '',
     variantNote: card.variantNote ?? '',
@@ -159,6 +162,8 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     card.exampleSentenceTranslation = form.exampleSentenceTranslation.trim() || undefined;
     const foils = splitList(form.visualFoils);
     card.visualFoils = foils.length ? foils : undefined;
+    const homophones = splitList(form.homophoneFoils);
+    card.homophoneFoils = homophones.length ? homophones : undefined;
     const variants = splitList(form.variants);
     card.variants = variants.length ? variants : undefined;
     card.spoken = form.spoken.trim() || undefined;
@@ -328,6 +333,20 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
           value={form.visualFoils}
           onChange={set('visualFoils')}
           data-testid="field-foils"
+        />
+      </Field>
+      <Field
+        label="Same-sound foils 同音字"
+        htmlFor="homophones"
+        hint="Wrong spellings of this reading, separated with | (e.g. 豆醬 | 逗漿). These are what an IME would have offered, and Spot the Character prefers them."
+      >
+        <input
+          id="homophones"
+          className={`${inputClass} hanzi`}
+          lang="zh-Hant-TW"
+          value={form.homophoneFoils}
+          onChange={set('homophoneFoils')}
+          data-testid="field-homophones"
         />
       </Field>
       <Field

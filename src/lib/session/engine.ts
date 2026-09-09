@@ -28,6 +28,12 @@ import {
 
 export type DrillExercise = ClozeExercise | FoilExercise | MenuExercise;
 
+/** The fields of an event that only the exercise that produced it can fill in. */
+type AnswerDetail = Pick<
+  StudyEvent,
+  'correct' | 'picked' | 'misses' | 'revealLatencyMs' | 'foilSource' | 'foilStrategy'
+>;
+
 export type SessionStep =
   { kind: 'card'; cardId: string } | { kind: 'drill'; exercise: DrillExercise };
 
@@ -485,15 +491,17 @@ export class StudyEngine {
   }
 
   /** What only the exercise knows: whether it was right, and what was picked. */
-  private answerDetail(
-    correct: boolean,
-    outcome?: DrillOutcome,
-  ): Pick<StudyEvent, 'correct' | 'picked' | 'misses' | 'revealLatencyMs'> {
-    const detail: Pick<StudyEvent, 'correct' | 'picked' | 'misses' | 'revealLatencyMs'> = {
-      correct,
-    };
+  private answerDetail(correct: boolean, outcome?: DrillOutcome): AnswerDetail {
+    const detail: AnswerDetail = { correct };
     if (outcome?.picked !== undefined) detail.picked = outcome.picked;
     if (outcome?.misses !== undefined) detail.misses = outcome.misses;
+    // Which confusion was on screen is a property of the set, not the answer,
+    // so it comes from the active exercise rather than the outcome.
+    const exercise = this.step?.kind === 'drill' ? this.step.exercise : null;
+    if (exercise?.type === 'foil_discrimination') {
+      detail.foilSource = exercise.source;
+      detail.foilStrategy = exercise.strategy;
+    }
     return detail;
   }
 
@@ -503,7 +511,7 @@ export class StudyEngine {
     exerciseType: ExerciseType,
     now: Date,
     precomputed?: Card,
-    detail?: Pick<StudyEvent, 'correct' | 'picked' | 'misses' | 'revealLatencyMs'>,
+    detail?: AnswerDetail,
   ): PersistedReview {
     const card = this.cards.get(cardId)!;
     const nextCard =

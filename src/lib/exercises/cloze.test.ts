@@ -19,15 +19,18 @@ describe('buildClozeExercise', () => {
     expect(ex.answer).toBe('團契');
   });
 
-  it('uses readable words from OTHER domains plus one look-alike, never a variant', () => {
+  it('uses readable words from the SAME domain plus one misspelling, never a variant', () => {
     const card = pool.find((c) => c.traditional === '團契')!;
     const { words, foil } = pickClozeDistractors(card, pool, 3, mulberry32(2));
     expect(words).toHaveLength(2);
     const byWord = new Map(pool.map((c) => [c.traditional, c]));
     for (const word of words) expect(byWord.has(word)).toBe(true);
     expect(['團隊', '契合', '團夥']).toContain(foil);
-    // A same-domain word (禱告) could fit the sentence too, so only other domains are used.
-    for (const word of words) expect(byWord.get(word)!.domain).not.toBe('church');
+    // Other-domain distractors let "pick the one about church" beat reading the
+    // sentence, so the answer's own domain is drained before anything else is
+    // touched. This pool holds exactly one other church word, so it must appear
+    // and the remaining slot may fall back.
+    expect(words).toContain('禱告');
     const withVariant = { ...card, variants: ['團隊'] };
     const again = pickClozeDistractors(withVariant, pool, 3, mulberry32(2));
     expect(again.foil).not.toBe('團隊');
@@ -50,8 +53,11 @@ describe('buildClozeExercise', () => {
     );
   });
 
-  it('names its foil explicitly and never draws a readable distractor from the same domain', async () => {
+  it('names its foil explicitly and keeps readable distractors in the answer’s domain', async () => {
     const deck = await buildStarterDeck();
+    const byWord = new Map(deck.map((c) => [c.traditional, c]));
+    let checked = 0;
+    let sameDomain = 0;
     for (const card of deck) {
       const ex = buildClozeExercise(card, deck, mulberry32(7));
       if (!ex) continue;
@@ -59,10 +65,17 @@ describe('buildClozeExercise', () => {
       for (const option of ex.options) {
         if (option === ex.answer || option === ex.foil) continue;
         const authored = card.clozeDistractors?.includes(option) ?? false;
-        const word = deck.find((c) => c.traditional === option);
-        expect(authored || (word !== undefined && word.domain !== card.domain)).toBe(true);
+        const word = byWord.get(option);
+        expect(authored || word !== undefined).toBe(true);
+        if (authored || !word) continue;
+        checked += 1;
+        if (word.domain === card.domain) sameDomain += 1;
       }
     }
+    // A handful of small domains cannot fill three slots on their own, so the
+    // rule is overwhelming rather than absolute.
+    expect(checked).toBeGreaterThan(100);
+    expect(sameDomain / checked).toBeGreaterThan(0.95);
   });
 
   it('carries pinyin and gloss for deck-word options', () => {

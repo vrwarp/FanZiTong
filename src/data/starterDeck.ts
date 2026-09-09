@@ -16,11 +16,14 @@ import { uuid } from '@/lib/util/id';
  * network works exactly as before.
  *
  * Compact authoring format, one row per card:
- * [traditional, pinyin, definition, tags, sentence, sentence pinyin, translation, foils, variants?]
- * `tags`, `foils` and `variants` are "|"-delimited. Foils are visually
- * confusable look-alikes (radical/component swaps, near-homographs) for §5.4
- * drills. Variants are accepted real-world spellings (滷肉飯 → 魯肉飯) that are
- * shown as "also written" and never used as wrong answers.
+ * [traditional, pinyin, definition, tags, sentence, sentence pinyin, translation,
+ *  foils, variants?, homophones?]
+ * `tags`, `foils`, `variants` and `homophones` are "|"-delimited. Foils are
+ * visually confusable look-alikes (radical/component swaps, near-homographs).
+ * Homophones are same-reading, wrong-character spellings — the candidates an
+ * IME offers — and are the §5.4 drill's first choice. Variants are accepted
+ * real-world spellings (滷肉飯 → 魯肉飯) that are shown as "also written" and
+ * never used as wrong answers.
  */
 export type SeedEntry = [
   traditional: string,
@@ -32,6 +35,7 @@ export type SeedEntry = [
   translation: string,
   foils: string,
   variants?: string,
+  homophones?: string,
 ];
 
 export interface StarterDeckData {
@@ -96,6 +100,7 @@ export function materializeStarterDeck(
       translation,
       foils,
       variants,
+      homophones,
     ] of data.entries[domain]) {
       // Stagger createdAt so the new-card queue keeps authoring order.
       const createdAt = new Date(now.getTime() + index).toISOString();
@@ -111,6 +116,7 @@ export function materializeStarterDeck(
         exampleSentencePinyin: sentencePinyin,
         exampleSentenceTranslation: translation,
         visualFoils: foils.split('|').filter(Boolean),
+        homophoneFoils: homophones ? homophones.split('|').filter(Boolean) : undefined,
         variants: variants ? variants.split('|').filter(Boolean) : undefined,
         variantNote: data.variantNotes[traditional],
         notes: data.notes[traditional],
@@ -163,6 +169,7 @@ const CONTENT_KEYS = [
   'exampleSentencePinyin',
   'exampleSentenceTranslation',
   'visualFoils',
+  'homophoneFoils',
   'variants',
   'variantNote',
   'notes',

@@ -104,12 +104,29 @@ describe('FoilExerciseView', () => {
     render(<FoilExerciseView exercise={exercise} card={card} onComplete={onComplete} />);
     expect(screen.getByTestId('foil-cue')).toHaveTextContent(card.pinyin);
     const options = screen.getAllByTestId('foil-option');
-    expect(options).toHaveLength(4);
+    // Sets are sized by what the card can honestly support: three balanced
+    // tiles when only two alternatives exist, four when two positions cross.
+    expect(options).toHaveLength(exercise.options.length);
     expect(options.filter((o) => o.dataset.correct === 'true')).toHaveLength(1);
     await userEvent.click(options.find((o) => o.dataset.correct === 'true')!);
     expect(screen.getByTestId('foil-feedback')).toHaveTextContent(/Correct/);
     await userEvent.click(screen.getByTestId('drill-continue'));
     expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: true, misses: 0 }]);
+  });
+
+  it('gives an odd tile the full width instead of leaving a hole beside it', () => {
+    // 滷肉飯 has two alternatives at one position, so the honest set is three.
+    render(<FoilExerciseView exercise={exercise} card={card} onComplete={vi.fn()} />);
+    const options = screen.getAllByTestId('foil-option');
+    expect(options).toHaveLength(3);
+    expect(options[2].className).toContain('col-span-2');
+    expect(options[0].className).not.toContain('col-span-2');
+  });
+
+  it('tells the learner which confusion is on screen', () => {
+    render(<FoilExerciseView exercise={exercise} card={card} onComplete={vi.fn()} />);
+    const hint = exercise.source === 'homophone' ? /sounds the same/i : /not the silhouette/i;
+    expect(screen.getByTestId('foil-feedback')).toHaveTextContent(hint);
   });
 
   it('explains a wrong pick character by character and requires one corrective tap', async () => {

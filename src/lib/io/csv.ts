@@ -20,6 +20,7 @@ export const CSV_HEADERS = [
   'variant_note',
   'cloze_distractors',
   'notes',
+  'homophones',
 ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
@@ -49,6 +50,9 @@ const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
   foils: 'foils',
   visual_foils: 'foils',
   visualfoils: 'foils',
+  homophones: 'homophones',
+  homophone_foils: 'homophones',
+  homophonefoils: 'homophones',
   example_pinyin: 'example_pinyin',
   example_sentence_pinyin: 'example_pinyin',
   example_translation: 'example_translation',
@@ -137,6 +141,7 @@ export function parseCsv(text: string): ParseResult {
       domain,
       tags: splitList(record.tags),
       visualFoils: splitList(record.foils),
+      homophoneFoils: splitList(record.homophones),
       variants: splitList(record.variants),
       clozeDistractors: splitList(record.cloze_distractors),
       warnings,
@@ -177,6 +182,7 @@ export function toCsv(cards: VocabCard[]): string {
     variant_note: c.variantNote ?? '',
     cloze_distractors: (c.clozeDistractors ?? []).join('|'),
     notes: c.notes ?? '',
+    homophones: (c.homophoneFoils ?? []).join('|'),
   }));
   const body = Papa.unparse(
     { fields: [...CSV_HEADERS], data: data.map((d) => CSV_HEADERS.map((h) => d[h])) },

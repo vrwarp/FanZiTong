@@ -1,3 +1,4 @@
+import type { FoilSource, FoilStrategy } from '@/lib/exercises/foil';
 import type { ExerciseType, RatingGrade } from '@/types';
 
 /** Bumped whenever the shape of a `StudyEvent` changes incompatibly. */
@@ -67,6 +68,16 @@ export interface StudyEvent {
   picked?: string;
   /** Misses before the shape was found, for drills that allow a retry. */
   misses?: number;
+  /**
+   * Spot the Character only: which confusion the wrong options were made of,
+   * and how the set was balanced. Accuracy on this drill is not comparable
+   * across these — a set of same-sound candidates asks a harder question than
+   * a set of look-alikes, and both ask a harder one than the sets built before
+   * the generator stopped leaving the answer at the centre. Recorded so the
+   * diagnostics can split the history rather than show a cliff.
+   */
+  foilSource?: FoilSource;
+  foilStrategy?: FoilStrategy;
 
   // ---- scheduler state, before and after ----------------------------
   stateBefore?: number;

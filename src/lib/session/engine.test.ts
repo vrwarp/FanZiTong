@@ -290,7 +290,8 @@ describe('StudyEngine — drill scoring (recognition ≠ recall)', () => {
       traditional: '火鍋',
       fsrs: reviewState(),
       exampleSentenceTraditional: '冬天吃火鍋。',
-      visualFoils: ['火渦'],
+      // Two positions, so the set can be crossed rather than starred.
+      visualFoils: ['火渦', '伙鍋'],
     });
     const all = [...pool, reviewCard];
     const drills = buildDrillExercises(

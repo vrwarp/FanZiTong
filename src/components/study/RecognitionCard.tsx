@@ -3,6 +3,7 @@ import { Hanzi } from '@/components/ui/Hanzi';
 import { DomainBadge } from '@/components/ui/Badge';
 import type { RatingPreview } from '@/lib/fsrs/scheduler';
 import { cn } from '@/lib/util/cn';
+import type { CharacterKnowledge } from '@/lib/stats/characters';
 import { CardState, type DomainCategory, type RatingGrade, type VocabCard } from '@/types';
 import { CharacterChips } from './CharacterChips';
 import { ExampleSentence } from './ExampleSentence';
@@ -13,6 +14,8 @@ export interface RecognitionCardProps {
   card: VocabCard;
   /** Deck, for the character-level "also in" layer. */
   pool: VocabCard[];
+  /** What the learner has read each character in before, for the chips. */
+  knowledge?: CharacterKnowledge;
   revealed: boolean;
   previews: Record<RatingGrade, RatingPreview> | null;
   revealLatencyMs?: number | null;
@@ -55,6 +58,7 @@ function readRevealCount(): number {
 export function RecognitionCard({
   card,
   pool,
+  knowledge,
   revealed,
   previews,
   revealLatencyMs,
@@ -205,6 +209,7 @@ export function RecognitionCard({
             <CharacterChips
               card={card}
               pool={pool}
+              knowledge={knowledge}
               selected={selectedChar}
               onSelect={setSelectedChar}
             />

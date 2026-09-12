@@ -191,3 +191,63 @@ Not a visual round: the material was one device's
   reproduces the stored state.
 - The export reads retries from the event log and gains `same_day_retries`
   and `settling_hold`.
+
+## Analytics round, 2026-09-12
+
+The second export from the same phone — six study days, 356 graded answers,
+81 words, 464 events across 18 recorded sessions, three of the days on the
+build that shipped the previous round — read through a heritage-language
+teacher's lens
+([`critique/analytics-2026-09-12/critique-heritage-teacher.md`](critique/analytics-2026-09-12/critique-heritage-teacher.md)),
+then an ideation–critique loop over every change the critique implied
+([`critique/analytics-2026-09-12/ideation.md`](critique/analytics-2026-09-12/ideation.md)).
+
+**What held.** Retention came back (58% → 80 / 70 / 78%); no card took over a
+session; the 81 retries are all in the event log; the learner finished every
+one of 18 sittings, median 5½ minutes. First-sight ratings are shaped by
+domain (16 of 33 food words read on sight; 37 of 48 church, slang and anime
+words failed) and the rating is honest: reveal time runs 2.1 s for _Easy_ up to
+5.6 s for _Again_.
+
+**Findings**
+
+1. Every drill lapse in the file — ten — landed on a word the learner had read
+   correctly the same day, or would read correctly within two minutes. 餛飩湯,
+   the file's one card at maximum difficulty, has passed recognition on every
+   day since it was first seen; both its lapses are drills.
+2. The app's day was midnight, the scheduler's was 5 p.m. local (`ts-fsrs`
+   counts whole UTC days), and 34% of the learner's answers fell after
+   midnight. Eight overnight recalls were scored as same-day; a five-hour gap
+   was scored as a day (歸剛, 0.21 → 1.89 days of stability).
+3. A new word got three looks in five minutes and nothing until tomorrow, where
+   the model itself predicted 73–79% recall; only two of 47 first-_Again_ words
+   had a second sitting on the day they were met.
+4. One card left on screen for 2 h 49 min was 77% of the file's time on task.
+5. 149 characters met, 116 read in a real test, 33 only ever failed: almost
+   every hard word fails on one character the learner has never read anywhere
+   else (滷味 beside 滷肉飯, 意麵 beside 牛肉麵, 米粥 beside 米飯), and the
+   reveal did not say which.
+
+**Decisions**
+
+- A word in Review is moved only by reading: a drill miss on it books a
+  recognition look in the same session instead of charging a lapse, and any
+  drill answer on a word already read that day is practice.
+- One day for everything, starting at 4 a.m.: streak, caps, "done for today",
+  the once-a-day rule, the analytics rows — and the scheduler is told the time
+  in study days, so a night's sleep is a day and an hour across midnight is
+  not.
+- A third learning step at three hours (relearning: ten minutes, three hours),
+  so a new word's third look lands in the next sitting; the summary says how
+  many come back later today.
+- At most two minutes counted per answer; the raw latency stays on the event.
+- Each chip on the reveal says "read in 滷肉飯", "missed in 滷味" or "new
+  here"; Stats gains _Read on sight_ and _Characters_; the export carries both
+  tables.
+- Histories replayed once more (`scheduleRepairV2`), each proved under the
+  rule and steps of its day before being recomputed. On this device: 81 of 81
+  cards verify, 40 change, total lapses 17 → 5, 餛飩湯 from 0.61 d / 9.57 / two
+  lapses to 7.30 d / 6.35 / none.
+- The export gains `drill_lapse_after_reading`, `scheduler_day_mismatch` and
+  `backgrounded_answers`, practice and booked counts per day, lapse sources on
+  saturated cards, and moves to report version 2.

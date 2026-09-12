@@ -1,5 +1,12 @@
 import type { FSRS, Grade } from 'ts-fsrs';
-import { fromFsrsCard, newFsrsState, toFsrsCard } from '@/lib/fsrs/scheduler';
+import {
+  createScheduler,
+  fromFsrsCard,
+  LEGACY_LEARNING_STEPS,
+  LEGACY_RELEARNING_STEPS,
+  newFsrsState,
+  toFsrsCard,
+} from '@/lib/fsrs/scheduler';
 import type { FsrsState, RatingGrade, ReviewLog, VocabCard } from '@/types';
 
 let counter = 0;
@@ -131,15 +138,27 @@ export interface StudiedAnswer {
   exercise?: ReviewLog['exerciseType'];
 }
 
+/** The scheduler the app ran before any rule: ts-fsrs's own steps, real time, no fuzz. */
+export function legacyScheduler(): FSRS {
+  return createScheduler(
+    { targetRetention: 0.9 },
+    {
+      enableFuzz: false,
+      learningSteps: LEGACY_LEARNING_STEPS,
+      relearningSteps: LEGACY_RELEARNING_STEPS,
+    },
+  );
+}
+
 /**
- * Study a card the way the app did before the one-Again-a-day rule: every
- * answer goes straight to FSRS and writes a log. What a device holds from
- * before the rule looks exactly like this.
+ * Study a card the way the app did before any rule: every answer goes
+ * straight to FSRS on the UTC clock with the legacy steps, and writes a log.
+ * What a device holds from before the rules looks exactly like this.
  */
 export function studyOldWay(
   card: VocabCard,
   answers: StudiedAnswer[],
-  scheduler: FSRS,
+  scheduler: FSRS = legacyScheduler(),
 ): { card: VocabCard; logs: ReviewLog[] } {
   let current = card;
   const logs: ReviewLog[] = [];
@@ -189,4 +208,24 @@ export const GONG_WAN_TANG_HISTORY: StudiedAnswer[] = [
   { at: '2026-09-08T18:45:21.000Z', rating: 3, exercise: 'foil_discrimination' },
   { at: '2026-09-08T18:46:00.000Z', rating: 1, exercise: 'foil_discrimination' },
   { at: '2026-09-08T18:47:12.000Z', rating: 3, exercise: 'foil_discrimination' },
+];
+
+/**
+ * 餛飩湯 as it happened on the same phone over five days: failed on first
+ * sight, then read correctly in recognition on every later day — and charged
+ * two lapses, both by drills: a Menu slip miss 53 seconds after a pass, and a
+ * Fill the Blank miss followed 65 seconds later by a pass. Difficulty 9.57,
+ * the file's one saturated card.
+ */
+export const HUN_TUN_TANG_HISTORY: StudiedAnswer[] = [
+  { at: '2026-09-08T14:00:35.000Z', rating: 1 },
+  { at: '2026-09-08T14:02:13.000Z', rating: 3 },
+  { at: '2026-09-08T14:02:57.000Z', rating: 3, exercise: 'foil_discrimination' },
+  { at: '2026-09-08T14:03:06.000Z', rating: 3 },
+  { at: '2026-09-09T17:22:04.000Z', rating: 3 },
+  { at: '2026-09-09T17:22:57.000Z', rating: 1, exercise: 'realia_menu' },
+  { at: '2026-09-09T17:24:07.000Z', rating: 3 },
+  { at: '2026-09-11T05:10:26.000Z', rating: 3 },
+  { at: '2026-09-12T08:29:59.000Z', rating: 1, exercise: 'cloze' },
+  { at: '2026-09-12T08:31:04.000Z', rating: 3 },
 ];

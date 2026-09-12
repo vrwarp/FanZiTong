@@ -58,10 +58,17 @@ export interface StudyEvent {
   /** False when the answer was recorded but left the schedule alone. */
   applied?: boolean;
   /**
-   * True for an answer on a word already knocked down today: practice that
-   * was recorded and brought the word back, but never reached the scheduler.
+   * True for an answer on a word that already had its verdict today — knocked
+   * down, or read correctly in recognition: practice that was recorded and
+   * brought the word back, but never reached the scheduler.
    */
   retry?: boolean;
+  /**
+   * True for a drill miss on a word in Review: a word in Review is moved only
+   * by reading, so the miss booked a recognition look instead of charging a
+   * lapse. The look, when it comes, is an ordinary answer event on the card.
+   */
+  booked?: boolean;
   correct?: boolean;
   /** Time from the step appearing to the answer. */
   latencyMs?: number;

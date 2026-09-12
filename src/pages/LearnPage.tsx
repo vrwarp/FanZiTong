@@ -304,9 +304,24 @@ export default function LearnPage() {
         >
           <p>
             <span className="font-semibold">Schedules recomputed.</span>{' '}
-            {repair.repaired === 1 ? 'One word' : `${repair.repaired} words`} had been marked
-            near-impossible after a single bad session — a word is now knocked down at most once a
-            day, and {repair.repaired === 1 ? 'its' : 'their'} history was replayed under that rule
+            {repair.rule >= 2 ? (
+              <>
+                {repair.repaired === 1 ? 'One word' : `${repair.repaired} words`} had{' '}
+                {repair.repaired === 1 ? 'its' : 'their'} history replayed under two new rules: a
+                word in review is moved only by your reading (a drill miss books a look instead of
+                counting as forgotten), and the scheduler now counts days the way you do, from 4
+                a.m., so a word read again after a night&apos;s sleep gets credit for the night. A
+                new word also gets a third look three hours on, so a next-day miss on a word still
+                being learned is no longer counted as forgotten
+              </>
+            ) : (
+              <>
+                {repair.repaired === 1 ? 'One word' : `${repair.repaired} words`} had been marked
+                near-impossible after a single bad session — a word is now knocked down at most once
+                a day, and {repair.repaired === 1 ? 'its' : 'their'} history was replayed under that
+                rule
+              </>
+            )}
             {repair.words.length > 0 && (
               <>
                 {' '}

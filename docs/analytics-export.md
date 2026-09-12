@@ -45,44 +45,64 @@ what a diagnosis needs:
 ```
 schema, schemaVersion, eventVersion, generatedAt
 readme            — orientation, in the file itself
-environment       — app version, build, IANA timezone, UTC offset, locale
+environment       — app version, build, IANA timezone, UTC offset, locale, and
+                    dayStartHour: the local hour the study day turns over (4)
 report
   settings        — the learner's scheduling settings, verbatim
   deck            — counts per domain: states, content coverage, what has been
                     seen, how many words are still settling; and newQueueAhead,
                     the domains of the next 200 new cards, run-length encoded
-  activity        — per local day and per inferred session, plus the sessions
-                    the engine recorded (with their retries); rating matrices
-                    by exercise and by pre-answer state; answer-time quantiles;
-                    where the lapses came from; retries by exercise
+  activity        — per study day (answers the scheduler heard, and the
+                    practice it was not consulted on) and per inferred session,
+                    plus the sessions the engine recorded (with their retries);
+                    rating matrices by exercise and by pre-answer state;
+                    answer-time quantiles; where the lapses came from; retries
+                    and booked readings by exercise; firstSight, how each
+                    domain was rated the first time its words were seen
+  characters      — the characters behind the studied words: how many were
+                    met, how many have been read in a real test, and the ones
+                    that have only ever been failed, with their words
   cards[]         — one row per STUDIED card: content coverage, FSRS state,
                     the full answer history with the gap before each answer,
-                    retries, and per-card flags
+                    retries, booked readings, lapses charged by drills, and
+                    per-card flags
   diagnostics[]   — the patterns the app found in its own data
 events            — real session boundaries and answers, including the ones
                     FSRS ignored (see below)
 ```
+
+A **day** anywhere in the report is the study day: it turns over at 4 a.m.
+local (`environment.dayStartHour`), so a sitting at 01:20 belongs to the
+evening before it. The streak, the daily caps, the one verdict a word gets a
+day, and the clock the scheduler is told all use the same day; nothing in the
+app counts midnight days any more.
 
 Read `report.diagnostics` first. Each finding carries a stable `code`, a
 severity, the numbers behind it, and a handful of examples to open.
 
 ### Diagnostic codes
 
-| code                            | severity  | what it means                                                                                                                                                                                        |
-| ------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `in_session_repeat_loop`        | high      | One card took 6+ answers in a single session (recorded sessions count retries). The engine now caps a card at three returns a session and a minute between looks, so a loop this size predates that. |
-| `same_day_retries`              | info      | Answers on a word already knocked down that day: recorded, and the word came back, but FSRS was not consulted again. Events only.                                                                    |
-| `settling_hold`                 | warn/info | Studied words still under a day of stability against the new-card hold: how much room is left for new cards today (warn when none), or that the hold is off and the pile is high.                    |
-| `difficulty_saturated`          | high      | Cards at difficulty ≥ 9.5. FSRS has no harsher verdict left, so the card cannot climb out on its own.                                                                                                |
-| `stability_floor`               | warn      | Stability ≤ 0.05 days: every interval the card is given is measured in minutes.                                                                                                                      |
-| `leech`                         | warn      | At or past the learner's leech threshold, and still scheduled like any other card.                                                                                                                   |
-| `guess_floor_lapse`             | warn      | A lapse charged by a one-in-four multiple-choice drill on a card already in Review. A hit on such a card changes nothing, so drills can only cost it ground.                                         |
-| `domain_starvation`             | warn      | An active domain that has never had a single card introduced.                                                                                                                                        |
-| `new_queue_single_domain_run`   | warn      | The upcoming new cards are a long run of one domain — days of study before another domain appears.                                                                                                   |
-| `answered_faster_than_readable` | info      | Answers under 800 ms: reflex, or a card still on screen from a re-queue.                                                                                                                             |
-| `shared_answer_timing`          | info      | One duration written onto several cards, so time on task is overstated.                                                                                                                              |
-| `missing_state_before`          | info      | Answers with no pre-answer state, which then count against the daily review budget by default.                                                                                                       |
-| `deck_barely_touched`           | info      | Almost none of the deck has been answered, so deck-wide averages are dominated by cards nobody has met.                                                                                              |
+| code                            | severity  | what it means                                                                                                                                                                                                                                                                         |
+| ------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `in_session_repeat_loop`        | high      | One card took 6+ answers in a single session (recorded sessions count retries). The engine now caps a card at three returns a session and a minute between looks, so a loop this size predates that.                                                                                  |
+| `same_day_retries`              | info      | Answers on a word that already had its verdict that day — knocked down, or read correctly in recognition: recorded, and the word came back, but FSRS was not consulted again. Events only.                                                                                            |
+| `settling_hold`                 | warn/info | Studied words still under a day of stability against the new-card hold: how much room is left for new cards today (warn when none), or that the hold is off and the pile is high.                                                                                                     |
+| `difficulty_saturated`          | high      | Cards at difficulty ≥ 9.5. FSRS has no harsher verdict left, so the card cannot climb out on its own. Each example says how many of the card's lapses a drill charged rather than a reading.                                                                                          |
+| `stability_floor`               | warn      | Stability ≤ 0.05 days: every interval the card is given is measured in minutes.                                                                                                                                                                                                       |
+| `leech`                         | warn      | At or past the learner's leech threshold, and still scheduled like any other card.                                                                                                                                                                                                    |
+| `drill_lapse_after_reading`     | warn      | A lapse charged by a four-tile drill on a word in Review, or on a word the learner had read correctly earlier that day — a discrimination slip charged as forgetting. A word in Review is now moved only by reading (a drill miss books a look instead), so these predate that build. |
+| `scheduler_day_mismatch`        | warn      | Consecutive answers the scheduler dated on a different side of a day (whole UTC calendar days) than the learner's study day; how many were a night's sleep scored as same-day. The scheduler is now told the time in study days, so these predate that build.                         |
+| `backgrounded_answers`          | info      | Answers over ten minutes in the event log — a phone put away with a card on screen — and how much time on task they overstate. The engine now counts at most two minutes per answer.                                                                                                  |
+| `domain_starvation`             | warn      | An active domain that has never had a single card introduced.                                                                                                                                                                                                                         |
+| `new_queue_single_domain_run`   | warn      | The upcoming new cards are a long run of one domain — days of study before another domain appears.                                                                                                                                                                                    |
+| `answered_faster_than_readable` | info      | Answers under 800 ms: reflex, or a card still on screen from a re-queue.                                                                                                                                                                                                              |
+| `shared_answer_timing`          | info      | One duration written onto several cards, so time on task is overstated.                                                                                                                                                                                                               |
+| `missing_state_before`          | info      | Answers with no pre-answer state, which then count against the daily review budget by default.                                                                                                                                                                                        |
+| `deck_barely_touched`           | info      | Almost none of the deck has been answered, so deck-wide averages are dominated by cards nobody has met.                                                                                                                                                                               |
+
+`guess_floor_lapse` (report version 1) was retired in favour of
+`drill_lapse_after_reading`, which says the same thing with the reading beside
+it.
 
 ### The event log
 
@@ -103,11 +123,18 @@ An event knows things a review log cannot:
 
 - the session it belongs to, and its position in that session;
 - `applied: false` answers — the ones FSRS ignored and never logged;
-- `retry: true` answers — a word is knocked down at most once a day, so a
-  second Again or Hard that day, or a drill answer on a word already knocked
-  down, brings the word back without consulting the scheduler. These are the
-  answers that used to pin a word at maximum difficulty after one bad session;
-  now they exist only here;
+- `retry: true` answers — a word has one verdict a day: the first Again, or a
+  recognition pass. A second Again or Hard that day, or a drill answer on a
+  word already knocked down or already read that day, brings the word back
+  without consulting the scheduler. These are the answers that used to pin a
+  word at maximum difficulty after one bad session; now they exist only here;
+- `booked: true` answers — a drill miss on a word in Review. A word in Review
+  is moved only by reading, so the miss books a recognition look in the same
+  session instead of charging a lapse; the look itself is an ordinary answer
+  on the card, a minute or more later;
+- `latencyMs` is the raw time on the step. The review log counts at most two
+  minutes per answer, so a phone put away with a card on screen no longer
+  reads as hours of study; the raw figure stays here for diagnosis;
 - `repeatIndex`, how many times this card had already come round this session;
 - `revealLatencyMs`, how long the prompt was studied before the answer was
   asked for, separately from how long the rating took;
@@ -131,3 +158,6 @@ studied — a diagnosis about 貢丸湯 is unreadable without the word itself.
 `schemaVersion` covers the envelope and the report; `eventVersion` covers the
 shape of the rows in `events`. Both are integers, and both are bumped only when
 a change would break a reader. New optional fields do not bump either.
+`report.reportVersion` is 2 since the day rows moved from calendar days to
+study days; a reader joining `days[].day` to a calendar should read
+`environment.dayStartHour` first.

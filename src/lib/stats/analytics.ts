@@ -49,12 +49,27 @@ export function countDueWithin(cards: VocabCard[], now: Date, hours: number): nu
 }
 
 /**
- * Reviews that fall due between now and the end of local tomorrow — the
- * "tomorrow" number every screen quotes (a calendar day, not a 24-hour window).
+ * Reviews that fall due between now and the end of tomorrow's study day — the
+ * "tomorrow" number every screen quotes (a study day, not a 24-hour window).
  */
 export function countDueByTomorrow(cards: VocabCard[], now: Date): number {
   const start = now.getTime();
   const end = startOfDay(addDays(now, 2)).getTime();
+  return cards.filter((c) => {
+    if (c.fsrs.state === CardState.New) return false;
+    const due = new Date(c.fsrs.due).getTime();
+    return due > start && due < end;
+  }).length;
+}
+
+/**
+ * Words that come back later this study day — a new word at its three-hour
+ * learning step, or a lapsed one at its second — so the summary can say the
+ * evening has something in it.
+ */
+export function countDueLaterToday(cards: VocabCard[], now: Date): number {
+  const start = now.getTime();
+  const end = startOfDay(addDays(now, 1)).getTime();
   return cards.filter((c) => {
     if (c.fsrs.state === CardState.New) return false;
     const due = new Date(c.fsrs.due).getTime();

@@ -19,11 +19,22 @@ import {
   SETTLING_STABILITY_DAYS,
 } from '@/lib/queue/session';
 import { MASTERY_STABILITY_DAYS } from '@/lib/stats/analytics';
+import {
+  characterKnowledge,
+  firstSightProfile,
+  summarizeCharacters,
+  type FirstSightDomain,
+} from '@/lib/stats/characters';
 import { dayKey, MINUTE_MS } from '@/lib/util/time';
 import { sortEvents, type SessionMode, type StudyEvent } from './events';
 
-/** Bumped whenever the report's shape changes incompatibly. */
-export const ANALYTICS_REPORT_VERSION = 1;
+/**
+ * Bumped whenever the report's shape changes incompatibly. Version 2: day
+ * rows are keyed by the study day (turning over at 4 a.m. local, see
+ * `environment.dayStartHour`) rather than the calendar day, and carry the
+ * answers the scheduler was not consulted on.
+ */
+export const ANALYTICS_REPORT_VERSION = 2;
 
 /** A quiet stretch longer than this ends an inferred session. */
 export const SESSION_GAP_MS = 30 * MINUTE_MS;
@@ -39,6 +50,10 @@ export const DIFFICULTY_SATURATED = 9.5;
 export const STABILITY_FLOOR_DAYS = 0.05;
 /** Answers on one card in one session, above which the session was a loop. */
 export const LOOP_ANSWER_THRESHOLD = 6;
+/** An answer that took longer than this was a phone in a pocket, not a reading. */
+export const BACKGROUNDED_ANSWER_MS = 10 * MINUTE_MS;
+/** How many not-yet-read characters the census lists by name. */
+export const NOT_YET_CHARACTERS = 20;
 
 export type RatingCounts = Record<RatingGrade, number>;
 export type ExerciseCounts = Record<ExerciseType, number>;
@@ -195,8 +210,13 @@ export function buildDeckCensus(cards: VocabCard[], settings: UserSettings): Dec
 // ---- activity --------------------------------------------------------
 
 export interface DayActivity {
-  /** Local calendar day, the same key the app's streak and daily caps use. */
+  /**
+   * Local study day (YYYY-MM-DD), turning over at `environment.dayStartHour`
+   * — the same key the app's streak, daily caps and once-a-day rule use, so a
+   * sitting at 01:20 belongs to the evening before it.
+   */
   day: string;
+  /** Answers the scheduler heard (review logs). */
   answers: number;
   distinctCards: number;
   newCardsIntroduced: number;
@@ -205,8 +225,17 @@ export interface DayActivity {
   ratings: RatingCounts;
   exercises: ExerciseCounts;
   retention: number | null;
-  /** Answers on words already knocked down that day (events only; never logged). */
+  /** Answers on words that already had their verdict that day (events only; never logged). */
   retries: number;
+  /**
+   * Every answer the scheduler was not consulted on, from the event log:
+   * retries, booked looks, hits on words in Review, misreads. The learner's
+   * day is `answers + practice`; the per-exercise counts above are of
+   * `answers` only.
+   */
+  practice: number;
+  /** Drill misses on words in Review that booked a recognition look instead of a lapse. */
+  booked: number;
 }
 
 export interface InferredSession {
@@ -258,6 +287,13 @@ export interface Activity {
   recordedSessions: RecordedSession[];
   /** Retries across the event log: recorded, never scheduled. */
   retries: { total: number; byExercise: ExerciseCounts };
+  /** Drill misses on words in Review that booked a reading (events only). */
+  booked: { total: number; byExercise: ExerciseCounts };
+  /**
+   * The heritage reader's fingerprint: how each domain was rated the first
+   * time its words were seen. Good/Easy on sight was already in the lexicon.
+   */
+  firstSight: FirstSightDomain[];
   ratingsByExercise: Record<ExerciseType, RatingCounts>;
   ratingsByStateBefore: Record<StateName, RatingCounts>;
   latencyMsByExercise: Record<ExerciseType, Quantiles>;
@@ -273,7 +309,11 @@ function chronological(logs: ReviewLog[]): ReviewLog[] {
   return [...logs].sort((a, b) => a.reviewTimestamp.localeCompare(b.reviewTimestamp));
 }
 
-export function buildActivity(logs: ReviewLog[], events: StudyEvent[] = []): Activity {
+export function buildActivity(
+  logs: ReviewLog[],
+  events: StudyEvent[] = [],
+  cards: VocabCard[] = [],
+): Activity {
   const ordered = chronological(logs);
   const days = new Map<string, DayActivity & { cardIds: Set<string> }>();
   const firstSeen = new Map<string, string>();
@@ -307,6 +347,8 @@ export function buildActivity(logs: ReviewLog[], events: StudyEvent[] = []): Act
         exercises: emptyExercises(),
         retention: null,
         retries: 0,
+        practice: 0,
+        booked: 0,
         cardIds: new Set<string>(),
       };
       days.set(key, day);
@@ -331,16 +373,26 @@ export function buildActivity(logs: ReviewLog[], events: StudyEvent[] = []): Act
     }
   }
 
-  // Retries live only in the event log; a day with nothing else gets no row,
-  // because a retry needs a knock-down (logged) earlier the same day.
+  // Practice lives only in the event log; a day with nothing else gets no row,
+  // because a retry needs a verdict (logged) earlier the same day.
   const retriesByExercise = emptyExercises();
+  const bookedByExercise = emptyExercises();
   let retryTotal = 0;
+  let bookedTotal = 0;
   for (const event of events) {
-    if (event.kind !== 'answer' || !event.retry || !event.exerciseType) continue;
-    retryTotal += 1;
-    retriesByExercise[event.exerciseType] += 1;
+    if (event.kind !== 'answer' || !event.exerciseType) continue;
     const day = days.get(dayKey(new Date(event.at)));
-    if (day) day.retries += 1;
+    if (event.applied === false && day) day.practice += 1;
+    if (event.retry) {
+      retryTotal += 1;
+      retriesByExercise[event.exerciseType] += 1;
+      if (day) day.retries += 1;
+    }
+    if (event.booked) {
+      bookedTotal += 1;
+      bookedByExercise[event.exerciseType] += 1;
+      if (day) day.booked += 1;
+    }
   }
 
   const dayList = Array.from(days.values())
@@ -361,6 +413,8 @@ export function buildActivity(logs: ReviewLog[], events: StudyEvent[] = []): Act
     sessions: inferSessions(ordered),
     recordedSessions: summarizeRecordedSessions(events),
     retries: { total: retryTotal, byExercise: retriesByExercise },
+    booked: { total: bookedTotal, byExercise: bookedByExercise },
+    firstSight: firstSightProfile(cards, logs),
     ratingsByExercise,
     ratingsByStateBefore,
     latencyMsByExercise: Object.fromEntries(
@@ -519,8 +573,12 @@ export interface CardReport {
   answers: number;
   ratings: RatingCounts;
   exercises: ExerciseCounts;
-  /** Answers on this word while it was already knocked down that day (events only). */
+  /** Answers on this word that the scheduler was not consulted on (events only). */
   retries: number;
+  /** Drill misses on this word while in Review that booked a reading (events only). */
+  booked: number;
+  /** How many of the card's lapses were charged by a drill rather than a reading. */
+  lapsesFromDrills: number;
   /** Answers the export could not include, once the history cap was hit. */
   historyTruncated: number;
   history: CardAnswer[];
@@ -546,9 +604,11 @@ export function buildCardReports(
     else byCard.set(log.cardId, [log]);
   }
   const retriesByCard = new Map<string, number>();
+  const bookedByCard = new Map<string, number>();
   for (const event of events) {
-    if (event.kind !== 'answer' || !event.retry || !event.cardId) continue;
-    retriesByCard.set(event.cardId, (retriesByCard.get(event.cardId) ?? 0) + 1);
+    if (event.kind !== 'answer' || !event.cardId) continue;
+    if (event.retry) retriesByCard.set(event.cardId, (retriesByCard.get(event.cardId) ?? 0) + 1);
+    if (event.booked) bookedByCard.set(event.cardId, (bookedByCard.get(event.cardId) ?? 0) + 1);
   }
 
   const touched = cards.filter((c) => c.fsrs.reps > 0 || byCard.has(c.id));
@@ -596,6 +656,13 @@ export function buildCardReports(
         ratings,
         exercises,
         retries: retriesByCard.get(card.id) ?? 0,
+        booked: bookedByCard.get(card.id) ?? 0,
+        lapsesFromDrills: history.filter(
+          (l) =>
+            l.rating === 1 &&
+            l.exerciseType !== 'rapid_recognition' &&
+            (l.stateBefore === CardState.Review || l.stateBefore === CardState.Relearning),
+        ).length,
         historyTruncated: history.length - kept.length,
         history: kept.map((log, i) => {
           const previous = kept[i - 1];
@@ -651,6 +718,7 @@ export function buildDiagnostics(
   deck: DeckCensus,
   activity: Activity,
   cardReports: CardReport[] = [],
+  events: StudyEvent[] = [],
 ): Diagnostic[] {
   const found: Diagnostic[] = [];
   const label = (id: string) => {
@@ -692,10 +760,11 @@ export function buildDiagnostics(
       severity: 'info',
       title: 'Answers that never reached the scheduler',
       detail:
-        `${activity.retries.total} answer(s) were retries on a word already knocked down that ` +
-        `day: recorded, and the word came back, but FSRS was not consulted again. A word is ` +
-        `knocked down at most once a day, so a second same-day miss cannot push its difficulty ` +
-        `toward 10. These answers appear in events only.`,
+        `${activity.retries.total} answer(s) were retries on a word that already had its verdict ` +
+        `that day — knocked down, or read correctly in recognition: recorded, and the word came ` +
+        `back, but FSRS was not consulted again. A word is knocked down at most once a day, so a ` +
+        `second same-day miss cannot push its difficulty toward 10. These answers appear in ` +
+        `events only.`,
       count: activity.retries.total,
       examples: top.slice(0, 5).map(([id, n]) => `${label(id)} · ${n} retries`),
     });
@@ -738,6 +807,11 @@ export function buildDiagnostics(
 
   const saturated = cards.filter((c) => c.fsrs.difficulty >= DIFFICULTY_SATURATED);
   if (saturated.length > 0) {
+    const source = (c: VocabCard) => {
+      const report = cardReports.find((r) => r.id === c.id);
+      if (!report || c.fsrs.lapses === 0) return '';
+      return ` · ${report.lapsesFromDrills} of ${c.fsrs.lapses} lapse(s) from drills`;
+    };
     found.push({
       code: 'difficulty_saturated',
       severity: 'high',
@@ -745,9 +819,10 @@ export function buildDiagnostics(
       detail:
         `${saturated.length} card(s) sit at difficulty ≥ ${DIFFICULTY_SATURATED}. FSRS has no ` +
         `harsher verdict left, so further failures cannot change the schedule and the card ` +
-        `cannot climb out on its own.`,
+        `cannot climb out on its own. Each example says where its lapses came from: a lapse ` +
+        `charged by a drill is one the reading may never have confirmed.`,
       count: saturated.length,
-      examples: saturated.slice(0, 5).map((c) => label(c.id)),
+      examples: saturated.slice(0, 5).map((c) => `${label(c.id)}${source(c)}`),
     });
   }
 
@@ -781,23 +856,132 @@ export function buildDiagnostics(
     });
   }
 
-  const guessFloorLapses = logs.filter(
-    (l) =>
-      l.rating === 1 &&
-      l.exerciseType !== 'rapid_recognition' &&
-      (l.stateBefore === CardState.Review || l.stateBefore === CardState.Relearning),
-  );
-  if (guessFloorLapses.length > 0) {
+  // A drill lapse on a word in Review, or on a word the learner had read
+  // correctly earlier that day: a discrimination slip charged as forgetting.
+  const passesByCardDay = new Set<string>();
+  for (const log of logs) {
+    if (log.exerciseType === 'rapid_recognition' && log.rating >= 3) {
+      passesByCardDay.add(`${log.cardId}|${dayKey(new Date(log.reviewTimestamp))}`);
+    }
+  }
+  const drillLapses = chronological(logs).filter((l, index, all) => {
+    if (l.rating !== 1 || l.exerciseType === 'rapid_recognition') return false;
+    if (l.stateBefore === CardState.Review) return true;
+    const day = dayKey(new Date(l.reviewTimestamp));
+    return all
+      .slice(0, index)
+      .some(
+        (p) =>
+          p.cardId === l.cardId &&
+          p.exerciseType === 'rapid_recognition' &&
+          p.rating >= 3 &&
+          dayKey(new Date(p.reviewTimestamp)) === day,
+      );
+  });
+  if (drillLapses.length > 0) {
+    const afterReading = drillLapses.filter((l) =>
+      passesByCardDay.has(`${l.cardId}|${dayKey(new Date(l.reviewTimestamp))}`),
+    ).length;
     found.push({
-      code: 'guess_floor_lapse',
+      code: 'drill_lapse_after_reading',
       severity: 'warn',
-      title: 'Lapses charged by multiple-choice drills',
+      title: 'Lapses charged by a drill the reading contradicts',
       detail:
-        `${guessFloorLapses.length} of ${activity.lapses.total} lapse(s) came from a drill with ` +
-        `a one-in-four guess floor, on a card already in Review or Relearning. A hit on such a ` +
-        `card changes nothing, so drills can only cost these cards ground.`,
-      count: guessFloorLapses.length,
-      examples: guessFloorLapses.slice(0, 5).map((l) => `${l.exerciseType} · ${label(l.cardId)}`),
+        `${drillLapses.length} of ${activity.lapses.total} lapse(s) were charged by a ` +
+        `four-tile drill on a word in Review, ${afterReading} of them on a day the learner had ` +
+        `already read the word correctly in recognition. A forced-choice miss is a ` +
+        `discrimination slip, not a forgetting. A word in Review is now moved only by reading ` +
+        `— a drill miss books a recognition look instead — and any drill answer on a word ` +
+        `already read that day is practice; the first launch of that build replays the ` +
+        `history under the rule, so these predate it.`,
+      count: drillLapses.length,
+      examples: drillLapses.slice(0, 5).map((l) => `${l.exerciseType} · ${label(l.cardId)}`),
+    });
+  }
+
+  // The scheduler measured elapsed time in whole UTC calendar days before it
+  // was told the time in study days; for a learner west of UTC that put the
+  // day boundary in the late afternoon.
+  const byCardChrono = new Map<string, ReviewLog[]>();
+  for (const log of chronological(logs)) {
+    const list = byCardChrono.get(log.cardId);
+    if (list) list.push(log);
+    else byCardChrono.set(log.cardId, [log]);
+  }
+  const utcDay = (iso: string) => iso.slice(0, 10);
+  const daysBetween = (a: string, b: string) =>
+    Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
+  const mismatched: { log: ReviewLog; previous: ReviewLog; scheduler: number; study: number }[] =
+    [];
+  let pairs = 0;
+  for (const history of byCardChrono.values()) {
+    for (let i = 1; i < history.length; i += 1) {
+      const previous = history[i - 1];
+      const log = history[i];
+      pairs += 1;
+      const scheduler = daysBetween(utcDay(previous.reviewTimestamp), utcDay(log.reviewTimestamp));
+      const study = daysBetween(
+        dayKey(new Date(previous.reviewTimestamp)),
+        dayKey(new Date(log.reviewTimestamp)),
+      );
+      if (scheduler !== study) mismatched.push({ log, previous, scheduler, study });
+    }
+  }
+  if (mismatched.length > 0) {
+    const overnightAsSameDay = mismatched.filter((m) => m.scheduler === 0 && m.study >= 1).length;
+    const hours = (m: (typeof mismatched)[number]) =>
+      round(
+        (new Date(m.log.reviewTimestamp).getTime() -
+          new Date(m.previous.reviewTimestamp).getTime()) /
+          3_600_000,
+        1,
+      );
+    found.push({
+      code: 'scheduler_day_mismatch',
+      severity: 'warn',
+      title: 'Reviews the scheduler dated on the wrong day',
+      detail:
+        `${mismatched.length} of ${pairs} consecutive answer pair(s) fell on different sides of ` +
+        `a day for the scheduler (whole UTC calendar days) than for the learner (study days ` +
+        `from 4 a.m. local); ${overnightAsSameDay} of them were a night's sleep scored as ` +
+        `same-day, which uses FSRS's short-term formula instead of the recall formula that ` +
+        `lets an overnight pass grow stability. The scheduler is now told the time in study ` +
+        `days, and the first launch of that build replays the history on that clock, so these ` +
+        `predate it.`,
+      count: mismatched.length,
+      examples: mismatched
+        .slice(0, 5)
+        .map(
+          (m) =>
+            `${label(m.log.cardId)} · ${hours(m)} h apart · scheduler ${m.scheduler} d, study ${m.study} d`,
+        ),
+    });
+  }
+
+  const backgrounded = events.filter(
+    (e) => e.kind === 'answer' && (e.latencyMs ?? 0) > BACKGROUNDED_ANSWER_MS,
+  );
+  if (backgrounded.length > 0) {
+    const excessMs = backgrounded.reduce(
+      (sum, e) => sum + Math.max(0, (e.latencyMs ?? 0) - BACKGROUNDED_ANSWER_MS),
+      0,
+    );
+    found.push({
+      code: 'backgrounded_answers',
+      severity: 'info',
+      title: 'Answers that took longer than a reading can',
+      detail:
+        `${backgrounded.length} answer(s) took over ${Math.round(BACKGROUNDED_ANSWER_MS / MINUTE_MS)} ` +
+        `minutes — a phone put away with a card on screen, about ${Math.round(excessMs / MINUTE_MS)} ` +
+        `minute(s) in all. Time on task written before this build is overstated by that much; ` +
+        `the engine now counts at most two minutes per answer and keeps the raw latency here.`,
+      count: backgrounded.length,
+      examples: backgrounded
+        .slice(0, 5)
+        .map(
+          (e) =>
+            `${e.at} · ${label(e.cardId ?? '')} · ${Math.round((e.latencyMs ?? 0) / MINUTE_MS)} min`,
+        ),
     });
   }
 
@@ -907,11 +1091,40 @@ export function buildDiagnostics(
 
 // ---- the report ------------------------------------------------------
 
+/**
+ * The characters behind the words: which have been read in a real test and
+ * which have only ever been failed. Almost every hard word fails on one
+ * character the learner has never read anywhere else.
+ */
+export interface CharacterCensus {
+  /** Distinct characters across the studied words. */
+  met: number;
+  /** Read correctly on first sight or on a later day, in at least one word. */
+  read: number;
+  /** Met, never read in a real test. */
+  notYet: number;
+  /** The not-yet characters, most-failed first, with the words they appear in. */
+  notYetExamples: { char: string; words: string[]; failedIn: string[] }[];
+}
+
+export function buildCharacterCensus(cards: VocabCard[], logs: ReviewLog[]): CharacterCensus {
+  const summary = summarizeCharacters(characterKnowledge(cards, logs));
+  return {
+    met: summary.met,
+    read: summary.read,
+    notYet: summary.notYet,
+    notYetExamples: summary.notYetChars
+      .slice(0, NOT_YET_CHARACTERS)
+      .map((f) => ({ char: f.char, words: f.words, failedIn: f.failedIn })),
+  };
+}
+
 export interface AnalyticsReport {
   reportVersion: number;
   settings: UserSettings;
   deck: DeckCensus;
   activity: Activity;
+  characters: CharacterCensus;
   cards: CardReport[];
   diagnostics: Diagnostic[];
 }
@@ -923,15 +1136,16 @@ export function buildReport(
   events: StudyEvent[] = [],
 ): AnalyticsReport {
   const deck = buildDeckCensus(cards, settings);
-  const activity = buildActivity(logs, events);
+  const activity = buildActivity(logs, events, cards);
   const cardReports = buildCardReports(cards, logs, settings, events);
   return {
     reportVersion: ANALYTICS_REPORT_VERSION,
     settings,
     deck,
     activity,
+    characters: buildCharacterCensus(cards, logs),
     cards: cardReports,
-    diagnostics: buildDiagnostics(cards, logs, settings, deck, activity, cardReports),
+    diagnostics: buildDiagnostics(cards, logs, settings, deck, activity, cardReports, events),
   };
 }
 

@@ -113,6 +113,12 @@ export interface VocabCard {
    * retries that come back but never reach FSRS (`isRetry` in lib/queue).
    */
   lastAgainAt?: string;
+  /**
+   * When the scheduler last heard a recognition pass (Good or Easy) for this
+   * card. A drill can move a word only while it is still being learned and
+   * has not been read today; after a reading, the day's verdict is in.
+   */
+  lastPassAt?: string;
   createdAt: string;
   updatedAt: string;
 }

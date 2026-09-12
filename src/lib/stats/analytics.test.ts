@@ -4,6 +4,7 @@ import {
   averageRetrievability,
   computeStreak,
   countDueByTomorrow,
+  countDueLaterToday,
   countNewCardsIntroducedToday,
   countReviewsToday,
   dailySeries,
@@ -133,16 +134,35 @@ describe('card-level diagnostics', () => {
 });
 
 describe('countDueByTomorrow', () => {
-  it('counts reviews due from now to the end of local tomorrow, never new cards', () => {
+  it("counts reviews due from now to the end of tomorrow's study day, never new cards", () => {
     const now = new Date(2026, 8, 5, 20, 0); // 20:00 local
     const at = (d: Date) => ({ ...makeCard({}), fsrs: { ...reviewState(), due: d.toISOString() } });
     const cards = [
       at(new Date(2026, 8, 5, 21, 0)), // later tonight
       at(new Date(2026, 8, 6, 23, 30)), // tomorrow, after the 24-hour mark
-      at(new Date(2026, 8, 7, 0, 30)), // the day after: excluded
+      at(new Date(2026, 8, 7, 0, 30)), // still tomorrow's evening: the day turns at 4 a.m.
+      at(new Date(2026, 8, 7, 5, 0)), // the day after: excluded
       at(new Date(2026, 8, 5, 19, 0)), // already due: excluded
       makeCard({}), // new: excluded
     ];
-    expect(countDueByTomorrow(cards, now)).toBe(2);
+    expect(countDueByTomorrow(cards, now)).toBe(3);
+  });
+});
+
+describe('countDueLaterToday', () => {
+  it('counts the learning steps that fall later in the study day', () => {
+    const now = new Date(2026, 8, 5, 20, 0);
+    const at = (d: Date, state = 1) => ({
+      ...makeCard({}),
+      fsrs: { ...reviewState({ state }), due: d.toISOString() },
+    });
+    const cards = [
+      at(new Date(2026, 8, 5, 23, 0)), // the three-hour step, tonight
+      at(new Date(2026, 8, 6, 1, 0)), // after midnight, still today
+      at(new Date(2026, 8, 6, 9, 0)), // tomorrow: excluded
+      at(new Date(2026, 8, 5, 19, 0)), // already due: excluded
+      makeCard({}), // new: excluded
+    ];
+    expect(countDueLaterToday(cards, now)).toBe(2);
   });
 });

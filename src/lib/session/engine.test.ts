@@ -5,7 +5,13 @@ import { mulberry32 } from '@/lib/util/random';
 import { CardState, type VocabCard } from '@/types';
 import { makeCard, makePool, reviewState } from '@/test/factories';
 import { buildDrillExercises, selectDrillCards } from './drillPlan';
-import { StudyEngine, describeDrillOutcome, drillRatingFor, summarizeResults } from './engine';
+import {
+  MAX_COUNTED_ANSWER_MS,
+  StudyEngine,
+  describeDrillOutcome,
+  drillRatingFor,
+  summarizeResults,
+} from './engine';
 import { DEFAULT_SETTINGS } from '@/types';
 
 const scheduler = createScheduler({ targetRetention: 0.9 }, { enableFuzz: false });
@@ -778,5 +784,179 @@ describe('StudyEngine — a card waits its turn', () => {
     engine.rate(1); // card 1 likewise; both are now inside their minute
     // Card 0 is the only foil-able candidate besides card 1, and both are waiting.
     expect(engine.snapshot().step?.kind).toBe('wait');
+  });
+});
+
+describe('StudyEngine — a word in Review is moved only by reading', () => {
+  const reviewCard = () =>
+    makeCard({
+      traditional: '火鍋',
+      fsrs: reviewState({ due: '2026-09-05T07:00:00.000Z' }),
+      exampleSentenceTraditional: '冬天吃火鍋。',
+      visualFoils: ['火渦', '伙鍋'],
+    });
+
+  it('books a recognition look for a drill miss on a Review card instead of charging a lapse', () => {
+    const pool = makePool();
+    const card = reviewCard();
+    const all = [...pool, card];
+    const drills = buildDrillExercises('foil_discrimination', [card], all, mulberry32(9));
+    const events: StudyEvent[] = [];
+    const c = clock('2026-09-05T08:00:00.000Z');
+    // A daily session whose first step is the drill: the miss must book a card, not a lapse.
+    const engine = engineFor(all, [pool[0].id], {
+      drills,
+      interleaveDrills: true,
+      now: c.now,
+      onEvent: (e) => events.push(e),
+    });
+    expect(engine.snapshot().step?.kind).toBe('drill');
+    expect(describeDrillOutcome(card, false, true, c.now())).toMatch(
+      /^In review.*only your reading/,
+    );
+    expect(describeDrillOutcome(card, true, true, c.now())).toMatch(
+      /^In review 複習中 — no change/,
+    );
+
+    expect(engine.answerDrill([{ cardId: card.id, correct: false, picked: '火渦' }])).toEqual([]);
+    const after = engine.getCard(card.id)!;
+    expect(after.fsrs).toEqual(card.fsrs);
+    expect(after.lastAgainAt).toBeUndefined();
+    const miss = events.filter((e) => e.kind === 'answer').at(-1)!;
+    expect(miss).toMatchObject({
+      exerciseType: 'foil_discrimination',
+      applied: false,
+      booked: true,
+      correct: false,
+      picked: '火渦',
+      rating: 1,
+    });
+    expect(miss.retry).toBeUndefined();
+    expect(engine.snapshot().results.at(-1)).toMatchObject({ retry: true, applied: false });
+    // The card is now in the queue, once, behind the planned card.
+    expect(engine.remainingCardIds()).toEqual([pool[0].id, card.id]);
+    expect(engine.snapshot().total).toBe(2);
+
+    c.advance(30_000);
+    engine.rate(4);
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: card.id });
+    c.advance(30_000);
+    // The reading is what the scheduler hears.
+    const read = engine.rate(3)!;
+    expect(read.log).toMatchObject({
+      rating: 3,
+      exerciseType: 'rapid_recognition',
+      stateBefore: 2,
+    });
+    expect(read.card.fsrs.reps).toBe(card.fsrs.reps + 1);
+    expect(read.card.fsrs.lapses).toBe(0);
+    expect(read.card.lastPassAt).toBe(c.now().toISOString());
+    expect(engine.snapshot().status).toBe('complete');
+  });
+
+  it('books each card once a session and carries the booking across a pause', () => {
+    const pool = makePool();
+    const card = reviewCard();
+    const all = [...pool, card];
+    const drills = buildDrillExercises('foil_discrimination', [card, card], all, mulberry32(9));
+    const engine = engineFor(all, [], { drills, interleaveDrills: true });
+    engine.answerDrill([{ cardId: card.id, correct: false }]);
+    engine.answerDrill([{ cardId: card.id, correct: false }]);
+    expect(engine.remainingCardIds()).toEqual([card.id]);
+    const progress = engine.serialize();
+    expect(progress.booked).toEqual([card.id]);
+    // Resumed: the booked card is in the saved queue; a new miss cannot add it twice.
+    const resumed = engineFor(all, engine.remainingCardIds(), {
+      drills: buildDrillExercises('foil_discrimination', [card], all, mulberry32(9)),
+      interleaveDrills: true,
+      restore: progress,
+    });
+    resumed.answerDrill([{ cardId: card.id, correct: false }]);
+    expect(resumed.remainingCardIds()).toEqual([card.id]);
+  });
+
+  it('leaves a standalone drill miss on a Review card as practice, and asks it once more', () => {
+    const pool = makePool();
+    const card = reviewCard();
+    const all = [...pool, card];
+    const drills = buildDrillExercises('foil_discrimination', [card], all, mulberry32(9));
+    const events: StudyEvent[] = [];
+    const engine = engineFor(all, [], {
+      drills,
+      interleaveDrills: false,
+      onEvent: (e) => events.push(e),
+    });
+    expect(engine.answerDrill([{ cardId: card.id, correct: false }])).toEqual([]);
+    expect(engine.getCard(card.id)?.fsrs).toEqual(card.fsrs);
+    expect(events.filter((e) => e.kind === 'answer').at(-1)).toMatchObject({ booked: true });
+    // The missed item comes back before the end, as before; nothing is queued for recognition.
+    expect(engine.snapshot().step?.kind).toBe('drill');
+    expect(engine.remainingCardIds()).toEqual([]);
+  });
+
+  it('treats any drill answer on a word already read today as practice', () => {
+    const pool = makePool();
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const card = makeCard({
+      traditional: '火鍋',
+      fsrs: reviewState({ state: 1, stability: 0.3, due: '2026-09-05T07:00:00.000Z' }),
+      exampleSentenceTraditional: '冬天吃火鍋。',
+      visualFoils: ['火渦', '伙鍋'],
+      lastPassAt: '2026-09-05T07:30:00.000Z',
+    });
+    const all = [...pool, card];
+    const drills = buildDrillExercises('foil_discrimination', [card, card], all, mulberry32(9));
+    const events: StudyEvent[] = [];
+    const engine = engineFor(all, [], {
+      drills,
+      interleaveDrills: false,
+      now: c.now,
+      onEvent: (e) => events.push(e),
+    });
+    expect(describeDrillOutcome(card, false, true, c.now())).toMatch(/^Practice — you read it/);
+    expect(engine.answerDrill([{ cardId: card.id, correct: false }])).toEqual([]);
+    expect(engine.answerDrill([{ cardId: card.id, correct: true }])).toEqual([]);
+    expect(engine.getCard(card.id)?.fsrs).toEqual(card.fsrs);
+    expect(events.filter((e) => e.kind === 'answer').map((e) => e.retry)).toEqual([true, true]);
+    // Yesterday's reading is spent: a miss counts again.
+    const tomorrow = new Date('2026-09-06T08:00:00.000Z');
+    expect(describeDrillOutcome(card, false, true, tomorrow)).toMatch(/^Again/);
+  });
+
+  it('records the day of a recognition pass, and not of a drill hit', () => {
+    const pool = makePool();
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor(pool, [pool[0].id, pool[1].id], { now: c.now });
+    const hard = engine.rate(2)!;
+    expect(hard.card.lastPassAt).toBeUndefined();
+    const good = engine.rate(3)!;
+    expect(good.card.lastPassAt).toBe(c.now().toISOString());
+  });
+});
+
+describe('StudyEngine — time on task', () => {
+  it('counts at most two minutes for one answer and keeps the raw latency on the event', () => {
+    const pool = makePool();
+    const events: StudyEvent[] = [];
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor(pool, [pool[0].id, pool[1].id], {
+      now: c.now,
+      onEvent: (e) => events.push(e),
+    });
+    // The phone goes in a pocket for three hours with the card on screen.
+    c.advance(3 * 60 * 60_000);
+    engine.reveal();
+    const { log } = engine.rate(4)!;
+    expect(log.timeSpentMs).toBe(MAX_COUNTED_ANSWER_MS);
+    expect(engine.snapshot().results[0].timeMs).toBe(MAX_COUNTED_ANSWER_MS);
+    expect(events.filter((e) => e.kind === 'answer')[0].latencyMs).toBe(3 * 60 * 60_000);
+    expect(engine.snapshot().elapsedMs).toBe(MAX_COUNTED_ANSWER_MS);
+    // A normal answer is counted in full, and the session clock moves with it.
+    c.advance(5000);
+    engine.rate(4);
+    expect(engine.snapshot().results[1].timeMs).toBe(5000);
+    expect(engine.snapshot().elapsedMs).toBe(MAX_COUNTED_ANSWER_MS + 5000);
+    const end = events.find((e) => e.kind === 'session_end')!;
+    expect(end.elapsedMs).toBe(MAX_COUNTED_ANSWER_MS + 5000);
   });
 });

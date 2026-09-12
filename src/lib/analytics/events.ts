@@ -78,6 +78,8 @@ export interface StudyEvent {
   repeatIndex?: number;
   /** The wrong option the learner picked, when the exercise knows it. */
   picked?: string;
+  /** Fill the Blank only: the sentence the blank was cut from, so repeats can be seen. */
+  sentence?: string;
   /** Misses before the shape was found, for drills that allow a retry. */
   misses?: number;
   /**

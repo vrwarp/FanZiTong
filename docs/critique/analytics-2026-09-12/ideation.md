@@ -262,3 +262,27 @@ The round counts if the next file shows, on this device:
 - a next-day not-_Again_ rate on first-_Again_ words above the 58% here, if
   the three-hour step is doing what it should;
 - and the learner still finishing every sitting.
+
+## Addendum: sentence rotation (reported after the round)
+
+The learner noticed that Fill the Blank and the reveal kept showing one
+sentence per word, and that a few key characters were enough to answer it. The
+export bears it out: 貢丸湯 was clozed seven times in a week, always on the
+same frame; 燙青菜 six; 餛飩湯 five. The fix is in `lib/exercises/cloze.ts`:
+
+- several sentences per card (`extraSentences`), and sentences borrowed from
+  other cards that happen to use the word, hosts the learner has met first;
+- the reveal rotates to the sentence shown least recently; a cloze takes a
+  sentence not clozed in the last seven days, preferably not the last reveal's,
+  and returns nothing for a word with every sentence cooling off;
+- a fixed-width blank and character-sharing distractors, so neither the length
+  of the gap nor a single recognised character settles it;
+- the card records what it showed, the event carries the sentence, and the
+  export reports `cloze_sentence_repeats`.
+
+What this does not fix: a foil still differs from the answer at one authored
+position, so a learner who knows the foil's weak character can still pick by
+that; only more authored foils per word would vary it. Watch the next export
+for `cloze_sentence_repeats` at zero after this build and for whether the
+cloze hit rate on the rotated words moves at all — if it does not, the
+sentences were never the cue.

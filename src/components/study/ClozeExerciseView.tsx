@@ -88,11 +88,7 @@ export function ClozeExerciseView({ exercise, card, onComplete }: ClozeExerciseV
   };
 
   const blankText =
-    phase === 'wrong'
-      ? foil
-      : done
-        ? exercise.answer
-        : (lastMisread ?? clozeBlank(exercise.answer));
+    phase === 'wrong' ? foil : done ? exercise.answer : (lastMisread ?? clozeBlank());
 
   return (
     <div className="flex flex-1 flex-col gap-4" data-testid="cloze-exercise">

@@ -114,6 +114,7 @@ export function materializeImport(
         exampleSentencePinyin: row.exampleSentencePinyin ?? current.exampleSentencePinyin,
         exampleSentenceTranslation:
           row.exampleSentenceTranslation ?? current.exampleSentenceTranslation,
+        extraSentences: row.extraSentences?.length ? row.extraSentences : current.extraSentences,
         visualFoils: row.visualFoils.length ? row.visualFoils : current.visualFoils,
         homophoneFoils: row.homophoneFoils.length ? row.homophoneFoils : current.homophoneFoils,
         variants: row.variants.length ? row.variants : current.variants,
@@ -126,6 +127,8 @@ export function materializeImport(
         // A backup restore carries FSRS state; a plain vocab file keeps the learner's progress.
         fsrs: row.fsrs ?? current.fsrs,
         lastAgainAt: row.lastAgainAt ?? current.lastAgainAt,
+        lastPassAt: row.lastPassAt ?? current.lastPassAt,
+        sentencesShown: row.sentencesShown ?? current.sentencesShown,
         updatedAt: nowIso,
       });
       continue;
@@ -145,6 +148,9 @@ export function materializeImport(
       updatedAt: row.updatedAt ?? createdAt,
     };
     if (row.lastAgainAt) card.lastAgainAt = row.lastAgainAt;
+    if (row.lastPassAt) card.lastPassAt = row.lastPassAt;
+    if (row.sentencesShown?.length) card.sentencesShown = row.sentencesShown;
+    if (row.extraSentences?.length) card.extraSentences = row.extraSentences;
     if (row.exampleSentenceTraditional)
       card.exampleSentenceTraditional = row.exampleSentenceTraditional;
     if (row.exampleSentencePinyin) card.exampleSentencePinyin = row.exampleSentencePinyin;

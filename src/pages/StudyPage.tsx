@@ -227,6 +227,7 @@ function StudySession({
           card={snapshot.card}
           pool={initialCards}
           knowledge={knowledge}
+          sentence={snapshot.sentence}
           revealed={snapshot.revealed}
           previews={snapshot.previews}
           revealLatencyMs={snapshot.revealLatencyMs}

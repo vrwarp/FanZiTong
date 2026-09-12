@@ -37,6 +37,19 @@ export const cardDraftSchema = z.object({
   exampleSentenceTraditional: z.string().trim().max(80).nullish(),
   exampleSentencePinyin: z.string().trim().max(200).nullish(),
   exampleSentenceTranslation: z.string().trim().max(200).nullish(),
+  extraSentences: z
+    .array(
+      z.object({
+        traditional: z.string().trim().min(1).max(80),
+        pinyin: z.string().trim().max(200).nullish(),
+        translation: z.string().trim().max(200).nullish(),
+      }),
+    )
+    .max(8)
+    .nullish()
+    .describe(
+      'Further sentences the word appears in; the app rotates through them. Add to these rather than replacing exampleSentenceTraditional.',
+    ),
   visualFoils: z.array(z.string().trim().min(1).max(20)).max(6).nullish(),
   variants: z.array(z.string().trim().min(1).max(20)).max(6).nullish(),
   variantNote: z.string().trim().max(200).nullish(),
@@ -49,6 +62,7 @@ export type CardDraft = z.infer<typeof cardDraftSchema>;
 
 export const MISSING_FIELDS = [
   'sentence',
+  'second_sentence',
   'sentencePinyin',
   'translation',
   'foils',
@@ -73,6 +87,8 @@ export interface CardSummary {
   spoken?: string;
   hasSentence: boolean;
   sentenceAligned: boolean;
+  /** How many sentences the word has of its own, primary included. */
+  sentenceCount: number;
   foilCount: number;
   state: string;
   lapses: number;

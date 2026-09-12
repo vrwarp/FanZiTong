@@ -1,6 +1,6 @@
 import type { Card, FSRS, Grade, IPreview } from 'ts-fsrs';
-import type { ClozeExercise } from '@/lib/exercises/cloze';
-import { buildClozeExercise } from '@/lib/exercises/cloze';
+import type { ClozeExercise, SentenceCandidate } from '@/lib/exercises/cloze';
+import { buildClozeExercise, chooseSentence, noteSentenceShown } from '@/lib/exercises/cloze';
 import type { FoilExercise } from '@/lib/exercises/foil';
 import { buildFoilExercise } from '@/lib/exercises/foil';
 import type { MenuExercise } from '@/lib/exercises/menu';
@@ -50,7 +50,7 @@ export const MAX_COUNTED_ANSWER_MS = 2 * MINUTE_MS;
 /** The fields of an event that only the exercise that produced it can fill in. */
 type AnswerDetail = Pick<
   StudyEvent,
-  'correct' | 'picked' | 'misses' | 'revealLatencyMs' | 'foilSource' | 'foilStrategy'
+  'correct' | 'picked' | 'misses' | 'revealLatencyMs' | 'foilSource' | 'foilStrategy' | 'sentence'
 >;
 
 /** How long a step took: what is counted, and what actually elapsed. */
@@ -224,6 +224,8 @@ export interface EngineSnapshot {
   elapsedMs: number;
   /** How long the learner looked at the prompt before revealing (current card). */
   revealLatencyMs: number | null;
+  /** The sentence the reveal shows for the current card: rotated, so the frame changes. */
+  sentence: SentenceCandidate | null;
 }
 
 /**
@@ -266,6 +268,9 @@ export class StudyEngine {
   private step: SessionStep | null = null;
   private revealed = false;
   private revealLatencyMs: number | null = null;
+  private revealSentence: SentenceCandidate | null = null;
+  /** Cards whose sentence record changed and have not been handed to the caller to save. */
+  private readonly touched = new Set<string>();
   private preview: { at: number; log: IPreview } | null = null;
   private answered = 0;
   private nextDrillAt = DRILL_EVERY_N_CARDS;
@@ -377,9 +382,26 @@ export class StudyEngine {
       startedAt: this.startedAt,
       elapsedMs: (this.completedAt ?? this.now().getTime()) - this.startedAt,
       revealLatencyMs: this.revealLatencyMs,
+      sentence: this.revealed ? this.revealSentence : null,
     };
     return this.cached;
   };
+
+  /**
+   * Cards whose record of shown sentences changed since the last call, for
+   * the caller to save. A reveal or a cloze on a word the scheduler was not
+   * consulted about writes no review, so this is the only way that record
+   * reaches storage.
+   */
+  drainTouchedCards(): VocabCard[] {
+    const cards: VocabCard[] = [];
+    for (const id of this.touched) {
+      const card = this.cards.get(id);
+      if (card) cards.push(card);
+    }
+    this.touched.clear();
+    return cards;
+  }
 
   /** Current in-memory state of every card in the pool. */
   getCards(): VocabCard[] {
@@ -407,6 +429,10 @@ export class StudyEngine {
     };
     this.revealed = true;
     this.revealLatencyMs = Math.max(0, now.getTime() - this.stepStartedAt);
+    this.revealSentence = chooseSentence(card, Array.from(this.cards.values()), now, 'reveal');
+    if (this.revealSentence) {
+      this.noteShown(card.id, this.revealSentence.traditional, now, 'reveal');
+    }
     this.touch();
   }
 
@@ -445,6 +471,7 @@ export class StudyEngine {
     this.answered += 1;
     this.revealed = false;
     this.revealLatencyMs = null;
+    this.revealSentence = null;
     this.preview = null;
     this.advance();
     this.touch();
@@ -478,6 +505,7 @@ export class StudyEngine {
           ? 'unchanged'
           : drillVerdict(card, outcome.correct, now);
       const detail = this.answerDetail(outcome.correct, outcome);
+      if (this.step.exercise.type === 'cloze') detail.sentence = this.step.exercise.sentence;
       switch (verdict) {
         case 'again':
         case 'good':
@@ -918,7 +946,19 @@ export class StudyEngine {
       if (card && card.fsrs.state !== CardState.New) this.drilled.add(id);
     }
     this.lastDrillIds = new Set(ids);
+    // The sentence a cloze cut its blank from is held back for a week.
+    if (exercise.type === 'cloze') {
+      this.noteShown(exercise.cardId, exercise.sentence, this.now(), 'cloze');
+    }
     this.step = { kind: 'drill', exercise };
+  }
+
+  /** Remember that a sentence was shown for a card, and mark the card to be saved. */
+  private noteShown(cardId: string, text: string, at: Date, via: 'reveal' | 'cloze'): void {
+    const card = this.cards.get(cardId);
+    if (!card) return;
+    this.cards.set(cardId, noteSentenceShown(card, text, at.toISOString(), via));
+    this.touched.add(cardId);
   }
 
   /**
@@ -943,8 +983,16 @@ export class StudyEngine {
     pool: VocabCard[],
   ): DrillExercise | null {
     switch (type) {
-      case 'cloze':
-        return buildClozeExercise(card, pool, this.rng, { avoid: this.wordsToKeepOut().words });
+      case 'cloze': {
+        // Not the sentence the learner has just been clozed on: another one,
+        // or none — a word whose every sentence was clozed this week waits.
+        const sentence = chooseSentence(card, pool, this.now(), 'cloze');
+        if (!sentence) return null;
+        return buildClozeExercise(card, pool, this.rng, {
+          avoid: this.wordsToKeepOut().words,
+          sentence,
+        });
+      }
       case 'foil_discrimination':
         return buildFoilExercise(card, pool, this.rng);
       case 'realia_menu': {

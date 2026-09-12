@@ -1,4 +1,4 @@
-import type { DomainCategory, VocabCard } from '@/types';
+import type { DomainCategory, ExampleSentence, VocabCard } from '@/types';
 import { newFsrsState } from '@/lib/fsrs/scheduler';
 import { uuid } from '@/lib/util/id';
 
@@ -36,7 +36,29 @@ export type SeedEntry = [
   foils: string,
   variants?: string,
   homophones?: string,
+  /**
+   * Further sentences: "sentence|pinyin|translation" triples joined by "||".
+   * The reveal and Fill the Blank rotate through them.
+   */
+  extraSentences?: string,
 ];
+
+/** Decode the compact extra-sentence column into sentences; blank triples are dropped. */
+export function parseSeedExtraSentences(value: string | undefined): ExampleSentence[] {
+  if (!value) return [];
+  const out: ExampleSentence[] = [];
+  for (const triple of value.split('||')) {
+    const [traditional = '', pinyin = '', translation = ''] = triple
+      .split('|')
+      .map((s) => s.trim());
+    if (!traditional) continue;
+    const sentence: ExampleSentence = { traditional };
+    if (pinyin) sentence.pinyin = pinyin;
+    if (translation) sentence.translation = translation;
+    out.push(sentence);
+  }
+  return out;
+}
 
 export interface StarterDeckData {
   name: string;
@@ -101,10 +123,12 @@ export function materializeStarterDeck(
       foils,
       variants,
       homophones,
+      extraSentences,
     ] of data.entries[domain]) {
       // Stagger createdAt so the new-card queue keeps authoring order.
       const createdAt = new Date(now.getTime() + index).toISOString();
       index += 1;
+      const extras = parseSeedExtraSentences(extraSentences);
       cards.push({
         id: makeId(),
         traditional,
@@ -115,6 +139,7 @@ export function materializeStarterDeck(
         exampleSentenceTraditional: sentence,
         exampleSentencePinyin: sentencePinyin,
         exampleSentenceTranslation: translation,
+        extraSentences: extras.length > 0 ? extras : undefined,
         visualFoils: foils.split('|').filter(Boolean),
         homophoneFoils: homophones ? homophones.split('|').filter(Boolean) : undefined,
         variants: variants ? variants.split('|').filter(Boolean) : undefined,
@@ -168,6 +193,7 @@ const CONTENT_KEYS = [
   'exampleSentenceTraditional',
   'exampleSentencePinyin',
   'exampleSentenceTranslation',
+  'extraSentences',
   'visualFoils',
   'homophoneFoils',
   'variants',

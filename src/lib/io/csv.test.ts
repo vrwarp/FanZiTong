@@ -125,3 +125,36 @@ describe('toCsv', () => {
     expect(rows[0].visualFoils).toEqual(['豆槳']);
   });
 });
+
+describe('extra sentences', () => {
+  it('round-trips further sentences as parallel "|" lists, tone numbers welcome', () => {
+    const card = makeCard({
+      extraSentences: [
+        {
+          traditional: '滷肉飯要加一顆滷蛋。',
+          pinyin: 'Lǔròufàn yào jiā yī kē lǔdàn.',
+          translation: 'Braised pork rice needs a braised egg.',
+        },
+        { traditional: '這家的滷肉飯不油。' },
+      ],
+    });
+    const csv = toCsv([card]);
+    expect(stripBom(csv).split('\n')[0]).toContain(
+      'extra_sentences,extra_pinyin,extra_translations',
+    );
+    const { rows, issues } = parseCsv(csv);
+    expect(issues).toEqual([]);
+    expect(rows[0].extraSentences).toEqual(card.extraSentences);
+    const numbered =
+      'traditional,pinyin,definition,more_sentences,extra_pinyin\n' +
+      '滷肉飯,lu3 rou4 fan4,Braised pork rice,這家的滷肉飯不油。|再一碗滷肉飯。,Zhe4 jia1 de lu3rou4fan4 bu4 you2.|\n';
+    const parsed = parseCsv(numbered).rows[0];
+    expect(parsed.extraSentences).toEqual([
+      { traditional: '這家的滷肉飯不油。', pinyin: 'Zhè jiā de lǔròufàn bù yóu.' },
+      { traditional: '再一碗滷肉飯。' },
+    ]);
+    expect(
+      parseCsv('traditional,pinyin\n滷肉飯,lǔ ròu fàn\n').rows[0].extraSentences,
+    ).toBeUndefined();
+  });
+});

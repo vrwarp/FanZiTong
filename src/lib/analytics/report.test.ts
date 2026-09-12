@@ -512,6 +512,44 @@ describe('buildDiagnostics', () => {
     expect(found.find((d) => d.code === 'shared_answer_timing')!.count).toBe(1);
   });
 
+  it('sees one sentence clozed again and again inside a week', () => {
+    const day = (d: number, hour = 8) => new Date(Date.UTC(2026, 8, 1 + d, hour)).toISOString();
+    const soup = makeCard({ traditional: '貢丸湯', fsrs: reviewState({ reps: 3 }) });
+    const wonton = makeCard({ traditional: '餛飩湯', fsrs: reviewState({ reps: 3 }) });
+    const greens = makeCard({ traditional: '燙青菜', fsrs: reviewState({ reps: 3 }) });
+    const logs = [makeLog({ cardId: soup.id, reviewTimestamp: day(0) })];
+    const cloze = (cardId: string, at: string, sentence?: string) =>
+      answerEvent({ cardId, exerciseType: 'cloze', correct: true, at, sentence });
+    const frame = '滷肉飯配一碗貢丸湯。';
+    const events: StudyEvent[] = [
+      cloze(soup.id, day(0), frame),
+      cloze(soup.id, day(2), frame),
+      cloze(soup.id, day(5), frame),
+      // Twice on another of the word's sentences is rotation working.
+      cloze(soup.id, day(3), '貢丸湯要加芹菜。'),
+      cloze(soup.id, day(4), '貢丸湯要加芹菜。'),
+      // A file from before events named the sentence: the card stands in.
+      cloze(wonton.id, day(1)),
+      cloze(wonton.id, day(1, 9)),
+      cloze(wonton.id, day(6)),
+      // Three in a month is the cooldown doing its job.
+      cloze(greens.id, day(0), '老闆，再來一盤燙青菜。'),
+      cloze(greens.id, day(10), '老闆，再來一盤燙青菜。'),
+      cloze(greens.id, day(20), '老闆，再來一盤燙青菜。'),
+    ];
+    const found = buildReport([soup, wonton, greens], logs, settings, events).diagnostics.find(
+      (d) => d.code === 'cloze_sentence_repeats',
+    )!;
+    expect(found.count).toBe(2);
+    expect(found.detail).toContain('貢丸湯');
+    expect(found.examples).toEqual([
+      expect.stringMatching(/^貢丸湯 .*×3 · 滷肉飯配一碗貢丸湯。$/),
+      expect.stringMatching(/^餛飩湯 .*×3$/),
+    ]);
+    const quiet = buildReport([greens], [], settings, events.slice(-3)).diagnostics;
+    expect(quiet.map((d) => d.code)).not.toContain('cloze_sentence_repeats');
+  });
+
   it('says nothing about a deck nobody has studied yet', () => {
     const found = buildReport([makeCard()], [], settings).diagnostics;
     expect(found.map((d) => d.code)).not.toContain('in_session_repeat_loop');

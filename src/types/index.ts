@@ -66,6 +66,20 @@ export interface FsrsState {
   learning_steps?: number;
 }
 
+/** A sentence the word appears in, with its own reading and translation. */
+export interface ExampleSentence {
+  traditional: string;
+  pinyin?: string;
+  translation?: string;
+}
+
+/** A sentence the app has shown for a word, and where. */
+export interface SentenceShown {
+  text: string;
+  at: string;
+  via: 'reveal' | 'cloze';
+}
+
 export interface VocabCard {
   /** UUID v4 */
   id: string;
@@ -86,6 +100,18 @@ export interface VocabCard {
   exampleSentenceTraditional?: string;
   exampleSentencePinyin?: string;
   exampleSentenceTranslation?: string;
+  /**
+   * Further sentences the word appears in. The reveal and Fill the Blank
+   * rotate through the primary sentence and these, so one frame is not
+   * memorised in place of the word.
+   */
+  extraSentences?: ExampleSentence[];
+  /**
+   * The sentences shown for this word lately, newest last (see
+   * `SENTENCES_SHOWN_LIMIT`), so the reveal can rotate and Fill the Blank can
+   * hold a sentence back for a week after it was clozed.
+   */
+  sentencesShown?: SentenceShown[];
   /** Visually confusable characters/words for discrimination drills. */
   visualFoils?: string[];
   /**

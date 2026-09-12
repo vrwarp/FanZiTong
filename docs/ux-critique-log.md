@@ -263,3 +263,25 @@ offered on the next (filler dishes included), a cloze never offers a word
 just drilled, and a queued word the learner has not met yet is kept off
 slips and out of cloze options so its first sight is not spoiled. Standalone
 runs keep each selected word out of the other items' options.
+
+**Reported by the learner after that:** the same sentence turning up for the
+same word until "it becomes really easy to know which word I should be looking
+for by looking at a few key characters without reading the whole sentence".
+Fill the Blank was tied to the one sentence authored on each card, and so was
+the reveal: the log had 貢丸湯 clozed seven times in a week on the same frame,
+燙青菜 six, 餛飩湯 five. The blank was also sized to the answer, and the
+readable distractors rarely shared a character with it, so the length of the
+gap and one recognised character each settled the question before any reading
+happened. Now a word has several sentences: its own (`extraSentences`, in the
+editor, CSV, JSON and the assistant, which adds rather than replaces) and any
+other card's sentence the word stands on its own in. The reveal shows the one
+seen least recently; a cloze takes one not clozed in the last seven days, not
+the one from the last reveal if it can help it, and a word with nothing left to
+show sits the drill out. The card remembers what it showed, the event log says
+which sentence each cloze was cut from, and the export flags a sentence clozed
+three times in a week (`cloze_sentence_repeats`). The blank is a fixed three
+characters wide and distractors that share a character with the answer come
+first. Every one of the 81 words this learner has met ships with two more
+sentences, checked for the reading-alignment rule like the first, and two
+primary sentences that repeated their word or hid it inside a longer one
+(肉圓, 餛飩) were rewritten.

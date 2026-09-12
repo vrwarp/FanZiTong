@@ -55,6 +55,15 @@ The syllable count must equal the number of Han characters in the sentence.
 something a person in Taiwan would actually say, ≤ 40 characters. Always give
 exampleSentenceTranslation with it.
 
+**extraSentences** — further sentences the headword appears in, each with its
+own pinyin and translation under the same rules. The app shows a different
+sentence on each reveal and never cuts the same blank twice in a week, so a
+word with one sentence becomes a frame the learner recognises from two
+characters. When a card already has a sentence and the learner wants another,
+ADD to extraSentences; never replace exampleSentenceTraditional. Make each new
+frame genuinely different: another topic, the headword in another position,
+a different register.
+
 **definition** — meaning only, 3 to 60 characters. No readings, no romanisation,
 no register labels. "Excuse, pretext", never "Excuse (Taiwan standard form)".
 

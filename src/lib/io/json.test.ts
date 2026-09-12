@@ -116,3 +116,38 @@ describe('parseJsonDeck', () => {
     expect(parsed.rows[0].definition).toBe('「蚵仔煎」— 夜市名物');
   });
 });
+
+describe('sentence rotation state', () => {
+  it('round-trips extra sentences, the last pass and the sentences shown', () => {
+    const card = makeCard({
+      extraSentences: [
+        {
+          traditional: '這家的滷肉飯不油。',
+          pinyin: 'Zhè jiā de lǔròufàn bù yóu.',
+          translation: 'Not greasy here.',
+        },
+      ],
+      lastPassAt: '2026-09-11T08:00:00.000Z',
+      sentencesShown: [
+        { text: '老闆，我要一碗滷肉飯。', at: '2026-09-11T08:00:00.000Z', via: 'reveal' },
+        { text: '這家的滷肉飯不油。', at: '2026-09-12T08:00:00.000Z', via: 'cloze' },
+      ],
+    });
+    const parsed = parseJsonDeck(serializeJsonDeck(toJsonDeck([card])));
+    expect(parsed.issues).toEqual([]);
+    expect(parsed.rows[0].extraSentences).toEqual(card.extraSentences);
+    expect(parsed.rows[0].lastPassAt).toBe(card.lastPassAt);
+    expect(parsed.rows[0].sentencesShown).toEqual(card.sentencesShown);
+    const bare = parseJsonDeck('[{"traditional":"火鍋","pinyin":"huǒ guō"}]').rows[0];
+    expect(bare.extraSentences).toBeUndefined();
+    expect(bare.sentencesShown).toBeUndefined();
+  });
+
+  it('drops a malformed showing record rather than the card', () => {
+    const deck = parseJsonDeck(
+      '[{"traditional":"火鍋","pinyin":"huǒ guō","sentencesShown":[{"text":"x","at":"nope","via":"reveal"}]}]',
+    );
+    expect(deck.rows.map((r) => r.traditional)).toEqual(['火鍋']);
+    expect(deck.rows[0].sentencesShown).toBeUndefined();
+  });
+});

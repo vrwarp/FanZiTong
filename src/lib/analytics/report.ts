@@ -25,7 +25,8 @@ import {
   summarizeCharacters,
   type FirstSightDomain,
 } from '@/lib/stats/characters';
-import { dayKey, MINUTE_MS } from '@/lib/util/time';
+import { DAY_MS, dayKey, MINUTE_MS } from '@/lib/util/time';
+import { SENTENCE_COOLDOWN_MS } from '@/lib/exercises/cloze';
 import { sortEvents, type SessionMode, type StudyEvent } from './events';
 
 /**
@@ -54,6 +55,8 @@ export const LOOP_ANSWER_THRESHOLD = 6;
 export const BACKGROUNDED_ANSWER_MS = 10 * MINUTE_MS;
 /** How many not-yet-read characters the census lists by name. */
 export const NOT_YET_CHARACTERS = 20;
+/** One sentence clozed this often inside the cooldown window is a shape being recognised. */
+export const CLOZE_REPEAT_THRESHOLD = 3;
 
 export type RatingCounts = Record<RatingGrade, number>;
 export type ExerciseCounts = Record<ExerciseType, number>;
@@ -105,6 +108,18 @@ export function quantiles(values: number[]): Quantiles {
   const at = (q: number) =>
     sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(q * sorted.length) - 1))];
   return { n: sorted.length, p50: at(0.5), p90: at(0.9), max: sorted[sorted.length - 1] };
+}
+
+/** The most of these instants that fall inside one window of the given length. */
+function mostWithin(times: number[], windowMs: number): number {
+  const sorted = [...times].sort((a, b) => a - b);
+  let best = 0;
+  let start = 0;
+  for (let end = 0; end < sorted.length; end += 1) {
+    while (sorted[end] - sorted[start] > windowMs) start += 1;
+    best = Math.max(best, end - start + 1);
+  }
+  return best;
 }
 
 function round(value: number, places = 4): number {
@@ -1052,6 +1067,41 @@ export function buildDiagnostics(
         .filter(([, n]) => n > 1)
         .slice(0, 5)
         .map(([key, n]) => `${key.split('|')[0]} ×${n}`),
+    });
+  }
+
+  // A Fill the Blank on the same sentence again and again tests the memory
+  // of its shape, not the reading. Events name the sentence since this
+  // build; before it a card had one sentence, so the card stands in for it.
+  const clozes = new Map<string, { cardId: string; sentence: string | null; at: number[] }>();
+  for (const e of sortEvents(events)) {
+    if (e.kind !== 'answer' || e.exerciseType !== 'cloze' || !e.cardId) continue;
+    const key = e.sentence ?? `card:${e.cardId}`;
+    const entry = clozes.get(key) ?? { cardId: e.cardId, sentence: e.sentence ?? null, at: [] };
+    entry.at.push(Date.parse(e.at));
+    clozes.set(key, entry);
+  }
+  const repeated = Array.from(clozes.values())
+    .map((entry) => ({ ...entry, inWindow: mostWithin(entry.at, SENTENCE_COOLDOWN_MS) }))
+    .filter((entry) => entry.inWindow >= CLOZE_REPEAT_THRESHOLD)
+    .sort((a, b) => b.inWindow - a.inWindow);
+  if (repeated.length > 0) {
+    const worst = repeated[0];
+    const windowDays = Math.round(SENTENCE_COOLDOWN_MS / DAY_MS);
+    found.push({
+      code: 'cloze_sentence_repeats',
+      severity: 'warn',
+      title: 'The same sentence clozed again and again',
+      detail:
+        `${repeated.length} sentence(s) were clozed ${CLOZE_REPEAT_THRESHOLD}+ times inside ` +
+        `${windowDays} days; the worst, on ${label(worst.cardId)}, ${worst.inWindow} times. A frame ` +
+        `filled in that often is recognised by its shape, not read. Fill the Blank now holds a ` +
+        `sentence back for ${windowDays} days after it is clozed and rotates through the word's ` +
+        `other sentences, so repeats this dense predate that build.`,
+      count: repeated.length,
+      examples: repeated
+        .slice(0, 5)
+        .map((r) => `${label(r.cardId)} ×${r.inWindow}${r.sentence ? ` · ${r.sentence}` : ''}`),
     });
   }
 

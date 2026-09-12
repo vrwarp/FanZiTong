@@ -154,7 +154,7 @@ The sidecar refuses to start on a public address with one and not the other.
 
 | Where                   | What                                                                                                                                              |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Card editor             | _Fill in_ writes the missing sentence, reading, translation and foils for the card you are editing.                                               |
+| Card editor             | _Fill in_ writes the missing sentence, reading, translation and foils for the card you are editing, and a second sentence when it has only one.   |
 | Study, after you reveal | _Why this?_ explains the shape and gives you something to hold on to. Hidden while the card is still face down.                                   |
 | Tabs                    | The 助 disc above the nav opens a conversation: ask for words, fixes, or an explanation. Attach a photo of a menu and it reads the dishes off it. |
 | Drills                  | _Assistant 助教_ in the header, since a drill screen has its own buttons along the bottom.                                                        |
@@ -178,7 +178,8 @@ against. A card is rejected, with the reason handed back to the model, when it
 - has a definition shorter than 3 or longer than 60 characters, or one that
   smuggles a reading into the meaning;
 - has an example sentence that does not contain the word, or a sentence reading
-  that does not line up with it word by word;
+  that does not line up with it word by word (extra sentences are held to the
+  same rules, and a repeat of one already on the card is dropped);
 - offers a foil that is a real way of writing the word, a different length from
   it, or an accepted spelling of another card;
 - writes `spoken` in POJ rather than Tâi-lô;

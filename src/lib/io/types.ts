@@ -1,4 +1,4 @@
-import type { DomainCategory, FsrsState } from '@/types';
+import type { DomainCategory, ExampleSentence, FsrsState, SentenceShown } from '@/types';
 
 /** A card-shaped row parsed from CSV or JSON, before it becomes a VocabCard. */
 export interface ImportRow {
@@ -11,6 +11,8 @@ export interface ImportRow {
   exampleSentenceTraditional?: string;
   exampleSentencePinyin?: string;
   exampleSentenceTranslation?: string;
+  /** Further sentences the word appears in. */
+  extraSentences?: ExampleSentence[];
   visualFoils: string[];
   homophoneFoils: string[];
   variants: string[];
@@ -21,6 +23,10 @@ export interface ImportRow {
   fsrs?: FsrsState;
   /** When the scheduler last heard "Again" (backups only; see VocabCard). */
   lastAgainAt?: string;
+  /** When the scheduler last heard a recognition pass (backups only). */
+  lastPassAt?: string;
+  /** Which sentences the word has been shown in lately (backups only). */
+  sentencesShown?: SentenceShown[];
   createdAt?: string;
   updatedAt?: string;
   /** Non-fatal notes produced while parsing this row. */

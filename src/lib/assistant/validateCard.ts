@@ -10,7 +10,7 @@
  * Errors reject the card; warnings apply it and are reported back so the model
  * (or the learner) can improve it.
  */
-import { CardState, type DomainCategory, type VocabCard } from '@/types';
+import { CardState, type DomainCategory, type ExampleSentence, type VocabCard } from '@/types';
 import { findSimplified } from '@/data/simplifiedChars';
 import { charInfo } from '@/data/charInfo';
 import { normalizeDomain } from '@/lib/io/domain';
@@ -173,6 +173,19 @@ export function mergeDraft(draft: CardDraft, existing: VocabCard | null, now: Da
   assignList('visualFoils');
   assignList('variants');
   assignList('clozeDistractors');
+  if (draft.extraSentences !== undefined) {
+    const extras = (draft.extraSentences ?? [])
+      .map((e) => {
+        const sentence: ExampleSentence = { traditional: text(e.traditional) };
+        const pinyin = e.pinyin ? numberedToMarks(text(e.pinyin)) : '';
+        const translation = e.translation ? text(e.translation) : '';
+        if (pinyin) sentence.pinyin = pinyin;
+        if (translation) sentence.translation = translation;
+        return sentence;
+      })
+      .filter((e) => e.traditional.length > 0);
+    card.extraSentences = extras.length > 0 ? extras : undefined;
+  }
 
   return card;
 }
@@ -318,6 +331,46 @@ export function validateCard(card: VocabCard, options: ValidateOptions): Validat
       'exampleSentenceTraditional',
       'There is a reading or translation but no sentence.',
     );
+  }
+  // The extra sentences follow the same rules as the first; a duplicate of
+  // the primary sentence, or of another extra, is dropped rather than rejected.
+  if (card.extraSentences) {
+    const seen = new Set(sentence ? [sentence] : []);
+    const kept: ExampleSentence[] = [];
+    for (const extra of card.extraSentences) {
+      if (seen.has(extra.traditional)) continue;
+      seen.add(extra.traditional);
+      kept.push(extra);
+      simplifiedIn(extra.traditional, 'extraSentences', 'A sentence');
+      if (!extra.traditional.includes(word)) {
+        err(
+          RULE_IDS.sentence,
+          'extraSentences',
+          `“${extra.traditional}” does not contain “${word}”, so the fill-the-blank drill cannot use it.`,
+        );
+      }
+      if (!extra.translation) {
+        expect(
+          RULE_IDS.translation,
+          'extraSentences',
+          'Every sentence needs its English translation.',
+        );
+      }
+      if (!extra.pinyin) {
+        expect(
+          RULE_IDS.sentencePinyin,
+          'extraSentences',
+          'Every sentence needs its reading, one token per word with the syllables joined.',
+        );
+      } else if (!alignSentenceReadings(extra.traditional, extra.pinyin)) {
+        expect(
+          RULE_IDS.sentencePinyin,
+          'extraSentences',
+          `The reading of “${extra.traditional}” does not line up with its ${hanChars(extra.traditional).length} characters.`,
+        );
+      }
+    }
+    card.extraSentences = kept.length > 0 ? kept : undefined;
   }
 
   // 6. Foils ------------------------------------------------------------

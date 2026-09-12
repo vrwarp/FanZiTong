@@ -27,6 +27,7 @@ import {
   stateDistribution,
   totalLapses,
 } from '@/lib/stats/analytics';
+import { ownSentences } from '@/lib/exercises/cloze';
 import { hasClozeSentence, hasFoils } from '@/lib/queue/session';
 import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
 import { hanChars } from '@/lib/util/pinyin';
@@ -96,6 +97,7 @@ export function toCardSummary(card: VocabCard): CardSummary {
       card.exampleSentencePinyin &&
       alignSentenceReadings(sentence, card.exampleSentencePinyin),
     ),
+    sentenceCount: ownSentences(card).length,
     foilCount: (card.visualFoils ?? []).length,
     state: stateName(card.fsrs.state),
     lapses: card.fsrs.lapses,
@@ -110,6 +112,8 @@ function missingField(card: VocabCard, field: string): boolean {
   switch (field) {
     case 'sentence':
       return !hasClozeSentence(card);
+    case 'second_sentence':
+      return hasClozeSentence(card) && ownSentences(card).length < 2;
     case 'sentencePinyin':
       return Boolean(card.exampleSentenceTraditional) && !card.exampleSentencePinyin;
     case 'translation':
@@ -313,6 +317,7 @@ export function createToolExecutor(deps: ExecutorDeps) {
       exampleSentencePinyin: keep.exampleSentencePinyin ?? drop.exampleSentencePinyin,
       exampleSentenceTranslation:
         keep.exampleSentenceTranslation ?? drop.exampleSentenceTranslation,
+      extraSentences: keep.extraSentences?.length ? keep.extraSentences : drop.extraSentences,
       visualFoils: keep.visualFoils?.length ? keep.visualFoils : drop.visualFoils,
       clozeDistractors: keep.clozeDistractors?.length
         ? keep.clozeDistractors

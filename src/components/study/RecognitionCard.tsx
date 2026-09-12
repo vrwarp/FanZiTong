@@ -4,6 +4,7 @@ import { DomainBadge } from '@/components/ui/Badge';
 import type { RatingPreview } from '@/lib/fsrs/scheduler';
 import { cn } from '@/lib/util/cn';
 import type { CharacterKnowledge } from '@/lib/stats/characters';
+import type { SentenceCandidate } from '@/lib/exercises/cloze';
 import { CardState, type DomainCategory, type RatingGrade, type VocabCard } from '@/types';
 import { CharacterChips } from './CharacterChips';
 import { ExampleSentence } from './ExampleSentence';
@@ -16,6 +17,8 @@ export interface RecognitionCardProps {
   pool: VocabCard[];
   /** What the learner has read each character in before, for the chips. */
   knowledge?: CharacterKnowledge;
+  /** The sentence to show on the reveal; the card's own primary one when absent. */
+  sentence?: SentenceCandidate | null;
   revealed: boolean;
   previews: Record<RatingGrade, RatingPreview> | null;
   revealLatencyMs?: number | null;
@@ -59,6 +62,7 @@ export function RecognitionCard({
   card,
   pool,
   knowledge,
+  sentence,
   revealed,
   previews,
   revealLatencyMs,
@@ -108,6 +112,15 @@ export function RecognitionCard({
         ? 'text-6xl'
         : 'text-5xl';
   const isNew = card.fsrs.state === CardState.New;
+  const shownSentence =
+    sentence ??
+    (card.exampleSentenceTraditional
+      ? {
+          traditional: card.exampleSentenceTraditional,
+          pinyin: card.exampleSentencePinyin,
+          translation: card.exampleSentenceTranslation,
+        }
+      : null);
   const variants = (card.variants ?? []).filter(Boolean);
   const variantNote = card.variantNote?.trim() || VARIANT_DEFAULTS[card.domain];
 
@@ -213,7 +226,7 @@ export function RecognitionCard({
               selected={selectedChar}
               onSelect={setSelectedChar}
             />
-            {card.exampleSentenceTraditional && (
+            {shownSentence && (
               <div
                 ref={exampleRef}
                 className="mt-1 scroll-mb-44 border-t border-stone-200 pt-2 dark:border-stone-700"
@@ -222,10 +235,10 @@ export function RecognitionCard({
                   例句 · Example
                 </p>
                 <ExampleSentence
-                  sentence={card.exampleSentenceTraditional}
+                  sentence={shownSentence.traditional}
                   target={card.traditional}
-                  pinyin={card.exampleSentencePinyin}
-                  translation={card.exampleSentenceTranslation}
+                  pinyin={shownSentence.pinyin}
+                  translation={shownSentence.translation}
                   emphasizeChar={selectedChar}
                 />
               </div>

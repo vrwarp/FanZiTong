@@ -1098,3 +1098,128 @@ describe('StudyEngine — time on task', () => {
     expect(end.elapsedMs).toBe(MAX_COUNTED_ANSWER_MS + 5000);
   });
 });
+
+describe('StudyEngine — sentences rotate', () => {
+  const extra = {
+    traditional: '滷肉飯要加一顆滷蛋。',
+    pinyin: 'Lǔròufàn yào jiā yī kē lǔdàn.',
+    translation: 'Braised pork rice needs a braised egg on it.',
+  };
+
+  it('shows a different sentence on each reveal and hands the record back to be saved', () => {
+    const pool = makePool();
+    const card = { ...pool[0], extraSentences: [extra] };
+    const all = [card, ...pool.slice(1)];
+    const engine = engineFor(all, [card.id, pool[1].id], {
+      now: clock('2026-09-12T08:00:00.000Z').now,
+    });
+    expect(engine.snapshot().sentence).toBeNull();
+    engine.reveal();
+    expect(engine.snapshot().sentence?.traditional).toBe(card.exampleSentenceTraditional);
+    const touched = engine.drainTouchedCards();
+    expect(touched.map((c) => c.id)).toEqual([card.id]);
+    expect(touched[0].sentencesShown).toEqual([
+      { text: card.exampleSentenceTraditional, at: '2026-09-12T08:00:00.000Z', via: 'reveal' },
+    ]);
+    expect(engine.drainTouchedCards()).toEqual([]);
+    engine.rate(1); // Again: back after the other card
+    engine.reveal();
+    engine.rate(4);
+    expect(engine.snapshot().step).toMatchObject({ kind: 'card', cardId: card.id });
+    engine.reveal();
+    expect(engine.snapshot().sentence?.traditional).toBe(extra.traditional);
+    // The rating carries the record too, so a save by either route keeps it.
+    const review = engine.rate(3)!;
+    expect(review.card.sentencesShown?.map((s) => s.text)).toEqual([
+      card.exampleSentenceTraditional,
+      extra.traditional,
+    ]);
+  });
+
+  it('records which sentence a cloze was cut from, on the event and on the card', () => {
+    const pool = makePool();
+    const card = { ...pool[0], fsrs: reviewState({ stability: 20 }) };
+    const all = [card, ...pool.slice(1)];
+    const events: StudyEvent[] = [];
+    const drills = buildDrillExercises('cloze', [card], all, mulberry32(1));
+    const engine = new StudyEngine({
+      pool: all,
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      drillType: 'cloze',
+      onEvent: (e) => events.push(e),
+    });
+    engine.answerDrill([{ cardId: card.id, correct: true }]);
+    expect(events.find((e) => e.kind === 'answer')).toMatchObject({
+      exerciseType: 'cloze',
+      sentence: card.exampleSentenceTraditional,
+    });
+    expect(engine.drainTouchedCards()[0]?.sentencesShown).toEqual([
+      { text: card.exampleSentenceTraditional, at: expect.any(String), via: 'cloze' },
+    ]);
+  });
+
+  it('does not cloze a word whose only sentence was clozed this week', () => {
+    const pool = makePool();
+    const outside = pool.find((c) => c.traditional === '團契')!;
+    const rest = pool.filter((c) => c.id !== outside.id);
+    const shownAt = (at: string) => [
+      { text: outside.exampleSentenceTraditional!, at, via: 'cloze' as const },
+    ];
+    const learning = (at: string): VocabCard => ({
+      ...outside,
+      fsrs: { ...outside.fsrs, state: CardState.Learning },
+      sentencesShown: shownAt(at),
+    });
+    const run = (at: string) => {
+      const engine = engineFor(
+        [...rest, learning(at)],
+        rest.map((c) => c.id),
+        {
+          now: clock('2026-09-12T08:00:00.000Z').now,
+        },
+      );
+      for (let i = 0; i < 5; i += 1) engine.rate(4);
+      return engine.snapshot().step;
+    };
+    const cooling = run('2026-09-10T08:00:00.000Z');
+    if (cooling?.kind === 'drill') {
+      expect(cooling.exercise.type === 'cloze' && cooling.exercise.cardId === outside.id).toBe(
+        false,
+      );
+    }
+    const cooled = run('2026-09-01T08:00:00.000Z');
+    expect(cooled).toMatchObject({
+      kind: 'drill',
+      exercise: { type: 'cloze', cardId: outside.id },
+    });
+  });
+
+  it('leaves a word out of a standalone cloze run while its sentences cool off', () => {
+    const pool = makePool();
+    const now = new Date('2026-09-12T08:00:00.000Z');
+    const card = {
+      ...pool[0],
+      sentencesShown: [
+        {
+          text: pool[0].exampleSentenceTraditional!,
+          at: '2026-09-11T08:00:00.000Z',
+          via: 'cloze' as const,
+        },
+      ],
+    };
+    const all = [card, ...pool.slice(1)];
+    expect(buildDrillExercises('cloze', [card], all, mulberry32(1), { now })).toEqual([]);
+    const withExtra = { ...card, extraSentences: [extra] };
+    const [ex] = buildDrillExercises(
+      'cloze',
+      [withExtra],
+      [withExtra, ...pool.slice(1)],
+      mulberry32(1),
+      { now },
+    );
+    expect(ex).toMatchObject({ type: 'cloze', sentence: extra.traditional });
+  });
+});

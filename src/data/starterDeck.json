@@ -132,7 +132,8 @@
         "Boss, one large braised pork rice, and add a braised egg.",
         "滷內飯|滷肉販|鹽肉飯",
         "魯肉飯",
-        "蘆肉飯|滷肉番|綠肉飯"
+        "蘆肉飯|滷肉番|綠肉飯",
+        "滷肉飯的肉要切丁，不能絞得太碎。|Lǔròufàn de ròu yào qiē dīng, bù néng jiǎo de tài suì.|The pork for braised pork rice should be diced, not minced too fine.||深夜肚子餓，我就去巷口吃一碗滷肉飯。|Shēnyè dùzi è, wǒ jiù qù xiàngkǒu chī yī wǎn lǔròufàn.|When I am hungry late at night, I go to the lane for a bowl of braised pork rice."
       ],
       [
         "蚵仔煎",
@@ -144,7 +145,8 @@
         "Night-market oyster omelette only tastes right drenched in sweet chili sauce.",
         "蚵仔炸|蜆仔煎|蚵仔剪",
         "",
-        "克仔煎|蚵載煎|蚵仔堅"
+        "克仔煎|蚵載煎|蚵仔堅",
+        "蚵仔煎的蚵仔要新鮮，粉漿要薄。|Kēzǎijiān de kēzǎi yào xīnxiān, fěnjiāng yào báo.|The oysters in an oyster omelette must be fresh and the batter thin.||逛夜市一定要吃一份蚵仔煎。|Guàng yèshì yīdìng yào chī yī fèn kēzǎijiān.|A night-market visit is not complete without an oyster omelette."
       ],
       [
         "珍珠奶茶",
@@ -156,7 +158,8 @@
         "One bubble milk tea, half sugar, no ice.",
         "珍株奶茶|診珠奶茶|珍珠妳茶",
         "",
-        "榛珠奶茶|珍豬奶茶|珍珠乃茶"
+        "榛珠奶茶|珍豬奶茶|珍珠乃茶",
+        "珍珠奶茶是台灣最有名的飲料。|Zhēnzhū nǎichá shì Táiwān zuì yǒumíng de yǐnliào.|Bubble milk tea is Taiwan's most famous drink.||下午三點，辦公室一起訂珍珠奶茶。|Xiàwǔ sān diǎn, bàngōngshì yīqǐ dìng zhēnzhū nǎichá.|At three in the afternoon the office orders bubble tea together."
       ],
       [
         "牛肉麵",
@@ -168,7 +171,8 @@
         "This place's beef noodle broth is rich and the noodles are nicely chewy.",
         "午肉麵|牛內麵|半肉麵",
         "",
-        "牛肉棉|牛肉免|牛肉綿"
+        "牛肉棉|牛肉免|牛肉綿",
+        "牛肉麵的牛肉要燉到軟才行。|Niúròumiàn de niúròu yào dùn dào ruǎn cái xíng.|The beef in beef noodle soup has to be stewed until tender.||台北每年都有牛肉麵節，大家都去排隊。|Táiběi měinián dōu yǒu niúròumiàn jié, dàjiā dōu qù páiduì.|Taipei holds a beef-noodle festival every year, and everyone goes to queue."
       ],
       [
         "蛋餅",
@@ -180,7 +184,8 @@
         "Breakfast-shop egg crepe with cheese is my favorite.",
         "旦餅|蛋餌|蛋拼",
         "",
-        "旦餅|蛋冰|擔餅"
+        "旦餅|蛋冰|擔餅",
+        "蛋餅要加玉米還是鮪魚？|Dànbǐng yào jiā yùmǐ háishì wěiyú?|Corn or tuna in your egg crepe?||早餐店阿姨煎的蛋餅外皮酥酥的。|Zǎocāndiàn āyí jiān de dànbǐng wàipí sūsū de.|The egg crepe the breakfast-shop lady makes has a crisp outside."
       ],
       [
         "豆漿",
@@ -192,7 +197,8 @@
         "I drink a cup of warm soy milk every morning.",
         "豆醬|荳漿|豆槳",
         "",
-        "逗漿|豆醬|鬥漿"
+        "逗漿|豆醬|鬥漿",
+        "豆漿要冰的還是熱的？|Dòujiāng yào bīng de háishì rè de?|Soy milk cold or hot?||這家的豆漿是自己磨的，沒有加糖。|Zhè jiā de dòujiāng shì zìjǐ mó de, méiyǒu jiā táng.|This shop grinds its own soy milk and adds no sugar."
       ],
       [
         "飯糰",
@@ -204,7 +210,8 @@
         "A traditional rice roll is stuffed with fried dough, pickled radish and pork floss.",
         "飯糧|販糰|飩糰",
         "飯團",
-        "番糰|犯糰|翻糰"
+        "番糰|犯糰|翻糰",
+        "早餐店的飯糰要加辣還是不辣？|Zǎocāndiàn de fàntuán yào jiā là háishì bù là?|Spicy or not for your breakfast-shop rice roll?||紫米飯糰比白米的更有嚼勁。|Zǐmǐ fàntuán bǐ báimǐ de gèng yǒu jiáojìn.|A purple-rice roll is chewier than a white-rice one."
       ],
       [
         "便當",
@@ -216,7 +223,8 @@
         "Shall we get pork-chop bento for lunch?",
         "便噹|使當|便富",
         "",
-        "邊當|便檔|遍當"
+        "邊當|便檔|遍當",
+        "火車上的便當有排骨和滷蛋。|Huǒchē shàng de biàndāng yǒu páigǔ hé lǔdàn.|The bento on the train has a pork chop and a braised egg.||媽媽每天早上幫我準備便當帶去學校。|Māma měitiān zǎoshang bāng wǒ zhǔnbèi biàndāng dài qù xuéxiào.|Mom packs a bento for me to take to school every morning."
       ],
       [
         "排骨",
@@ -228,7 +236,8 @@
         "The fried pork chop here is huge and fragrant.",
         "徘骨|排胃|排肯",
         "",
-        "派骨|排古|拍骨"
+        "派骨|排古|拍骨",
+        "排骨要先醃再炸，才會入味。|Páigǔ yào xiān yān zài zhá, cái huì rùwèi.|Pork chops need marinating before frying to take on the flavour.||這碗湯裡的排骨燉得很軟。|Zhè wǎn tāng lǐ de páigǔ dùn de hěn ruǎn.|The pork ribs in this soup are stewed till tender."
       ],
       [
         "貢丸湯",
@@ -240,7 +249,8 @@
         "Braised pork rice with a bowl of meatball soup is everyday life in Taiwan.",
         "貞丸湯|貢九湯|貢丸場",
         "",
-        "宮丸湯|貢晚湯|貢丸燙"
+        "宮丸湯|貢晚湯|貢丸燙",
+        "這碗貢丸湯的湯頭很清甜。|Zhè wǎn gòngwántāng de tāngtóu hěn qīngtián.|The broth of this meatball soup is light and sweet.||夜市攤位的貢丸湯一碗三十塊。|Yèshì tānwèi de gòngwántāng yī wǎn sānshí kuài.|A bowl of meatball soup at the night-market stall is thirty dollars."
       ],
       [
         "地瓜葉",
@@ -252,7 +262,8 @@
         "For blanched greens I'll have sweet potato leaves with a bit of garlic soy sauce.",
         "地爪葉|池瓜葉|地瓜業",
         "",
-        "帝瓜葉|地刈葉|地瓜椰"
+        "帝瓜葉|地刈葉|地瓜椰",
+        "地瓜葉炒蒜頭，簡單又下飯。|Dìguāyè chǎo suàntóu, jiǎndān yòu xiàfàn.|Sweet potato leaves stir-fried with garlic: simple, and it goes great with rice.||阿嬤在菜園裡種了一大片地瓜葉。|Āmà zài càiyuán lǐ zhòng le yī dà piàn dìguāyè.|Grandma planted a big patch of sweet potato leaves in the vegetable garden."
       ],
       [
         "鹹酥雞",
@@ -264,7 +275,8 @@
         "Hungry at night, we went for popcorn chicken with basil.",
         "減酥雞|鹹穌雞|鹹酥難",
         "鹽酥雞",
-        "鮮酥雞|鹹素雞|鹹酥忌"
+        "鮮酥雞|鹹素雞|鹹酥忌",
+        "鹹酥雞要加九層塔和辣粉才對味。|Xiánsūjī yào jiā jiǔcéngtǎ hé làfěn cái duìwèi.|Popcorn chicken only tastes right with basil and chili powder.||巷口那攤鹹酥雞每天都大排長龍。|Xiàngkǒu nà tān xiánsūjī měitiān dōu dàpáichánglóng.|The popcorn chicken stall at the end of the lane has a long queue every day."
       ],
       [
         "臭豆腐",
@@ -276,7 +288,8 @@
         "Foreign friends always get a shock the first time they smell stinky tofu.",
         "嗅豆腐|臭豆府|臭荳腐",
         "",
-        "愁豆腐|臭逗腐|臭豆婦"
+        "愁豆腐|臭逗腐|臭豆婦",
+        "臭豆腐要配泡菜一起吃才對。|Chòudòufǔ yào pèi pàocài yīqǐ chī cái duì.|Stinky tofu should be eaten with pickled cabbage.||深坑的臭豆腐是碳烤的，跟夜市炸的不一樣。|Shēnkēng de chòudòufǔ shì tànkǎo de, gēn yèshì zhá de bù yīyàng.|Shenkeng's stinky tofu is charcoal-grilled, unlike the fried kind at the night market."
       ],
       [
         "火鍋",
@@ -288,7 +301,8 @@
         "Winter is the perfect time for hot pot with friends.",
         "火渦|火過|灰鍋",
         "",
-        "貨鍋|火果|活鍋"
+        "貨鍋|火果|活鍋",
+        "火鍋的湯底我喜歡麻辣的，他喜歡昆布的。|Huǒguō de tāngdǐ wǒ xǐhuān málà de, tā xǐhuān kūnbù de.|For hot-pot broth I like spicy; he likes kelp.||吃到飽的火鍋店，一個人五百塊。|Chīdàobǎo de huǒguō diàn, yī ge rén wǔbǎi kuài.|The all-you-can-eat hot-pot place is five hundred a person."
       ],
       [
         "燙青菜",
@@ -300,7 +314,8 @@
         "Boss, one more plate of blanched greens.",
         "湯青菜|燙清菜|燙青萊",
         "",
-        "湯青菜|燙清菜|燙青才"
+        "湯青菜|燙清菜|燙青才",
+        "燙青菜上面淋的是蒜頭醬油和肉燥。|Tàng qīngcài shàngmiàn lín de shì suàntóu jiàngyóu hé ròuzào.|What is drizzled on the blanched greens is garlic soy sauce and minced-pork sauce.||吃太油了，我們點一盤燙青菜平衡一下。|Chī tài yóu le, wǒmen diǎn yī pán tàng qīngcài pínghéng yīxià.|We have had too much greasy food; let us order a plate of blanched greens to balance it."
       ],
       [
         "滷味",
@@ -312,19 +327,21 @@
         "For a late-night snack, grab a bag of braised goodies to eat in front of the TV.",
         "滷未|滷咪|漏味",
         "魯味",
-        "蘆味|滷威|綠味"
+        "蘆味|滷威|綠味",
+        "滷味攤的海帶和豆干是我的必點。|Lǔwèi tān de hǎidài hé dòugān shì wǒ de bìdiǎn.|Kelp and dried tofu from the braised-snack stall are my must-orders.||看球賽的時候，一定要配滷味和啤酒。|Kàn qiúsài de shíhòu, yīdìng yào pèi lǔwèi hé píjiǔ.|Watching a ball game, you have to have braised snacks and beer."
       ],
       [
         "肉圓",
         "ròu yuán",
         "Taiwanese meatball in translucent glutinous dough",
         "night-market|snack",
-        "彰化的肉圓是炸的，台南的肉圓是蒸的。",
-        "Zhānghuà de ròuyuán shì zhá de, Táinán de ròuyuán shì zhēng de.",
+        "彰化的肉圓是炸的，台南的是蒸的。",
+        "Zhānghuà de ròuyuán shì zhá de, Táinán de shì zhēng de.",
         "Changhua's meatballs are fried; Tainan's are steamed.",
         "內圓|肉園|肉圍",
         "",
-        "肉園|肉原|肉元"
+        "肉園|肉原|肉元",
+        "肉圓的皮很有彈性，醬料是甜的。|Ròuyuán de pí hěn yǒu tánxìng, jiàngliào shì tián de.|A Taiwanese meatball's skin is nicely springy, and the sauce is sweet.||下午三點，肉圓店門口已經在排隊了。|Xiàwǔ sān diǎn, ròuyuán diàn ménkǒu yǐjīng zài páiduì le.|At three in the afternoon there is already a queue outside the meatball shop."
       ],
       [
         "乾麵",
@@ -336,7 +353,8 @@
         "One bowl of dry noodles, no chili.",
         "幹麵|乾麯|軋麵",
         "",
-        "干麵|乾棉|柑麵"
+        "干麵|乾棉|柑麵",
+        "這家的乾麵拌的是自製的肉燥。|Zhè jiā de gānmiàn bàn de shì zìzhì de ròuzào.|This shop tosses its dry noodles with homemade minced-pork sauce.||老闆，乾麵一碗，湯麵一碗，外帶。|Lǎobǎn, gānmiàn yī wǎn, tāngmiàn yī wǎn, wàidài.|Boss, one dry noodles, one soup noodles, to go."
       ],
       [
         "餛飩湯",
@@ -348,7 +366,8 @@
         "Dry noodles with wonton soup is the classic snack-shop combo.",
         "混沌湯|餛鈍湯|餛飩場",
         "",
-        "魂飩湯|餛燉湯|餛飩燙"
+        "魂飩湯|餛燉湯|餛飩燙",
+        "天冷的時候來一碗餛飩湯最舒服。|Tiān lěng de shíhòu lái yī wǎn húntuntāng zuì shūfú.|When it is cold, a bowl of wonton soup is the most comforting thing.||餛飩湯裡加一點芹菜和油蔥更香。|Húntuntāng lǐ jiā yīdiǎn qíncài hé yóucōng gèng xiāng.|Wonton soup smells even better with a little celery and fried shallot."
       ],
       [
         "蘿蔔糕",
@@ -360,7 +379,8 @@
         "The breakfast shop fries its turnip cake nice and crisp; it's even better with an egg.",
         "羅蔔糕|蘿葡糕|蘿蔔羔",
         "",
-        "酪蔔糕|蘿波糕|蘿蔔高"
+        "酪蔔糕|蘿波糕|蘿蔔高",
+        "過年的時候，媽媽會自己蒸蘿蔔糕。|Guònián de shíhòu, māma huì zìjǐ zhēng luóbogāo.|At Chinese New Year, Mom steams her own turnip cake.||我的早餐是一份蘿蔔糕加一杯豆漿。|Wǒ de zǎocān shì yī fèn luóbogāo jiā yī bēi dòujiāng.|My breakfast is a turnip cake and a cup of soy milk."
       ],
       [
         "沙茶醬",
@@ -372,7 +392,8 @@
         "You have to dip in shacha sauce when eating hot pot.",
         "砂茶醬|沙荼醬|沙茶漿",
         "",
-        "砂茶醬|沙叉醬|沙茶漿"
+        "砂茶醬|沙叉醬|沙茶漿",
+        "沙茶醬拌麵也很好吃，不只是火鍋沾醬。|Shāchájiàng bàn miàn yě hěn hǎochī, bù zhǐshì huǒguō zhànjiàng.|Shacha sauce is great tossed with noodles too, not only as a hot-pot dip.||牛肉炒空心菜要加一匙沙茶醬才夠味。|Niúròu chǎo kōngxīncài yào jiā yī chí shāchájiàng cái gòuwèi.|Beef stir-fried with water spinach needs a spoon of shacha sauce to have enough flavour."
       ],
       [
         "豆干",
@@ -384,7 +405,8 @@
         "For sides, a plate of braised dried tofu and kelp.",
         "荳干|豆千|豆于",
         "豆乾",
-        "逗干|豆柑|鬥干"
+        "逗干|豆柑|鬥干",
+        "豆干炒芹菜是一道很家常的菜。|Dòugān chǎo qíncài shì yī dào hěn jiācháng de cài.|Dried tofu stir-fried with celery is a very homely dish.||大溪的豆干很有名，很多人去買。|Dàxī de dòugān hěn yǒumíng, hěn duō rén qù mǎi.|Daxi is famous for its dried tofu; lots of people go there to buy it."
       ],
       [
         "水餃",
@@ -396,7 +418,8 @@
         "Ten boiled dumplings, please.",
         "永餃|冰餃",
         "",
-        "水腳|水蕉|水椒"
+        "水腳|水蕉|水椒",
+        "星期天全家一起包水餃。|Xīngqītiān quánjiā yīqǐ bāo shuǐjiǎo.|On Sunday the whole family wraps dumplings together.||水餃沾醬油和一點辣油最對味。|Shuǐjiǎo zhàn jiàngyóu hé yīdiǎn làyóu zuì duìwèi.|Dumplings dipped in soy sauce and a little chili oil taste just right."
       ],
       [
         "鍋貼",
@@ -408,19 +431,21 @@
         "I'd like a portion of pan-fried dumplings.",
         "過貼|渦貼",
         "",
-        "果貼|鍋鐵|粿貼"
+        "果貼|鍋鐵|粿貼",
+        "鍋貼底部煎得金黃酥脆才好吃。|Guōtiē dǐbù jiān de jīnhuáng sūcuì cái hǎochī.|Pot stickers are only good when the bottoms are fried golden and crisp.||我們點了十個鍋貼和一碗酸辣湯。|Wǒmen diǎn le shí ge guōtiē hé yī wǎn suānlàtāng.|We ordered ten pot stickers and a bowl of hot and sour soup."
       ],
       [
         "餛飩",
         "hún dùn",
         "Wontons",
         "dish|soup",
-        "這家的餛飩湯很好喝。",
-        "Zhè jiā de húndùn tāng hěn hǎohē.",
-        "The wonton soup here is very good.",
+        "這家的餛飩很大顆，湯也好喝。",
+        "Zhè jiā de húndùn hěn dà kē, tāng yě hǎohē.",
+        "The wontons here are big, and the soup is good too.",
         "混飩|餛沌|餛鈍",
         "",
-        "魂飩|餛燉"
+        "魂飩|餛燉",
+        "媽媽包的餛飩皮薄餡多。|Māma bāo de húndùn pí báo xiàn duō.|The wontons Mom wraps have thin skins and lots of filling.||冷凍餛飩煮三分鐘就可以吃了。|Lěngdòng húndùn zhǔ sān fēnzhōng jiù kěyǐ chī le.|Frozen wontons are ready after three minutes of boiling."
       ],
       [
         "炒飯",
@@ -432,7 +457,8 @@
         "Do you want egg in the fried rice?",
         "沙飯|炒飲",
         "",
-        "抄飯|炒番|超飯"
+        "抄飯|炒番|超飯",
+        "隔夜飯拿來做炒飯最剛好。|Géyè fàn ná lái zuò chǎofàn zuì gānghǎo.|Day-old rice is perfect for fried rice.||這盤蝦仁炒飯粒粒分明，很香。|Zhè pán xiārén chǎofàn lìlì fēnmíng, hěn xiāng.|This shrimp fried rice has every grain separate, and it is fragrant."
       ],
       [
         "白飯",
@@ -444,7 +470,8 @@
         "One more bowl of plain rice, please.",
         "自飯|白飲|百飯",
         "",
-        "百飯|白番|拜飯"
+        "百飯|白番|拜飯",
+        "白飯免費續碗，配菜另外算。|Báifàn miǎnfèi xù wǎn, pèicài lìngwài suàn.|Free refills on plain rice; side dishes are charged separately.||這鍋滷肉太鹹了，要多配一點白飯。|Zhè guō lǔròu tài xián le, yào duō pèi yīdiǎn báifàn.|This pot of braised pork is too salty; it needs more plain rice."
       ],
       [
         "油飯",
@@ -456,7 +483,8 @@
         "You give out savoury rice at a baby's first month.",
         "柚飯|油飲|軸飯",
         "",
-        "柚飯|油番|優飯"
+        "柚飯|油番|優飯",
+        "油飯上面撒了肉鬆和香菜。|Yóufàn shàngmiàn sǎ le ròusōng hé xiāngcài.|The savoury rice is topped with pork floss and coriander.||鄰居生了小孩，送來一盒油飯。|Línjū shēng le xiǎohái, sòng lái yī hé yóufàn.|The neighbours had a baby and sent over a box of savoury rice."
       ],
       [
         "米飯",
@@ -468,7 +496,8 @@
         "The rice is still in the pot.",
         "木飯|米飲|采飯",
         "",
-        "蜜飯|米番|彌飯"
+        "蜜飯|米番|彌飯",
+        "米飯煮得太軟，阿公不喜歡。|Mǐfàn zhǔ de tài ruǎn, āgōng bù xǐhuān.|The rice came out too soft; Grandpa does not like it.||東部的米飯特別香，因為水好。|Dōngbù de mǐfàn tèbié xiāng, yīnwèi shuǐ hǎo.|Rice from the east coast is especially fragrant, because the water is good."
       ],
       [
         "米粥",
@@ -480,7 +509,8 @@
         "You have congee when you've got a cold.",
         "木粥|采粥",
         "",
-        "蜜粥|米州|彌粥"
+        "蜜粥|米州|彌粥",
+        "早上一碗熱米粥配醬瓜，很台灣。|Zǎoshang yī wǎn rè mǐzhōu pèi jiàngguā, hěn Táiwān.|A bowl of hot congee with pickled cucumber in the morning: very Taiwan.||阿公胃不好，晚餐只能吃米粥。|Āgōng wèi bù hǎo, wǎncān zhǐ néng chī mǐzhōu.|Grandpa's stomach is weak, so he can only have congee for dinner."
       ],
       [
         "米粉",
@@ -492,7 +522,8 @@
         "Hsinchu is famous for its rice vermicelli.",
         "木粉|米紛|采粉",
         "",
-        "蜜粉|米分|彌粉"
+        "蜜粉|米分|彌粉",
+        "炒米粉是辦桌少不了的一道菜。|Chǎo mǐfěn shì bànzhuō shǎobuliǎo de yī dào cài.|Stir-fried rice vermicelli is a dish no banquet can do without.||我點了一碗米粉，加一顆滷蛋。|Wǒ diǎn le yī wǎn mǐfěn, jiā yī kē lǔdàn.|I ordered a bowl of rice vermicelli, with a braised egg."
       ],
       [
         "意麵",
@@ -504,7 +535,8 @@
         "Tainan yi noodles have a real chew to them.",
         "竟麵|意麯|憶麵",
         "",
-        "義麵|意棉|飴麵"
+        "義麵|意棉|飴麵",
+        "意麵煮好後要馬上拌，不然會黏在一起。|Yìmiàn zhǔ hǎo hòu yào mǎshàng bàn, bùrán huì nián zài yīqǐ.|Toss the yi noodles right after cooking, or they stick together.||這碗意麵的肉燥香，麵條也不會太軟。|Zhè wǎn yìmiàn de ròuzào xiāng, miàntiáo yě bù huì tài ruǎn.|This bowl of yi noodles has fragrant minced pork, and the noodles are not too soft."
       ],
       [
         "炸醬麵",
@@ -516,7 +548,8 @@
         "I ordered a bowl of bean-sauce noodles.",
         "炸將麵|炸醬麯",
         "",
-        "閘醬麵|炸漿麵|炸醬棉"
+        "閘醬麵|炸漿麵|炸醬棉",
+        "炸醬麵的醬要用豆瓣醬和絞肉一起炒。|Zhájiàngmiàn de jiàng yào yòng dòubànjiàng hé jiǎoròu yīqǐ chǎo.|The sauce for bean-sauce noodles is made by frying broad-bean paste with minced pork.||小黃瓜絲是炸醬麵少不了的配料。|Xiǎohuángguā sī shì zhájiàngmiàn shǎobuliǎo de pèiliào.|Shredded cucumber is a topping bean-sauce noodles cannot do without."
       ],
       [
         "義大利麵",
@@ -7042,7 +7075,8 @@
         "Our church has youth fellowship every Friday night.",
         "團隊|契合|團夥",
         "",
-        "糰契|團氣|團起"
+        "糰契|團氣|團起",
+        "團契結束後，大家留下來一起吃宵夜。|Tuánqì jiéshù hòu, dàjiā liú xiàlái yīqǐ chī xiāoyè.|After fellowship, everyone stayed for a late-night snack together.||這個學期我開始帶大學團契的小組。|Zhège xuéqī wǒ kāishǐ dài dàxué tuánqì de xiǎozǔ.|This term I started leading a small group in the university fellowship."
       ],
       [
         "靈修",
@@ -7054,7 +7088,8 @@
         "She spends half an hour every morning on devotions and Bible reading.",
         "靈休|零修|靈條",
         "",
-        "鈴修|靈秀|領修"
+        "鈴修|靈秀|領修",
+        "今天的靈修經文是詩篇二十三篇。|Jīntiān de língxiū jīngwén shì Shīpiān èrshísān piān.|Today's devotional passage is Psalm 23.||他習慣睡前靈修，把一天交託給神。|Tā xíguàn shuì qián língxiū, bǎ yī tiān jiāotuō gěi shén.|He does his devotions before bed, committing the day to God."
       ],
       [
         "恩典",
@@ -7066,7 +7101,8 @@
         "We are saved entirely by God's grace, not by our own works.",
         "思典|恩點|恩曲",
         "",
-        "恩點|恩電|恩殿"
+        "恩點|恩電|恩殿",
+        "這份工作對我來說是神的恩典。|Zhè fèn gōngzuò duì wǒ láishuō shì shén de ēndiǎn.|To me this job is God's grace.||恩典是白白得來的，不是我們配得的。|Ēndiǎn shì báibái dé lái de, bú shì wǒmen pèidé de.|Grace is freely given, not something we deserve."
       ],
       [
         "禱告",
@@ -7078,7 +7114,8 @@
         "Let us bow our heads and pray together.",
         "濤告|禱吉|檮告",
         "",
-        "刀告|禱糕|道告"
+        "刀告|禱糕|道告",
+        "吃飯前，阿公會先帶大家禱告。|Chīfàn qián, āgōng huì xiān dài dàjiā dǎogào.|Before the meal, Grandpa leads everyone in prayer.||她為生病的媽媽禱告了整整一個月。|Tā wèi shēngbìng de māma dǎogào le zhěngzhěng yī ge yuè.|She prayed for her sick mother for a whole month."
       ],
       [
         "奉獻",
@@ -7090,7 +7127,8 @@
         "Sunday's offering goes to support mission work.",
         "奏獻|捧獻|奉戲",
         "",
-        "鳳獻|奉鹹|蜂獻"
+        "鳳獻|奉鹹|蜂獻",
+        "奉獻不只是金錢，也可以是時間和才幹。|Fèngxiàn bù zhǐshì jīnqián, yě kěyǐ shì shíjiān hé cáigàn.|An offering is not only money; it can be time and talents too.||教會這個月的奉獻要用來修屋頂。|Jiàohuì zhège yuè de fèngxiàn yào yònglái xiū wūdǐng.|This month's church offering will go to fixing the roof."
       ],
       [
         "聖餐",
@@ -7102,7 +7140,8 @@
         "On the first Sunday of each month we take Communion together.",
         "聖参|聲餐|聖餮",
         "",
-        "生餐|聖蠶|聲餐"
+        "生餐|聖蠶|聲餐",
+        "領聖餐之前，牧師請大家安靜省察自己。|Lǐng shèngcān zhīqián, mùshī qǐng dàjiā ānjìng xǐngchá zìjǐ.|Before Communion, the pastor asked everyone to quietly examine themselves.||聖餐的餅和杯提醒我們耶穌的犧牲。|Shèngcān de bǐng hé bēi tíxǐng wǒmen Yēsū de xīshēng.|The bread and cup of Communion remind us of Jesus' sacrifice."
       ],
       [
         "主日",
@@ -7114,7 +7153,8 @@
         "Sunday worship starts at ten in the morning.",
         "主曰|王日|住日",
         "",
-        "珠日|豬日|竹日"
+        "珠日|豬日|竹日",
+        "每個主日，全家都會一起去教會。|Měi ge zhǔrì, quánjiā dōu huì yīqǐ qù jiàohuì.|Every Sunday the whole family goes to church together.||下個主日有洗禮，請大家提早到。|Xià ge zhǔrì yǒu xǐlǐ, qǐng dàjiā tízǎo dào.|There is a baptism next Sunday; please come early."
       ],
       [
         "講道",
@@ -7126,7 +7166,8 @@
         "Today's sermon by the pastor was about forgiveness.",
         "講到|講導|構道",
         "",
-        "漿道|講刀|醬道"
+        "漿道|講刀|醬道",
+        "今天的講道太長了，小孩子都睡著了。|Jīntiān de jiǎngdào tài cháng le, xiǎoháizi dōu shuìzháo le.|Today's sermon was too long; the kids all fell asleep.||這位傳道人講道很生活化，大家都聽得懂。|Zhè wèi chuándàorén jiǎngdào hěn shēnghuóhuà, dàjiā dōu tīng de dǒng.|This preacher's sermons are down to earth; everyone can follow."
       ],
       [
         "敬拜",
@@ -7138,7 +7179,8 @@
         "The worship team led everyone in song from the stage.",
         "敬敗|警拜|敬湃",
         "",
-        "精拜|敬白|井拜"
+        "精拜|敬白|井拜",
+        "主日早上的敬拜從十點開始。|Zhǔrì zǎoshang de jìngbài cóng shí diǎn kāishǐ.|Sunday morning worship starts at ten.||她在敬拜的時候常常感動到流淚。|Tā zài jìngbài de shíhòu chángcháng gǎndòng dào liúlèi.|She is often moved to tears during worship."
       ],
       [
         "詩歌",
@@ -7150,7 +7192,8 @@
         "This hymn is my favorite.",
         "詩哥|持歌|詩欹",
         "",
-        "食歌|詩蛤|士歌"
+        "食歌|詩蛤|士歌",
+        "聚會一開始先唱三首詩歌。|Jùhuì yī kāishǐ xiān chàng sān shǒu shīgē.|The meeting opens with three hymns.||奶奶最愛的詩歌是〈奇異恩典〉。|Nǎinai zuì ài de shīgē shì Qíyì Ēndiǎn.|Grandma's favourite hymn is Amazing Grace."
       ],
       [
         "讀經",
@@ -7162,7 +7205,8 @@
         "This year's Bible-reading plan is to finish the whole Bible in a year.",
         "讀徑|讚經|續經",
         "",
-        "都經|讀精|肚經"
+        "都經|讀精|肚經",
+        "我們小組每週三晚上一起讀經和禱告。|Wǒmen xiǎozǔ měi zhōusān wǎnshang yīqǐ dújīng hé dǎogào.|Our small group reads the Bible and prays together every Wednesday night.||讀經的時候，把不懂的地方記下來問牧師。|Dújīng de shíhòu, bǎ bù dǒng de dìfāng jì xiàlái wèn mùshī.|When reading the Bible, note down what you do not understand and ask the pastor."
       ],
       [
         "見證",
@@ -7174,7 +7218,8 @@
         "A brother shared his testimony of coming to faith.",
         "見正|建證|見誑",
         "",
-        "煎證|見正|堅證"
+        "煎證|見正|堅證",
+        "受洗那天，她在台上分享自己的見證。|Shòuxǐ nà tiān, tā zài tái shàng fēnxiǎng zìjǐ de jiànzhèng.|On the day of her baptism she shared her testimony from the stage.||他的見證讓很多人流下眼淚。|Tā de jiànzhèng ràng hěn duō rén liú xià yǎnlèi.|His testimony brought many people to tears."
       ],
       [
         "受洗",
@@ -7186,7 +7231,8 @@
         "She decided to be baptized at Easter.",
         "受冼|授洗|受先",
         "",
-        "手洗|受西|守洗"
+        "手洗|受西|守洗",
+        "他信主三年後才決定受洗。|Tā xìn zhǔ sān nián hòu cái juédìng shòuxǐ.|He decided to be baptised only three years after coming to faith.||受洗那天，全教會的人都來為她慶祝。|Shòuxǐ nà tiān, quán jiàohuì de rén dōu lái wèi tā qìngzhù.|On the day of her baptism the whole church came to celebrate with her."
       ],
       [
         "牧師",
@@ -7198,7 +7244,8 @@
         "The pastor and his wife both care deeply about the young people.",
         "牧帥|枚師|收師",
         "",
-        "木師|牧食|母師"
+        "木師|牧食|母師",
+        "牧師的孩子也在我們的青年團契。|Mùshī de háizi yě zài wǒmen de qīngnián tuánqì.|The pastor's kids are in our youth fellowship too.||有問題可以直接去找牧師聊一聊。|Yǒu wèntí kěyǐ zhíjiē qù zhǎo mùshī liáo yī liáo.|If something is on your mind you can go straight to the pastor for a chat."
       ],
       [
         "小組",
@@ -7210,7 +7257,8 @@
         "Our small group meets every Wednesday at a brother's home.",
         "小祖|小阻|少組",
         "",
-        "宵組|小祖|孝組"
+        "宵組|小祖|孝組",
+        "新來的朋友可以先參加小組，認識大家。|Xīn lái de péngyǒu kěyǐ xiān cānjiā xiǎozǔ, rènshi dàjiā.|Newcomers can start by joining a small group and getting to know everyone.||我們小組這個月多了兩個新人。|Wǒmen xiǎozǔ zhège yuè duō le liǎng ge xīnrén.|Our small group gained two newcomers this month."
       ],
       [
         "饒恕",
@@ -7222,7 +7270,8 @@
         "Jesus taught us to forgive those who wrong us.",
         "繞恕|饒怒|饒如",
         "",
-        "繞恕|饒糬|饒薯"
+        "繞恕|饒糬|饒薯",
+        "要饒恕傷害過你的人，真的不容易。|Yào ráoshù shānghài guò nǐ de rén, zhēn de bù róngyì.|Forgiving someone who hurt you is truly not easy.||主禱文裡說，我們要饒恕別人的虧欠。|Zhǔdǎowén lǐ shuō, wǒmen yào ráoshù biérén de kuīqiàn.|The Lord's Prayer says we are to forgive others their debts."
       ],
       [
         "榮耀",
@@ -7234,7 +7283,8 @@
         "May all glory be given to God.",
         "榮躍|容耀|榮輝",
         "",
-        "溶耀|榮搖|融耀"
+        "溶耀|榮搖|融耀",
+        "這次比賽得獎，我要把榮耀歸給神。|Zhè cì bǐsài déjiǎng, wǒ yào bǎ róngyào guī gěi shén.|Winning this competition, I want to give the glory to God.||詩歌的最後一句是：榮耀歸於神。|Shīgē de zuìhòu yī jù shì: róngyào guīyú shén.|The last line of the hymn is: glory be to God."
       ],
       [
         "阿們",
@@ -7246,7 +7296,8 @@
         "When the prayer ended, everyone said amen together.",
         "呵們|阿倆|何們",
         "阿門",
-        "仔們|惡們|俄們"
+        "仔們|惡們|俄們",
+        "牧師講到一半，台下有人大聲說阿們。|Mùshī jiǎng dào yībàn, tái xià yǒu rén dàshēng shuō āmen.|Halfway through the sermon, someone in the pews said a loud amen.||阿們的意思是：誠心所願。|Āmen de yìsi shì: chéngxīn suǒ yuàn.|Amen means: so let it be, from the heart."
       ],
       [
         "傳福音",
@@ -7258,7 +7309,8 @@
         "The summer short-term mission team is going to share the gospel in the tribal villages.",
         "傅福音|傳福因|傳副音",
         "",
-        "串福音|傳腐音|傳福飲"
+        "串福音|傳腐音|傳福飲",
+        "傳福音不一定要講很多話，用生活見證就可以。|Chuán fúyīn bù yīdìng yào jiǎng hěn duō huà, yòng shēnghuó jiànzhèng jiù kěyǐ.|Sharing the gospel does not have to mean many words; the witness of your life can do it.||他們每個週末都去公園傳福音。|Tāmen měi ge zhōumò dōu qù gōngyuán chuán fúyīn.|They go to the park every weekend to share the gospel."
       ],
       [
         "聖靈",
@@ -7270,7 +7322,8 @@
         "May the Holy Spirit fill our hearts.",
         "聖零|聲靈|聖靄",
         "",
-        "生靈|聖鈴|聲靈"
+        "生靈|聖鈴|聲靈",
+        "聖靈會在我們軟弱的時候安慰我們。|Shènglíng huì zài wǒmen ruǎnruò de shíhòu ānwèi wǒmen.|The Holy Spirit comforts us when we are weak.||牧師說，順服聖靈的帶領比自己的計畫重要。|Mùshī shuō, shùnfú Shènglíng de dàilǐng bǐ zìjǐ de jìhuà zhòngyào.|The pastor said following the Spirit's leading matters more than our own plans."
       ],
       [
         "感恩",
@@ -13920,7 +13973,8 @@
         "He's very reliable; just leave it to him.",
         "靠普|告譜|靠諳",
         "",
-        "烤譜|靠葡|考譜"
+        "烤譜|靠葡|考譜",
+        "這家搬家公司很靠譜，東西一件都沒壞。|Zhè jiā bānjiā gōngsī hěn kàopǔ, dōngxi yī jiàn dōu méi huài.|This moving company is reliable; not one thing got broken.||網路上的偏方不靠譜，還是去看醫生吧。|Wǎnglù shàng de piānfāng bù kàopǔ, háishì qù kàn yīshēng ba.|Those online folk remedies are not reliable; better go and see a doctor."
       ],
       [
         "傻眼",
@@ -13932,7 +13986,8 @@
         "Everyone was dumbfounded by this outrageous news.",
         "白眼|眨眼|傻限",
         "",
-        "沙眼|傻鹽|砂眼"
+        "沙眼|傻鹽|砂眼",
+        "打開便當發現裡面是空的，我當場傻眼。|Dǎkāi biàndāng fāxiàn lǐmiàn shì kōng de, wǒ dāngchǎng shǎyǎn.|I opened the bento, found it empty, and was dumbfounded on the spot.||老師說明天要考試，全班都傻眼了。|Lǎoshī shuō míngtiān yào kǎoshì, quán bān dōu shǎyǎn le.|The teacher said there is a test tomorrow; the whole class was stunned."
       ],
       [
         "壓軸",
@@ -13944,7 +13999,8 @@
         "The finale act is finally about to go on.",
         "押軸|壓抽|壓輔",
         "",
-        "鴨軸|壓粥|芽軸"
+        "鴨軸|壓粥|芽軸",
+        "晚會的壓軸是校長親自上台唱歌。|Wǎnhuì de yāzhòu shì xiàozhǎng qīnzì shàng tái chànggē.|The finale of the evening party was the principal himself singing on stage.||好料的留到最後，這才叫壓軸。|Hǎo liào de liú dào zuìhòu, zhè cái jiào yāzhòu.|Save the good stuff for last; that is what a finale is."
       ],
       [
         "魯蛇",
@@ -13956,7 +14012,8 @@
         "He's always joking that he's a loser.",
         "滷蛇|魯它|魯虵",
         "",
-        "滷蛇|魯舌|蘆蛇"
+        "滷蛇|魯舌|蘆蛇",
+        "三十歲還住在家裡，他覺得自己是魯蛇。|Sānshí suì hái zhù zài jiā lǐ, tā juéde zìjǐ shì lǔshé.|Still living at home at thirty, he feels like a loser.||魯蛇只是網路上的說法，別太在意。|Lǔshé zhǐshì wǎnglù shàng de shuōfǎ, bié tài zàiyì.|'Loser' is just internet talk; do not take it to heart."
       ],
       [
         "盤子",
@@ -13968,7 +14025,8 @@
         "You bought it at that price? You're a total sucker.",
         "盆子|磐子|盤了",
         "",
-        "磐子|盤仔|盤自"
+        "磐子|盤仔|盤自",
+        "原價買到演唱會的票就好，別當盤子。|Yuánjià mǎi dào yǎnchànghuì de piào jiù hǎo, bié dāng pánzi.|Just get concert tickets at face value; do not be a sucker.||同樣的東西網路上便宜一半，你真是盤子。|Tóngyàng de dōngxi wǎnglù shàng piányí yībàn, nǐ zhēn shì pánzi.|The same thing is half the price online; you are such a sucker."
       ],
       [
         "邊緣人",
@@ -13980,7 +14038,8 @@
         "Nobody invited me to the class dinner; I really am a loner.",
         "邊綠人|遍緣人|邊緣入",
         "",
-        "便緣人|邊圓人|邊緣仁"
+        "便緣人|邊圓人|邊緣仁",
+        "同學都有群組，只有我沒被加，根本邊緣人。|Tóngxué dōu yǒu qúnzǔ, zhǐyǒu wǒ méi bèi jiā, gēnběn biānyuánrén.|Everyone is in the group chat except me; total loner.||他自稱邊緣人，其實朋友比誰都多。|Tā zìchēng biānyuánrén, qíshí péngyǒu bǐ shéi dōu duō.|He calls himself a loner, but actually has more friends than anyone."
       ],
       [
         "厲害",
@@ -13992,7 +14051,8 @@
         "You finished it all by yourself? Amazing!",
         "歷害|勵害|厲告",
         "",
-        "利害|厲海|梨害"
+        "利害|厲海|梨害",
+        "阿嬤八十歲還會用手機拍照，很厲害。|Āmà bāshí suì hái huì yòng shǒujī pāizhào, hěn lìhài.|Grandma is eighty and still takes photos on her phone; impressive.||這個颱風很厲害，整條街的招牌都被吹掉了。|Zhège táifēng hěn lìhài, zhěng tiáo jiē de zhāopái dōu bèi chuī diào le.|This typhoon is fierce; every shop sign on the street got blown off."
       ],
       [
         "蛤",
@@ -14004,7 +14064,8 @@
         "Huh? What did you say? I didn't catch that.",
         "哈|蚧|給",
         "",
-        "歌|割|鴿"
+        "歌|割|鴿",
+        "蛤？你說他們兩個在一起了？|Há? Nǐ shuō tāmen liǎng ge zài yīqǐ le?|Huh? You are saying those two are together now?||他聽完只回了一句蛤，然後就走了。|Tā tīng wán zhǐ huí le yī jù há, ránhòu jiù zǒu le.|He listened, replied with just a 'huh?', and walked off."
       ],
       [
         "超級",
@@ -14016,7 +14077,8 @@
         "It's super hot today; I'm melting.",
         "超及|趙級|越級",
         "",
-        "炒級|超雞|抄級"
+        "炒級|超雞|抄級",
+        "這家的芒果冰超級大，兩個人吃剛好。|Zhè jiā de mángguǒ bīng chāojí dà, liǎng ge rén chī gānghǎo.|This place's mango ice is super huge; just right for two.||他超級怕蟑螂，看到就會尖叫。|Tā chāojí pà zhāngláng, kàn dào jiù huì jiānjiào.|He is super scared of cockroaches; he screams when he sees one."
       ],
       [
         "讚",
@@ -14026,7 +14088,10 @@
         "這家店的雞排真的讚！",
         "Zhè jiā diàn de jīpái zhēn de zàn!",
         "This shop's chicken cutlet is seriously awesome!",
-        "贊|譖|讜"
+        "贊|譖|讜",
+        "",
+        "",
+        "這部電影超讚，你一定要去看。|Zhè bù diànyǐng chāo zàn, nǐ yīdìng yào qù kàn.|This movie is awesome; you have to go and see it.||老闆人很好，餐點也讚，難怪客人這麼多。|Lǎobǎn rén hěn hǎo, cāndiǎn yě zàn, nánguài kèrén zhème duō.|The owner is nice and the food is great; no wonder it is packed."
       ],
       [
         "母湯",
@@ -14038,7 +14103,8 @@
         "Don't do it like that, you'll get yelled at.",
         "毋湯|母場|母揚",
         "",
-        "木湯|母燙|目湯"
+        "木湯|母燙|目湯",
+        "半夜吃鹹酥雞母湯啦，會胖。|Bànyè chī xiánsūjī mǔtāng la, huì pàng.|Popcorn chicken at midnight? No way, you will get fat.||考試作弊母湯喔，被抓到就完了。|Kǎoshì zuòbì mǔtāng o, bèi zhuā dào jiù wán le.|Cheating on the test? Don't; if you are caught it is over."
       ],
       [
         "歸剛",
@@ -14050,7 +14116,8 @@
         "You're on your phone all day; don't you need to study?",
         "龜剛|歸鋼|歸崗",
         "",
-        "鮭剛|歸港|龜剛"
+        "鮭剛|歸港|龜剛",
+        "弟弟歸剛都在打電動，功課都沒寫。|Dìdi guīgāng dōu zài dǎ diàndòng, gōngkè dōu méi xiě.|My little brother games all day long and has not done any homework.||老闆歸剛欸，一直丟新的工作給我。|Lǎobǎn guīgāng ei, yīzhí diū xīn de gōngzuò gěi wǒ.|The boss is at it all day, forever tossing new work my way."
       ],
       [
         "很瞎",
@@ -14062,7 +14129,8 @@
         "This rule is truly ridiculous.",
         "很嚇|狠瞎|很暇",
         "",
-        "很蝦|很下|很夏"
+        "很蝦|很下|很夏",
+        "排了兩小時的隊，結果店家說賣完了，很瞎。|Pái le liǎng xiǎoshí de duì, jiéguǒ diànjiā shuō mài wán le, hěn xiā.|Queued two hours, and then the shop said sold out; ridiculous.||規則說改就改，也沒人通知，很瞎欸。|Guīzé shuō gǎi jiù gǎi, yě méi rén tōngzhī, hěn xiā ei.|They changed the rules on a whim and told nobody; so absurd."
       ],
       [
         "崩潰",
@@ -14074,7 +14142,8 @@
         "Fifth revision of the report; I'm about to lose it.",
         "崩饋|蹦潰|崩漬",
         "",
-        "崩葵|崩盔"
+        "崩葵|崩盔",
+        "電腦在交報告前一分鐘當機，我整個崩潰。|Diànnǎo zài jiāo bàogào qián yī fēnzhōng dāngjī, wǒ zhěnggè bēngkuì.|The computer crashed a minute before the report was due; I completely lost it.||小孩半夜哭了三個小時，媽媽快崩潰了。|Xiǎohái bànyè kū le sān ge xiǎoshí, māma kuài bēngkuì le.|The baby cried for three hours in the night; Mom is about to break down."
       ],
       [
         "放閃",
@@ -14086,7 +14155,8 @@
         "They keep flaunting their romance in the group chat; so blinding.",
         "放閂|方閃|放門",
         "",
-        "房閃|放鱔|方閃"
+        "房閃|放鱔|方閃",
+        "情人節那天，臉書上全是放閃的照片。|Qíngrénjié nà tiān, Liǎnshū shàng quán shì fàngshǎn de zhàopiàn.|On Valentine's Day, Facebook was nothing but couple photos.||你們要放閃可以，但不要在我面前。|Nǐmen yào fàngshǎn kěyǐ, dàn bù yào zài wǒ miànqián.|You two can flaunt it all you want, just not in front of me."
       ],
       [
         "吃土",
@@ -17614,7 +17684,8 @@
         "This anime's voice cast is incredibly star-studded.",
         "聲憂|聲尤|聖優",
         "",
-        "生優|聲油|聖優"
+        "生優|聲油|聖優",
+        "她為了當聲優，特地去日本學配音。|Tā wèile dāng shēngyōu, tèdì qù Rìběn xué pèiyīn.|To become a voice actor she went to Japan specially to study voice acting.||這個角色換了聲優，老粉絲都不習慣。|Zhège juésè huàn le shēngyōu, lǎo fěnsī dōu bù xíguàn.|This character got a new voice actor, and the old fans cannot get used to it."
       ],
       [
         "追番",
@@ -17626,7 +17697,8 @@
         "I'm following five shows this season.",
         "追蕃|追翻|迫番",
         "",
-        "追飯|追犯|追翻"
+        "追飯|追犯|追翻",
+        "期末考完，我終於可以安心追番了。|Qīmòkǎo wán, wǒ zhōngyú kěyǐ ānxīn zhuīfān le.|Finals are over; I can finally binge my shows in peace.||追番最痛苦的就是等下一集。|Zhuīfān zuì tòngkǔ de jiùshì děng xià yī jí.|The worst part of following a show is waiting for the next episode."
       ],
       [
         "傲嬌",
@@ -17638,7 +17710,8 @@
         "She clearly cares about you but pretends not to; such a tsundere.",
         "驕傲|傲慢|傲驕",
         "",
-        "傲餃|傲腳|傲蕉"
+        "傲餃|傲腳|傲蕉",
+        "傲嬌角色嘴上說討厭，其實最在乎。|Àojiāo juésè zuǐ shàng shuō tǎoyàn, qíshí zuì zàihu.|A tsundere character says 'I hate you' but cares the most.||我家的貓超傲嬌，叫牠不理，摸牠又不走。|Wǒ jiā de māo chāo àojiāo, jiào tā bù lǐ, mō tā yòu bù zǒu.|My cat is so tsundere: she ignores me when I call, but will not leave when I pet her."
       ],
       [
         "吐槽",
@@ -17650,7 +17723,8 @@
         "He can't help roasting the plot every time he watches a show.",
         "吐曹|土槽|吐嘈",
         "",
-        "土槽|吐草|徒槽"
+        "土槽|吐草|徒槽",
+        "這部動畫的設定太多洞，網友吐槽得很兇。|Zhè bù dònghuà de shèdìng tài duō dòng, wǎngyǒu tǔcáo de hěn xiōng.|This anime's setting is full of holes; netizens roasted it hard.||她講冷笑話的時候，總有人在旁邊吐槽。|Tā jiǎng lěngxiàohuà de shíhòu, zǒng yǒu rén zài pángbiān tǔcáo.|Whenever she tells a lame joke, someone beside her always snarks."
       ],
       [
         "泡麵番",
@@ -17662,7 +17736,8 @@
         "Each episode is only three minutes; perfect for the commute.",
         "泡麵蕃|抱麵番|泡麯番",
         "",
-        "跑麵番|泡棉番|泡麵飯"
+        "跑麵番|泡棉番|泡麵飯",
+        "泡麵番雖然短，劇情有時候比長篇還精彩。|Pàomiànfān suīrán duǎn, jùqíng yǒushíhòu bǐ chángpiān hái jīngcǎi.|Short-episode anime may be brief, but the plots are sometimes better than long series.||這季新出的泡麵番，主角是一隻會說話的企鵝。|Zhè jì xīn chū de pàomiànfān, zhǔjué shì yī zhī huì shuōhuà de qǐ'é.|This season's new short anime stars a talking penguin."
       ],
       [
         "治癒系",
@@ -17674,7 +17749,8 @@
         "After a tiring day, a healing-genre anime is the most relaxing.",
         "治瘐系|治癒係|冶癒系",
         "",
-        "汁癒系|治魚系|治癒西"
+        "汁癒系|治魚系|治癒西",
+        "這部治癒系的漫畫，畫的是小鎮的日常。|Zhè bù zhìyùxì de mànhuà, huà de shì xiǎozhèn de rìcháng.|This healing-genre manga draws everyday life in a small town.||加班之後，我只想看治癒系的東西放空。|Jiābān zhīhòu, wǒ zhǐ xiǎng kàn zhìyùxì de dōngxi fàngkōng.|After overtime, I only want to zone out with something from the healing genre."
       ],
       [
         "婆",
@@ -17686,7 +17762,8 @@
         "This character is my waifu; nobody can take her from me.",
         "波|娑|姿",
         "",
-        "坡|破|頗"
+        "坡|破|頗",
+        "他手機桌布是他的婆，一個動畫角色。|Tā shǒujī zhuōbù shì tā de pó, yī ge dònghuà juésè.|His phone wallpaper is his waifu, an anime character.||別人的婆再美，也不能跟我的比。|Biérén de pó zài měi, yě bù néng gēn wǒ de bǐ.|Someone else's waifu can be as pretty as she likes; she is no match for mine."
       ],
       [
         "燃",
@@ -17698,7 +17775,8 @@
         "The final episode's battle was so hype!",
         "然|燒|熬",
         "",
-        "然"
+        "然",
+        "主角站起來反擊的那一幕真的很燃。|Zhǔjué zhàn qǐlái fǎnjī de nà yī mù zhēn de hěn rán.|The moment the hero gets up and fights back is seriously hype.||配上這首歌，整段預告片都燃起來了。|Pèi shàng zhè shǒu gē, zhěng duàn yùgàopiàn dōu rán qǐlái le.|With this song on it, the whole trailer gets the blood pumping."
       ],
       [
         "萌",
@@ -17710,7 +17788,8 @@
         "This kitty is way too cute!",
         "明|萄|崩",
         "",
-        "檬|蒙|孟"
+        "檬|蒙|孟",
+        "小妹妹穿浴衣的樣子好萌。|Xiǎomèimei chuān yùyī de yàngzi hǎo méng.|The little girl in a yukata looks so adorable.||這個吉祥物設計得很萌，小朋友都愛。|Zhège jíxiángwù shèjì de hěn méng, xiǎopéngyǒu dōu ài.|This mascot is designed to be really cute; kids love it."
       ],
       [
         "神作",
@@ -17722,7 +17801,8 @@
         "This one is definitely the masterpiece of the season.",
         "神做|伸作|神炸",
         "",
-        "身作|神做|腎作"
+        "身作|神做|腎作",
+        "十年前的神作，現在重看還是會哭。|Shí nián qián de shénzuò, xiànzài chóng kàn háishì huì kū.|A masterpiece from ten years ago; rewatching it now still makes me cry.||大家都說是神作，我看了卻覺得普通。|Dàjiā dōu shuō shì shénzuò, wǒ kàn le què juéde pǔtōng.|Everyone calls it a masterpiece, but I watched it and thought it was ordinary."
       ],
       [
         "二次元",
@@ -17734,7 +17814,8 @@
         "He's only interested in 2D characters.",
         "二次原|二欠元|二次完",
         "",
-        "洱次元|二刺元|二次圓"
+        "洱次元|二刺元|二次圓",
+        "他的房間貼滿二次元海報。|Tā de fángjiān tiē mǎn èrcìyuán hǎibào.|His room is plastered with anime posters.||二次元和三次元的世界，他分得很清楚。|Èrcìyuán hé sāncìyuán de shìjiè, tā fēn de hěn qīngchǔ.|The 2D world and the 3D world: he keeps them very clearly apart."
       ],
       [
         "動漫",
@@ -17746,7 +17827,8 @@
         "Taipei's anime convention is packed every year.",
         "動慢|働漫|勤漫",
         "",
-        "凍漫|動滿|東漫"
+        "凍漫|動滿|東漫",
+        "我哥從小就愛看動漫，房間裡全是公仔。|Wǒ gē cóngxiǎo jiù ài kàn dòngmàn, fángjiān lǐ quán shì gōngzǎi.|My brother has loved anime since he was small; his room is full of figures.||這家咖啡廳的主題是動漫，牆上都是角色。|Zhè jiā kāfēitīng de zhǔtí shì dòngmàn, qiáng shàng dōu shì juésè.|This café's theme is anime; the walls are covered in characters."
       ],
       [
         "漫畫",
@@ -17758,7 +17840,8 @@
         "This manga has been serialized for ten years.",
         "漫劃|慢畫|漫晝",
         "",
-        "滿畫|漫花|幔畫"
+        "滿畫|漫花|幔畫",
+        "小時候我都躲在棉被裡偷看漫畫。|Xiǎoshíhòu wǒ dōu duǒ zài miánbèi lǐ tōu kàn mànhuà.|As a kid I would hide under the covers to sneak-read manga.||圖書館的漫畫區永遠都是滿的。|Túshūguǎn de mànhuà qū yǒngyuǎn dōu shì mǎn de.|The library's manga section is always full."
       ],
       [
         "角色",

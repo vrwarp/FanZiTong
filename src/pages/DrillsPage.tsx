@@ -37,7 +37,7 @@ export default function DrillsPage() {
       <PageHeader
         title="Drills"
         zh="練習"
-        subtitle="Extra practice. A miss brings the word back sooner; a hit only speeds up words not yet in review."
+        subtitle="Extra practice. A hit only speeds up words not yet in review; a miss brings the word back to read, and only your reading moves a word in review."
       />
 
       <div className="card-surface grid grid-cols-2 gap-3 p-4">

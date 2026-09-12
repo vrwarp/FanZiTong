@@ -14,3 +14,8 @@ can be regenerated with that script.
 - `analytics-2026-09-09/critique-language-expert.md` — a round run on the
   [analytics export](../analytics-export.md) rather than on screenshots: what
   three days of one learner's data showed about the scheduling, and what changed.
+- `analytics-2026-09-12/critique-heritage-teacher.md` — the second export from
+  the same phone, six days in, read as a heritage-language teacher would: what
+  is working, what still overrules the learner's own reading, and what a tutor
+  would have said on day one; `analytics-2026-09-12/ideation.md` is the
+  ideation–critique loop behind the patch set that followed.

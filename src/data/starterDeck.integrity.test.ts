@@ -31,6 +31,24 @@ describe('starter deck integrity', () => {
     expect(failures).toEqual([]);
   });
 
+  it('gives every extra sentence the word, an aligned reading and a translation, once', () => {
+    const failures: string[] = [];
+    for (const card of deck) {
+      const seen = new Set([card.exampleSentenceTraditional]);
+      for (const extra of card.extraSentences ?? []) {
+        const tag = `${card.traditional}: ${extra.traditional}`;
+        if (seen.has(extra.traditional)) failures.push(`${tag} (repeat)`);
+        seen.add(extra.traditional);
+        if (!extra.traditional.includes(card.traditional)) failures.push(`${tag} (no word)`);
+        if (!extra.translation) failures.push(`${tag} (no translation)`);
+        if (!extra.pinyin || !alignSentenceReadings(extra.traditional, extra.pinyin)) {
+          failures.push(`${tag} (reading)`);
+        }
+      }
+    }
+    expect(failures).toEqual([]);
+  });
+
   it('has character info for every character a look-alike differs by', () => {
     const missing = new Set<string>();
     for (const card of deck) {

@@ -1,5 +1,6 @@
 import {
   addDays,
+  DAY_START_HOUR,
   dayKey,
   formatDuration,
   formatInterval,
@@ -29,13 +30,27 @@ describe('formatInterval', () => {
 });
 
 describe('day helpers', () => {
-  it('computes local day keys and day boundaries', () => {
+  it('computes study-day keys and boundaries, turning over at 4 a.m.', () => {
     const d = new Date(2026, 8, 5, 13, 30);
+    expect(DAY_START_HOUR).toBe(4);
     expect(dayKey(d)).toBe('2026-09-05');
-    expect(startOfDay(d).getHours()).toBe(0);
+    expect(startOfDay(d).getHours()).toBe(4);
+    expect(startOfDay(d).getDate()).toBe(5);
     expect(isSameLocalDay(d, new Date(2026, 8, 5, 23, 59))).toBe(true);
-    expect(isSameLocalDay(d, new Date(2026, 8, 6, 0, 0))).toBe(false);
+    // A sitting at 00:30 is the same evening, not tomorrow.
+    expect(isSameLocalDay(d, new Date(2026, 8, 6, 0, 30))).toBe(true);
+    expect(dayKey(new Date(2026, 8, 6, 3, 59))).toBe('2026-09-05');
+    expect(startOfDay(new Date(2026, 8, 6, 3, 59)).getDate()).toBe(5);
+    expect(dayKey(new Date(2026, 8, 6, 4, 0))).toBe('2026-09-06');
+    expect(isSameLocalDay(d, new Date(2026, 8, 6, 4, 0))).toBe(false);
     expect(dayKey(addDays(d, 27))).toBe('2026-10-02');
+  });
+  it('can still count midnight days when a caller asks for them', () => {
+    const late = new Date(2026, 8, 5, 23, 59);
+    const early = new Date(2026, 8, 6, 0, 30);
+    expect(isSameLocalDay(late, early, 0)).toBe(false);
+    expect(dayKey(early, 0)).toBe('2026-09-06');
+    expect(startOfDay(early, 0).getHours()).toBe(0);
   });
   it('formats durations and relative due', () => {
     expect(formatDuration(0)).toBe('0s');

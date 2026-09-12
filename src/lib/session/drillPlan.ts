@@ -1,4 +1,4 @@
-import { buildClozeExercise } from '@/lib/exercises/cloze';
+import { buildClozeExercise, chooseSentence } from '@/lib/exercises/cloze';
 import { buildFoilExercise } from '@/lib/exercises/foil';
 import { buildMenuExercise, companionsFor, groupCardsByShop } from '@/lib/exercises/menu';
 import { hasClozeSentence, isActiveDomain, isDrillCandidate } from '@/lib/queue/session';
@@ -81,7 +81,9 @@ export function buildDrillExercises(
   selected: VocabCard[],
   pool: VocabCard[],
   rng: Rng = Math.random,
+  options: { now?: Date } = {},
 ): DrillExercise[] {
+  const now = options.now ?? new Date();
   const exercises: DrillExercise[] = [];
   if (type === 'realia_menu') {
     for (const group of groupCardsByShop(selected, rng)) {
@@ -95,9 +97,20 @@ export function buildDrillExercises(
     }
     return exercises;
   }
+  // A word this run will ask about is not offered as an option in another
+  // item's cloze: one word, one appearance per run.
+  const selectedWords = new Set(selected.map((c) => c.traditional));
   for (const card of selected) {
-    const ex =
-      type === 'cloze' ? buildClozeExercise(card, pool, rng) : buildFoilExercise(card, pool, rng);
+    const avoid = new Set(selectedWords);
+    avoid.delete(card.traditional);
+    let ex: DrillExercise | null = null;
+    if (type === 'cloze') {
+      // A word whose every sentence was clozed this week sits this run out.
+      const sentence = chooseSentence(card, pool, now, 'cloze');
+      if (sentence) ex = buildClozeExercise(card, pool, rng, { avoid, sentence });
+    } else {
+      ex = buildFoilExercise(card, pool, rng);
+    }
     if (ex) exercises.push(ex);
   }
   return exercises;

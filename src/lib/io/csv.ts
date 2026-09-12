@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import type { VocabCard } from '@/types';
+import type { ExampleSentence, VocabCard } from '@/types';
 import { numberedToMarks } from '@/lib/util/pinyin';
 import { normalizeDomain, splitList } from './domain';
 import type { ImportRow, ParseIssue, ParseResult } from './types';
@@ -21,6 +21,9 @@ export const CSV_HEADERS = [
   'cloze_distractors',
   'notes',
   'homophones',
+  'extra_sentences',
+  'extra_pinyin',
+  'extra_translations',
 ] as const;
 
 const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
@@ -70,7 +73,40 @@ const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
   distractors: 'cloze_distractors',
   notes: 'notes',
   note: 'notes',
+  extra_sentences: 'extra_sentences',
+  more_sentences: 'extra_sentences',
+  extra_pinyin: 'extra_pinyin',
+  extra_sentence_pinyin: 'extra_pinyin',
+  extra_translations: 'extra_translations',
+  extra_sentence_translations: 'extra_translations',
 };
+
+/** Extra sentences travel as "|"-separated parallel lists; a sentence itself never contains "|". */
+const EXTRA_SEPARATOR = '|';
+
+function splitExtras(value: string | undefined): string[] {
+  return (value ?? '').split(EXTRA_SEPARATOR).map((s) => s.trim());
+}
+
+/** Zip the three extra-sentence columns into sentences; blank sentences are dropped. */
+export function parseExtraSentences(
+  sentences: string | undefined,
+  pinyin: string | undefined,
+  translations: string | undefined,
+): ExampleSentence[] {
+  const texts = splitExtras(sentences);
+  const readings = splitExtras(pinyin);
+  const glosses = splitExtras(translations);
+  const out: ExampleSentence[] = [];
+  texts.forEach((text, i) => {
+    if (!text) return;
+    const sentence: ExampleSentence = { traditional: text };
+    if (readings[i]) sentence.pinyin = numberedToMarks(readings[i]);
+    if (glosses[i]) sentence.translation = glosses[i];
+    out.push(sentence);
+  });
+  return out;
+}
 
 const BOM = '\uFEFF';
 
@@ -159,6 +195,12 @@ export function parseCsv(text: string): ParseResult {
     if (sentencePinyin) row.exampleSentencePinyin = numberedToMarks(sentencePinyin);
     const translation = (record.example_translation ?? '').trim();
     if (translation) row.exampleSentenceTranslation = translation;
+    const extras = parseExtraSentences(
+      record.extra_sentences,
+      record.extra_pinyin,
+      record.extra_translations,
+    );
+    if (extras.length > 0) row.extraSentences = extras;
     rows.push(row);
   });
 
@@ -183,6 +225,11 @@ export function toCsv(cards: VocabCard[]): string {
     cloze_distractors: (c.clozeDistractors ?? []).join('|'),
     notes: c.notes ?? '',
     homophones: (c.homophoneFoils ?? []).join('|'),
+    extra_sentences: (c.extraSentences ?? []).map((e) => e.traditional).join(EXTRA_SEPARATOR),
+    extra_pinyin: (c.extraSentences ?? []).map((e) => e.pinyin ?? '').join(EXTRA_SEPARATOR),
+    extra_translations: (c.extraSentences ?? [])
+      .map((e) => e.translation ?? '')
+      .join(EXTRA_SEPARATOR),
   }));
   const body = Papa.unparse(
     { fields: [...CSV_HEADERS], data: data.map((d) => CSV_HEADERS.map((h) => d[h])) },

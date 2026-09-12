@@ -15,6 +15,8 @@ export interface SessionSummaryProps {
   remaining?: number;
   /** Reviews due by the end of tomorrow (to set tomorrow's appointment). */
   dueTomorrow?: number;
+  /** Words at a learning step that falls later today: the evening's look. */
+  dueLaterToday?: number;
   /** Cards rated Again/Hard on first sight, for one last look. */
   weakCards?: VocabCard[];
   onContinue?: () => void;
@@ -36,6 +38,7 @@ export function SessionSummary({
   streak,
   remaining = 0,
   dueTomorrow,
+  dueLaterToday = 0,
   weakCards = [],
   onContinue,
   onDone,
@@ -134,6 +137,15 @@ export function SessionSummary({
               : dueTomorrow > 0
                 ? `Tomorrow 明天: ${dueTomorrow} review${dueTomorrow === 1 ? '' : 's'} due — do ${dueTomorrow === 1 ? 'it' : 'them'} to keep the streak.`
                 : 'Come back tomorrow to keep the streak alive.'}
+          </span>
+        )}
+        {mode === 'complete' && dueLaterToday > 0 && (
+          <span
+            className="block text-xs font-medium text-stone-500 dark:text-stone-400"
+            data-testid="summary-later-today"
+          >
+            Later today <span lang="zh-Hant-TW">今天稍晚</span>: {dueLaterToday} of today&apos;s
+            words {dueLaterToday === 1 ? 'comes' : 'come'} back for a real look in a few hours.
           </span>
         )}
       </p>

@@ -28,7 +28,11 @@ import {
   stateDistribution,
   totalLapses,
 } from '@/lib/stats/analytics';
-import { CARD_STATE_LABELS, CARD_STATE_ZH, type VocabCard } from '@/types';
+import { characterKnowledge, firstSightProfile, summarizeCharacters } from '@/lib/stats/characters';
+import { CARD_STATE_LABELS, CARD_STATE_ZH, DOMAIN_LABELS, type VocabCard } from '@/types';
+
+/** How many not-yet-read characters the Characters block lists before trailing off. */
+const NOT_YET_SHOWN = 24;
 
 /** Below this many answers a percentage is noise, so it is not shown. */
 const MIN_ANSWERS_FOR_RATE = 10;
@@ -57,6 +61,8 @@ export default function StatsPage() {
       leeches: findLeeches(cards, settings.leechThreshold),
       lapses: totalLapses(cards),
       states: stateDistribution(cards),
+      firstSight: firstSightProfile(cards, logs).filter((d) => d.met > 0),
+      characters: summarizeCharacters(characterKnowledge(cards, logs)),
     };
   }, [cards, logs, settings, now]);
 
@@ -165,6 +171,75 @@ export default function StatsPage() {
         </p>
         <DomainMasteryBars mastery={model.mastery} cards={cards} />
       </section>
+
+      {model.firstSight.length > 0 && (
+        <section className="card-surface p-4" data-testid="first-sight">
+          <h2 className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400">
+            Read on sight <span lang="zh-Hant-TW">一看就會</span>
+          </h2>
+          <p className="mb-2 text-xs text-stone-500 dark:text-stone-400">
+            How each domain went the first time its words appeared — what you already read before
+            any study, and what was new to you.
+          </p>
+          <ul className="flex flex-col gap-1 text-sm">
+            {model.firstSight.map((d) => (
+              <li key={d.domain} className="flex flex-wrap items-baseline gap-x-2">
+                <span className="font-semibold">
+                  <span aria-hidden>{DOMAIN_LABELS[d.domain].emoji}</span>{' '}
+                  {DOMAIN_LABELS[d.domain].en}
+                </span>
+                <span data-testid={`first-sight-${d.domain}`}>
+                  {d.onSight} of {d.met} on sight
+                </span>
+                <span className="text-xs text-stone-500 dark:text-stone-400">
+                  · {d.ratings[2]} slow · {d.ratings[1]} new to you
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {model.characters.met > 0 && (
+        <section className="card-surface p-4" data-testid="characters">
+          <h2 className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400">
+            Characters <span lang="zh-Hant-TW">字</span>
+          </h2>
+          <p className="mt-1 text-sm" data-testid="characters-summary">
+            {model.characters.met} met · {model.characters.read} read · {model.characters.notYet}{' '}
+            not yet
+          </p>
+          <p className="text-xs text-stone-500 dark:text-stone-400">
+            &ldquo;Read&rdquo; means read correctly the first time you saw a word, or on a later
+            day. A look minutes after the reveal does not count, and neither does a drill.
+          </p>
+          {model.characters.notYet > 0 && (
+            <>
+              <p className="mt-2 text-xs font-semibold text-stone-500 uppercase dark:text-stone-400">
+                Not read yet — the new part of each word
+              </p>
+              <ul className="mt-1 flex flex-wrap gap-1.5" data-testid="characters-not-yet">
+                {model.characters.notYetChars.slice(0, NOT_YET_SHOWN).map((f) => (
+                  <li
+                    key={f.char}
+                    className="flex items-baseline gap-1 rounded-lg border border-stone-200 px-2 py-1 dark:border-stone-700"
+                  >
+                    <Hanzi className="text-base font-semibold">{f.char}</Hanzi>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400">
+                      in <Hanzi>{f.words.slice(0, 2).join('、')}</Hanzi>
+                    </span>
+                  </li>
+                ))}
+                {model.characters.notYet > NOT_YET_SHOWN && (
+                  <li className="self-center text-xs text-stone-500 dark:text-stone-400">
+                    +{model.characters.notYet - NOT_YET_SHOWN} more
+                  </li>
+                )}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
 
       <section className="card-surface p-4" aria-labelledby="leech-heading">
         <div className="flex items-center justify-between gap-2">

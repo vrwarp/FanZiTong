@@ -34,14 +34,26 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
   );
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const persist = useCallback((reviews: PersistedReview[]) => {
-    for (const review of reviews) {
-      repository.recordReview(review.card, review.log).catch((err: unknown) => {
-        console.error('Failed to save review', err);
-        setSaveError((err as Error).message);
-      });
-    }
-  }, []);
+  const persist = useCallback(
+    (reviews: PersistedReview[]) => {
+      for (const review of reviews) {
+        repository.recordReview(review.card, review.log).catch((err: unknown) => {
+          console.error('Failed to save review', err);
+          setSaveError((err as Error).message);
+        });
+      }
+      // The record of which sentences a card has been shown in changes on a
+      // reveal and on a cloze, neither of which need write a review.
+      const saved = new Set(reviews.map((r) => r.card.id));
+      const touched = (engine?.drainTouchedCards() ?? []).filter((c) => !saved.has(c.id));
+      if (touched.length > 0) {
+        repository.putCards(touched).catch((err: unknown) => {
+          console.error('Failed to save cards', err);
+        });
+      }
+    },
+    [engine],
+  );
 
   const reveal = useCallback(() => engine?.reveal(), [engine]);
   const rate = useCallback(
@@ -49,7 +61,7 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
       if (!engine) return;
       // A retry on a word already knocked down today changes nothing to save.
       const review = engine.rate(rating);
-      if (review) persist([review]);
+      persist(review ? [review] : []);
     },
     [engine, persist],
   );
@@ -59,9 +71,15 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
     },
     [engine, persist],
   );
-  const skipDrill = useCallback(() => engine?.skipDrill(), [engine]);
+  const skipDrill = useCallback(() => {
+    engine?.skipDrill();
+    persist([]);
+  }, [engine, persist]);
   const tick = useCallback(() => engine?.tick(), [engine]);
-  const finish = useCallback(() => engine?.finish(), [engine]);
+  const finish = useCallback(() => {
+    engine?.finish();
+    persist([]);
+  }, [engine, persist]);
 
   return { snapshot, reveal, rate, answerDrill, skipDrill, tick, finish, saveError };
 }

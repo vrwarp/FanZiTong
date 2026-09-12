@@ -6,7 +6,7 @@ import {
   type UserSettings,
   type VocabCard,
 } from '@/types';
-import { isSameLocalDay, MINUTE_MS } from '@/lib/util/time';
+import { DAY_START_HOUR, isSameLocalDay, MINUTE_MS } from '@/lib/util/time';
 
 /** Cards still in (re)learning that are due within this window are re-shown in the same session. */
 export const LEARN_AHEAD_MS = 20 * MINUTE_MS;
@@ -177,9 +177,24 @@ export function shouldRequeue(nextDueIso: string, now: Date): boolean {
   return new Date(nextDueIso).getTime() <= now.getTime() + LEARN_AHEAD_MS;
 }
 
-/** Whether the scheduler has already heard "Again" for this card today (local day). */
-export function knockedDownToday(card: Pick<VocabCard, 'lastAgainAt'>, now: Date): boolean {
-  return Boolean(card.lastAgainAt) && isSameLocalDay(new Date(card.lastAgainAt!), now);
+/** Whether the scheduler has already heard "Again" for this card today (study day). */
+export function knockedDownToday(
+  card: Pick<VocabCard, 'lastAgainAt'>,
+  now: Date,
+  dayStartHour: number = DAY_START_HOUR,
+): boolean {
+  return (
+    Boolean(card.lastAgainAt) && isSameLocalDay(new Date(card.lastAgainAt!), now, dayStartHour)
+  );
+}
+
+/** Whether the scheduler has already heard a recognition pass for this card today. */
+export function readToday(
+  card: Pick<VocabCard, 'lastPassAt'>,
+  now: Date,
+  dayStartHour: number = DAY_START_HOUR,
+): boolean {
+  return Boolean(card.lastPassAt) && isSameLocalDay(new Date(card.lastPassAt!), now, dayStartHour);
 }
 
 /**
@@ -200,8 +215,44 @@ export function isRetry(
   card: Pick<VocabCard, 'lastAgainAt'>,
   rating: RatingGrade,
   now: Date,
+  dayStartHour: number = DAY_START_HOUR,
 ): boolean {
-  return rating <= 2 && knockedDownToday(card, now);
+  return rating <= 2 && knockedDownToday(card, now, dayStartHour);
+}
+
+/**
+ * What a drill answer is allowed to do to the schedule.
+ *
+ * - `again` / `good`: the answer reaches the scheduler as that rating.
+ * - `unchanged`: a hit on a word in Review — recorded, nothing to change.
+ * - `practice`: the word already had its verdict today (knocked down, or read
+ *   correctly in recognition); recorded, the word comes back, the scheduler
+ *   is not consulted.
+ * - `book`: a miss on a word in Review. A word in Review is moved only by
+ *   reading: the miss is recorded and books a recognition look, and how that
+ *   look is rated is what the scheduler hears.
+ *
+ * Why the last two. Drills are four-tile recognition with a guess floor, so
+ * a hit was never allowed to move a Review card; a miss was charged as a full
+ * lapse. Six days of one learner's data showed every drill lapse landing on a
+ * word the learner had read correctly the same day, or would read correctly
+ * within two minutes — a discrimination slip, not a forgetting — and those
+ * lapses alone pinned words at maximum difficulty. A forced-choice miss is
+ * information about the shape, which is what the drills are for, but the
+ * memory FSRS models is the one the reading tests.
+ */
+export type DrillVerdict = 'again' | 'good' | 'unchanged' | 'practice' | 'book';
+
+export function drillVerdict(
+  card: Pick<VocabCard, 'fsrs' | 'lastAgainAt' | 'lastPassAt'>,
+  correct: boolean,
+  now: Date,
+  dayStartHour: number = DAY_START_HOUR,
+): DrillVerdict {
+  if (knockedDownToday(card, now, dayStartHour)) return 'practice';
+  if (card.fsrs.state === CardState.Review) return correct ? 'unchanged' : 'book';
+  if (readToday(card, now, dayStartHour)) return 'practice';
+  return correct ? 'good' : 'again';
 }
 
 /** Cards eligible for a contextual drill: in Learning/Relearning, or with lapses. */

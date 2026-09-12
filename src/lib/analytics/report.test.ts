@@ -150,6 +150,74 @@ describe('buildActivity', () => {
   });
 });
 
+describe('practice, first sight and characters', () => {
+  it('counts every answer the scheduler was not consulted on, per day', () => {
+    const inReview = makeCard({ traditional: '餛飩湯', fsrs: reviewState({ reps: 4 }) });
+    const logs = [
+      makeLog({ cardId: inReview.id, rating: 3, reviewTimestamp: at(0), stateBefore: 2 }),
+    ];
+    const events: StudyEvent[] = [
+      answerEvent({ cardId: inReview.id, rating: 3, correct: true }),
+      // A slip hit on a word in Review: recorded, nothing to change.
+      answerEvent({
+        cardId: inReview.id,
+        exerciseType: 'realia_menu',
+        applied: false,
+        correct: true,
+      }),
+      // A cloze miss on it: books a reading.
+      answerEvent({
+        cardId: inReview.id,
+        exerciseType: 'cloze',
+        rating: 1,
+        applied: false,
+        booked: true,
+        correct: false,
+      }),
+      // The booked look, and a retry after it.
+      answerEvent({ cardId: inReview.id, rating: 1, correct: false }),
+      answerEvent({ cardId: inReview.id, rating: 2, applied: false, retry: true, correct: true }),
+    ];
+    const activity = buildActivity(logs, events, [inReview]);
+    expect(activity.days[0]).toMatchObject({ answers: 1, practice: 3, booked: 1, retries: 1 });
+    expect(activity.booked).toEqual({
+      total: 1,
+      byExercise: { rapid_recognition: 0, cloze: 1, realia_menu: 0, foil_discrimination: 0 },
+    });
+    const report = buildReport([inReview], logs, settings, events);
+    expect(report.cards[0].booked).toBe(1);
+  });
+
+  it('profiles the first sight per domain and censuses the characters', () => {
+    const cards = [
+      makeCard({ traditional: '滷肉飯', domain: 'food' }),
+      makeCard({ traditional: '滷味', domain: 'food' }),
+      makeCard({ traditional: '團契', domain: 'church' }),
+      makeCard({ traditional: '禱告', domain: 'church' }),
+    ];
+    const logs = [
+      makeLog({ cardId: cards[0].id, rating: 4, reviewTimestamp: at(0), stateBefore: 0 }),
+      makeLog({ cardId: cards[1].id, rating: 1, reviewTimestamp: at(1), stateBefore: 0 }),
+      makeLog({ cardId: cards[2].id, rating: 2, reviewTimestamp: at(2), stateBefore: 0 }),
+    ];
+    const report = buildReport(cards, logs, settings);
+    const food = report.activity.firstSight.find((d) => d.domain === 'food')!;
+    expect(food).toMatchObject({ met: 2, onSight: 1, ratings: { 1: 1, 2: 0, 3: 0, 4: 1 } });
+    expect(report.activity.firstSight.find((d) => d.domain === 'church')).toMatchObject({
+      met: 1,
+      onSight: 0,
+    });
+    // 滷 肉 飯 味 團 契: 禱告 was never studied and is not counted.
+    expect(report.characters).toMatchObject({ met: 6, read: 3, notYet: 3 });
+    expect(report.characters.notYetExamples.map((e) => e.char)).toEqual(['味', '團', '契']);
+    expect(report.characters.notYetExamples[0]).toEqual({
+      char: '味',
+      words: ['滷味'],
+      failedIn: ['滷味'],
+    });
+  });
+});
+
 describe('retries and recorded sessions', () => {
   const card = makeCard({ traditional: '傲嬌', fsrs: reviewState({ state: 1, stability: 0.2 }) });
   const logs = [makeLog({ cardId: card.id, rating: 1, reviewTimestamp: at(0), stateBefore: 0 })];
@@ -303,19 +371,117 @@ describe('buildDiagnostics', () => {
     expect(loop.detail).toContain('貢丸湯');
   });
 
-  it('separates lapses charged by a multiple-choice drill', () => {
-    const card = makeCard({ fsrs: reviewState({ reps: 2, lapses: 1 }) });
+  it('names the lapses a drill charged on a word the reading contradicts', () => {
+    const inReview = makeCard({ traditional: '餛飩湯', fsrs: reviewState({ reps: 2, lapses: 1 }) });
+    const learning = makeCard({ traditional: '地瓜葉', fsrs: reviewState({ state: 1, reps: 3 }) });
     const logs = [
       makeLog({
-        cardId: card.id,
+        cardId: inReview.id,
         rating: 1,
         exerciseType: 'foil_discrimination',
         stateBefore: 2,
         reviewTimestamp: at(0),
       }),
+      // Read correctly, then missed in a slip a minute later while still learning.
+      makeLog({ cardId: learning.id, rating: 3, stateBefore: 0, reviewTimestamp: at(1) }),
+      makeLog({
+        cardId: learning.id,
+        rating: 1,
+        exerciseType: 'realia_menu',
+        stateBefore: 1,
+        reviewTimestamp: at(2),
+      }),
+      // A drill miss on a word still learning and not read that day is honest.
+      makeLog({
+        cardId: learning.id,
+        rating: 1,
+        exerciseType: 'cloze',
+        stateBefore: 1,
+        reviewTimestamp: new Date(Date.UTC(2026, 8, 8, 8, 0)).toISOString(),
+      }),
     ];
-    const codes = buildReport([card], logs, settings).diagnostics.map((d) => d.code);
-    expect(codes).toContain('guess_floor_lapse');
+    const report = buildReport([inReview, learning], logs, settings);
+    const found = report.diagnostics.find((d) => d.code === 'drill_lapse_after_reading')!;
+    expect(found.count).toBe(2);
+    expect(found.detail).toContain('2 of 3 lapse(s)');
+    expect(found.detail).toContain('1 of them on a day');
+    expect(found.examples).toEqual([
+      expect.stringContaining('餛飩湯'),
+      expect.stringContaining('地瓜葉'),
+    ]);
+    expect(report.diagnostics.map((d) => d.code)).not.toContain('guess_floor_lapse');
+    const saturated = report.cards.find((c) => c.traditional === '餛飩湯')!;
+    expect(saturated.lapsesFromDrills).toBe(1);
+  });
+
+  it('says where a saturated card got its difficulty', () => {
+    const card = makeCard({
+      traditional: '餛飩湯',
+      fsrs: reviewState({ reps: 3, lapses: 2, difficulty: 9.6 }),
+    });
+    const logs = [
+      makeLog({ cardId: card.id, rating: 1, stateBefore: 2, reviewTimestamp: at(0) }),
+      makeLog({
+        cardId: card.id,
+        rating: 1,
+        exerciseType: 'cloze',
+        stateBefore: 2,
+        reviewTimestamp: at(1),
+      }),
+    ];
+    const found = buildReport([card], logs, settings).diagnostics.find(
+      (d) => d.code === 'difficulty_saturated',
+    )!;
+    expect(found.examples[0]).toContain('1 of 2 lapse(s) from drills');
+  });
+
+  it('spots reviews the scheduler dated on the wrong side of a day', () => {
+    // 23:30 → 00:30 on the scheduler's UTC clock is a day; for the learner's
+    // study day (from 4 a.m.) it is the same evening.
+    const card = makeCard({ fsrs: reviewState({ reps: 2 }) });
+    const logs = [
+      makeLog({
+        cardId: card.id,
+        rating: 3,
+        reviewTimestamp: new Date(2026, 8, 7, 23, 30).toISOString(),
+      }),
+      makeLog({
+        cardId: card.id,
+        rating: 3,
+        reviewTimestamp: new Date(2026, 8, 8, 0, 30).toISOString(),
+      }),
+    ];
+    const found = buildReport([card], logs, settings).diagnostics.find(
+      (d) => d.code === 'scheduler_day_mismatch',
+    );
+    // Only where the local clock and UTC disagree about the date, which the
+    // test machine's timezone decides; the shape is what is asserted.
+    if (found) {
+      expect(found.count).toBe(1);
+      expect(found.examples[0]).toMatch(/1 h apart/);
+    }
+    const sameSide = [
+      makeLog({ cardId: card.id, rating: 3, reviewTimestamp: at(0) }),
+      makeLog({ cardId: card.id, rating: 3, reviewTimestamp: at(5) }),
+    ];
+    expect(buildReport([card], sameSide, settings).diagnostics.map((d) => d.code)).not.toContain(
+      'scheduler_day_mismatch',
+    );
+  });
+
+  it('flags answers that took longer than a reading can, from the event log', () => {
+    const card = makeCard({ traditional: '吐槽', fsrs: reviewState({ reps: 1 }) });
+    const logs = [makeLog({ cardId: card.id, rating: 1, reviewTimestamp: at(0) })];
+    const events: StudyEvent[] = [
+      answerEvent({ cardId: card.id, rating: 1, correct: false, latencyMs: 3 * 60 * 60_000 }),
+      answerEvent({ cardId: card.id, rating: 3, correct: true, latencyMs: 4000 }),
+    ];
+    const found = buildReport([card], logs, settings, events).diagnostics.find(
+      (d) => d.code === 'backgrounded_answers',
+    )!;
+    expect(found.count).toBe(1);
+    expect(found.detail).toContain('about 170 minute(s)');
+    expect(found.examples[0]).toContain('吐槽');
   });
 
   it('notices an active domain that has never been reached', () => {
@@ -344,6 +510,44 @@ describe('buildDiagnostics', () => {
     );
     const found = buildReport(cards, logs, settings).diagnostics;
     expect(found.find((d) => d.code === 'shared_answer_timing')!.count).toBe(1);
+  });
+
+  it('sees one sentence clozed again and again inside a week', () => {
+    const day = (d: number, hour = 8) => new Date(Date.UTC(2026, 8, 1 + d, hour)).toISOString();
+    const soup = makeCard({ traditional: '貢丸湯', fsrs: reviewState({ reps: 3 }) });
+    const wonton = makeCard({ traditional: '餛飩湯', fsrs: reviewState({ reps: 3 }) });
+    const greens = makeCard({ traditional: '燙青菜', fsrs: reviewState({ reps: 3 }) });
+    const logs = [makeLog({ cardId: soup.id, reviewTimestamp: day(0) })];
+    const cloze = (cardId: string, at: string, sentence?: string) =>
+      answerEvent({ cardId, exerciseType: 'cloze', correct: true, at, sentence });
+    const frame = '滷肉飯配一碗貢丸湯。';
+    const events: StudyEvent[] = [
+      cloze(soup.id, day(0), frame),
+      cloze(soup.id, day(2), frame),
+      cloze(soup.id, day(5), frame),
+      // Twice on another of the word's sentences is rotation working.
+      cloze(soup.id, day(3), '貢丸湯要加芹菜。'),
+      cloze(soup.id, day(4), '貢丸湯要加芹菜。'),
+      // A file from before events named the sentence: the card stands in.
+      cloze(wonton.id, day(1)),
+      cloze(wonton.id, day(1, 9)),
+      cloze(wonton.id, day(6)),
+      // Three in a month is the cooldown doing its job.
+      cloze(greens.id, day(0), '老闆，再來一盤燙青菜。'),
+      cloze(greens.id, day(10), '老闆，再來一盤燙青菜。'),
+      cloze(greens.id, day(20), '老闆，再來一盤燙青菜。'),
+    ];
+    const found = buildReport([soup, wonton, greens], logs, settings, events).diagnostics.find(
+      (d) => d.code === 'cloze_sentence_repeats',
+    )!;
+    expect(found.count).toBe(2);
+    expect(found.detail).toContain('貢丸湯');
+    expect(found.examples).toEqual([
+      expect.stringMatching(/^貢丸湯 .*×3 · 滷肉飯配一碗貢丸湯。$/),
+      expect.stringMatching(/^餛飩湯 .*×3$/),
+    ]);
+    const quiet = buildReport([greens], [], settings, events.slice(-3)).diagnostics;
+    expect(quiet.map((d) => d.code)).not.toContain('cloze_sentence_repeats');
   });
 
   it('says nothing about a deck nobody has studied yet', () => {

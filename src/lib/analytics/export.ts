@@ -1,5 +1,6 @@
 import type { ReviewLog, UserSettings, VocabCard } from '@/types';
 import { sortEvents, STUDY_EVENT_VERSION, type StudyEvent } from './events';
+import { DAY_START_HOUR } from '@/lib/util/time';
 import { buildReport, type AnalyticsReport } from './report';
 
 export const ANALYTICS_SCHEMA = 'fanzitong.analytics';
@@ -15,6 +16,12 @@ export interface AnalyticsEnvironment {
   /** IANA zone and the offset in effect when the file was written. */
   timeZone: string;
   utcOffsetMinutes: number;
+  /**
+   * The local hour a study day begins. Day rows, the streak, the daily caps,
+   * the one verdict a word gets a day and the clock the scheduler is told all
+   * turn over here, not at midnight.
+   */
+  dayStartHour: number;
   language: string;
   userAgent: string;
 }
@@ -47,8 +54,12 @@ const README = [
   'events array carries real session boundaries for study done since events shipped.',
   'A review log exists only when a rating moved the schedule, so answers that FSRS',
   'ignored (a correct drill answer on a card already in Review) appear in events only.',
-  'So do retries (retry: true): a word is knocked down at most once a day, and later',
-  'misses that day bring it back without consulting the scheduler.',
+  'So do retries (retry: true): a word has one verdict a day — the first Again, or a',
+  'recognition pass — and later misses or drill answers that day bring it back without',
+  'consulting the scheduler. A drill miss on a word in Review (booked: true) books a',
+  'recognition look instead of counting as forgotten; the look is an ordinary answer.',
+  'Days (report.activity.days, environment.dayStartHour) turn over at 4 a.m. local, and the',
+  'scheduler is told the time in those days.',
 ];
 
 /** Timezone and build details, so timestamps and day boundaries can be read. */
@@ -62,6 +73,7 @@ export function describeEnvironment(now: Date = new Date()): AnalyticsEnvironmen
     timeZone: resolved ?? 'unknown',
     // Positive east of UTC, matching the IANA sign rather than the JS one.
     utcOffsetMinutes: -now.getTimezoneOffset(),
+    dayStartHour: DAY_START_HOUR,
     language: typeof navigator === 'undefined' ? 'unknown' : navigator.language,
     userAgent: typeof navigator === 'undefined' ? 'unknown' : navigator.userAgent,
   };

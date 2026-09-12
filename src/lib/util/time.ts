@@ -2,23 +2,39 @@ export const MINUTE_MS = 60_000;
 export const HOUR_MS = 60 * MINUTE_MS;
 export const DAY_MS = 24 * HOUR_MS;
 
-/** Local-time start of day. */
-export function startOfDay(date: Date): Date {
+/**
+ * The hour (local) at which a study day begins.
+ *
+ * A learner who sits down at 23:40 and again at 01:20 has had one evening,
+ * not two days: the streak, the daily caps, "done for today", the one verdict
+ * a word gets a day and the analytics day rows all turn over here rather than
+ * at midnight. Anki has rolled its day over at 4 a.m. for the same reason.
+ * The scheduler is told the time in these days too (see `lib/fsrs/scheduler`).
+ */
+export const DAY_START_HOUR = 4;
+
+/**
+ * Local-time start of the study day `date` falls in: `dayStartHour` o'clock
+ * today, or yesterday when the date is earlier than that.
+ */
+export function startOfDay(date: Date, dayStartHour: number = DAY_START_HOUR): Date {
   const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
+  d.setHours(dayStartHour, 0, 0, 0);
+  if (d.getTime() > date.getTime()) d.setDate(d.getDate() - 1);
   return d;
 }
 
-/** YYYY-MM-DD in local time. */
-export function dayKey(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
+/** YYYY-MM-DD of the study day (local time; the day turns over at `DAY_START_HOUR`). */
+export function dayKey(date: Date, dayStartHour: number = DAY_START_HOUR): string {
+  const d = startOfDay(date, dayStartHour);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
-export function isSameLocalDay(a: Date, b: Date): boolean {
-  return dayKey(a) === dayKey(b);
+export function isSameLocalDay(a: Date, b: Date, dayStartHour: number = DAY_START_HOUR): boolean {
+  return dayKey(a, dayStartHour) === dayKey(b, dayStartHour);
 }
 
 export function addDays(date: Date, days: number): Date {

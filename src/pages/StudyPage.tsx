@@ -22,7 +22,8 @@ import {
   readPausedSession,
   savePausedSession,
 } from '@/lib/session/pausedSession';
-import { computeStreak, countDueByTomorrow } from '@/lib/stats/analytics';
+import { computeStreak, countDueByTomorrow, countDueLaterToday } from '@/lib/stats/analytics';
+import { characterKnowledge } from '@/lib/stats/characters';
 import { dayKey } from '@/lib/util/time';
 import type { RatingGrade, ReviewLog, UserSettings, VocabCard } from '@/types';
 
@@ -72,6 +73,9 @@ function StudySession({
   const { snapshot } = api;
   const [paused, setPaused] = useState(false);
   const assistant = useAssistant();
+  // Which characters the learner has read in other words, as of the session's
+  // start: the tutor's sentence on the reveal ("read in 滷肉飯" / "new here").
+  const [knowledge] = useState(() => characterKnowledge(initialCards, logs));
 
   // Tell the assistant what is on screen. While a card is unrevealed it learns
   // only that a session is running: the reading must not reach it before the
@@ -148,6 +152,7 @@ function StudySession({
           streak={Math.max(1, computeStreak(logs, now))}
           remaining={snapshot.remaining + (snapshot.step?.kind === 'card' ? 1 : 0)}
           dueTomorrow={countDueByTomorrow(engine.getCards(), now)}
+          dueLaterToday={countDueLaterToday(engine.getCards(), now)}
           weakCards={weakCards}
           onContinue={complete ? undefined : () => setPaused(false)}
           onDone={() => {
@@ -221,6 +226,8 @@ function StudySession({
           key={`${snapshot.card.id}-${snapshot.answered}`}
           card={snapshot.card}
           pool={initialCards}
+          knowledge={knowledge}
+          sentence={snapshot.sentence}
           revealed={snapshot.revealed}
           previews={snapshot.previews}
           revealLatencyMs={snapshot.revealLatencyMs}

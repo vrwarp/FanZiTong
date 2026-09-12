@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { buildStarterDeck } from '@/data/starterDeck';
 import { META_KEYS, repository, type Repository } from '@/db/repository';
-import { repairSchedules } from '@/lib/fsrs/repair';
-import { createScheduler } from '@/lib/fsrs/scheduler';
+import { CURRENT_RULE, repairSchedules } from '@/lib/fsrs/repair';
 
 export type BootstrapState =
   { status: 'loading' } | { status: 'ready'; seeded: boolean } | { status: 'error'; error: string };
@@ -10,6 +9,8 @@ export type BootstrapState =
 /** What the one-time schedule repair did, kept in meta so the dashboard can say so once. */
 export interface ScheduleRepairSummary {
   at: string;
+  /** Which rules the histories were replayed under (see lib/fsrs/repair). */
+  rule: number;
   /** Cards whose schedule changed. */
   repaired: number;
   /** Cards that only gained a record of their last Again. */
@@ -40,11 +41,12 @@ export async function bootstrapDatabase(repo: Repository = repository): Promise<
 }
 
 /**
- * Recompute every studied card's schedule under the one-Again-a-day rule, the
- * first time this build runs on a device. Study done before the rule fed every
- * same-day miss to FSRS, which left words pinned at maximum difficulty after
- * one bad session; the history is all there, so it is replayed (see
- * lib/fsrs/repair). Runs once: the summary in meta is the marker.
+ * Recompute every studied card's schedule under the rules in force, the first
+ * time this build runs on a device. Each rule the app has adopted changed what
+ * a history means — the once-a-day rule, then a word in Review being moved
+ * only by reading and the scheduler counting days from 4 a.m. — and the
+ * history is all there, so it is replayed (see lib/fsrs/repair). Runs once per
+ * rule version: the summary in meta is the marker.
  */
 export async function repairSchedulesOnce(
   repo: Repository,
@@ -56,11 +58,12 @@ export async function repairSchedulesOnce(
     repo.getAllReviewLogs(),
     repo.getSettings(),
   ]);
-  const result = repairSchedules(cards, logs, createScheduler(settings, { enableFuzz: false }));
+  const result = repairSchedules(cards, logs, settings);
   const writes = [...result.repaired.map((r) => r.card), ...result.annotated];
   if (writes.length > 0) await repo.putCards(writes);
   const summary: ScheduleRepairSummary = {
     at: now.toISOString(),
+    rule: CURRENT_RULE.version,
     repaired: result.repaired.length,
     annotated: result.annotated.length,
     unverifiable: result.unverifiable,
@@ -78,6 +81,7 @@ export function parseRepairSummary(raw: string | undefined): ScheduleRepairSumma
     if (typeof parsed.at !== 'string' || typeof parsed.repaired !== 'number') return null;
     return {
       at: parsed.at,
+      rule: typeof parsed.rule === 'number' ? parsed.rule : 1,
       repaired: parsed.repaired,
       annotated: parsed.annotated ?? 0,
       unverifiable: parsed.unverifiable ?? 0,

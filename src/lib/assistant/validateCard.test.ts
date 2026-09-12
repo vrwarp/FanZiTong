@@ -84,6 +84,41 @@ describe('validateCard', () => {
     expect(rules(check({ exampleSentenceTranslation: undefined }).errors)).toContain('translation');
   });
 
+  it('holds every extra sentence to the rules of the first, and drops repeats', () => {
+    const good = check({
+      extraSentences: [
+        {
+          traditional: '這家的滷肉飯不油。',
+          pinyin: 'Zhè jiā de lǔròufàn bù yóu.',
+          translation: 'The braised pork rice here is not greasy.',
+        },
+        {
+          traditional: '老闆，我要一碗滷肉飯。',
+          pinyin: 'x',
+          translation: 'a repeat of the first',
+        },
+      ],
+    });
+    expect(good.errors).toEqual([]);
+    expect(good.card.extraSentences).toHaveLength(1);
+    const missing = check({
+      extraSentences: [
+        { traditional: '我要一碗牛肉麵。', pinyin: 'Wǒ yào yī wǎn niúròumiàn.', translation: 'x' },
+      ],
+    });
+    expect(missing.errors).toContainEqual(
+      expect.objectContaining({ rule: 'sentence', field: 'extraSentences' }),
+    );
+    const misaligned = check({
+      extraSentences: [
+        { traditional: '這家的滷肉飯不油。', pinyin: 'Zhè jiā de.', translation: 'x' },
+      ],
+    });
+    expect(rules(misaligned.errors)).toContain('sentence-pinyin');
+    const bare = check({ extraSentences: [{ traditional: '這家的滷肉飯不油。' }] });
+    expect(rules(bare.errors)).toEqual(expect.arrayContaining(['translation', 'sentence-pinyin']));
+  });
+
   it('rejects a foil that is a real way of writing this word', () => {
     const report = check({ variants: ['魯肉飯'], visualFoils: ['魯肉飯'] });
     expect(rules(report.errors)).toContain('foils');

@@ -3,8 +3,10 @@ import {
   DEFAULT_SETTINGS,
   DOMAIN_CATEGORIES,
   type DeckExport,
+  type ExampleSentence,
   type FsrsState,
   type ReviewLog,
+  type SentenceShown,
   type UserSettings,
   type VocabCard,
 } from '@/types';
@@ -32,6 +34,18 @@ const stringList = z
   .optional()
   .transform((v) => splitList(v ?? []));
 
+const exampleSentenceSchema = z.object({
+  traditional: z.string().trim().min(1),
+  pinyin: z.string().optional(),
+  translation: z.string().optional(),
+});
+
+const sentenceShownSchema = z.object({
+  text: z.string(),
+  at: isoDate,
+  via: z.enum(['reveal', 'cloze']),
+});
+
 export const importCardSchema = z.object({
   id: z.string().optional(),
   traditional: z.string().trim().min(1, 'traditional is required'),
@@ -42,6 +56,7 @@ export const importCardSchema = z.object({
   exampleSentenceTraditional: z.string().optional(),
   exampleSentencePinyin: z.string().optional(),
   exampleSentenceTranslation: z.string().optional(),
+  extraSentences: z.array(exampleSentenceSchema).optional(),
   visualFoils: stringList,
   homophoneFoils: stringList,
   variants: stringList,
@@ -52,6 +67,9 @@ export const importCardSchema = z.object({
   fsrs: fsrsStateSchema.optional(),
   /** Carried with the FSRS state: without it a restore forgets today's knock-down. */
   lastAgainAt: isoDate.optional(),
+  lastPassAt: isoDate.optional(),
+  /** Rotation memory only: a malformed record is dropped, never the card. */
+  sentencesShown: z.array(sentenceShownSchema).optional().catch(undefined),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
 });
@@ -163,6 +181,8 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       clozeDistractors: c.clozeDistractors,
       fsrs: c.fsrs as FsrsState | undefined,
       lastAgainAt: c.lastAgainAt,
+      lastPassAt: c.lastPassAt,
+      sentencesShown: c.sentencesShown as SentenceShown[] | undefined,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       warnings,
@@ -176,6 +196,14 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
     }
     if (c.exampleSentenceTranslation?.trim()) {
       row.exampleSentenceTranslation = c.exampleSentenceTranslation.trim();
+    }
+    if (c.extraSentences?.length) {
+      row.extraSentences = c.extraSentences.map((e) => {
+        const sentence: ExampleSentence = { traditional: e.traditional.trim() };
+        if (e.pinyin?.trim()) sentence.pinyin = numberedToMarks(e.pinyin.trim());
+        if (e.translation?.trim()) sentence.translation = e.translation.trim();
+        return sentence;
+      });
     }
     if (c.spoken?.trim()) row.spoken = c.spoken.trim();
     if (c.variantNote?.trim()) row.variantNote = c.variantNote.trim();

@@ -3,6 +3,7 @@ import { makeCard, reviewState } from '@/test/factories';
 import {
   buildSessionQueue,
   chooseDrillType,
+  drillVerdict,
   hasClozeSentence,
   hasFoils,
   interleaveByDomain,
@@ -12,6 +13,7 @@ import {
   knockedDownToday,
   LEARN_AHEAD_MS,
   newCardCapacity,
+  readToday,
   shouldRequeue,
 } from './session';
 
@@ -239,12 +241,16 @@ describe('settling and the one-Again-a-day rule', () => {
     expect(newCardCapacity({ maxSettlingCards: 0 }, 999)).toBe(Number.POSITIVE_INFINITY);
   });
 
-  it('treats a second miss on the same local day as a retry, but not a pass', () => {
+  it('treats a second miss on the same study day as a retry, but not a pass', () => {
     const morning = new Date(2026, 8, 5, 8, 0);
     const evening = new Date(2026, 8, 5, 22, 0);
-    const nextDay = new Date(2026, 8, 6, 0, 30);
+    const afterMidnight = new Date(2026, 8, 6, 0, 30);
+    const nextDay = new Date(2026, 8, 6, 5, 0);
     const card = { lastAgainAt: morning.toISOString() };
     expect(knockedDownToday(card, evening)).toBe(true);
+    // The day turns over at 4 a.m.: half past midnight is still this evening.
+    expect(knockedDownToday(card, afterMidnight)).toBe(true);
+    expect(knockedDownToday(card, afterMidnight, 0)).toBe(false);
     expect(knockedDownToday(card, nextDay)).toBe(false);
     expect(knockedDownToday({}, evening)).toBe(false);
     expect(isRetry(card, 1, evening)).toBe(true);
@@ -252,5 +258,47 @@ describe('settling and the one-Again-a-day rule', () => {
     expect(isRetry(card, 3, evening)).toBe(false);
     expect(isRetry(card, 4, evening)).toBe(false);
     expect(isRetry(card, 1, nextDay)).toBe(false);
+  });
+
+  it('knows when a word has been read today', () => {
+    const morning = new Date(2026, 8, 5, 8, 0);
+    const evening = new Date(2026, 8, 5, 22, 0);
+    const nextDay = new Date(2026, 8, 6, 8, 0);
+    expect(readToday({ lastPassAt: morning.toISOString() }, evening)).toBe(true);
+    expect(readToday({ lastPassAt: morning.toISOString() }, nextDay)).toBe(false);
+    expect(readToday({}, evening)).toBe(false);
+  });
+});
+
+describe('what a drill may do to a word', () => {
+  const now = new Date(2026, 8, 5, 22, 0);
+  const earlier = new Date(2026, 8, 5, 8, 0).toISOString();
+  const yesterday = new Date(2026, 8, 4, 8, 0).toISOString();
+
+  it('moves a word still being learned, unless it already had its verdict today', () => {
+    const learning = makeCard({ fsrs: reviewState({ state: 1, stability: 0.3 }) });
+    expect(drillVerdict(learning, false, now)).toBe('again');
+    expect(drillVerdict(learning, true, now)).toBe('good');
+    expect(drillVerdict({ ...learning, lastAgainAt: earlier }, false, now)).toBe('practice');
+    expect(drillVerdict({ ...learning, lastAgainAt: earlier }, true, now)).toBe('practice');
+    expect(drillVerdict({ ...learning, lastPassAt: earlier }, false, now)).toBe('practice');
+    expect(drillVerdict({ ...learning, lastPassAt: earlier }, true, now)).toBe('practice');
+    // Yesterday's verdict is spent.
+    expect(drillVerdict({ ...learning, lastAgainAt: yesterday }, false, now)).toBe('again');
+    expect(drillVerdict({ ...learning, lastPassAt: yesterday }, true, now)).toBe('good');
+    // A never-seen word in a standalone drill is graded like a learning one.
+    expect(drillVerdict(makeCard(), false, now)).toBe('again');
+  });
+
+  it('never moves a word in Review: a hit changes nothing and a miss books a reading', () => {
+    const review = makeCard({ fsrs: reviewState() });
+    expect(drillVerdict(review, true, now)).toBe('unchanged');
+    expect(drillVerdict(review, false, now)).toBe('book');
+    expect(drillVerdict({ ...review, lastPassAt: earlier }, false, now)).toBe('book');
+    // Knocked down today in recognition: the miss is practice, the reading is already booked.
+    expect(drillVerdict({ ...review, lastAgainAt: earlier }, false, now)).toBe('practice');
+    // Relearning is still learning.
+    const relearning = makeCard({ fsrs: reviewState({ state: 3, lapses: 1 }) });
+    expect(drillVerdict(relearning, false, now)).toBe('again');
   });
 });

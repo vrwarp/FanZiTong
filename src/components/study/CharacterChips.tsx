@@ -4,12 +4,19 @@ import { charInfo } from '@/data/charInfo';
 import { CharacterBreakdown } from './CharacterBreakdown';
 import { cn } from '@/lib/util/cn';
 import { hanChars, syllablesPerCharacter } from '@/lib/util/pinyin';
+import { describeElsewhere, type CharacterKnowledge } from '@/lib/stats/characters';
 import type { VocabCard } from '@/types';
 
 export interface CharacterChipsProps {
   card: VocabCard;
   /** Deck used to find other words sharing each character. */
   pool: VocabCard[];
+  /**
+   * What the review log says about each character in the learner's other
+   * words, so a chip can say "read in 滷肉飯" or "new here" — the sentence a
+   * tutor says on the reveal: which part of this word is the new one.
+   */
+  knowledge?: CharacterKnowledge;
   selected: string | null;
   onSelect: (char: string | null) => void;
 }
@@ -26,7 +33,7 @@ export interface CharacterChipsProps {
  * A character that is one indivisible unit simply has nothing extra to show,
  * which is the honest answer rather than a missing panel.
  */
-export function CharacterChips({ card, pool, selected, onSelect }: CharacterChipsProps) {
+export function CharacterChips({ card, pool, knowledge, selected, onSelect }: CharacterChipsProps) {
   // Every character the deck contains, so the sound family only ever points at
   // words this learner is actually studying. Computed before the early return
   // below, because a hook cannot be skipped for one-character words.
@@ -54,6 +61,7 @@ export function CharacterChips({ card, pool, selected, onSelect }: CharacterChip
       <div className="flex flex-wrap gap-1.5">
         {chars.map((ch, i) => {
           const related = alsoIn(ch);
+          const elsewhere = describeElsewhere(knowledge, ch, card.traditional);
           const active = selected === ch;
           return (
             <button
@@ -76,10 +84,32 @@ export function CharacterChips({ card, pool, selected, onSelect }: CharacterChip
               {syllables && (
                 <span className="text-xs text-stone-500 dark:text-stone-400">{syllables[i]}</span>
               )}
-              {related.length > 0 && (
-                <span className="text-[11px] text-stone-600 dark:text-stone-300">
-                  · {related.length} more word{related.length === 1 ? '' : 's'}
+              {elsewhere ? (
+                <span
+                  className={cn(
+                    'text-[11px]',
+                    elsewhere.tone === 'read' && 'text-jade-700 dark:text-jade-500',
+                    elsewhere.tone === 'missed' && 'text-amber-700 dark:text-amber-300',
+                    elsewhere.tone === 'new' && 'text-stone-500 dark:text-stone-400',
+                  )}
+                  data-testid="character-elsewhere"
+                  data-tone={elsewhere.tone}
+                >
+                  · {elsewhere.text}
+                  {elsewhere.word && (
+                    <>
+                      {' '}
+                      <Hanzi>{elsewhere.word}</Hanzi>
+                    </>
+                  )}
+                  {elsewhere.more > 0 && ` +${elsewhere.more}`}
                 </span>
+              ) : (
+                related.length > 0 && (
+                  <span className="text-[11px] text-stone-600 dark:text-stone-300">
+                    · {related.length} more word{related.length === 1 ? '' : 's'}
+                  </span>
+                )
               )}
             </button>
           );

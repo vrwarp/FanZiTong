@@ -10,6 +10,7 @@ import { buildDeckIndex, validateCard } from '@/lib/assistant/validateCard';
 import { useCard } from '@/hooks/useCards';
 import { newFsrsState } from '@/lib/fsrs/scheduler';
 import { splitList } from '@/lib/io/domain';
+import { formatExtraSentenceLines, parseExtraSentenceLines } from '@/lib/io/extraSentenceLines';
 import { uuid } from '@/lib/util/id';
 import { numberedToMarks } from '@/lib/util/pinyin';
 import { formatRelativeDue } from '@/lib/util/time';
@@ -32,6 +33,8 @@ interface FormState {
   exampleSentenceTraditional: string;
   exampleSentencePinyin: string;
   exampleSentenceTranslation: string;
+  /** One per line: sentence | pinyin | translation. */
+  extraSentences: string;
   visualFoils: string;
   homophoneFoils: string;
   variants: string;
@@ -50,6 +53,7 @@ const EMPTY_FORM: FormState = {
   exampleSentenceTraditional: '',
   exampleSentencePinyin: '',
   exampleSentenceTranslation: '',
+  extraSentences: '',
   visualFoils: '',
   homophoneFoils: '',
   variants: '',
@@ -69,6 +73,7 @@ function toForm(card: VocabCard): FormState {
     exampleSentenceTraditional: card.exampleSentenceTraditional ?? '',
     exampleSentencePinyin: card.exampleSentencePinyin ?? '',
     exampleSentenceTranslation: card.exampleSentenceTranslation ?? '',
+    extraSentences: formatExtraSentenceLines(card.extraSentences),
     visualFoils: (card.visualFoils ?? []).join(' | '),
     homophoneFoils: (card.homophoneFoils ?? []).join(' | '),
     variants: (card.variants ?? []).join(' | '),
@@ -160,6 +165,8 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     card.exampleSentenceTraditional = sentence || undefined;
     card.exampleSentencePinyin = numberedToMarks(form.exampleSentencePinyin.trim()) || undefined;
     card.exampleSentenceTranslation = form.exampleSentenceTranslation.trim() || undefined;
+    const extras = parseExtraSentenceLines(form.extraSentences);
+    card.extraSentences = extras.length ? extras : undefined;
     const foils = splitList(form.visualFoils);
     card.visualFoils = foils.length ? foils : undefined;
     const homophones = splitList(form.homophoneFoils);
@@ -319,6 +326,21 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
           className={inputClass}
           value={form.exampleSentenceTranslation}
           onChange={set('exampleSentenceTranslation')}
+        />
+      </Field>
+      <Field
+        label="More sentences 更多例句"
+        htmlFor="extraSentences"
+        hint="One per line: sentence | pinyin | translation. The reveal and Fill the Blank take turns through every sentence, so one frame is not memorised in place of the word."
+      >
+        <textarea
+          id="extraSentences"
+          className={`${textareaClass} hanzi`}
+          lang="zh-Hant-TW"
+          rows={3}
+          value={form.extraSentences}
+          onChange={set('extraSentences')}
+          data-testid="field-extra-sentences"
         />
       </Field>
       <Field

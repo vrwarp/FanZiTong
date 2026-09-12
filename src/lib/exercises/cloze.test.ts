@@ -94,6 +94,16 @@ describe('buildClozeExercise', () => {
     expect(ex.sentencePinyin).toBe(card.exampleSentencePinyin);
   });
 
+  it('leaves out the words it is told to avoid', () => {
+    const card = pool.find((c) => c.traditional === '團契')!;
+    const avoid = new Set(['禱告']);
+    const { words } = pickClozeDistractors(card, pool, 3, mulberry32(2), avoid);
+    expect(words).not.toContain('禱告');
+    const ex = buildClozeExercise(card, pool, mulberry32(1), { avoid })!;
+    expect(ex.options).not.toContain('禱告');
+    expect(ex.options).toContain('團契');
+  });
+
   it('returns null when the sentence does not contain the word', () => {
     const card = makeCard({ exampleSentenceTraditional: '這句沒有目標。' });
     expect(buildClozeExercise(card, pool)).toBeNull();

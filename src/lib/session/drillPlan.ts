@@ -95,9 +95,16 @@ export function buildDrillExercises(
     }
     return exercises;
   }
+  // A word this run will ask about is not offered as an option in another
+  // item's cloze: one word, one appearance per run.
+  const selectedWords = new Set(selected.map((c) => c.traditional));
   for (const card of selected) {
+    const avoid = new Set(selectedWords);
+    avoid.delete(card.traditional);
     const ex =
-      type === 'cloze' ? buildClozeExercise(card, pool, rng) : buildFoilExercise(card, pool, rng);
+      type === 'cloze'
+        ? buildClozeExercise(card, pool, rng, { avoid })
+        : buildFoilExercise(card, pool, rng);
     if (ex) exercises.push(ex);
   }
   return exercises;

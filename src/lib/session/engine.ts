@@ -270,7 +270,14 @@ export class StudyEngine {
   private answered = 0;
   private nextDrillAt = DRILL_EVERY_N_CARDS;
   private lastDrillType: ExerciseType | undefined;
+  /**
+   * Cards a drill has asked about this session: every target, and every
+   * studied dish printed on a slip, since a studied dish on a slip is graded
+   * like a target. None of them is drilled again this session.
+   */
   private readonly drilled = new Set<string>();
+  /** Every card on the last drill served, filler dishes included. */
+  private lastDrillIds = new Set<string>();
   private readonly results: SessionResultEntry[] = [];
   /** Moves forward by the time a step spent past the cap, so elapsed time excludes it. */
   private startedAt: number;
@@ -809,14 +816,14 @@ export class StudyEngine {
     this.stepStartedAt = nowMs;
     if (this.status === 'complete') return;
     if (this.drillQueue.length > 0) {
-      this.step = { kind: 'drill', exercise: this.drillQueue.shift()! };
+      this.serveDrill(this.drillQueue.shift()!);
       return;
     }
     if (this.interleave && this.answered >= this.nextDrillAt) {
       this.nextDrillAt = this.answered + DRILL_EVERY_N_CARDS;
       const drill = this.makeDrill();
       if (drill) {
-        this.step = { kind: 'drill', exercise: drill };
+        this.serveDrill(drill);
         return;
       }
     }
@@ -834,7 +841,7 @@ export class StudyEngine {
         const drill = this.makeDrill(new Set(this.queue));
         if (drill) {
           this.nextDrillAt = this.answered + DRILL_EVERY_N_CARDS;
-          this.step = { kind: 'drill', exercise: drill };
+          this.serveDrill(drill);
           return;
         }
       }
@@ -899,6 +906,37 @@ export class StudyEngine {
     return null;
   }
 
+  /**
+   * Put a drill on screen and remember what it showed. A studied dish printed
+   * on a slip is graded like a target, so it has had its drill; and nothing
+   * on this drill — filler dishes included — is offered on the next one.
+   */
+  private serveDrill(exercise: DrillExercise): void {
+    const ids = exercise.type === 'realia_menu' ? exercise.cardIds : [exercise.cardId];
+    for (const id of ids) {
+      const card = this.cards.get(id);
+      if (card && card.fsrs.state !== CardState.New) this.drilled.add(id);
+    }
+    this.lastDrillIds = new Set(ids);
+    this.step = { kind: 'drill', exercise };
+  }
+
+  /**
+   * Words a drill built now must not show as options or neighbours: the
+   * ones already drilled this session, everything on the last drill, and the
+   * cards still queued — a queued word the learner has not met yet must not
+   * be shown with its reading before its first sight.
+   */
+  private wordsToKeepOut(): { ids: Set<string>; words: Set<string> } {
+    const ids = new Set<string>([...this.drilled, ...this.lastDrillIds, ...this.queue]);
+    const words = new Set<string>();
+    for (const id of ids) {
+      const card = this.cards.get(id);
+      if (card) words.add(card.traditional);
+    }
+    return { ids, words };
+  }
+
   private buildExercise(
     type: Exclude<ExerciseType, 'rapid_recognition'>,
     card: VocabCard,
@@ -906,12 +944,15 @@ export class StudyEngine {
   ): DrillExercise | null {
     switch (type) {
       case 'cloze':
-        return buildClozeExercise(card, pool, this.rng);
+        return buildClozeExercise(card, pool, this.rng, { avoid: this.wordsToKeepOut().words });
       case 'foil_discrimination':
         return buildFoilExercise(card, pool, this.rng);
       case 'realia_menu': {
         const seenIds = new Set(this.results.map((r) => r.cardId));
+        const keepOut = this.wordsToKeepOut().ids;
+        keepOut.delete(card.id);
         const companions = companionsFor(card, pool)
+          .filter((c) => !keepOut.has(c.id))
           .sort((a, b) => Number(seenIds.has(b.id)) - Number(seenIds.has(a.id)))
           .slice(0, 2);
         return buildMenuExercise([card, ...companions], this.rng);

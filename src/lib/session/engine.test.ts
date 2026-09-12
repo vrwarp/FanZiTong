@@ -5,6 +5,7 @@ import { mulberry32 } from '@/lib/util/random';
 import { CardState, type VocabCard } from '@/types';
 import { makeCard, makePool, reviewState } from '@/test/factories';
 import { buildDrillExercises, selectDrillCards } from './drillPlan';
+import type { DrillExercise } from './engine';
 import {
   MAX_COUNTED_ANSWER_MS,
   StudyEngine,
@@ -278,6 +279,130 @@ describe('StudyEngine — drill interleaving', () => {
   });
 });
 
+describe('StudyEngine — one word, one drill', () => {
+  const lapsed = (traditional: string, extra: Partial<VocabCard> = {}) =>
+    makeCard({
+      traditional,
+      domain: 'food',
+      fsrs: reviewState({ lapses: 1, due: '2026-09-05T07:00:00.000Z' }),
+      exampleSentenceTraditional: `我要一碗${traditional}。`,
+      ...extra,
+    });
+
+  it('counts a studied dish on a slip as drilled, and never drills it again that session', () => {
+    const pool = makePool();
+    const engine = engineFor(
+      pool,
+      pool.map((c) => c.id),
+    );
+    // Three food words knocked down, two others read: the fifth answer brings a slip.
+    engine.rate(1); // 滷肉飯
+    engine.rate(1); // 牛肉麵
+    engine.rate(1); // 貢丸湯
+    engine.rate(4); // 地瓜葉
+    engine.rate(4); // 團契
+    const first = engine.snapshot().step;
+    if (first?.kind !== 'drill' || first.exercise.type !== 'realia_menu') {
+      throw new Error('expected a slip');
+    }
+    const onSlip = first.exercise.cardIds.filter((id) => pool.some((c) => c.id === id));
+    expect(onSlip.length).toBeGreaterThan(1);
+    engine.answerDrill(onSlip.map((cardId) => ({ cardId, correct: true })));
+    // Run the session out; no later drill may ask about a dish that was on that slip.
+    const later: DrillExercise[] = [];
+    let guard = 0;
+    while (engine.snapshot().status === 'active' && guard < 60) {
+      const s = engine.snapshot();
+      if (s.step?.kind === 'card') engine.rate(4);
+      else if (s.step?.kind === 'drill') {
+        later.push(s.step.exercise);
+        engine.skipDrill();
+      } else engine.tick();
+      guard += 1;
+    }
+    for (const exercise of later) {
+      const ids = exercise.type === 'realia_menu' ? exercise.cardIds : [exercise.cardId];
+      for (const id of onSlip) expect(ids).not.toContain(id);
+    }
+  });
+
+  it("does not put a slip's dish into the very next drill, even to fill a gap", () => {
+    // Two lapsed dishes read correctly (not re-queued) and three new words
+    // knocked down (waiting out their minute): the fifth answer brings a slip
+    // on one lapsed dish with the other beside it. Before, the gap after the
+    // slip was filled with a drill on that very neighbour.
+    const pool = makePool();
+    const x = lapsed('餛飩湯');
+    const y = lapsed('貢丸湯', { visualFoils: ['貞丸湯'] });
+    const fresh = pool.filter((c) => c.domain !== 'food').slice(0, 3);
+    const all = [...pool, x, y];
+    const c = clock();
+    const engine = engineFor(all, [x.id, y.id, ...fresh.map((f) => f.id)], {
+      now: c.now,
+      retryGapMs: 60_000,
+    });
+    engine.rate(3); // 餛飩湯: read
+    c.advance(1000);
+    engine.rate(3); // 貢丸湯: read
+    for (const _ of fresh) {
+      c.advance(1000);
+      engine.rate(1);
+    }
+    const first = engine.snapshot().step;
+    if (first?.kind !== 'drill' || first.exercise.type !== 'realia_menu') {
+      throw new Error('expected a slip');
+    }
+    expect(first.exercise.cardIds).toContain(x.id);
+    expect(first.exercise.cardIds).toContain(y.id);
+    // Nothing still queued for its first look may be printed on the slip.
+    for (const f of fresh) expect(first.exercise.cardIds).not.toContain(f.id);
+    engine.answerDrill([
+      { cardId: x.id, correct: true },
+      { cardId: y.id, correct: true },
+    ]);
+    // The three new words are inside their minute and the only other seen
+    // dish was on the slip: the session waits rather than drill it.
+    const next = engine.snapshot().step;
+    expect(next?.kind).toBe('wait');
+  });
+
+  it('keeps the previous drill and the queue out of a cloze', () => {
+    const pool = makePool();
+    const outside = makeCard({
+      traditional: '見證',
+      domain: 'church',
+      fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }),
+      exampleSentenceTraditional: '她在聚會裡分享見證。',
+    });
+    const tuanQi = pool.find((c) => c.traditional === '團契')!;
+    const daoGao = pool.find((c) => c.traditional === '禱告')!;
+    const all = [...pool, outside];
+    // 團契 is drilled first (a pre-built foil); 禱告 stays queued and unmet
+    // while the fifth answer brings a cloze on the outside learning card.
+    const queue = [...pool.filter((c) => c.domain === 'food'), pool[6], daoGao].map((c) => c.id);
+    const engine = engineFor(all, queue, {
+      drills: buildDrillExercises('foil_discrimination', [tuanQi], all, mulberry32(3)),
+    });
+    const first = engine.snapshot().step;
+    if (first?.kind !== 'drill' || first.exercise.type !== 'foil_discrimination') {
+      throw new Error('expected the foil drill');
+    }
+    engine.skipDrill();
+    for (let i = 0; i < 5; i += 1) engine.rate(4);
+    const cloze = engine.snapshot().step;
+    if (cloze?.kind !== 'drill' || cloze.exercise.type !== 'cloze') {
+      throw new Error('expected a cloze');
+    }
+    expect(cloze.exercise.cardId).toBe(outside.id);
+    expect(engine.remainingCardIds()).toContain(daoGao.id);
+    // The only two church words in the deck are the one just drilled and the
+    // one not yet met: the cloze fills its options from elsewhere.
+    expect(cloze.exercise.options).not.toContain('團契');
+    expect(cloze.exercise.options).not.toContain('禱告');
+    expect(cloze.exercise.options).toContain('見證');
+  });
+});
+
 describe('StudyEngine — standalone drills', () => {
   it('runs pre-built drills in order and completes', () => {
     const pool = makePool();
@@ -470,6 +595,19 @@ describe('drillPlan', () => {
       onlyIds: [leech.id],
     });
     expect(only.map((c) => c.id)).toEqual([leech.id]);
+  });
+
+  it("never offers one selected word as an option in another selected word's cloze", () => {
+    const pool = makePool();
+    const church = pool.filter((c) => c.domain === 'church');
+    expect(church.length).toBe(2);
+    const drills = buildDrillExercises('cloze', church, pool, mulberry32(7));
+    for (const drill of drills) {
+      if (drill.type !== 'cloze') throw new Error('expected cloze');
+      for (const other of church) {
+        if (other.id !== drill.cardId) expect(drill.options).not.toContain(other.traditional);
+      }
+    }
   });
 
   it('groups menu drills and pads lonely groups', () => {

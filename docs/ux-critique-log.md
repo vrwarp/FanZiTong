@@ -251,3 +251,15 @@ words failed) and the rating is honest: reveal time runs 2.1 s for _Easy_ up to
 - The export gains `drill_lapse_after_reading`, `scheduler_day_mismatch` and
   `backgrounded_answers`, practice and booked counts per day, lapse sources on
   saturated cards, and moves to report version 2.
+
+**Reported by the learner after the round:** the same word turning up in two
+drills in a row of different kinds. The log had it — 餛飩湯 as a Fill the
+Blank target at 08:57 on 09-12 and on an Order Slip a minute later; a slip, a
+foil drill and a second slip sharing 貢丸湯 within eighty seconds on 09-09 —
+and the cause was that a slip prefers "seen" dishes as neighbours while a
+card just drilled counts as seen and a neighbour never counted as drilled.
+Now a studied dish on a slip counts as drilled, nothing on one drill is
+offered on the next (filler dishes included), a cloze never offers a word
+just drilled, and a queued word the learner has not met yet is kept off
+slips and out of cloze options so its first sight is not spoiled. Standalone
+runs keep each selected word out of the other items' options.

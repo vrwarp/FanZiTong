@@ -100,6 +100,43 @@ export function characterElsewhere(
   return { readIn, failedIn };
 }
 
+/** The chip's claim about a character, from the learner's other words. */
+export interface ElsewhereLabel {
+  /** The claim: "read in", "missed in", or "new here". */
+  text: string;
+  /** The word the claim is about, when there is one. */
+  word?: string;
+  /** How many further words back the same claim. */
+  more: number;
+  tone: 'read' | 'missed' | 'new';
+}
+
+export function describeElsewhere(
+  knowledge: CharacterKnowledge | undefined,
+  char: string,
+  word: string,
+): ElsewhereLabel | null {
+  if (!knowledge) return null;
+  const elsewhere = characterElsewhere(knowledge, char, word);
+  if (elsewhere.readIn.length > 0) {
+    return {
+      text: 'read in',
+      word: elsewhere.readIn[0],
+      more: elsewhere.readIn.length - 1,
+      tone: 'read',
+    };
+  }
+  if (elsewhere.failedIn.length > 0) {
+    return {
+      text: 'missed in',
+      word: elsewhere.failedIn[0],
+      more: elsewhere.failedIn.length - 1,
+      tone: 'missed',
+    };
+  }
+  return { text: 'new here', more: 0, tone: 'new' };
+}
+
 export interface CharacterSummary {
   /** Distinct characters across the studied words. */
   met: number;

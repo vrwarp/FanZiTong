@@ -66,6 +66,12 @@ export function pickClozeDistractors(
   pool: VocabCard[],
   count: number,
   rng: Rng = Math.random,
+  /**
+   * Words not to offer as readable options: the ones just drilled or about
+   * to be met, so one word does not turn up in two drills in a row and a new
+   * word is not shown with its reading before its first sight.
+   */
+  avoid: ReadonlySet<string> = new Set(),
 ): ClozeDistractors {
   const target = card.traditional;
   const targetLength = hanChars(target).length;
@@ -87,7 +93,8 @@ export function pickClozeDistractors(
       c.id !== card.id &&
       c.traditional !== target &&
       !isVariantOf(card, c.traditional) &&
-      !sentence.includes(c.traditional),
+      !sentence.includes(c.traditional) &&
+      !avoid.has(c.traditional),
   );
   const sameLength = (c: VocabCard) => hanChars(c.traditional).length === targetLength;
   const deckWords = (cards: VocabCard[]) => cards.map((c) => c.traditional);
@@ -127,11 +134,12 @@ export function buildClozeExercise(
   card: VocabCard,
   pool: VocabCard[],
   rng: Rng = Math.random,
+  opts: { avoid?: ReadonlySet<string> } = {},
 ): ClozeExercise | null {
   if (!hasClozeSentence(card)) return null;
   const sentence = card.exampleSentenceTraditional!.trim();
   const index = sentence.indexOf(card.traditional);
-  const { words, foil } = pickClozeDistractors(card, pool, CLOZE_OPTION_COUNT - 1, rng);
+  const { words, foil } = pickClozeDistractors(card, pool, CLOZE_OPTION_COUNT - 1, rng, opts.avoid);
   if (words.length + (foil ? 1 : 0) < 1) return null;
   const options = shuffle([card.traditional, ...words, ...(foil ? [foil] : [])], rng);
   const optionInfo: Record<string, ClozeOptionInfo> = {};

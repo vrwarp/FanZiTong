@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import { characterKnowledge } from '@/lib/stats/characters';
+import { characterKnowledge, describeElsewhere } from '@/lib/stats/characters';
 import { makeCard, makeLog } from '@/test/factories';
-import { CharacterChips, describeElsewhere } from './CharacterChips';
+import { CharacterChips } from './CharacterChips';
 
 const day = (d: number) => new Date(2026, 8, d, 10, 0).toISOString();
 

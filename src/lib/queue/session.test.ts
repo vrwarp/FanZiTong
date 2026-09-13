@@ -210,20 +210,30 @@ describe('requeue and drill helpers', () => {
     expect(hasFoils(makeCard({ visualFoils: [' '] }))).toBe(false);
   });
 
-  it('rotates drill types and falls back sensibly', () => {
+  it('gives every drill kind a card supports its turn, and falls back sensibly', () => {
     const food = makeCard();
     expect(chooseDrillType(food, undefined)).toBe('cloze');
     expect(chooseDrillType(food, 'cloze')).toBe('realia_menu');
-    expect(chooseDrillType(food, 'realia_menu')).toBe('cloze');
+    expect(chooseDrillType(food, 'realia_menu')).toBe('foil_discrimination');
+    expect(chooseDrillType(food, 'foil_discrimination')).toBe('meaning_to_form');
+    expect(chooseDrillType(food, 'meaning_to_form')).toBe('cloze');
+    expect(chooseDrillType(food, 'cloze', ['realia_menu', 'foil_discrimination'])).toBe(
+      'meaning_to_form',
+    );
     const church = makeCard({ domain: 'church', exampleSentenceTraditional: undefined });
     expect(chooseDrillType(church, undefined)).toBe('foil_discrimination');
-    expect(chooseDrillType(church, 'foil_discrimination')).toBe('foil_discrimination');
+    expect(chooseDrillType(church, 'foil_discrimination')).toBe('meaning_to_form');
+    expect(chooseDrillType(church, 'meaning_to_form')).toBe('foil_discrimination');
+    // Which Word needs only a meaning and a reading, so a bare card still has one drill…
     const bare = makeCard({
       domain: 'slang',
       exampleSentenceTraditional: undefined,
       visualFoils: [],
     });
-    expect(chooseDrillType(bare, undefined)).toBeNull();
+    expect(chooseDrillType(bare, undefined)).toBe('meaning_to_form');
+    expect(chooseDrillType(bare, undefined, ['meaning_to_form'])).toBeNull();
+    // …and a card with no definition has none.
+    expect(chooseDrillType({ ...bare, definition: ' ' }, undefined)).toBeNull();
   });
 });
 

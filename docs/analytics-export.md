@@ -50,22 +50,25 @@ environment       — app version, build, IANA timezone, UTC offset, locale, and
 report
   settings        — the learner's scheduling settings, verbatim
   deck            — counts per domain: states, content coverage, what has been
-                    seen, how many words are still settling; and newQueueAhead,
-                    the domains of the next 200 new cards, run-length encoded
+                    seen, how many words are still settling; newQueueAhead,
+                    the domains of the next 200 new cards, run-length encoded;
+                    and byEar, how many words were checked by ear and known
   activity        — per study day (answers the scheduler heard, and the
                     practice it was not consulted on) and per inferred session,
                     plus the sessions the engine recorded (with their retries);
                     rating matrices by exercise and by pre-answer state;
                     answer-time quantiles; where the lapses came from; retries
-                    and booked readings by exercise; firstSight, how each
-                    domain was rated the first time its words were seen
+                    and booked readings by exercise; earChecks, how many
+                    Which Word ear checks were asked and known; firstSight,
+                    how each domain was rated the first time its words were seen
   characters      — the characters behind the studied words: how many were
                     met, how many have been read in a real test, and the ones
                     that have only ever been failed, with their words
   cards[]         — one row per STUDIED card: content coverage, FSRS state,
                     the full answer history with the gap before each answer,
-                    retries, booked readings, lapses charged by drills, and
-                    per-card flags
+                    retries, booked readings, lapses charged by drills, whether
+                    the word was known by ear when last asked, and per-card
+                    flags
   diagnostics[]   — the patterns the app found in its own data
 events            — real session boundaries and answers, including the ones
                     FSRS ignored (see below)
@@ -94,6 +97,7 @@ severity, the numbers behind it, and a handful of examples to open.
 | `scheduler_day_mismatch`        | warn      | Consecutive answers the scheduler dated on a different side of a day (whole UTC calendar days) than the learner's study day; how many were a night's sleep scored as same-day. The scheduler is now told the time in study days, so these predate that build.                                                                                                     |
 | `backgrounded_answers`          | info      | Answers over ten minutes in the event log — a phone put away with a card on screen — and how much time on task they overstate. The engine now counts at most two minutes per answer.                                                                                                                                                                              |
 | `cloze_sentence_repeats`        | warn      | One sentence clozed three or more times inside a week (events name the sentence; for older files the card stands in for its one sentence). A frame filled in that often is recognised by its shape, not read. Fill the Blank now holds a sentence back for a week after it is clozed and rotates through the word's other sentences, so these predate that build. |
+| `not_known_by_ear`              | info      | Words the learner did not know by ear when Which Word asked for their reading from the meaning alone. A reading drill cannot teach these: they need the word before the shape.                                                                                                                                                                                    |
 | `domain_starvation`             | warn      | An active domain that has never had a single card introduced.                                                                                                                                                                                                                                                                                                     |
 | `new_queue_single_domain_run`   | warn      | The upcoming new cards are a long run of one domain — days of study before another domain appears.                                                                                                                                                                                                                                                                |
 | `answered_faster_than_readable` | info      | Answers under 800 ms: reflex, or a card still on screen from a re-queue.                                                                                                                                                                                                                                                                                          |
@@ -140,6 +144,10 @@ An event knows things a review log cannot:
 - `revealLatencyMs`, how long the prompt was studied before the answer was
   asked for, separately from how long the rating took;
 - `picked` and `misses`: which wrong shape was taken for the word;
+- `heard`, on a Which Word answer: whether the learner picked the word's
+  reading from the meaning alone before choosing the characters; absent when
+  the ear check was not due. The written step is graded like a cloze, so
+  `picked` and `misses` mean the same there;
 - `sentence`, on a Fill the Blank answer: the sentence the blank was cut from —
   a word can now have several, its own and ones borrowed from other cards, so
   a repeat is a fact about the sentence rather than the word;

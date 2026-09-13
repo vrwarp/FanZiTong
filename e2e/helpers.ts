@@ -23,6 +23,20 @@ export async function solveDrill(page: Page, opts: { wrong?: boolean } = {}) {
   const cloze = page.getByTestId('cloze-exercise');
   const foil = page.getByTestId('foil-exercise');
   const menu = page.getByTestId('menu-exercise');
+  const meaning = page.getByTestId('meaning-exercise');
+  if (await meaning.isVisible()) {
+    // The ear check comes first when it is due; only the written word is graded.
+    if (await page.getByTestId('meaning-reading').first().isVisible()) {
+      await page.locator('[data-testid="meaning-reading"][data-correct="true"]').click();
+    }
+    if (opts.wrong) {
+      await page.locator('[data-testid="meaning-option"][data-foil="true"]').first().click();
+      await page.getByTestId('meaning-retry').click();
+    }
+    await page.locator('[data-testid="meaning-option"][data-correct="true"]').first().click();
+    await page.getByTestId('drill-continue').click();
+    return 'meaning';
+  }
   if (await cloze.isVisible()) {
     // Only the look-alike counts as a miss; a deck word that does not fit is a retry.
     if (opts.wrong) {

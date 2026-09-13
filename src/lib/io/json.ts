@@ -70,6 +70,8 @@ export const importCardSchema = z.object({
   lastPassAt: isoDate.optional(),
   /** Rotation memory only: a malformed record is dropped, never the card. */
   sentencesShown: z.array(sentenceShownSchema).optional().catch(undefined),
+  /** Whether the word was known by ear when last asked; malformed → dropped, never the card. */
+  byEar: z.object({ at: isoDate, known: z.boolean() }).optional().catch(undefined),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
 });
@@ -78,7 +80,13 @@ export const reviewLogSchema = z.object({
   id: z.string(),
   cardId: z.string(),
   rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
-  exerciseType: z.enum(['rapid_recognition', 'cloze', 'realia_menu', 'foil_discrimination']),
+  exerciseType: z.enum([
+    'rapid_recognition',
+    'cloze',
+    'realia_menu',
+    'foil_discrimination',
+    'meaning_to_form',
+  ]),
   reviewTimestamp: isoDate,
   timeSpentMs: z.number().nonnegative(),
   /**
@@ -183,6 +191,7 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       lastAgainAt: c.lastAgainAt,
       lastPassAt: c.lastPassAt,
       sentencesShown: c.sentencesShown as SentenceShown[] | undefined,
+      byEar: c.byEar,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       warnings,

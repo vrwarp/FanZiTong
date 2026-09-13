@@ -2,6 +2,7 @@ import type { DrillExercise, DrillOutcome } from '@/lib/session/engine';
 import type { VocabCard } from '@/types';
 import { ClozeExerciseView } from './ClozeExerciseView';
 import { FoilExerciseView } from './FoilExerciseView';
+import { MeaningExerciseView } from './MeaningExerciseView';
 import { MenuExerciseView } from './MenuExerciseView';
 
 export interface DrillStepProps {
@@ -32,6 +33,15 @@ export function DrillStep({ exercise, getCard, onComplete, onSkip }: DrillStepPr
     case 'foil_discrimination':
       return (
         <FoilExerciseView
+          key={exercise.cardId}
+          exercise={exercise}
+          card={getCard(exercise.cardId)}
+          onComplete={onComplete}
+        />
+      );
+    case 'meaning_to_form':
+      return (
+        <MeaningExerciseView
           key={exercise.cardId}
           exercise={exercise}
           card={getCard(exercise.cardId)}

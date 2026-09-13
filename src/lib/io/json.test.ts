@@ -151,3 +151,17 @@ describe('sentence rotation state', () => {
     expect(deck.rows[0].sentencesShown).toBeUndefined();
   });
 });
+
+describe('by-ear checks', () => {
+  it('round-trips the record and drops a malformed one rather than the card', () => {
+    const card = makeCard({ byEar: { at: '2026-09-13T08:00:00.000Z', known: false } });
+    const parsed = parseJsonDeck(serializeJsonDeck(toJsonDeck([card])));
+    expect(parsed.issues).toEqual([]);
+    expect(parsed.rows[0].byEar).toEqual(card.byEar);
+    const bad = parseJsonDeck(
+      '[{"traditional":"火鍋","pinyin":"huǒ guō","byEar":{"at":"2026-09-13T08:00:00.000Z","known":"yes"}}]',
+    );
+    expect(bad.rows.map((r) => r.traditional)).toEqual(['火鍋']);
+    expect(bad.rows[0].byEar).toBeUndefined();
+  });
+});

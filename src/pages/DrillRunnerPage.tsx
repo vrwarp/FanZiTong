@@ -124,7 +124,7 @@ function DrillSession({
         <EmptyState
           icon="🗂️"
           title="No cards fit this drill yet"
-          description="Cloze drills need an example sentence, menu drills need food-domain cards, and foil drills need visual foils. Add some in the Vocab tab."
+          description="Cloze drills need an example sentence, menu drills need food-domain cards, foil drills need visual foils, and Which Word needs a definition and a few other words in the same domain. Add some in the Vocab tab."
           action={<Button onClick={() => navigate('/drills')}>Back to Drills</Button>}
         />
       </div>

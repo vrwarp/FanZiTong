@@ -73,7 +73,12 @@ export const MISSING_FIELDS = [
 ] as const;
 export type MissingField = (typeof MISSING_FIELDS)[number];
 
-export const DRILL_TYPES = ['cloze', 'foil_discrimination', 'realia_menu'] as const;
+export const DRILL_TYPES = [
+  'cloze',
+  'foil_discrimination',
+  'realia_menu',
+  'meaning_to_form',
+] as const;
 
 /** A card as the model sees it in search results: compact, no FSRS internals. */
 export interface CardSummary {

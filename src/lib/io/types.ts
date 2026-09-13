@@ -1,4 +1,4 @@
-import type { DomainCategory, ExampleSentence, FsrsState, SentenceShown } from '@/types';
+import type { ByEar, DomainCategory, ExampleSentence, FsrsState, SentenceShown } from '@/types';
 
 /** A card-shaped row parsed from CSV or JSON, before it becomes a VocabCard. */
 export interface ImportRow {
@@ -27,6 +27,8 @@ export interface ImportRow {
   lastPassAt?: string;
   /** Which sentences the word has been shown in lately (backups only). */
   sentencesShown?: SentenceShown[];
+  /** Whether the word was known by ear when last asked (backups only). */
+  byEar?: ByEar;
   createdAt?: string;
   updatedAt?: string;
   /** Non-fatal notes produced while parsing this row. */

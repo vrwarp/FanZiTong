@@ -80,6 +80,12 @@ export interface StudyEvent {
   picked?: string;
   /** Fill the Blank only: the sentence the blank was cut from, so repeats can be seen. */
   sentence?: string;
+  /**
+   * Which Word only: whether the learner knew the word by ear — picked its
+   * reading from the meaning alone — before choosing the characters. Absent
+   * when the ear check was not due.
+   */
+  heard?: boolean;
   /** Misses before the shape was found, for drills that allow a retry. */
   misses?: number;
   /**

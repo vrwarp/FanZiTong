@@ -139,6 +139,7 @@ describe('buildActivity', () => {
         cloze: 0,
         realia_menu: 0,
         foil_discrimination: 1,
+        meaning_to_form: 0,
       },
     });
     expect(activity.latencyMsByExercise.rapid_recognition).toEqual({
@@ -182,7 +183,13 @@ describe('practice, first sight and characters', () => {
     expect(activity.days[0]).toMatchObject({ answers: 1, practice: 3, booked: 1, retries: 1 });
     expect(activity.booked).toEqual({
       total: 1,
-      byExercise: { rapid_recognition: 0, cloze: 1, realia_menu: 0, foil_discrimination: 0 },
+      byExercise: {
+        rapid_recognition: 0,
+        cloze: 1,
+        realia_menu: 0,
+        foil_discrimination: 0,
+        meaning_to_form: 0,
+      },
     });
     const report = buildReport([inReview], logs, settings, events);
     expect(report.cards[0].booked).toBe(1);
@@ -249,7 +256,13 @@ describe('retries and recorded sessions', () => {
     const activity = buildActivity(logs, events);
     expect(activity.retries).toEqual({
       total: 3,
-      byExercise: { rapid_recognition: 2, cloze: 0, realia_menu: 0, foil_discrimination: 1 },
+      byExercise: {
+        rapid_recognition: 2,
+        cloze: 0,
+        realia_menu: 0,
+        foil_discrimination: 1,
+        meaning_to_form: 0,
+      },
     });
     expect(activity.days[0].retries).toBe(3);
     expect(activity.days[0].answers).toBe(1); // the log, not the retries
@@ -554,5 +567,56 @@ describe('buildDiagnostics', () => {
     const found = buildReport([makeCard()], [], settings).diagnostics;
     expect(found.map((d) => d.code)).not.toContain('in_session_repeat_loop');
     expect(found.map((d) => d.code)).not.toContain('leech');
+  });
+});
+
+describe('known by ear', () => {
+  it('counts the ear checks in the census, on the card and in the event log, and names the unknown', () => {
+    const known = makeCard({
+      traditional: '滷肉飯',
+      fsrs: reviewState({ reps: 2 }),
+      byEar: { at: '2026-09-13T08:00:00.000Z', known: true },
+    });
+    const unknown = makeCard({
+      traditional: '靈修',
+      domain: 'church',
+      fsrs: reviewState({ reps: 2 }),
+      byEar: { at: '2026-09-13T08:05:00.000Z', known: false },
+    });
+    const never = makeCard({ traditional: '團契', domain: 'church' });
+    const logs = [
+      makeLog({ cardId: known.id, reviewTimestamp: at(0) }),
+      makeLog({ cardId: unknown.id, reviewTimestamp: at(1) }),
+    ];
+    const events: StudyEvent[] = [
+      answerEvent({
+        cardId: known.id,
+        exerciseType: 'meaning_to_form',
+        correct: true,
+        heard: true,
+      }),
+      answerEvent({
+        cardId: unknown.id,
+        exerciseType: 'meaning_to_form',
+        correct: false,
+        heard: false,
+      }),
+      answerEvent({ cardId: unknown.id, exerciseType: 'meaning_to_form', correct: true }),
+    ];
+    const report = buildReport([known, unknown, never], logs, settings, events);
+    expect(report.deck.byEar).toEqual({ checked: 2, known: 1, unknown: 1 });
+    expect(report.activity.earChecks).toEqual({ asked: 2, known: 1 });
+    expect(report.cards.find((c) => c.traditional === '靈修')?.byEar).toEqual({
+      known: false,
+      at: '2026-09-13T08:05:00.000Z',
+    });
+    expect(report.cards.find((c) => c.traditional === '滷肉飯')?.byEar?.known).toBe(true);
+    const found = report.diagnostics.find((d) => d.code === 'not_known_by_ear')!;
+    expect(found.count).toBe(1);
+    expect(found.examples[0]).toContain('靈修');
+    expect(found.detail).toContain('2 checked, 1 known');
+    expect(
+      buildReport([known, never], logs, settings, []).diagnostics.map((d) => d.code),
+    ).not.toContain('not_known_by_ear');
   });
 });

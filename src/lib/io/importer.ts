@@ -129,6 +129,7 @@ export function materializeImport(
         lastAgainAt: row.lastAgainAt ?? current.lastAgainAt,
         lastPassAt: row.lastPassAt ?? current.lastPassAt,
         sentencesShown: row.sentencesShown ?? current.sentencesShown,
+        byEar: row.byEar ?? current.byEar,
         updatedAt: nowIso,
       });
       continue;
@@ -150,6 +151,7 @@ export function materializeImport(
     if (row.lastAgainAt) card.lastAgainAt = row.lastAgainAt;
     if (row.lastPassAt) card.lastPassAt = row.lastPassAt;
     if (row.sentencesShown?.length) card.sentencesShown = row.sentencesShown;
+    if (row.byEar) card.byEar = row.byEar;
     if (row.extraSentences?.length) card.extraSentences = row.extraSentences;
     if (row.exampleSentenceTraditional)
       card.exampleSentenceTraditional = row.exampleSentenceTraditional;

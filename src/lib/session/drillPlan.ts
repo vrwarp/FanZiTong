@@ -1,7 +1,13 @@
 import { buildClozeExercise, chooseSentence } from '@/lib/exercises/cloze';
 import { buildFoilExercise } from '@/lib/exercises/foil';
+import { buildMeaningExercise } from '@/lib/exercises/meaning';
 import { buildMenuExercise, companionsFor, groupCardsByShop } from '@/lib/exercises/menu';
-import { hasClozeSentence, isActiveDomain, isDrillCandidate } from '@/lib/queue/session';
+import {
+  hasClozeSentence,
+  hasMeaningCue,
+  isActiveDomain,
+  isDrillCandidate,
+} from '@/lib/queue/session';
 import { shuffle, type Rng } from '@/lib/util/random';
 import {
   CardState,
@@ -14,7 +20,12 @@ import type { DrillExercise } from './engine';
 
 export type DrillType = Exclude<ExerciseType, 'rapid_recognition'>;
 
-export const DRILL_TYPES: DrillType[] = ['cloze', 'realia_menu', 'foil_discrimination'];
+export const DRILL_TYPES: DrillType[] = [
+  'cloze',
+  'realia_menu',
+  'foil_discrimination',
+  'meaning_to_form',
+];
 
 export function isDrillType(value: unknown): value is DrillType {
   return typeof value === 'string' && (DRILL_TYPES as string[]).includes(value);
@@ -55,6 +66,7 @@ export function selectDrillCards(
   if (options.domain) eligible = eligible.filter((c) => c.domain === options.domain);
   if (options.type === 'realia_menu') eligible = eligible.filter((c) => c.domain === 'food');
   if (options.type === 'cloze') eligible = eligible.filter(hasClozeSentence);
+  if (options.type === 'meaning_to_form') eligible = eligible.filter(hasMeaningCue);
 
   const buckets = new Map<number, VocabCard[]>();
   for (const card of eligible) {
@@ -108,6 +120,8 @@ export function buildDrillExercises(
       // A word whose every sentence was clozed this week sits this run out.
       const sentence = chooseSentence(card, pool, now, 'cloze');
       if (sentence) ex = buildClozeExercise(card, pool, rng, { avoid, sentence });
+    } else if (type === 'meaning_to_form') {
+      ex = buildMeaningExercise(card, pool, rng, { avoid, now });
     } else {
       ex = buildFoilExercise(card, pool, rng);
     }

@@ -28,7 +28,7 @@ import {
   totalLapses,
 } from '@/lib/stats/analytics';
 import { ownSentences } from '@/lib/exercises/cloze';
-import { hasClozeSentence, hasFoils } from '@/lib/queue/session';
+import { hasClozeSentence, hasFoils, hasMeaningCue } from '@/lib/queue/session';
 import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
 import { hanChars } from '@/lib/util/pinyin';
 import { buildBatch, type ChangeInput } from './journal';
@@ -577,7 +577,7 @@ export function createToolExecutor(deps: ExecutorDeps) {
 
   async function drill(input: unknown): Promise<ToolOutcome> {
     const args = TOOLS.suggest_drill.input.parse(input) as {
-      type: 'cloze' | 'foil_discrimination' | 'realia_menu';
+      type: 'cloze' | 'foil_discrimination' | 'realia_menu' | 'meaning_to_form';
       cardIds: string[];
       label: string;
     };
@@ -591,6 +591,8 @@ export function createToolExecutor(deps: ExecutorDeps) {
         skipped.push({ id: card.id, why: `“${card.traditional}” has no foils yet.` });
       } else if (args.type === 'realia_menu' && card.domain !== 'food') {
         skipped.push({ id: card.id, why: `“${card.traditional}” is not a food word.` });
+      } else if (args.type === 'meaning_to_form' && !hasMeaningCue(card)) {
+        skipped.push({ id: card.id, why: `“${card.traditional}” has no definition yet.` });
       } else {
         eligible.push(card.id);
       }

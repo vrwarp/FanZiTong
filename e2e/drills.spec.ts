@@ -78,6 +78,40 @@ test.describe('Drills tab (standalone modalities)', () => {
     await expect(page.getByTestId('cloze-exercise')).toBeVisible();
   });
 
+  test('which word: the meaning is the cue; by ear first, then the written word', async ({
+    page,
+  }) => {
+    await openApp(page, '/drills');
+    await page.getByTestId('drill-domain').selectOption('food');
+    await page.getByTestId('drill-count').selectOption('3');
+    await page.getByTestId('start-drill-meaning_to_form').click();
+
+    await expect(page.getByTestId('meaning-exercise')).toBeVisible();
+    const cue = (await page.getByTestId('meaning-cue').textContent()) ?? '';
+    expect(cue).not.toMatch(TONE_MARK_RE);
+    // Nothing is written on screen until the ear has answered.
+    await expect(page.getByTestId('meaning-option')).toHaveCount(0);
+    await expect(page.getByTestId('meaning-reading')).toHaveCount(4);
+    await page.locator('[data-testid="meaning-reading"][data-correct="false"]').first().click();
+    await expect(page.getByTestId('meaning-ear')).toContainText('New to your ear');
+    await expect(page.getByTestId('meaning-option')).toHaveCount(4);
+
+    // A real word that is not this one is explained and retired, not charged …
+    await page
+      .locator('[data-testid="meaning-option"][data-correct="false"][data-foil="false"]')
+      .first()
+      .click();
+    await expect(page.getByTestId('meaning-misread')).toBeVisible();
+    await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+    await page.locator('[data-testid="meaning-option"][data-correct="true"]').click();
+    await expect(page.getByTestId('meaning-feedback')).toContainText('Found it');
+    await expect(page.getByTestId('drill-outcome')).toContainText('No change');
+    await page.getByTestId('drill-continue').click();
+    // … and the next item comes up.
+    await expect(page.getByTestId('meaning-exercise')).toBeVisible();
+    await expect(page.getByTestId('drill-progress')).toContainText('2 of 3');
+  });
+
   test('menu realia: tick the ordered dishes on the slip within the time window', async ({
     page,
   }) => {

@@ -25,6 +25,12 @@ const DRILLS: { type: DrillType; icon: string; description: string; foodOnly?: b
     description:
       'Read the sound and meaning, then pick the right characters among look-alikes. Breaks the character-blur habit.',
   },
+  {
+    type: 'meaning_to_form',
+    icon: '💬',
+    description:
+      'Start from the meaning alone. First say the word to yourself — it asks now and then whether you know it by ear — then find how it is written among real words and one misspelling.',
+  },
 ];
 
 export default function DrillsPage() {

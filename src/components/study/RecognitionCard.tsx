@@ -197,6 +197,13 @@ export function RecognitionCard({
             <p className="text-lg" data-testid="definition">
               {card.definition}
             </p>
+            {card.byEar && (
+              <p className="-mt-1 text-xs text-stone-500 dark:text-stone-400" data-testid="by-ear">
+                {card.byEar.known
+                  ? 'You know this word by ear; the shape is what is new. 聽得懂'
+                  : 'New to your ear too — learn the word, not only its shape. 連音也是新的'}
+              </p>
+            )}
             {card.notes && (
               <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="card-note">
                 💡 {card.notes}

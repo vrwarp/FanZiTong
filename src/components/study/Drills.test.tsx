@@ -2,12 +2,14 @@ import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { buildClozeExercise } from '@/lib/exercises/cloze';
 import { buildFoilExercise } from '@/lib/exercises/foil';
+import { buildMeaningExercise } from '@/lib/exercises/meaning';
 import { buildMenuExercise } from '@/lib/exercises/menu';
 import { containsPinyin } from '@/lib/util/pinyin';
 import { mulberry32 } from '@/lib/util/random';
 import { makePool } from '@/test/factories';
 import { ClozeExerciseView } from './ClozeExerciseView';
 import { FoilExerciseView } from './FoilExerciseView';
+import { MeaningExerciseView } from './MeaningExerciseView';
 import { MenuExerciseView } from './MenuExerciseView';
 import { SessionSummary } from './SessionSummary';
 
@@ -151,6 +153,131 @@ describe('FoilExerciseView', () => {
     await userEvent.click(screen.getByTestId('drill-continue'));
     expect(onComplete).toHaveBeenCalledWith([
       { cardId: card.id, correct: false, misses: 1, picked: wrongText },
+    ]);
+  });
+});
+
+describe('MeaningExerciseView', () => {
+  const now = new Date('2026-09-13T08:00:00.000Z');
+  const soups = [
+    ...pool,
+    {
+      ...pool[0],
+      id: 'yu',
+      traditional: '魚丸湯',
+      pinyin: 'yú wán tāng',
+      definition: 'Fish ball soup',
+    },
+    {
+      ...pool[0],
+      id: 'hun',
+      traditional: '餛飩湯',
+      pinyin: 'hún tun tāng',
+      definition: 'Wonton soup',
+    },
+  ];
+  const card = soups.find((c) => c.traditional === '貢丸湯')!;
+  const withEar = buildMeaningExercise(card, soups, mulberry32(1), { now, askByEar: true })!;
+  const noEar = buildMeaningExercise(card, soups, mulberry32(1), { now, askByEar: false })!;
+
+  it('asks by ear first, explains a wrong reading, then grades the written word like a cloze', async () => {
+    const onComplete = vi.fn();
+    render(<MeaningExerciseView exercise={withEar} card={card} onComplete={onComplete} />);
+    // The cue is the meaning alone: no reading, no characters, no options yet.
+    expect(screen.getByTestId('meaning-cue')).toHaveTextContent(card.definition);
+    // The cue is English, so "no pinyin" here means no tone-marked reading.
+    expect(screen.getByTestId('meaning-cue').textContent).not.toMatch(/[āáǎàēéěèīíǐìōóǒòūúǔù]/);
+    expect(screen.getByTestId('meaning-cue').textContent).not.toContain(card.traditional);
+    expect(screen.queryAllByTestId('meaning-option')).toHaveLength(0);
+    const readings = screen.getAllByTestId('meaning-reading');
+    expect(readings).toHaveLength(4);
+    expect(readings.filter((r) => r.dataset.correct === 'true')).toHaveLength(1);
+    const wrongReading = readings.find((r) => r.dataset.correct === 'false')!;
+    await userEvent.click(wrongReading);
+    expect(screen.getByTestId('meaning-ear')).toHaveTextContent(/New to your ear/);
+    expect(screen.getByTestId('meaning-ear')).toHaveTextContent(card.pinyin);
+    expect(screen.queryAllByTestId('meaning-reading')).toHaveLength(0);
+
+    const options = screen.getAllByTestId('meaning-option');
+    expect(options).toHaveLength(4);
+    expect(options.every((o) => !containsPinyin(o.textContent ?? ''))).toBe(true);
+    // A real word that is not this one is a misreading of that word: explained and retired.
+    const misread = options.find(
+      (o) => o.dataset.correct === 'false' && o.dataset.foil === 'false',
+    )!;
+    const misreadWord = misread.textContent!.trim();
+    await userEvent.click(misread);
+    expect(screen.getByTestId('meaning-misread')).toHaveTextContent(misreadWord);
+    expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
+    // The misspelling is a miss on the target: contrast, then find it again.
+    const foil = options.find((o) => o.dataset.foil === 'true')!;
+    const foilText = foil.textContent!.trim();
+    await userEvent.click(foil);
+    expect(screen.getByTestId('meaning-feedback')).toHaveTextContent(/不對/);
+    expect(screen.getByTestId('meaning-diff')).toHaveTextContent(/is not/);
+    await userEvent.click(screen.getByTestId('meaning-retry'));
+    expect(screen.getByTestId('meaning-retry-hint')).toBeInTheDocument();
+    const reshuffled = screen.getAllByTestId('meaning-option');
+    await userEvent.click(reshuffled.find((o) => o.dataset.correct === 'true')!);
+    expect(screen.getByTestId('meaning-feedback')).toHaveTextContent(/Found it/);
+    expect(screen.getByTestId('meaning-feedback')).toHaveTextContent(card.pinyin);
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      {
+        cardId: card.id,
+        correct: false,
+        applyRating: true,
+        misses: 2,
+        picked: foilText,
+        heard: false,
+      },
+    ]);
+  });
+
+  it('skips the ear check when it is not due and marks a first-try pick correct', async () => {
+    const onComplete = vi.fn();
+    render(<MeaningExerciseView exercise={noEar} card={card} onComplete={onComplete} />);
+    expect(screen.queryAllByTestId('meaning-reading')).toHaveLength(0);
+    const right = screen
+      .getAllByTestId('meaning-option')
+      .find((o) => o.dataset.correct === 'true')!;
+    await userEvent.click(right);
+    expect(screen.getByTestId('meaning-feedback')).toHaveTextContent(/Correct/);
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Good/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: true, applyRating: true, misses: 0 },
+    ]);
+  });
+
+  it('leaves the schedule alone when the word follows a misread, and reports the ear check', async () => {
+    const onComplete = vi.fn();
+    render(<MeaningExerciseView exercise={withEar} card={card} onComplete={onComplete} />);
+    await userEvent.click(
+      screen.getAllByTestId('meaning-reading').find((r) => r.dataset.correct === 'true')!,
+    );
+    expect(screen.getByTestId('meaning-ear')).toHaveTextContent(/By ear: yes/);
+    const options = screen.getAllByTestId('meaning-option');
+    const misread = options.find(
+      (o) => o.dataset.correct === 'false' && o.dataset.foil === 'false',
+    )!;
+    const misreadWord = misread.textContent!.trim();
+    await userEvent.click(misread);
+    await userEvent.click(options.find((o) => o.dataset.correct === 'true')!);
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/No change/);
+    // Glosses of the other words stay behind a tap.
+    expect(screen.getAllByTestId('meaning-gloss')[0]).toHaveTextContent('tap to check');
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      {
+        cardId: card.id,
+        correct: true,
+        applyRating: false,
+        misses: 1,
+        picked: misreadWord,
+        heard: true,
+      },
     ]);
   });
 });

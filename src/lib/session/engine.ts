@@ -3,6 +3,8 @@ import type { ClozeExercise, SentenceCandidate } from '@/lib/exercises/cloze';
 import { buildClozeExercise, chooseSentence, noteSentenceShown } from '@/lib/exercises/cloze';
 import type { FoilExercise } from '@/lib/exercises/foil';
 import { buildFoilExercise } from '@/lib/exercises/foil';
+import type { MeaningExercise } from '@/lib/exercises/meaning';
+import { buildMeaningExercise } from '@/lib/exercises/meaning';
 import type { MenuExercise } from '@/lib/exercises/menu';
 import { buildMenuExercise, companionsFor } from '@/lib/exercises/menu';
 import {
@@ -19,6 +21,7 @@ import {
   chooseDrillType,
   drillVerdict,
   hasClozeSentence,
+  hasMeaningCue,
   isDrillCandidate,
   isRetry,
   knockedDownToday,
@@ -37,7 +40,7 @@ import {
   type VocabCard,
 } from '@/types';
 
-export type DrillExercise = ClozeExercise | FoilExercise | MenuExercise;
+export type DrillExercise = ClozeExercise | FoilExercise | MenuExercise | MeaningExercise;
 
 /**
  * The most time one answer can add to the log, the summary and the day's
@@ -50,7 +53,14 @@ export const MAX_COUNTED_ANSWER_MS = 2 * MINUTE_MS;
 /** The fields of an event that only the exercise that produced it can fill in. */
 type AnswerDetail = Pick<
   StudyEvent,
-  'correct' | 'picked' | 'misses' | 'revealLatencyMs' | 'foilSource' | 'foilStrategy' | 'sentence'
+  | 'correct'
+  | 'picked'
+  | 'misses'
+  | 'revealLatencyMs'
+  | 'foilSource'
+  | 'foilStrategy'
+  | 'sentence'
+  | 'heard'
 >;
 
 /** How long a step took: what is counted, and what actually elapsed. */
@@ -82,6 +92,12 @@ export interface DrillOutcome {
   picked?: string;
   /** How many misses it took before the shape was found. */
   misses?: number;
+  /**
+   * Which Word only: whether the learner knew the word by ear — picked its
+   * reading from the meaning — before choosing the characters. Recorded on
+   * the card and the event; absent when the ear check was not due.
+   */
+  heard?: boolean;
 }
 
 export interface SessionResultEntry {
@@ -275,6 +291,8 @@ export class StudyEngine {
   private answered = 0;
   private nextDrillAt = DRILL_EVERY_N_CARDS;
   private lastDrillType: ExerciseType | undefined;
+  /** Which of the two fresh-card drills ran last, so they take turns. */
+  private lastFreshType: 'cloze' | 'meaning_to_form' | undefined;
   /**
    * Cards a drill has asked about this session: every target, and every
    * studied dish printed on a slip, since a studied dish on a slip is graded
@@ -494,6 +512,7 @@ export class StudyEngine {
     const timing = this.takeStepTiming(now);
     const persisted: PersistedReview[] = [];
     for (const outcome of outcomes) {
+      if (outcome.heard !== undefined) this.noteByEar(outcome.cardId, outcome.heard, now);
       const card = this.cards.get(outcome.cardId);
       if (!card) continue;
       // A companion dish the learner has never studied is only there to fill the
@@ -681,6 +700,7 @@ export class StudyEngine {
     const detail: AnswerDetail = { correct };
     if (outcome?.picked !== undefined) detail.picked = outcome.picked;
     if (outcome?.misses !== undefined) detail.misses = outcome.misses;
+    if (outcome?.heard !== undefined) detail.heard = outcome.heard;
     // Which confusion was on screen is a property of the set, not the answer,
     // so it comes from the active exercise rather than the outcome.
     const exercise = this.step?.kind === 'drill' ? this.step.exercise : null;
@@ -900,16 +920,27 @@ export class StudyEngine {
     const usable = (c: VocabCard) =>
       isDrillCandidate(c) && !this.drilled.has(c.id) && !exclude.has(c.id);
 
-    if (this.lastDrillType !== 'cloze') {
+    // Which Word starts from the meaning the reveal has just shown beside the
+    // word, so like the cloze it is kept for cards not seen this session; the
+    // two take turns on those cards.
+    if (this.lastDrillType !== 'cloze' && this.lastDrillType !== 'meaning_to_form') {
       const fresh = pool
-        .filter((c) => usable(c) && hasClozeSentence(c) && !seenIds.has(c.id) && !queued.has(c.id))
+        .filter((c) => usable(c) && !seenIds.has(c.id) && !queued.has(c.id))
         .sort((a, b) => b.fsrs.lapses - a.fsrs.lapses || a.fsrs.stability - b.fsrs.stability);
-      for (const card of fresh) {
-        const exercise = this.buildExercise('cloze', card, pool);
-        if (!exercise) continue;
-        this.drilled.add(card.id);
-        this.lastDrillType = 'cloze';
-        return exercise;
+      const order: ('cloze' | 'meaning_to_form')[] =
+        this.lastFreshType === 'cloze'
+          ? ['meaning_to_form', 'cloze']
+          : ['cloze', 'meaning_to_form'];
+      for (const type of order) {
+        for (const card of fresh) {
+          if (type === 'cloze' ? !hasClozeSentence(card) : !hasMeaningCue(card)) continue;
+          const exercise = this.buildExercise(type, card, pool);
+          if (!exercise) continue;
+          this.drilled.add(card.id);
+          this.lastDrillType = type;
+          this.lastFreshType = type;
+          return exercise;
+        }
       }
     }
 
@@ -923,7 +954,7 @@ export class StudyEngine {
       ...eligible.filter((c) => recent.has(c.id)),
     ].sort((a, b) => b.fsrs.lapses - a.fsrs.lapses);
     for (const card of candidates) {
-      const type = chooseDrillType(card, this.lastDrillType, ['cloze']);
+      const type = chooseDrillType(card, this.lastDrillType, ['cloze', 'meaning_to_form']);
       if (!type) continue;
       const exercise = this.buildExercise(type, card, pool);
       if (!exercise) continue;
@@ -951,6 +982,14 @@ export class StudyEngine {
       this.noteShown(exercise.cardId, exercise.sentence, this.now(), 'cloze');
     }
     this.step = { kind: 'drill', exercise };
+  }
+
+  /** Remember whether the word was known by ear, and mark the card to be saved. */
+  private noteByEar(cardId: string, known: boolean, at: Date): void {
+    const card = this.cards.get(cardId);
+    if (!card) return;
+    this.cards.set(cardId, { ...card, byEar: { at: at.toISOString(), known } });
+    this.touched.add(cardId);
   }
 
   /** Remember that a sentence was shown for a card, and mark the card to be saved. */
@@ -995,6 +1034,11 @@ export class StudyEngine {
       }
       case 'foil_discrimination':
         return buildFoilExercise(card, pool, this.rng);
+      case 'meaning_to_form':
+        return buildMeaningExercise(card, pool, this.rng, {
+          avoid: this.wordsToKeepOut().words,
+          now: this.now(),
+        });
       case 'realia_menu': {
         const seenIds = new Set(this.results.map((r) => r.cardId));
         const keepOut = this.wordsToKeepOut().ids;

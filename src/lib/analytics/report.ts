@@ -66,6 +66,7 @@ const EXERCISES: ExerciseType[] = [
   'cloze',
   'realia_menu',
   'foil_discrimination',
+  'meaning_to_form',
 ];
 
 const STATE_NAMES = ['new', 'learning', 'review', 'relearning', 'unknown'] as const;
@@ -91,7 +92,13 @@ function emptyRatings(): RatingCounts {
 }
 
 function emptyExercises(): ExerciseCounts {
-  return { rapid_recognition: 0, cloze: 0, realia_menu: 0, foil_discrimination: 0 };
+  return {
+    rapid_recognition: 0,
+    cloze: 0,
+    realia_menu: 0,
+    foil_discrimination: 0,
+    meaning_to_form: 0,
+  };
 }
 
 export interface Quantiles {
@@ -165,6 +172,12 @@ export interface DeckCensus {
    * domains for weeks, however many they switched on.
    */
   newQueueAhead: { domain: DomainCategory; count: number }[];
+  /**
+   * Words asked, from the meaning alone, which reading is theirs (Which
+   * Word's ear check): how many were known by ear and how many were not. A
+   * word not known by ear needs the word before the shape.
+   */
+  byEar: { checked: number; known: number; unknown: number };
 }
 
 export function buildDeckCensus(cards: VocabCard[], settings: UserSettings): DeckCensus {
@@ -219,6 +232,11 @@ export function buildDeckCensus(cards: VocabCard[], settings: UserSettings): Dec
     settlingCards: cards.filter((c) => isActiveDomain(c, settings) && isSettling(c)).length,
     byDomain,
     newQueueAhead,
+    byEar: {
+      checked: cards.filter((c) => c.byEar).length,
+      known: cards.filter((c) => c.byEar?.known).length,
+      unknown: cards.filter((c) => c.byEar && !c.byEar.known).length,
+    },
   };
 }
 
@@ -304,6 +322,8 @@ export interface Activity {
   retries: { total: number; byExercise: ExerciseCounts };
   /** Drill misses on words in Review that booked a reading (events only). */
   booked: { total: number; byExercise: ExerciseCounts };
+  /** Which Word ear checks in the event log: how many asked, how many known. */
+  earChecks: { asked: number; known: number };
   /**
    * The heritage reader's fingerprint: how each domain was rated the first
    * time its words were seen. Good/Easy on sight was already in the lexicon.
@@ -394,8 +414,13 @@ export function buildActivity(
   const bookedByExercise = emptyExercises();
   let retryTotal = 0;
   let bookedTotal = 0;
+  const earChecks = { asked: 0, known: 0 };
   for (const event of events) {
     if (event.kind !== 'answer' || !event.exerciseType) continue;
+    if (event.heard !== undefined) {
+      earChecks.asked += 1;
+      if (event.heard) earChecks.known += 1;
+    }
     const day = days.get(dayKey(new Date(event.at)));
     if (event.applied === false && day) day.practice += 1;
     if (event.retry) {
@@ -428,6 +453,7 @@ export function buildActivity(
     sessions: inferSessions(ordered),
     recordedSessions: summarizeRecordedSessions(events),
     retries: { total: retryTotal, byExercise: retriesByExercise },
+    earChecks,
     booked: { total: bookedTotal, byExercise: bookedByExercise },
     firstSight: firstSightProfile(cards, logs),
     ratingsByExercise,
@@ -592,6 +618,8 @@ export interface CardReport {
   retries: number;
   /** Drill misses on this word while in Review that booked a reading (events only). */
   booked: number;
+  /** Whether the word was known by ear when last asked from the meaning. */
+  byEar?: { known: boolean; at: string };
   /** How many of the card's lapses were charged by a drill rather than a reading. */
   lapsesFromDrills: number;
   /** Answers the export could not include, once the history cap was hit. */
@@ -672,6 +700,7 @@ export function buildCardReports(
         exercises,
         retries: retriesByCard.get(card.id) ?? 0,
         booked: bookedByCard.get(card.id) ?? 0,
+        ...(card.byEar ? { byEar: { known: card.byEar.known, at: card.byEar.at } } : {}),
         lapsesFromDrills: history.filter(
           (l) =>
             l.rating === 1 &&
@@ -1102,6 +1131,23 @@ export function buildDiagnostics(
       examples: repeated
         .slice(0, 5)
         .map((r) => `${label(r.cardId)} ×${r.inWindow}${r.sentence ? ` · ${r.sentence}` : ''}`),
+    });
+  }
+
+  // A heritage reader knows most words by ear; the ones they do not are a
+  // different job — the word first, then its shape — and worth naming.
+  const unheard = cards.filter((c) => c.byEar && !c.byEar.known);
+  if (unheard.length > 0) {
+    found.push({
+      code: 'not_known_by_ear',
+      severity: 'info',
+      title: 'Words not known by ear',
+      detail:
+        `${unheard.length} word(s) were not known by ear when Which Word asked for their reading ` +
+        `from the meaning alone (${deck.byEar.checked} checked, ${deck.byEar.known} known). ` +
+        `A reading drill cannot teach these: they need the word before the shape.`,
+      count: unheard.length,
+      examples: unheard.slice(0, 8).map((c) => `${label(c.id)} · ${c.byEar!.at.slice(0, 10)}`),
     });
   }
 

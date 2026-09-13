@@ -145,8 +145,20 @@ export interface VocabCard {
    * has not been read today; after a reading, the day's verdict is in.
    */
   lastPassAt?: string;
+  /**
+   * The last time the learner was asked, from the meaning alone, which
+   * reading is this word's — and whether they knew. A heritage reader knows
+   * most words by ear; the ones they do not need the word before the shape.
+   */
+  byEar?: ByEar;
   createdAt: string;
   updatedAt: string;
+}
+
+/** One check of whether a word is known by ear (see `VocabCard.byEar`). */
+export interface ByEar {
+  at: string;
+  known: boolean;
 }
 
 /** 1: Again, 2: Hard, 3: Good, 4: Easy */
@@ -158,13 +170,15 @@ export const RATING_LABELS: Record<RatingGrade, string> = {
   4: 'Easy',
 };
 
-export type ExerciseType = 'rapid_recognition' | 'cloze' | 'realia_menu' | 'foil_discrimination';
+export type ExerciseType =
+  'rapid_recognition' | 'cloze' | 'realia_menu' | 'foil_discrimination' | 'meaning_to_form';
 /** One plain name per exercise, used everywhere it appears. */
 export const EXERCISE_LABELS: Record<ExerciseType, { en: string; zh: string }> = {
   rapid_recognition: { en: 'Recognition', zh: '認字' },
   cloze: { en: 'Fill the Blank', zh: '填空' },
   realia_menu: { en: 'Order Slip', zh: '點菜單' },
   foil_discrimination: { en: 'Spot the Character', zh: '辨字' },
+  meaning_to_form: { en: 'Which Word', zh: '選詞' },
 };
 
 export interface ReviewLog {

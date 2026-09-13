@@ -285,3 +285,18 @@ first. Every one of the 81 words this learner has met ships with two more
 sentences, checked for the reading-alignment rule like the first, and two
 primary sentences that repeated their word or hid it inside a longer one
 (肉圓, 餛飩) were rewritten.
+
+**Asked for by the learner after that:** a drill that starts from the English
+and asks for the pinyin and/or the characters. Every mode so far started from
+the characters or the sound, and a heritage reader's real-life direction is the
+other way round: I want the dish, which one on the menu is it? Which Word 選詞
+now does that in two steps. First, when due, four readings: is the word known
+by ear? Never scored, but kept on the card, said on the reveal and counted in
+the export, so "never heard it" and "cannot read it" stop being the same
+_Again_. Then four written words — the target, readable words from its domain
+with near-synonyms by definition kept out, and one same-sound misspelling —
+graded as Fill the Blank grades them, so a wrong real word is a misreading of
+that word and only the misspelling is a miss on this one. It is on the Drills
+tab, in the assistant's drill tool, and in sessions on cards not seen that
+day, in turn with Fill the Blank; the rotation for seen cards now gives every
+kind a card supports its turn instead of alternating two.

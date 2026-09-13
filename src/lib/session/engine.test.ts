@@ -1223,3 +1223,134 @@ describe('StudyEngine — sentences rotate', () => {
     expect(ex).toMatchObject({ type: 'cloze', sentence: extra.traditional });
   });
 });
+
+describe('StudyEngine — Which Word', () => {
+  const at = new Date('2026-09-13T08:00:00.000Z');
+
+  it('records whether the word was known by ear on the card and on the event', () => {
+    const pool = makePool();
+    const card = { ...pool[0], fsrs: reviewState({ stability: 20 }) };
+    const all = [card, ...pool.slice(1)];
+    const events: StudyEvent[] = [];
+    const drills = buildDrillExercises('meaning_to_form', [card], all, mulberry32(1), { now: at });
+    expect(drills[0]).toMatchObject({ type: 'meaning_to_form', cardId: card.id });
+    const engine = new StudyEngine({
+      pool: all,
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      drillType: 'meaning_to_form',
+      onEvent: (e) => events.push(e),
+      now: () => at,
+    });
+    // A hit on a word in Review changes nothing, but the ear check is kept.
+    expect(engine.answerDrill([{ cardId: card.id, correct: true, heard: false }])).toEqual([]);
+    expect(events.find((e) => e.kind === 'answer')).toMatchObject({
+      exerciseType: 'meaning_to_form',
+      applied: false,
+      heard: false,
+    });
+    const [touched] = engine.drainTouchedCards();
+    expect(touched.byEar).toEqual({ at: at.toISOString(), known: false });
+  });
+
+  it('carries the ear check on the review it persists when the answer moved the schedule', () => {
+    const pool = makePool();
+    const card = { ...pool[0], fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }) };
+    const all = [card, ...pool.slice(1)];
+    const drills = buildDrillExercises('meaning_to_form', [card], all, mulberry32(1), { now: at });
+    const engine = new StudyEngine({
+      pool: all,
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      drillType: 'meaning_to_form',
+      now: () => at,
+    });
+    const [review] = engine.answerDrill([{ cardId: card.id, correct: true, heard: true }]);
+    expect(review.log.rating).toBe(3);
+    expect(review.card.byEar).toEqual({ at: at.toISOString(), known: true });
+    // An answer with no ear check leaves the record alone.
+    expect(engine.drainTouchedCards().map((c) => c.id)).toEqual([card.id]);
+  });
+
+  it('gives fresh cards Fill the Blank and Which Word in turn, never Which Word on a card seen', () => {
+    const pool = makePool();
+    const outsideA = {
+      ...pool.find((c) => c.traditional === '團契')!,
+      fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }),
+    };
+    const outsideB = {
+      ...pool.find((c) => c.traditional === '禱告')!,
+      fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }),
+    };
+    const rest = pool.filter((c) => c.id !== outsideA.id && c.id !== outsideB.id);
+    // Church words nobody is studying, so the drills have readable options
+    // that are neither queued nor just drilled.
+    const bystanders = [
+      ['敬拜', 'jìng bài', 'Worship'],
+      ['恩典', 'ēn diǎn', 'Grace'],
+      ['見證', 'jiàn zhèng', 'Testimony'],
+    ].map(([traditional, pinyin, definition]) =>
+      makeCard({ traditional, pinyin, definition, domain: 'church', visualFoils: [] }),
+    );
+    const engine = engineFor(
+      [...rest, outsideA, outsideB, ...bystanders],
+      rest.map((c) => c.id),
+      { now: () => at },
+    );
+    const drills: DrillExercise[] = [];
+    let guard = 0;
+    while (drills.length < 3 && engine.snapshot().status === 'active' && guard < 60) {
+      const step = engine.snapshot().step;
+      if (step?.kind === 'drill') {
+        drills.push(step.exercise);
+        engine.skipDrill();
+      } else if (step?.kind === 'card') {
+        engine.rate(1); // keep the cards cycling so the drill slots keep coming
+      } else {
+        engine.tick();
+      }
+      guard += 1;
+    }
+    expect(drills.length).toBe(3);
+    const ids = (d: DrillExercise) => ('cardId' in d ? d.cardId : d.cardIds[0]);
+    // A fresh card gets the cloze, then a seen card gets a different drill,
+    // then the other fresh card gets Which Word.
+    expect(drills[0]).toMatchObject({ type: 'cloze', cardId: outsideA.id });
+    expect(['realia_menu', 'foil_discrimination']).toContain(drills[1].type);
+    expect([outsideA.id, outsideB.id]).not.toContain(ids(drills[1]));
+    expect(drills[2]).toMatchObject({ type: 'meaning_to_form', cardId: outsideB.id });
+  });
+});
+
+describe('drillPlan — Which Word', () => {
+  it('selects cards with a meaning and keeps each run’s words out of one another’s options', () => {
+    const pool = makePool();
+    const now = new Date('2026-09-13T08:00:00.000Z');
+    const withBlank = [...pool, makeCard({ traditional: '空', pinyin: 'kōng', definition: ' ' })];
+    const selected = selectDrillCards(withBlank, DEFAULT_SETTINGS, {
+      type: 'meaning_to_form',
+      count: 10,
+      now,
+      domain: 'food',
+      rng: mulberry32(1),
+    });
+    expect(selected.map((c) => c.traditional)).not.toContain('空');
+    expect(selected.every((c) => c.domain === 'food')).toBe(true);
+    const drills = buildDrillExercises('meaning_to_form', selected, withBlank, mulberry32(2), {
+      now,
+    });
+    expect(drills.length).toBeGreaterThan(0);
+    const words = new Set(selected.map((c) => c.traditional));
+    for (const drill of drills) {
+      if (drill.type !== 'meaning_to_form') throw new Error('expected Which Word');
+      for (const option of drill.options) {
+        if (option === drill.answer) continue;
+        expect(words.has(option)).toBe(false);
+      }
+    }
+  });
+});

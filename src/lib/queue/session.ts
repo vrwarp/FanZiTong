@@ -274,21 +274,49 @@ export function hasFoils(card: VocabCard): boolean {
   return authored.some((f) => f.trim().length > 0);
 }
 
+/** Which Word needs a meaning to ask from and a reading to ask about. */
+export function hasMeaningCue(card: VocabCard): boolean {
+  return card.definition.trim().length > 0 && card.pinyin.trim().length > 0;
+}
+
+/** The drill modalities in the order they take turns. */
+export const DRILL_ROTATION: Exclude<ExerciseType, 'rapid_recognition'>[] = [
+  'cloze',
+  'realia_menu',
+  'foil_discrimination',
+  'meaning_to_form',
+];
+
+/** Whether the card's data can support a drill of this kind. */
+export function supportsDrill(
+  card: VocabCard,
+  type: Exclude<ExerciseType, 'rapid_recognition'>,
+): boolean {
+  switch (type) {
+    case 'cloze':
+      return hasClozeSentence(card);
+    case 'realia_menu':
+      return card.domain === 'food';
+    case 'foil_discrimination':
+      return hasFoils(card);
+    case 'meaning_to_form':
+      return hasMeaningCue(card);
+  }
+}
+
 /**
- * Choose the drill modality for a card, rotating away from the previous type
- * for variety. Returns null when no modality fits the card's data.
+ * Choose the drill modality for a card: the one after `lastType` in the
+ * rotation that the card's data supports, so every kind gets its turn rather
+ * than two of them alternating. Returns null when no modality fits the card.
  */
 export function chooseDrillType(
   card: VocabCard,
   lastType: ExerciseType | undefined,
   exclude: ExerciseType[] = [],
 ): Exclude<ExerciseType, 'rapid_recognition'> | null {
-  const options: Exclude<ExerciseType, 'rapid_recognition'>[] = [];
-  if (hasClozeSentence(card) && !exclude.includes('cloze')) options.push('cloze');
-  if (card.domain === 'food' && !exclude.includes('realia_menu')) options.push('realia_menu');
-  if (hasFoils(card) && !exclude.includes('foil_discrimination'))
-    options.push('foil_discrimination');
+  const options = DRILL_ROTATION.filter((t) => !exclude.includes(t) && supportsDrill(card, t));
   if (options.length === 0) return null;
-  const rotated = options.filter((t) => t !== lastType);
-  return (rotated.length > 0 ? rotated : options)[0];
+  const last = (DRILL_ROTATION as ExerciseType[]).indexOf(lastType ?? 'rapid_recognition');
+  const after = options.filter((t) => DRILL_ROTATION.indexOf(t) > last);
+  return (after.length > 0 ? after : options)[0];
 }

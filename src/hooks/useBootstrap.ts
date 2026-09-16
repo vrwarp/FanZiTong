@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { buildStarterDeck } from '@/data/starterDeck';
 import { META_KEYS, repository, type Repository } from '@/db/repository';
 import { CURRENT_RULE, repairSchedules } from '@/lib/fsrs/repair';
+import { countSlipDays } from '@/lib/stats/slips';
 
 export type BootstrapState =
   { status: 'loading' } | { status: 'ready'; seeded: boolean } | { status: 'error'; error: string };
@@ -37,6 +38,7 @@ export async function bootstrapDatabase(repo: Repository = repository): Promise<
   }
   if (!seededAt) await repo.setMeta(META_KEYS.seededAt, new Date().toISOString());
   await repairSchedulesOnce(repo);
+  await backfillSlipDaysOnce(repo);
   return seeded;
 }
 
@@ -71,6 +73,23 @@ export async function repairSchedulesOnce(
   };
   await repo.setMeta(META_KEYS.scheduleRepair, JSON.stringify(summary));
   return summary;
+}
+
+/**
+ * Count each studied card's slip days from its review log, once. The engine
+ * keeps the count from then on; this gives the words already forgotten day
+ * after day their history, so the leech list stops missing them.
+ */
+export async function backfillSlipDaysOnce(repo: Repository): Promise<number> {
+  if (await repo.getMeta(META_KEYS.slipDaysBackfill)) return 0;
+  const [cards, logs] = await Promise.all([repo.getAllCards(), repo.getAllReviewLogs()]);
+  const counts = countSlipDays(logs);
+  const writes = cards
+    .filter((c) => (counts.get(c.id) ?? 0) !== (c.slipDays ?? 0))
+    .map((c) => ({ ...c, slipDays: counts.get(c.id) ?? 0 }));
+  if (writes.length > 0) await repo.putCards(writes);
+  await repo.setMeta(META_KEYS.slipDaysBackfill, new Date().toISOString());
+  return writes.length;
 }
 
 /** The stored repair summary, or null when it never ran or cannot be read. */

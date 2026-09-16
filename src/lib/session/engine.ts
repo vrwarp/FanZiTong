@@ -812,6 +812,10 @@ export class StudyEngine {
     const updated: VocabCard = { ...card, fsrs: next, updatedAt: nowIso };
     // The one Again a day the scheduler hears; everything after it is a retry.
     if (rating === 1) updated.lastAgainAt = nowIso;
+    // …and, after the first sight, one more day the word slipped in reading.
+    if (rating === 1 && exerciseType === 'rapid_recognition' && card.fsrs.state !== CardState.New) {
+      updated.slipDays = (card.slipDays ?? 0) + 1;
+    }
     // The day's reading, after which a drill can no longer move the word.
     if (rating >= 3 && exerciseType === 'rapid_recognition') updated.lastPassAt = nowIso;
     this.cards.set(cardId, updated);

@@ -1,8 +1,19 @@
 import { createDatabase } from '@/db/database';
 import { createRepository, META_KEYS } from '@/db/repository';
 import { buildStarterDeck, planStarterRestore, starterDeckSize } from '@/data/starterDeck';
-import { GONG_WAN_TANG_HISTORY, makeCard, studyOldWay } from '@/test/factories';
-import { bootstrapDatabase, parseRepairSummary, repairSchedulesOnce } from './useBootstrap';
+import {
+  GONG_WAN_TANG_HISTORY,
+  makeCard,
+  makeLog,
+  reviewState,
+  studyOldWay,
+} from '@/test/factories';
+import {
+  backfillSlipDaysOnce,
+  bootstrapDatabase,
+  parseRepairSummary,
+  repairSchedulesOnce,
+} from './useBootstrap';
 
 describe('bootstrapDatabase', () => {
   it('seeds the starter deck exactly once on an empty database', async () => {
@@ -93,5 +104,32 @@ describe('the one-time schedule repair', () => {
       unverifiable: 0,
       words: [],
     });
+  });
+});
+
+describe('backfillSlipDaysOnce', () => {
+  it('counts each studied word’s slip days from its log once, and never again', async () => {
+    const repo = createRepository(createDatabase('bootstrap-slips'));
+    try {
+      const card = makeCard({ fsrs: reviewState({ reps: 4, lapses: 0 }) });
+      await repo.putCard(card);
+      for (const [stateBefore, reviewTimestamp] of [
+        [0, '2026-09-09T15:00:00.000Z'],
+        [1, '2026-09-10T15:00:00.000Z'],
+        [1, '2026-09-11T15:00:00.000Z'],
+      ] as const) {
+        await repo.addReviewLog(
+          makeLog({ cardId: card.id, rating: 1, stateBefore, reviewTimestamp }),
+        );
+      }
+      expect(await backfillSlipDaysOnce(repo)).toBe(1);
+      expect((await repo.getCard(card.id))?.slipDays).toBe(2);
+      expect(await repo.getMeta(META_KEYS.slipDaysBackfill)).toBeTruthy();
+      await repo.putCard({ ...card, slipDays: undefined });
+      expect(await backfillSlipDaysOnce(repo)).toBe(0);
+      expect((await repo.getCard(card.id))?.slipDays).toBeUndefined();
+    } finally {
+      await repo.db.delete();
+    }
   });
 });

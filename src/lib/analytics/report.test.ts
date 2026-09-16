@@ -620,3 +620,48 @@ describe('known by ear', () => {
     ).not.toContain('not_known_by_ear');
   });
 });
+
+describe('slip days in the export', () => {
+  it('calls a word that keeps slipping a leech, by days forgotten as well as by lapses', () => {
+    const slipping = makeCard({
+      traditional: '傲嬌',
+      domain: 'anime',
+      fsrs: reviewState({ reps: 12, lapses: 1, stability: 0.4 }),
+      slipDays: 3,
+    });
+    const fine = makeCard({ traditional: '滷肉飯', fsrs: reviewState({ reps: 5 }), slipDays: 1 });
+    const logs = [
+      makeLog({ cardId: slipping.id, reviewTimestamp: at(0) }),
+      makeLog({ cardId: fine.id, reviewTimestamp: at(1) }),
+    ];
+    const report = buildReport([slipping, fine], logs, settings);
+    expect(report.deck.byDomain.find((d) => d.domain === 'anime')?.leeches).toBe(1);
+    const row = report.cards.find((c) => c.traditional === '傲嬌')!;
+    expect(row.slipDays).toBe(3);
+    expect(row.flags).toContain('leech');
+    expect(report.cards.find((c) => c.traditional === '滷肉飯')?.flags).not.toContain('leech');
+    const found = report.diagnostics.find((d) => d.code === 'leech')!;
+    expect(found.count).toBe(1);
+    expect(found.detail).toContain('never reached 3 FSRS lapses');
+    expect(found.examples[0]).toContain('3 day(s) · 1 lapse(s)');
+  });
+
+  it('stops counting day mismatches once the scheduler counts study days', () => {
+    const card = makeCard({ fsrs: reviewState({ reps: 3 }) });
+    // Two answers either side of 4 a.m. on one calendar day: the same day to the
+    // old scheduler clock, a night's sleep to the learner.
+    const pair = (a: string, b: string) => [
+      makeLog({ cardId: card.id, reviewTimestamp: a }),
+      makeLog({ cardId: card.id, reviewTimestamp: b }),
+    ];
+    const before = pair('2026-09-10T02:30:00.000Z', '2026-09-10T06:30:00.000Z');
+    const after = pair('2026-09-14T02:30:00.000Z', '2026-09-14T06:30:00.000Z');
+    const codes = (opts?: { studyDayClockSince?: string }) =>
+      buildReport([card], [...before, ...after], settings, [], opts).diagnostics.find(
+        (d) => d.code === 'scheduler_day_mismatch',
+      );
+    expect(codes()?.count).toBe(3); // three consecutive pairs, all across 4 a.m.
+    expect(codes({ studyDayClockSince: '2026-09-12T00:00:00.000Z' })?.count).toBe(1);
+    expect(codes({ studyDayClockSince: '2026-09-01T00:00:00.000Z' })).toBeUndefined();
+  });
+});

@@ -45,8 +45,10 @@ what a diagnosis needs:
 ```
 schema, schemaVersion, eventVersion, generatedAt
 readme            — orientation, in the file itself
-environment       — app version, build, IANA timezone, UTC offset, locale, and
-                    dayStartHour: the local hour the study day turns over (4)
+environment       — app version, build, IANA timezone, UTC offset, locale,
+                    dayStartHour: the local hour the study day turns over (4),
+                    and studyDayClockSince: when this device's scheduler began
+                    counting days from that hour
 report
   settings        — the learner's scheduling settings, verbatim
   deck            — counts per domain: states, content coverage, what has been
@@ -67,8 +69,9 @@ report
   cards[]         — one row per STUDIED card: content coverage, FSRS state,
                     the full answer history with the gap before each answer,
                     retries, booked readings, lapses charged by drills, whether
-                    the word was known by ear when last asked, and per-card
-                    flags
+                    the word was known by ear when last asked, slipDays (the
+                    study days it was forgotten on after its first sight), and
+                    per-card flags
   diagnostics[]   — the patterns the app found in its own data
 events            — real session boundaries and answers, including the ones
                     FSRS ignored (see below)
@@ -92,9 +95,9 @@ severity, the numbers behind it, and a handful of examples to open.
 | `settling_hold`                 | warn/info | Studied words still under a day of stability against the new-card hold: how much room is left for new cards today (warn when none), or that the hold is off and the pile is high.                                                                                                                                                                                 |
 | `difficulty_saturated`          | high      | Cards at difficulty ≥ 9.5. FSRS has no harsher verdict left, so the card cannot climb out on its own. Each example says how many of the card's lapses a drill charged rather than a reading.                                                                                                                                                                      |
 | `stability_floor`               | warn      | Stability ≤ 0.05 days: every interval the card is given is measured in minutes.                                                                                                                                                                                                                                                                                   |
-| `leech`                         | warn      | At or past the learner's leech threshold, and still scheduled like any other card.                                                                                                                                                                                                                                                                                |
+| `leech`                         | warn      | Forgotten in reading on the threshold number of study days, or lapsed that many times, and still scheduled like any other card. FSRS counts a lapse only for a word in Review, so a word that fails before it graduates is caught by its slip days.                                                                                                               |
 | `drill_lapse_after_reading`     | warn      | A lapse charged by a four-tile drill on a word in Review, or on a word the learner had read correctly earlier that day — a discrimination slip charged as forgetting. A word in Review is now moved only by reading (a drill miss books a look instead), so these predate that build.                                                                             |
-| `scheduler_day_mismatch`        | warn      | Consecutive answers the scheduler dated on a different side of a day (whole UTC calendar days) than the learner's study day; how many were a night's sleep scored as same-day. The scheduler is now told the time in study days, so these predate that build.                                                                                                     |
+| `scheduler_day_mismatch`        | warn      | Consecutive answers the scheduler dated on a different side of a day (whole UTC calendar days) than the learner's study day; how many were a night's sleep scored as same-day. Counted only before `environment.studyDayClockSince`, when the scheduler on this device was told the time in study days.                                                           |
 | `backgrounded_answers`          | info      | Answers over ten minutes in the event log — a phone put away with a card on screen — and how much time on task they overstate. The engine now counts at most two minutes per answer.                                                                                                                                                                              |
 | `cloze_sentence_repeats`        | warn      | One sentence clozed three or more times inside a week (events name the sentence; for older files the card stands in for its one sentence). A frame filled in that often is recognised by its shape, not read. Fill the Blank now holds a sentence back for a week after it is clozed and rotates through the word's other sentences, so these predate that build. |
 | `not_known_by_ear`              | info      | Words the learner did not know by ear when Which Word asked for their reading from the meaning alone. A reading drill cannot teach these: they need the word before the shape.                                                                                                                                                                                    |

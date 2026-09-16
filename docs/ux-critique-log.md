@@ -300,3 +300,28 @@ that word and only the misspelling is a miss on this one. It is on the Drills
 tab, in the assistant's drill tool, and in sessions on cards not seen that
 day, in turn with Fill the Blank; the rotation for seen cards now gives every
 kind a card supports its turn instead of alternating two.
+
+## Analytics round, 2026-09-16
+
+Read: [`docs/critique/analytics-2026-09-16/critique-heritage-teacher.md`](critique/analytics-2026-09-16/critique-heritage-teacher.md).
+
+The previous round's exit criteria held: no drill has charged a lapse since
+the build, overnight passes after a first Again rose from 58% to 79%, daily
+retention sits at 0.81–0.86, sentences rotate, and 餛飩湯 is at 7.3 days.
+What the ten days showed instead:
+
+- Nine words forgotten on three or more study days were on no list, because
+  FSRS counts a lapse only for a word in Review and these fail before they
+  graduate. A card now counts its **slip days** (charged recognition Agains
+  after the first sight, backfilled once from the log), and a word keeps
+  slipping by lapses _or_ by days: Stats, the reveal, the export and the
+  drills' priority all agree.
+- Half of Which Word's ear checks came hours after the reveal had shown the
+  reading. The check now never runs on a day the word was read, and
+  standalone runs take untouched words first.
+- Fill the Blank and Which Word drew readable distractors from the whole
+  domain, so the target was usually the one studied word among strangers.
+  Studied words now come first in the written options and the readings.
+- `scheduler_day_mismatch` kept counting after the scheduler had switched to
+  study days; the export now records when the switch happened on the device
+  and looks only before it.

@@ -72,6 +72,7 @@ export const importCardSchema = z.object({
   sentencesShown: z.array(sentenceShownSchema).optional().catch(undefined),
   /** Whether the word was known by ear when last asked; malformed → dropped, never the card. */
   byEar: z.object({ at: isoDate, known: z.boolean() }).optional().catch(undefined),
+  slipDays: z.number().int().nonnegative().optional().catch(undefined),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
 });
@@ -192,6 +193,7 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       lastPassAt: c.lastPassAt,
       sentencesShown: c.sentencesShown as SentenceShown[] | undefined,
       byEar: c.byEar,
+      slipDays: c.slipDays,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       warnings,

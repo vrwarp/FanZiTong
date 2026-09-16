@@ -22,6 +22,13 @@ export interface AnalyticsEnvironment {
    * turn over here, not at midnight.
    */
   dayStartHour: number;
+  /**
+   * When this device's scheduler started counting days from `dayStartHour`
+   * (the first run of that build), if it has. Answers before it were dated
+   * by the scheduler in whole UTC calendar days; `scheduler_day_mismatch`
+   * looks only at those.
+   */
+  studyDayClockSince?: string;
   language: string;
   userAgent: string;
 }
@@ -86,6 +93,8 @@ export interface AnalyticsExportInput {
   events?: StudyEvent[];
   now?: Date;
   maxEvents?: number;
+  /** When this device's scheduler started counting days from 4 a.m. (the first run of that build). */
+  studyDayClockSince?: string;
 }
 
 /**
@@ -107,8 +116,13 @@ export function buildAnalyticsExport(input: AnalyticsExportInput): AnalyticsExpo
     eventVersion: STUDY_EVENT_VERSION,
     generatedAt: now.toISOString(),
     readme: README,
-    environment: describeEnvironment(now),
-    report: buildReport(input.cards, input.reviewLogs, input.settings, all),
+    environment: {
+      ...describeEnvironment(now),
+      ...(input.studyDayClockSince ? { studyDayClockSince: input.studyDayClockSince } : {}),
+    },
+    report: buildReport(input.cards, input.reviewLogs, input.settings, all, {
+      studyDayClockSince: input.studyDayClockSince,
+    }),
     events: {
       complete: items.length === all.length,
       dropped: all.length - items.length,

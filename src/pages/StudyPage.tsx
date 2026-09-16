@@ -26,6 +26,7 @@ import { computeStreak, countDueByTomorrow, countDueLaterToday } from '@/lib/sta
 import { characterKnowledge } from '@/lib/stats/characters';
 import { dayKey } from '@/lib/util/time';
 import type { RatingGrade, ReviewLog, UserSettings, VocabCard } from '@/types';
+import { isLeech } from '@/lib/stats/slips';
 
 /** Journey 1: waits for the local data, then mounts the session exactly once. */
 export default function StudyPage() {
@@ -236,7 +237,7 @@ function StudySession({
           autoRevealMs={settings.pinyinRevealDelayMs}
           position={snapshot.answered + 1}
           total={snapshot.total}
-          keepsSlipping={snapshot.card.fsrs.lapses >= settings.leechThreshold}
+          keepsSlipping={isLeech(snapshot.card, settings.leechThreshold)}
           practice={knockedDownToday(snapshot.card, new Date())}
         />
       )}

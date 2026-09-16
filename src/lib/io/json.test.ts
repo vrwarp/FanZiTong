@@ -165,3 +165,14 @@ describe('by-ear checks', () => {
     expect(bad.rows[0].byEar).toBeUndefined();
   });
 });
+
+describe('slip days', () => {
+  it('round-trips the count and drops a malformed one rather than the card', () => {
+    const card = makeCard({ slipDays: 3 });
+    const parsed = parseJsonDeck(serializeJsonDeck(toJsonDeck([card])));
+    expect(parsed.rows[0].slipDays).toBe(3);
+    const bad = parseJsonDeck('[{"traditional":"火鍋","pinyin":"huǒ guō","slipDays":"many"}]');
+    expect(bad.rows.map((r) => r.traditional)).toEqual(['火鍋']);
+    expect(bad.rows[0].slipDays).toBeUndefined();
+  });
+});

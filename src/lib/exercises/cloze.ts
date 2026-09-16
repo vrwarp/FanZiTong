@@ -258,7 +258,9 @@ export interface ClozeDistractors {
  *
  * Within the domain, words that share a character with the answer come first:
  * when 餛飩湯 and 魚丸湯 sit beside 貢丸湯, spotting 湯 settles nothing and the
- * whole word has to be read.
+ * whole word has to be read. And words the learner has studied come before
+ * words they have never seen: with one studied word among three strangers,
+ * the familiar shape wins without a character being read.
  *
  * One same-sound foil keeps the eyes on the characters — the spelling an IME
  * would have offered for this reading, when the card names one.
@@ -311,13 +313,22 @@ export function pickClozeDistractors(
   // Up to count-1 real words first, leaving one slot for a same-sound foil.
   const wordSlots = Math.max(1, count - 1);
   push(card.clozeDistractors ?? [], wordSlots);
-  push(deckWords(sharedTag.filter(sharesChar)), wordSlots);
-  push(deckWords(sameDomain.filter(sharesChar)), wordSlots);
-  push(deckWords(sharedTag.filter(sameLength)), wordSlots);
-  push(deckWords(sharedTag), wordSlots);
-  push(deckWords(sameDomain.filter(sameLength)), wordSlots);
-  push(deckWords(sameDomain), wordSlots);
+  // Words the learner has studied before words they have never seen: among
+  // strangers the answer is the one familiar shape, and familiarity is not
+  // reading. Each pass runs the tiers in order, the studied words first.
+  const studied = (c: VocabCard) => c.fsrs.state !== CardState.New;
+  const tiers = [
+    sharedTag.filter(sharesChar),
+    sameDomain.filter(sharesChar),
+    sharedTag.filter(sameLength),
+    sharedTag,
+    sameDomain.filter(sameLength),
+    sameDomain,
+  ];
+  for (const tier of tiers) push(deckWords(tier.filter(studied)), wordSlots);
+  for (const tier of tiers) push(deckWords(tier.filter((c) => !studied(c))), wordSlots);
   // Only when the domain cannot fill the slots does the rest of the deck.
+  if (chosen.length < 2) push(deckWords(others.filter(studied)), wordSlots);
   if (chosen.length < 2) push(deckWords(others), wordSlots);
   // One misspelling, when the card names one that is not an accepted spelling.
   // The same-sound candidates come first: they are what the learner would have
@@ -332,6 +343,7 @@ export function pickClozeDistractors(
   if (foil) seen.add(foil);
   // Without a foil the last slot is one more readable word.
   const wordTarget = count - (foil ? 1 : 0);
+  push(deckWords(sameDomain.filter(studied)), wordTarget);
   push(deckWords(sameDomain), wordTarget);
   if (chosen.length < wordTarget) push(deckWords(others), wordTarget);
   return { words: chosen, foil };

@@ -1354,3 +1354,50 @@ describe('drillPlan — Which Word', () => {
     }
   });
 });
+
+describe('StudyEngine — slip days', () => {
+  it('counts a day the word was forgotten in reading, after its first sight, once a day', () => {
+    const pool = makePool();
+    const c = clock('2026-09-12T08:00:00.000Z');
+    const engine = engineFor(pool, [pool[0].id, pool[1].id], { now: c.now });
+    // First sight: a miss, but not a slip.
+    expect(engine.rate(1)!.card.slipDays).toBeUndefined();
+    // The other card, then the first comes back the same session: a retry, not a second day.
+    engine.rate(4);
+    expect(engine.snapshot().step).toMatchObject({ kind: 'card', cardId: pool[0].id });
+    const retry = engine.rate(1);
+    expect(retry === null || retry.card.slipDays === undefined).toBe(true);
+  });
+
+  it('adds a slip day for a charged Again on a word already learning, and not for a drill miss', () => {
+    const pool = makePool();
+    const card = { ...pool[0], fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }) };
+    const rest = pool.slice(1);
+    const engine = engineFor([card, ...rest], [card.id], {
+      now: clock('2026-09-12T08:00:00.000Z').now,
+    });
+    const review = engine.rate(1)!;
+    expect(review.card.slipDays).toBe(1);
+    expect(review.card.lastAgainAt).toBe('2026-09-12T08:00:00.000Z');
+    // A drill Again on a learning word the next day moves the schedule but is not a reading slip.
+    const next = { ...review.card, lastAgainAt: undefined, lastPassAt: undefined };
+    const drills = buildDrillExercises(
+      'foil_discrimination',
+      [next],
+      [next, ...rest],
+      mulberry32(1),
+    );
+    const drill = new StudyEngine({
+      pool: [next, ...rest],
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      drillType: 'foil_discrimination',
+      now: () => new Date('2026-09-13T08:00:00.000Z'),
+    });
+    const [missed] = drill.answerDrill([{ cardId: next.id, correct: false }]);
+    expect(missed.log.rating).toBe(1);
+    expect(missed.card.slipDays).toBe(1);
+  });
+});

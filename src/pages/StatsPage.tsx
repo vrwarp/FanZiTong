@@ -250,7 +250,7 @@ export default function StatsPage() {
             Words that keep slipping <span lang="zh-Hant-TW">常忘的字</span>
           </h2>
           <span className="shrink-0 text-xs text-stone-500">
-            forgotten ≥ {settings.leechThreshold}×
+            forgotten on ≥ {settings.leechThreshold} days
           </span>
         </div>
         {model.leeches.length === 0 ? (

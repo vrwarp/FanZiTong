@@ -7,7 +7,10 @@ import {
   hasMeaningCue,
   isActiveDomain,
   isDrillCandidate,
+  knockedDownToday,
+  readToday,
 } from '@/lib/queue/session';
+import { troubleScore } from '@/lib/stats/slips';
 import { shuffle, type Rng } from '@/lib/util/random';
 import {
   CardState,
@@ -42,8 +45,9 @@ export interface DrillSelectionOptions {
 }
 
 function priority(card: VocabCard, now: Date): number {
-  // Leeches/lapsed first, then (re)learning, then due reviews, then the rest.
-  if (card.fsrs.lapses > 0) return 0;
+  // Words in trouble first (forgotten on some day, or lapsed), then
+  // (re)learning, then due reviews, then the rest.
+  if (troubleScore(card) > 0) return 0;
   if (card.fsrs.state === CardState.Learning || card.fsrs.state === CardState.Relearning) return 1;
   if (card.fsrs.state === CardState.Review && new Date(card.fsrs.due).getTime() <= now.getTime())
     return 2;
@@ -73,14 +77,24 @@ export function selectDrillCards(
     const p = priority(card, options.now);
     buckets.set(p, [...(buckets.get(p) ?? []), card]);
   }
+  // Which Word's ear check is honest only on a word not yet read today, so
+  // that run takes the words the day has not touched first.
+  const untouched = (c: VocabCard) =>
+    options.type === 'meaning_to_form' &&
+    !readToday(c, options.now) &&
+    !knockedDownToday(c, options.now)
+      ? 1
+      : 0;
   const ordered: VocabCard[] = [];
   for (const p of [0, 1, 2, 3, 4]) {
     const bucket = buckets.get(p) ?? [];
     ordered.push(
-      ...shuffle(bucket, rng).sort((a, b) =>
-        p === 0
-          ? b.fsrs.lapses - a.fsrs.lapses
-          : Number(isDrillCandidate(b)) - Number(isDrillCandidate(a)),
+      ...shuffle(bucket, rng).sort(
+        (a, b) =>
+          untouched(b) - untouched(a) ||
+          (p === 0
+            ? troubleScore(b) - troubleScore(a)
+            : Number(isDrillCandidate(b)) - Number(isDrillCandidate(a))),
       ),
     );
   }

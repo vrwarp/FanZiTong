@@ -17,6 +17,7 @@ import { resetIntro } from '@/lib/util/intro';
 import { describeLastChecked, formatBuildStamp } from '@/lib/pwa/updatePolicy';
 import { useAppUpdate } from '@/pwa/appUpdateContext';
 import { resetAppCache } from '@/pwa/resetAppCache';
+import { parseRepairSummary } from '@/hooks/useBootstrap';
 import { useNow } from '@/hooks/useNow';
 import {
   DOMAIN_CATEGORIES,
@@ -90,7 +91,14 @@ export default function SettingsPage() {
    */
   const exportAnalytics = async () => {
     const events = await repository.getAllStudyEvents();
-    const report = buildAnalyticsExport({ cards, reviewLogs: logs, settings, events });
+    const repair = parseRepairSummary(await repository.getMeta(META_KEYS.scheduleRepair));
+    const report = buildAnalyticsExport({
+      cards,
+      reviewLogs: logs,
+      settings,
+      events,
+      studyDayClockSince: repair?.at,
+    });
     downloadTextFile(
       `fanzitong-analytics-${timestampForFilename()}.json`,
       serializeAnalyticsExport(report),

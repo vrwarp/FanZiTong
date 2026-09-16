@@ -8,6 +8,7 @@ import {
 } from '@/types';
 import { retrievability } from '@/lib/fsrs/scheduler';
 import { addDays, dayKey, startOfDay } from '@/lib/util/time';
+import { isLeech, troubleScore } from './slips';
 
 /** Stability (days) above which a card counts as "mastered" for domain mastery. */
 export const MASTERY_STABILITY_DAYS = 30;
@@ -192,10 +193,13 @@ export function domainMastery(cards: VocabCard[]): DomainMastery[] {
 }
 
 /** Cards whose lapse count meets the leech threshold, worst first. */
+/** The words that keep slipping: by lapses or by days forgotten, whichever the history shows. */
 export function findLeeches(cards: VocabCard[], threshold: number): VocabCard[] {
   return cards
-    .filter((c) => c.fsrs.lapses >= threshold)
-    .sort((a, b) => b.fsrs.lapses - a.fsrs.lapses || a.traditional.localeCompare(b.traditional));
+    .filter((c) => isLeech(c, threshold))
+    .sort(
+      (a, b) => troubleScore(b) - troubleScore(a) || a.traditional.localeCompare(b.traditional),
+    );
 }
 
 export function totalLapses(cards: VocabCard[]): number {

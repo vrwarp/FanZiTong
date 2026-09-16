@@ -151,6 +151,13 @@ export interface VocabCard {
    * most words by ear; the ones they do not need the word before the shape.
    */
   byEar?: ByEar;
+  /**
+   * Study days on which the scheduler heard Again for this word in
+   * recognition, after its first sight. FSRS counts a lapse only when a word
+   * in Review is forgotten, so a word that slips day after day before it
+   * ever graduates has no lapses and never looked like a leech; this does.
+   */
+  slipDays?: number;
   createdAt: string;
   updatedAt: string;
 }

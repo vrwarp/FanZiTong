@@ -17,6 +17,8 @@ export const META_KEYS = {
   doneForTodayDate: 'doneForTodayDate',
   /** JSON summary of the first one-time schedule repair (the once-a-day rule); its presence means it ran. */
   scheduleRepairV1: 'scheduleRepairV1',
+  /** Set once the cards' slip days have been counted from the review log. */
+  slipDaysBackfill: 'slipDaysBackfillV1',
   /**
    * JSON summary of the second repair (a word in Review moved only by reading;
    * the scheduler told the time in study days). See lib/fsrs/repair.

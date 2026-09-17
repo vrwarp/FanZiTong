@@ -61,7 +61,7 @@ export default function StatsPage() {
       leeches: findLeeches(cards, settings.leechThreshold),
       lapses: totalLapses(cards),
       states: stateDistribution(cards),
-      firstSight: firstSightProfile(cards, logs).filter((d) => d.met > 0),
+      firstSight: firstSightProfile(cards, logs).filter((d) => d.met > 0 || d.introduced > 0),
       characters: summarizeCharacters(characterKnowledge(cards, logs)),
     };
   }, [cards, logs, settings, now]);
@@ -193,6 +193,7 @@ export default function StatsPage() {
                 </span>
                 <span className="text-xs text-stone-500 dark:text-stone-400">
                   · {d.ratings[2]} slow · {d.ratings[1]} new to you
+                  {d.introduced > 0 && ` · ${d.introduced} met face up`}
                 </span>
               </li>
             ))}
@@ -250,7 +251,7 @@ export default function StatsPage() {
             Words that keep slipping <span lang="zh-Hant-TW">常忘的字</span>
           </h2>
           <span className="shrink-0 text-xs text-stone-500">
-            forgotten ≥ {settings.leechThreshold}×
+            forgotten on ≥ {settings.leechThreshold} days
           </span>
         </div>
         {model.leeches.length === 0 ? (

@@ -19,3 +19,8 @@ can be regenerated with that script.
   is working, what still overrules the learner's own reading, and what a tutor
   would have said on day one; `analytics-2026-09-12/ideation.md` is the
   ideation–critique loop behind the patch set that followed.
+- `analytics-2026-09-16/critique-heritage-teacher.md` — the third export, ten
+  days in: the previous round's exit criteria checked one by one, then the
+  words that never graduate and so never looked like leeches, the ear check
+  that was half contaminated, and the familiar word that gave itself away
+  among strangers; with the patch set that followed.

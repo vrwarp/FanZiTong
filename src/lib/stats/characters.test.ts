@@ -2,6 +2,7 @@ import { makeCard, makeLog } from '@/test/factories';
 import {
   characterElsewhere,
   characterKnowledge,
+  faceUpDomains,
   firstSightProfile,
   summarizeCharacters,
 } from './characters';
@@ -109,8 +110,59 @@ describe('firstSightProfile', () => {
       met: 3,
       ratings: { 1: 1, 2: 1, 3: 0, 4: 1 },
       onSight: 1,
+      introduced: 0,
     });
     expect(profile.find((d) => d.domain === 'church')).toMatchObject({ met: 1, onSight: 1 });
     expect(profile.find((d) => d.domain === 'anime')).toMatchObject({ met: 0, onSight: 0 });
+  });
+
+  it('counts a word met face up apart: its first test was not a first sight', () => {
+    const cold = makeCard({ traditional: '傲嬌', domain: 'anime' });
+    const faceUp = makeCard({ traditional: '吐槽', domain: 'anime', introducedAt: day(5, 9) });
+    const logs = [
+      makeLog({ cardId: cold.id, rating: 1, reviewTimestamp: day(5) }),
+      makeLog({ cardId: faceUp.id, rating: 3, reviewTimestamp: day(5) }),
+    ];
+    expect(firstSightProfile([cold, faceUp], logs).find((d) => d.domain === 'anime')).toEqual({
+      domain: 'anime',
+      met: 1,
+      ratings: { 1: 1, 2: 0, 3: 0, 4: 0 },
+      onSight: 0,
+      introduced: 1,
+    });
+  });
+});
+
+describe('faceUpDomains', () => {
+  const met = (domain: 'food' | 'slang' | 'anime', count: number, onSight: number) => {
+    const cards = Array.from({ length: count }, (_, i) =>
+      makeCard({ traditional: `字${domain}${i}`, domain }),
+    );
+    const logs = cards.map((c, i) =>
+      makeLog({ cardId: c.id, rating: i < onSight ? 3 : 1, reviewTimestamp: day(5) }),
+    );
+    return { cards, logs };
+  };
+
+  it('names the domains met often enough and rarely read on sight', () => {
+    const food = met('food', 12, 8); // two in three on sight: tested cold
+    const slang = met('slang', 12, 1); // one in twelve: shown face up
+    const anime = met('anime', 6, 0); // too few met to say
+    const cards = [...food.cards, ...slang.cards, ...anime.cards];
+    const logs = [...food.logs, ...slang.logs, ...anime.logs];
+    expect(faceUpDomains(cards, logs)).toEqual(['slang']);
+    expect(faceUpDomains([], [])).toEqual([]);
+  });
+
+  it('stays a rate of cold sights once words are met face up', () => {
+    const slang = met('slang', 12, 1);
+    const introduced = Array.from({ length: 20 }, (_, i) =>
+      makeCard({ traditional: `新${i}`, domain: 'slang', introducedAt: day(6) }),
+    );
+    const logs = [
+      ...slang.logs,
+      ...introduced.map((c) => makeLog({ cardId: c.id, rating: 3, reviewTimestamp: day(6) })),
+    ];
+    expect(faceUpDomains([...slang.cards, ...introduced], logs)).toEqual(['slang']);
   });
 });

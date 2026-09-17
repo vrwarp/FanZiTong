@@ -18,12 +18,46 @@ export async function openApp(page: Page, path = '/', options: { fakeClock?: boo
   if (path === '/') await expect(page.getByTestId('start-session')).toBeVisible();
 }
 
-/** Solve whichever drill is on screen by picking the correct option(s). */
-export async function solveDrill(page: Page, opts: { wrong?: boolean } = {}) {
+/**
+ * Solve whichever drill is on screen by picking the correct option(s). Say
+ * It has no option to pick and the reading is not in the DOM until answered,
+ * so the helper gives up on it — a miss — unless told what to type.
+ */
+export async function solveDrill(page: Page, opts: { wrong?: boolean; typed?: string } = {}) {
   const cloze = page.getByTestId('cloze-exercise');
   const foil = page.getByTestId('foil-exercise');
   const menu = page.getByTestId('menu-exercise');
   const meaning = page.getByTestId('meaning-exercise');
+  const typed = page.getByTestId('typed-exercise');
+  const find = page.getByTestId('find-exercise');
+  const family = page.getByTestId('family-exercise');
+  if (await typed.isVisible()) {
+    if (opts.typed && !opts.wrong) {
+      await page.getByTestId('typed-input').fill(opts.typed);
+      await page.getByTestId('typed-check').click();
+    } else {
+      await page.getByTestId('typed-giveup').click();
+    }
+    await page.getByTestId('drill-continue').click();
+    return 'typed';
+  }
+  if (await find.isVisible()) {
+    if (opts.wrong) {
+      await page.locator('[data-testid="find-word"][data-target="false"]').first().click();
+    }
+    await page.locator('[data-testid="find-word"][data-target="true"]').first().click();
+    await page.getByTestId('drill-continue').click();
+    return 'find';
+  }
+  if (await family.isVisible()) {
+    if (opts.wrong) {
+      await page.locator('[data-testid="family-option"][data-correct="false"]').first().click();
+      await page.getByTestId('family-retry').click();
+    }
+    await page.locator('[data-testid="family-option"][data-correct="true"]').first().click();
+    await page.getByTestId('drill-continue').click();
+    return 'family';
+  }
   if (await meaning.isVisible()) {
     // The ear check comes first when it is due; only the written word is graded.
     if (await page.getByTestId('meaning-reading').first().isVisible()) {
@@ -74,6 +108,8 @@ export interface SessionRunSummary {
   drills: string[];
   /** Times the session had to wait out a card's minute. */
   waits?: number;
+  /** New words shown face up before their first test. */
+  intros?: number;
 }
 
 /**
@@ -93,6 +129,11 @@ export async function completeSession(
       summary.waits = (summary.waits ?? 0) + 1;
       await page.clock.fastForward(61_000);
       await expect(page.getByTestId('wait-step')).toHaveCount(0);
+      continue;
+    }
+    if (await page.getByTestId('intro-step').isVisible()) {
+      summary.intros = (summary.intros ?? 0) + 1;
+      await page.getByTestId('intro-done').click();
       continue;
     }
     if (await page.getByTestId('recognition-prompt').isVisible()) {

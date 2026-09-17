@@ -19,6 +19,7 @@ import {
   SETTLING_STABILITY_DAYS,
 } from '@/lib/queue/session';
 import { MASTERY_STABILITY_DAYS } from '@/lib/stats/analytics';
+import { isLeech, troubleScore } from '@/lib/stats/slips';
 import {
   characterKnowledge,
   firstSightProfile,
@@ -67,6 +68,9 @@ const EXERCISES: ExerciseType[] = [
   'realia_menu',
   'foil_discrimination',
   'meaning_to_form',
+  'typed_reading',
+  'find_in_text',
+  'sound_family',
 ];
 
 const STATE_NAMES = ['new', 'learning', 'review', 'relearning', 'unknown'] as const;
@@ -98,6 +102,9 @@ function emptyExercises(): ExerciseCounts {
     realia_menu: 0,
     foil_discrimination: 0,
     meaning_to_form: 0,
+    typed_reading: 0,
+    find_in_text: 0,
+    sound_family: 0,
   };
 }
 
@@ -197,7 +204,7 @@ export function buildDeckCensus(cards: VocabCard[], settings: UserSettings): Dec
       introduced: count((c) => c.fsrs.reps > 0),
       mastered: count((c) => c.fsrs.stability > MASTERY_STABILITY_DAYS),
       settling: count(isSettling),
-      leeches: count((c) => c.fsrs.lapses >= settings.leechThreshold),
+      leeches: count((c) => isLeech(c, settings.leechThreshold)),
       content: {
         withSentence: count((c) => Boolean(c.exampleSentenceTraditional?.trim())),
         withFoils: count((c) => (c.visualFoils ?? []).length > 0),
@@ -620,6 +627,10 @@ export interface CardReport {
   booked: number;
   /** Whether the word was known by ear when last asked from the meaning. */
   byEar?: { known: boolean; at: string };
+  /** Study days the word was forgotten on after its first sight (see VocabCard.slipDays). */
+  slipDays: number;
+  /** When the word was shown face up before its first test, so it had no first sight. */
+  introducedAt?: string;
   /** How many of the card's lapses were charged by a drill rather than a reading. */
   lapsesFromDrills: number;
   /** Answers the export could not include, once the history cap was hit. */
@@ -666,7 +677,7 @@ export function buildCardReports(
       }
       const kept = history.slice(-MAX_CARD_HISTORY);
       const flags: string[] = [];
-      if (card.fsrs.lapses >= settings.leechThreshold) flags.push('leech');
+      if (isLeech(card, settings.leechThreshold)) flags.push('leech');
       if (card.fsrs.difficulty >= DIFFICULTY_SATURATED) flags.push('difficulty_saturated');
       if (card.fsrs.state !== CardState.New && card.fsrs.stability <= STABILITY_FLOOR_DAYS) {
         flags.push('stability_floor');
@@ -701,6 +712,8 @@ export function buildCardReports(
         retries: retriesByCard.get(card.id) ?? 0,
         booked: bookedByCard.get(card.id) ?? 0,
         ...(card.byEar ? { byEar: { known: card.byEar.known, at: card.byEar.at } } : {}),
+        slipDays: card.slipDays ?? 0,
+        ...(card.introducedAt ? { introducedAt: card.introducedAt } : {}),
         lapsesFromDrills: history.filter(
           (l) =>
             l.rating === 1 &&
@@ -755,6 +768,14 @@ export interface Diagnostic {
  * Patterns worth looking at, computed here so the export says what it found
  * instead of leaving it to be rediscovered by hand every time.
  */
+export interface DiagnosticOptions {
+  /**
+   * When the scheduler on this device started counting days from 4 a.m.
+   * (the first run of that build). Answers after it are not day mismatches.
+   */
+  studyDayClockSince?: string;
+}
+
 export function buildDiagnostics(
   cards: VocabCard[],
   logs: ReviewLog[],
@@ -763,6 +784,7 @@ export function buildDiagnostics(
   activity: Activity,
   cardReports: CardReport[] = [],
   events: StudyEvent[] = [],
+  options: DiagnosticOptions = {},
 ): Diagnostic[] {
   const found: Diagnostic[] = [];
   const label = (id: string) => {
@@ -886,17 +908,26 @@ export function buildDiagnostics(
     });
   }
 
-  const leeches = cards.filter((c) => c.fsrs.lapses >= settings.leechThreshold);
+  const leeches = cards
+    .filter((c) => isLeech(c, settings.leechThreshold))
+    .sort((a, b) => troubleScore(b) - troubleScore(a));
   if (leeches.length > 0) {
+    const byDays = leeches.filter((c) => c.fsrs.lapses < settings.leechThreshold).length;
     found.push({
       code: 'leech',
       severity: 'warn',
-      title: 'Leeches in rotation',
+      title: 'Words that keep slipping',
       detail:
-        `${leeches.length} card(s) are at or past the leech threshold of ` +
-        `${settings.leechThreshold} lapses and are still scheduled like any other card.`,
+        `${leeches.length} card(s) have been forgotten on ${settings.leechThreshold}+ study days ` +
+        `or lapsed ${settings.leechThreshold}+ times, and are still scheduled like any other card` +
+        (byDays > 0
+          ? `; ${byDays} of them never reached ${settings.leechThreshold} FSRS lapses, because a ` +
+            `word that fails before it graduates is not counted as lapsing.`
+          : '.'),
       count: leeches.length,
-      examples: leeches.slice(0, 5).map((c) => `${label(c.id)} · ${c.fsrs.lapses} lapses`),
+      examples: leeches
+        .slice(0, 5)
+        .map((c) => `${label(c.id)} · ${c.slipDays ?? 0} day(s) · ${c.fsrs.lapses} lapse(s)`),
     });
   }
 
@@ -963,6 +994,8 @@ export function buildDiagnostics(
       const previous = history[i - 1];
       const log = history[i];
       pairs += 1;
+      // Since the study-day clock, the scheduler and the learner agree by construction.
+      if (options.studyDayClockSince && log.reviewTimestamp >= options.studyDayClockSince) continue;
       const scheduler = daysBetween(utcDay(previous.reviewTimestamp), utcDay(log.reviewTimestamp));
       const study = daysBetween(
         dayKey(new Date(previous.reviewTimestamp)),
@@ -1230,6 +1263,7 @@ export function buildReport(
   logs: ReviewLog[],
   settings: UserSettings,
   events: StudyEvent[] = [],
+  options: DiagnosticOptions = {},
 ): AnalyticsReport {
   const deck = buildDeckCensus(cards, settings);
   const activity = buildActivity(logs, events, cards);
@@ -1241,7 +1275,16 @@ export function buildReport(
     activity,
     characters: buildCharacterCensus(cards, logs),
     cards: cardReports,
-    diagnostics: buildDiagnostics(cards, logs, settings, deck, activity, cardReports, events),
+    diagnostics: buildDiagnostics(
+      cards,
+      logs,
+      settings,
+      deck,
+      activity,
+      cardReports,
+      events,
+      options,
+    ),
   };
 }
 

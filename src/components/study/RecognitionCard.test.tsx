@@ -105,3 +105,23 @@ describe('RatingButtons in practice mode', () => {
     expect(screen.getByTestId('rate-1').getAttribute('aria-label')).toMatch(/one more look/);
   });
 });
+
+describe('RecognitionCard — a new word met face up', () => {
+  it('shows the answer from the start, rates nothing, and hands back one "got it"', async () => {
+    const onDone = vi.fn();
+    const { card, onReveal, onRate } = renderCard({ intro: { onDone } });
+    expect(screen.getByTestId('intro-badge')).toBeInTheDocument();
+    expect(screen.queryByTestId('new-badge')).not.toBeInTheDocument();
+    expect(screen.getByTestId('pinyin')).toHaveTextContent(card.pinyin);
+    expect(screen.getByTestId('definition')).toHaveTextContent(card.definition);
+    expect(screen.getByTestId('example-sentence')).toBeInTheDocument();
+    expect(screen.queryByTestId('rating-buttons')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('recognition-prompt')).not.toBeInTheDocument();
+    expect(screen.getByTestId('intro-note')).toHaveTextContent(/comes back/);
+    await userEvent.click(screen.getByTestId('intro-prompt'));
+    expect(onReveal).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByTestId('intro-done'));
+    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(onRate).not.toHaveBeenCalled();
+  });
+});

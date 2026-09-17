@@ -2,12 +2,24 @@ import { buildClozeExercise, chooseSentence } from '@/lib/exercises/cloze';
 import { buildFoilExercise } from '@/lib/exercises/foil';
 import { buildMeaningExercise } from '@/lib/exercises/meaning';
 import { buildMenuExercise, companionsFor, groupCardsByShop } from '@/lib/exercises/menu';
+import { buildFindInTextExercise } from '@/lib/exercises/passage';
+import { buildTypedReadingExercise } from '@/lib/exercises/reading';
 import {
+  buildSoundFamilyExercise,
+  hasSoundFamily,
+  type SoundFamilyIndex,
+} from '@/lib/exercises/soundFamily';
+import {
+  hasAlignedSentence,
   hasClozeSentence,
   hasMeaningCue,
+  hasReading,
   isActiveDomain,
   isDrillCandidate,
+  knockedDownToday,
+  readToday,
 } from '@/lib/queue/session';
+import { troubleScore } from '@/lib/stats/slips';
 import { shuffle, type Rng } from '@/lib/util/random';
 import {
   CardState,
@@ -25,6 +37,9 @@ export const DRILL_TYPES: DrillType[] = [
   'realia_menu',
   'foil_discrimination',
   'meaning_to_form',
+  'typed_reading',
+  'find_in_text',
+  'sound_family',
 ];
 
 export function isDrillType(value: unknown): value is DrillType {
@@ -39,11 +54,14 @@ export interface DrillSelectionOptions {
   /** Restrict to these card ids (e.g. leeches from the Stats tab). */
   onlyIds?: string[];
   rng?: Rng;
+  /** The deck's sound families; Sound Families selects nothing without them. */
+  families?: SoundFamilyIndex;
 }
 
 function priority(card: VocabCard, now: Date): number {
-  // Leeches/lapsed first, then (re)learning, then due reviews, then the rest.
-  if (card.fsrs.lapses > 0) return 0;
+  // Words in trouble first (forgotten on some day, or lapsed), then
+  // (re)learning, then due reviews, then the rest.
+  if (troubleScore(card) > 0) return 0;
   if (card.fsrs.state === CardState.Learning || card.fsrs.state === CardState.Relearning) return 1;
   if (card.fsrs.state === CardState.Review && new Date(card.fsrs.due).getTime() <= now.getTime())
     return 2;
@@ -67,20 +85,37 @@ export function selectDrillCards(
   if (options.type === 'realia_menu') eligible = eligible.filter((c) => c.domain === 'food');
   if (options.type === 'cloze') eligible = eligible.filter(hasClozeSentence);
   if (options.type === 'meaning_to_form') eligible = eligible.filter(hasMeaningCue);
+  if (options.type === 'typed_reading') eligible = eligible.filter(hasReading);
+  if (options.type === 'find_in_text') eligible = eligible.filter(hasAlignedSentence);
+  if (options.type === 'sound_family') {
+    const families = options.families;
+    eligible = families ? eligible.filter((c) => hasSoundFamily(c, families)) : [];
+  }
 
   const buckets = new Map<number, VocabCard[]>();
   for (const card of eligible) {
     const p = priority(card, options.now);
     buckets.set(p, [...(buckets.get(p) ?? []), card]);
   }
+  // Which Word's ear check is honest only on a word not yet read today, and
+  // Say It can only be a reading on one, so those runs take the words the
+  // day has not touched first.
+  const untouched = (c: VocabCard) =>
+    (options.type === 'meaning_to_form' || options.type === 'typed_reading') &&
+    !readToday(c, options.now) &&
+    !knockedDownToday(c, options.now)
+      ? 1
+      : 0;
   const ordered: VocabCard[] = [];
   for (const p of [0, 1, 2, 3, 4]) {
     const bucket = buckets.get(p) ?? [];
     ordered.push(
-      ...shuffle(bucket, rng).sort((a, b) =>
-        p === 0
-          ? b.fsrs.lapses - a.fsrs.lapses
-          : Number(isDrillCandidate(b)) - Number(isDrillCandidate(a)),
+      ...shuffle(bucket, rng).sort(
+        (a, b) =>
+          untouched(b) - untouched(a) ||
+          (p === 0
+            ? troubleScore(b) - troubleScore(a)
+            : Number(isDrillCandidate(b)) - Number(isDrillCandidate(a))),
       ),
     );
   }
@@ -93,7 +128,7 @@ export function buildDrillExercises(
   selected: VocabCard[],
   pool: VocabCard[],
   rng: Rng = Math.random,
-  options: { now?: Date } = {},
+  options: { now?: Date; families?: SoundFamilyIndex } = {},
 ): DrillExercise[] {
   const now = options.now ?? new Date();
   const exercises: DrillExercise[] = [];
@@ -122,6 +157,12 @@ export function buildDrillExercises(
       if (sentence) ex = buildClozeExercise(card, pool, rng, { avoid, sentence });
     } else if (type === 'meaning_to_form') {
       ex = buildMeaningExercise(card, pool, rng, { avoid, now });
+    } else if (type === 'typed_reading') {
+      ex = buildTypedReadingExercise(card);
+    } else if (type === 'find_in_text') {
+      ex = buildFindInTextExercise(card, pool, rng, { avoid, now });
+    } else if (type === 'sound_family') {
+      ex = options.families ? buildSoundFamilyExercise(card, pool, options.families, rng) : null;
     } else {
       ex = buildFoilExercise(card, pool, rng);
     }

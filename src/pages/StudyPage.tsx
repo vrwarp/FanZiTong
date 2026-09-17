@@ -11,6 +11,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { META_KEYS, repository } from '@/db/repository';
 import { useCards, useReviewLogs } from '@/hooks/useCards';
 import { computeDashboard } from '@/hooks/useDashboard';
+import { useEtymology } from '@/hooks/useEtymology';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { recordStudyEvent } from '@/lib/analytics/recorder';
@@ -23,9 +24,10 @@ import {
   savePausedSession,
 } from '@/lib/session/pausedSession';
 import { computeStreak, countDueByTomorrow, countDueLaterToday } from '@/lib/stats/analytics';
-import { characterKnowledge } from '@/lib/stats/characters';
+import { characterKnowledge, faceUpDomains } from '@/lib/stats/characters';
 import { dayKey } from '@/lib/util/time';
 import type { RatingGrade, ReviewLog, UserSettings, VocabCard } from '@/types';
+import { isLeech } from '@/lib/stats/slips';
 
 /** Journey 1: waits for the local data, then mounts the session exactly once. */
 export default function StudyPage() {
@@ -65,6 +67,7 @@ function StudySession({
         interleaveDrills: true,
         onEvent: recordStudyEvent,
         restore: saved.length > 0 ? paused?.progress : undefined,
+        faceUpDomains: faceUpDomains(initialCards, logs),
       }),
       saved.length > 0,
     ];
@@ -73,6 +76,8 @@ function StudySession({
   const { snapshot } = api;
   const [paused, setPaused] = useState(false);
   const assistant = useAssistant();
+  // Sound Families needs the composition table; fetch it so the drill can join the rotation.
+  useEtymology();
   // Which characters the learner has read in other words, as of the session's
   // start: the tutor's sentence on the reveal ("read in 滷肉飯" / "new here").
   const [knowledge] = useState(() => characterKnowledge(initialCards, logs));
@@ -80,7 +85,12 @@ function StudySession({
   // Tell the assistant what is on screen. While a card is unrevealed it learns
   // only that a session is running: the reading must not reach it before the
   // learner has tried to read the characters themselves (PRD AC-2).
-  const hiddenNow = snapshot?.step?.kind !== 'card' ? true : !snapshot.revealed;
+  const hiddenNow =
+    snapshot?.step?.kind === 'intro'
+      ? false
+      : snapshot?.step?.kind !== 'card'
+        ? true
+        : !snapshot.revealed;
   const publish = assistant.publishContext;
   useEffect(() => {
     publish({
@@ -104,11 +114,19 @@ function StudySession({
     else savePausedSession(engine.remainingCardIds(), engine.serialize());
   }, [engine, snapshot]);
 
-  // Keyboard shortcuts for desktop practice: space/enter reveal, 1-4 rate.
+  // Keyboard shortcuts for desktop practice: space/enter reveal (or "got it"), 1-4 rate.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (paused || !snapshot || snapshot.step?.kind !== 'card') return;
+      if (paused || !snapshot) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (snapshot.step?.kind === 'intro') {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          api.acknowledgeIntro();
+        }
+        return;
+      }
+      if (snapshot.step?.kind !== 'card') return;
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
         api.reveal();
@@ -150,7 +168,10 @@ function StudySession({
           results={snapshot.results}
           elapsedMs={snapshot.elapsedMs}
           streak={Math.max(1, computeStreak(logs, now))}
-          remaining={snapshot.remaining + (snapshot.step?.kind === 'card' ? 1 : 0)}
+          remaining={
+            snapshot.remaining +
+            (snapshot.step?.kind === 'card' || snapshot.step?.kind === 'intro' ? 1 : 0)
+          }
           dueTomorrow={countDueByTomorrow(engine.getCards(), now)}
           dueLaterToday={countDueLaterToday(engine.getCards(), now)}
           weakCards={weakCards}
@@ -236,9 +257,29 @@ function StudySession({
           autoRevealMs={settings.pinyinRevealDelayMs}
           position={snapshot.answered + 1}
           total={snapshot.total}
-          keepsSlipping={snapshot.card.fsrs.lapses >= settings.leechThreshold}
+          keepsSlipping={isLeech(snapshot.card, settings.leechThreshold)}
           practice={knockedDownToday(snapshot.card, new Date())}
         />
+      )}
+
+      {snapshot.step?.kind === 'intro' && snapshot.card && (
+        <div data-testid="intro-step" className="flex flex-1 flex-col">
+          <RecognitionCard
+            key={`intro-${snapshot.card.id}`}
+            card={snapshot.card}
+            pool={initialCards}
+            knowledge={knowledge}
+            sentence={snapshot.sentence}
+            revealed={false}
+            previews={null}
+            onReveal={() => undefined}
+            onRate={() => undefined}
+            autoRevealMs={0}
+            position={snapshot.answered + 1}
+            total={snapshot.total}
+            intro={{ onDone: api.acknowledgeIntro }}
+          />
+        </div>
       )}
 
       {snapshot.step?.kind === 'drill' && (

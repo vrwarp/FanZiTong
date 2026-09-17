@@ -163,3 +163,13 @@ describe('near-synonyms', () => {
     expect(nearSynonyms('', 'Rice')).toBe(false);
   });
 });
+
+describe('askByEar on a day the word was read', () => {
+  it('never asks after the reveal has shown the reading that study day', () => {
+    const at = new Date('2026-09-13T20:00:00.000Z');
+    expect(askByEar({ lastPassAt: '2026-09-13T15:00:00.000Z' }, at)).toBe(false);
+    expect(askByEar({ lastAgainAt: '2026-09-13T15:00:00.000Z' }, at)).toBe(false);
+    // Yesterday's reading does not count, and neither does a pass before 4 a.m. local… the day before.
+    expect(askByEar({ lastPassAt: '2026-09-12T15:00:00.000Z' }, at)).toBe(true);
+  });
+});

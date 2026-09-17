@@ -1354,3 +1354,340 @@ describe('drillPlan — Which Word', () => {
     }
   });
 });
+
+describe('StudyEngine — slip days', () => {
+  it('counts a day the word was forgotten in reading, after its first sight, once a day', () => {
+    const pool = makePool();
+    const c = clock('2026-09-12T08:00:00.000Z');
+    const engine = engineFor(pool, [pool[0].id, pool[1].id], { now: c.now });
+    // First sight: a miss, but not a slip.
+    expect(engine.rate(1)!.card.slipDays).toBeUndefined();
+    // The other card, then the first comes back the same session: a retry, not a second day.
+    engine.rate(4);
+    expect(engine.snapshot().step).toMatchObject({ kind: 'card', cardId: pool[0].id });
+    const retry = engine.rate(1);
+    expect(retry === null || retry.card.slipDays === undefined).toBe(true);
+  });
+
+  it('adds a slip day for a charged Again on a word already learning, and not for a drill miss', () => {
+    const pool = makePool();
+    const card = { ...pool[0], fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }) };
+    const rest = pool.slice(1);
+    const engine = engineFor([card, ...rest], [card.id], {
+      now: clock('2026-09-12T08:00:00.000Z').now,
+    });
+    const review = engine.rate(1)!;
+    expect(review.card.slipDays).toBe(1);
+    expect(review.card.lastAgainAt).toBe('2026-09-12T08:00:00.000Z');
+    // A drill Again on a learning word the next day moves the schedule but is not a reading slip.
+    const next = { ...review.card, lastAgainAt: undefined, lastPassAt: undefined };
+    const drills = buildDrillExercises(
+      'foil_discrimination',
+      [next],
+      [next, ...rest],
+      mulberry32(1),
+    );
+    const drill = new StudyEngine({
+      pool: [next, ...rest],
+      queue: [],
+      drills,
+      scheduler,
+      interleaveDrills: false,
+      drillType: 'foil_discrimination',
+      now: () => new Date('2026-09-13T08:00:00.000Z'),
+    });
+    const [missed] = drill.answerDrill([{ cardId: next.id, correct: false }]);
+    expect(missed.log.rating).toBe(1);
+    expect(missed.card.slipDays).toBe(1);
+  });
+});
+
+describe('StudyEngine — Say It is a reading', () => {
+  const reviewCard = () =>
+    makeCard({
+      traditional: '火鍋',
+      pinyin: 'huǒ guō',
+      fsrs: reviewState({ due: '2026-09-05T07:00:00.000Z' }),
+    });
+
+  it('moves a word in Review on a first-try hit, and records the day’s reading', () => {
+    const card = reviewCard();
+    const pool = [...makePool(), card];
+    const drills = buildDrillExercises('typed_reading', [card], pool, mulberry32(1));
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor(pool, [], { drills, interleaveDrills: false, now: c.now });
+    expect(engine.snapshot().step).toMatchObject({
+      kind: 'drill',
+      exercise: { type: 'typed_reading', word: '火鍋' },
+    });
+    expect(describeDrillOutcome(card, true, true, c.now(), { reading: true })).toMatch(
+      /^Good — you read it/,
+    );
+    const [review] = engine.answerDrill([{ cardId: card.id, correct: true, applyRating: true }]);
+    expect(review.log).toMatchObject({ rating: 3, exerciseType: 'typed_reading', stateBefore: 2 });
+    expect(review.card.fsrs.reps).toBe(card.fsrs.reps + 1);
+    expect(review.card.lastPassAt).toBe(c.now().toISOString());
+    expect(engine.snapshot().status).toBe('complete');
+  });
+
+  it('charges a miss on a word in Review as a lapse and a slip day: it was read, wrongly', () => {
+    const card = reviewCard();
+    const pool = [...makePool(), card];
+    const drills = buildDrillExercises('typed_reading', [card], pool, mulberry32(1));
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor(pool, [], { drills, interleaveDrills: false, now: c.now });
+    const [review] = engine.answerDrill([
+      { cardId: card.id, correct: false, applyRating: true, misses: 2, picked: 'huo gua' },
+    ]);
+    expect(review.log).toMatchObject({ rating: 1, exerciseType: 'typed_reading' });
+    expect(review.card.fsrs.lapses).toBe(1);
+    expect(review.card.slipDays).toBe(1);
+    expect(review.card.lastAgainAt).toBe(c.now().toISOString());
+    // A standalone run asks the missed word once more before the end.
+    expect(engine.snapshot().step).toMatchObject({
+      kind: 'drill',
+      exercise: { type: 'typed_reading' },
+    });
+  });
+
+  it('leaves the schedule alone for a word found on the second try, or already read today', () => {
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const card = reviewCard();
+    const pool = [...makePool(), card];
+    const drills = buildDrillExercises('typed_reading', [card], pool, mulberry32(1));
+    const engine = engineFor(pool, [], { drills, interleaveDrills: false, now: c.now });
+    expect(
+      engine.answerDrill([{ cardId: card.id, correct: true, applyRating: false, misses: 1 }]),
+    ).toEqual([]);
+    expect(engine.getCard(card.id)!.fsrs).toEqual(card.fsrs);
+    expect(engine.getCard(card.id)!.lastPassAt).toBeUndefined();
+
+    const readToday = { ...card, lastPassAt: '2026-09-05T07:30:00.000Z' };
+    const pool2 = [...makePool(), readToday];
+    const engine2 = engineFor(pool2, [], {
+      drills: buildDrillExercises('typed_reading', [readToday], pool2, mulberry32(1)),
+      interleaveDrills: false,
+      now: c.now,
+    });
+    expect(describeDrillOutcome(readToday, true, true, c.now(), { reading: true })).toMatch(
+      /^Practice — you read it/,
+    );
+    expect(
+      engine2.answerDrill([{ cardId: readToday.id, correct: true, applyRating: true }]),
+    ).toEqual([]);
+    expect(engine2.snapshot().results.at(-1)).toMatchObject({ retry: true, applied: false });
+  });
+
+  it('takes its turn among the fresh-card drills in a session', () => {
+    const pool = makePool();
+    const outside = pool.filter((c) => c.domain === 'church' || c.domain === 'anime');
+    const learning = outside.map((c) => ({
+      ...c,
+      fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }),
+    }));
+    const rest = pool.filter((c) => !outside.includes(c));
+    const bystanders = [
+      ['敬拜', 'jìng bài', 'Worship'],
+      ['恩典', 'ēn diǎn', 'Grace'],
+      ['見證', 'jiàn zhèng', 'Testimony'],
+    ].map(([traditional, pinyin, definition]) =>
+      makeCard({ traditional, pinyin, definition, domain: 'church', visualFoils: [] }),
+    );
+    // Enough queued food words that the session has drill slots for all three.
+    const more = [
+      ['雞排', 'jī pái', 'Fried chicken cutlet'],
+      ['蔥抓餅', 'cōng zhuā bǐng', 'Scallion pancake'],
+      ['珍珠奶茶', 'zhēn zhū nǎi chá', 'Bubble tea'],
+    ].map(([traditional, pinyin, definition]) =>
+      makeCard({ traditional, pinyin, definition, domain: 'food', visualFoils: [] }),
+    );
+    const queued = [...rest, ...more];
+    const engine = engineFor(
+      [...queued, ...learning, ...bystanders],
+      queued.map((c) => c.id),
+      { now: () => new Date('2026-09-05T08:00:00.000Z') },
+    );
+    const types: string[] = [];
+    let guard = 0;
+    while (types.length < 6 && engine.snapshot().status === 'active' && guard < 120) {
+      const step = engine.snapshot().step;
+      if (step?.kind === 'drill') {
+        types.push(step.exercise.type);
+        engine.skipDrill();
+      } else if (step?.kind === 'card') {
+        engine.rate(1);
+      } else {
+        engine.tick();
+      }
+      guard += 1;
+    }
+    // Fresh cards get Fill the Blank, Which Word and Say It in turn, with a
+    // seen-card drill between each pair.
+    expect(types.filter((t) => ['cloze', 'meaning_to_form', 'typed_reading'].includes(t))).toEqual([
+      'cloze',
+      'meaning_to_form',
+      'typed_reading',
+    ]);
+  });
+});
+
+describe('StudyEngine — a new word met face up', () => {
+  it('shows a new word of a face-up domain first, then tests it later in the sitting', () => {
+    const pool = makePool();
+    const slang = pool.find((c) => c.domain === 'slang')!;
+    const food = pool[0];
+    const events: StudyEvent[] = [];
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor(pool, [slang.id, food.id], {
+      faceUpDomains: ['slang'],
+      now: c.now,
+      onEvent: (e) => events.push(e),
+    });
+    const intro = engine.snapshot();
+    expect(intro.step).toEqual({ kind: 'intro', cardId: slang.id });
+    expect(intro.card?.id).toBe(slang.id);
+    expect(intro.revealed).toBe(false);
+    expect(intro.sentence?.traditional).toBe(slang.exampleSentenceTraditional);
+    expect(intro.total).toBe(2);
+    expect(engine.remainingCardIds()).toEqual([slang.id, food.id]);
+    expect(() => engine.rate(3)).toThrow();
+
+    c.advance(8_000);
+    engine.acknowledgeIntro();
+    expect(events.at(-1)).toMatchObject({ kind: 'intro', cardId: slang.id, latencyMs: 8_000 });
+    const touched = engine.drainTouchedCards();
+    expect(touched.map((t) => t.id)).toContain(slang.id);
+    expect(engine.getCard(slang.id)!.introducedAt).toBe(c.now().toISOString());
+    expect(engine.getCard(slang.id)!.fsrs.state).toBe(CardState.New);
+    // The word went to the back: the food card is tested first…
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: food.id });
+    expect(engine.snapshot().total).toBe(2);
+    expect(engine.serialize().introduced).toEqual([slang.id]);
+    engine.rate(4);
+    // …and the slang word comes back as a test, not another look.
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: slang.id });
+    const first = engine.rate(3)!;
+    expect(first.log).toMatchObject({ rating: 3, stateBefore: CardState.New });
+    expect(first.card.introducedAt).toBe(engine.getCard(slang.id)!.introducedAt);
+  });
+
+  it('tests cold a word of another domain, one already introduced, and one introduced before', () => {
+    const pool = makePool();
+    const slang = pool.find((c) => c.domain === 'slang')!;
+    const anime = pool.find((c) => c.domain === 'anime')!;
+    const seenBefore = { ...slang, introducedAt: '2026-09-04T08:00:00.000Z' };
+    const engine = engineFor(
+      [...pool.filter((c) => c.id !== slang.id), seenBefore],
+      [anime.id, seenBefore.id],
+      { faceUpDomains: ['slang'] },
+    );
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: anime.id });
+    engine.rate(4);
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: seenBefore.id });
+
+    // A session picked up after a pause remembers the introduction.
+    const again = engineFor(pool, [slang.id], {
+      faceUpDomains: ['slang'],
+      restore: {
+        answered: 1,
+        results: [],
+        elapsedMs: 0,
+        drilled: [],
+        nextDrillAt: 5,
+        introduced: [slang.id],
+      },
+    });
+    expect(again.snapshot().step).toEqual({ kind: 'card', cardId: slang.id });
+  });
+
+  it('waits the minute before testing a word just shown, and can fill it with a drill', () => {
+    const pool = makePool();
+    const slang = pool.find((c) => c.domain === 'slang')!;
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor(pool, [slang.id], {
+      faceUpDomains: ['slang'],
+      retryGapMs: MIN_RETRY_GAP_MS,
+      now: c.now,
+    });
+    engine.acknowledgeIntro();
+    expect(engine.snapshot().step).toMatchObject({ kind: 'wait', waiting: 1 });
+    c.advance(MIN_RETRY_GAP_MS);
+    engine.tick();
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: slang.id });
+  });
+});
+
+describe('StudyEngine — the words in most trouble are drilled first', () => {
+  it('picks the seen card forgotten on the most days, not merely the most lapsed', () => {
+    const pool = makePool();
+    // 團契: three days forgotten before it ever graduated, so no lapse; 禱告: one lapse.
+    const slipping = {
+      ...pool.find((c) => c.traditional === '團契')!,
+      fsrs: reviewState(),
+      slipDays: 3,
+    };
+    const lapsed = {
+      ...pool.find((c) => c.traditional === '禱告')!,
+      fsrs: reviewState({ lapses: 1 }),
+    };
+    const rest = pool.filter((c) => c.id !== slipping.id && c.id !== lapsed.id);
+    const engine = engineFor(
+      [slipping, lapsed, ...rest],
+      [lapsed.id, slipping.id, ...rest.slice(0, 3).map((c) => c.id)],
+    );
+    for (let i = 0; i < 5; i += 1) engine.rate(4);
+    const step = engine.snapshot().step;
+    expect(step?.kind).toBe('drill');
+    if (step?.kind !== 'drill') throw new Error('expected drill');
+    expect(step.exercise.type).toBe('foil_discrimination');
+    if (step.exercise.type !== 'foil_discrimination') throw new Error('expected foil');
+    expect(step.exercise.cardId).toBe(slipping.id);
+  });
+});
+
+describe('StudyEngine — Find It', () => {
+  const alignedPool = () => [
+    makeCard({ fsrs: reviewState({ state: CardState.Learning, stability: 0.3 }) }),
+    makeCard({
+      traditional: '牛肉麵',
+      pinyin: 'niú ròu miàn',
+      definition: 'Beef noodles',
+      exampleSentenceTraditional: '這家牛肉麵很好吃。',
+      exampleSentencePinyin: 'Zhè jiā niúròumiàn hěn hǎochī.',
+    }),
+    makeCard({
+      traditional: '貢丸湯',
+      pinyin: 'gòng wán tāng',
+      definition: 'Meatball soup',
+      exampleSentenceTraditional: '我要一碗貢丸湯。',
+      exampleSentencePinyin: 'Wǒ yào yī wǎn gòngwántāng.',
+    }),
+  ];
+
+  it('records the sentence the word was hidden in, on the event and on the card', () => {
+    const pool = alignedPool();
+    const card = pool[0];
+    const drills = buildDrillExercises('find_in_text', [card], pool, mulberry32(1), {
+      now: new Date('2026-09-05T08:00:00.000Z'),
+    });
+    expect(drills).toHaveLength(1);
+    const events: StudyEvent[] = [];
+    const engine = engineFor(pool, [], {
+      drills,
+      interleaveDrills: false,
+      now: () => new Date('2026-09-05T08:00:00.000Z'),
+      onEvent: (e) => events.push(e),
+    });
+    const shown = engine.getCard(card.id)!.sentencesShown;
+    expect(shown).toEqual([
+      { text: card.exampleSentenceTraditional, at: '2026-09-05T08:00:00.000Z', via: 'cloze' },
+    ]);
+    expect(engine.drainTouchedCards().map((c) => c.id)).toEqual([card.id]);
+    engine.answerDrill([{ cardId: card.id, correct: true, applyRating: true, misses: 0 }]);
+    expect(events.filter((e) => e.kind === 'answer').at(-1)).toMatchObject({
+      exerciseType: 'find_in_text',
+      correct: true,
+      sentence: card.exampleSentenceTraditional,
+    });
+  });
+});

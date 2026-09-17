@@ -310,3 +310,22 @@ describe('sentences a word can be shown in', () => {
     }
   });
 });
+
+describe('familiar words as distractors', () => {
+  it('offers words the learner has studied before words never seen', () => {
+    const pool = makePool();
+    const soup = pool.find((c) => c.traditional === '貢丸湯')!;
+    // Two studied food words among many strangers.
+    const studied = ['滷肉飯', '牛肉麵'];
+    const all = pool.map((c) =>
+      studied.includes(c.traditional) ? { ...c, fsrs: reviewState({ stability: 5 }) } : c,
+    );
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const { words } = pickClozeDistractors(soup, all, 3, mulberry32(seed));
+      expect(words.sort()).toEqual([...studied].sort());
+    }
+    // With nothing studied, the strangers are still offered.
+    const { words } = pickClozeDistractors(soup, pool, 3, mulberry32(1));
+    expect(words).toHaveLength(2);
+  });
+});

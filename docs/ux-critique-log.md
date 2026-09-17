@@ -300,3 +300,53 @@ that word and only the misspelling is a miss on this one. It is on the Drills
 tab, in the assistant's drill tool, and in sessions on cards not seen that
 day, in turn with Fill the Blank; the rotation for seen cards now gives every
 kind a card supports its turn instead of alternating two.
+
+## Analytics round, 2026-09-16
+
+Read: [`docs/critique/analytics-2026-09-16/critique-heritage-teacher.md`](critique/analytics-2026-09-16/critique-heritage-teacher.md).
+
+The previous round's exit criteria held: no drill has charged a lapse since
+the build, overnight passes after a first Again rose from 58% to 79%, daily
+retention sits at 0.81–0.86, sentences rotate, and 餛飩湯 is at 7.3 days.
+What the ten days showed instead:
+
+- Nine words forgotten on three or more study days were on no list, because
+  FSRS counts a lapse only for a word in Review and these fail before they
+  graduate. A card now counts its **slip days** (charged recognition Agains
+  after the first sight, backfilled once from the log), and a word keeps
+  slipping by lapses _or_ by days: Stats, the reveal, the export and the
+  drills' priority all agree.
+- Half of Which Word's ear checks came hours after the reveal had shown the
+  reading. The check now never runs on a day the word was read, and
+  standalone runs take untouched words first.
+- Fill the Blank and Which Word drew readable distractors from the whole
+  domain, so the target was usually the one studied word among strangers.
+  Studied words now come first in the written options and the readings.
+- `scheduler_day_mismatch` kept counting after the scheduler had switched to
+  study days; the export now records when the switch happened on the device
+  and looks only before it.
+
+**Asked for by the learner after that** — "are there any adjustments or new
+drills to add?" — with audio ruled out. Two adjustments and three drills:
+
+- **A new word is met face up** in a domain the learner hardly reads on sight
+  (met ten cold, fewer than a third read on sight: slang and anime here). The
+  cold first sight in such a domain was a formality with a known result, and
+  that _Again_ set the word's initial difficulty near the ceiling for days.
+  The word is shown with its reading, meaning and sentence, one "got it",
+  then comes back for its first test later in the sitting. The card keeps
+  `introducedAt`, the first-sight profile counts such words apart, and the
+  event log records the look.
+- **The word in most trouble is drilled first** in a session: candidates are
+  ordered by slip days and lapses, and a word forgotten on some day is a
+  candidate even in Review.
+- **Say It 唸出來**: the characters alone, the reading typed, tones optional.
+  The one drill that is a reading, so a first-try hit is graded like a
+  recognition pass and can move a word in Review; a wrong try is marked
+  syllable by syllable without spelling the answer, and gets one more go.
+- **Find It 找字**: two or three real sentences, one holding the word; tap it
+  given its sound and meaning. Reading the way a chat or a menu is read. A
+  wrong tap is named and retired without charge, a second is a miss.
+- **Sound Families 聲旁**: the word with one character blanked, and tiles that
+  all share its sound part (＿嬌: 傲 敖 熬 遨), so only the meaning part can
+  settle it. Built from the composition layer over the deck's own characters.

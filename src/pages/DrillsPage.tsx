@@ -31,6 +31,24 @@ const DRILLS: { type: DrillType; icon: string; description: string; foodOnly?: b
     description:
       'Start from the meaning alone. First say the word to yourself — it asks now and then whether you know it by ear — then find how it is written among real words and one misspelling.',
   },
+  {
+    type: 'typed_reading',
+    icon: '⌨️',
+    description:
+      'The characters alone; type the pinyin, tones optional. The one drill where you produce the reading yourself, so a first-try hit counts as a reading — it can move a word in review.',
+  },
+  {
+    type: 'find_in_text',
+    icon: '🔎',
+    description:
+      'A few real sentences, one of which uses the word. Given its sound and meaning, tap it in the text — reading the way a chat or a menu is read: skim, cut into words, spot.',
+  },
+  {
+    type: 'sound_family',
+    icon: '🧬',
+    description:
+      'The word with one character missing, and tiles that all share its sound part (＿嬌: 傲 敖 熬 遨). Only the other half of each character can settle it — the half that says what it means.',
+  },
 ];
 
 export default function DrillsPage() {

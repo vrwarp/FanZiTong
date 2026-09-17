@@ -29,6 +29,10 @@ export interface ImportRow {
   sentencesShown?: SentenceShown[];
   /** Whether the word was known by ear when last asked (backups only). */
   byEar?: ByEar;
+  /** Study days the word was forgotten on, after its first sight (backups only). */
+  slipDays?: number;
+  /** When the word was met face up before its first test (backups only). */
+  introducedAt?: string;
   createdAt?: string;
   updatedAt?: string;
   /** Non-fatal notes produced while parsing this row. */

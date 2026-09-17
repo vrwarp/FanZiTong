@@ -7,6 +7,14 @@ import type { MeaningExercise } from '@/lib/exercises/meaning';
 import { buildMeaningExercise } from '@/lib/exercises/meaning';
 import type { MenuExercise } from '@/lib/exercises/menu';
 import { buildMenuExercise, companionsFor } from '@/lib/exercises/menu';
+import type { FindInTextExercise } from '@/lib/exercises/passage';
+import { buildFindInTextExercise } from '@/lib/exercises/passage';
+import type { TypedReadingExercise } from '@/lib/exercises/reading';
+import { buildTypedReadingExercise } from '@/lib/exercises/reading';
+import type { SoundFamilyExercise, SoundFamilyIndex } from '@/lib/exercises/soundFamily';
+import { buildSoundFamilyExercise, soundFamilyIndex } from '@/lib/exercises/soundFamily';
+import { isLoaded as isEtymologyLoaded } from '@/lib/etymology/table';
+import { troubleScore } from '@/lib/stats/slips';
 import {
   fromFsrsCard,
   STUDY_DAY_CLOCK,
@@ -16,17 +24,20 @@ import {
 } from '@/lib/fsrs/scheduler';
 import {
   DRILL_EVERY_N_CARDS,
+  FRESH_CARD_DRILLS,
   MAX_SESSION_REQUEUES,
   MIN_RETRY_GAP_MS,
   chooseDrillType,
   drillVerdict,
-  hasClozeSentence,
-  hasMeaningCue,
   isDrillCandidate,
   isRetry,
   knockedDownToday,
   shouldRequeue,
+  supportsDrill,
+  type DrillContext,
+  type DrillType,
   type DrillVerdict,
+  type DrillVerdictOptions,
 } from '@/lib/queue/session';
 import type { SessionMode, StudyEvent, StudyEventSink } from '@/lib/analytics/events';
 import { uuid } from '@/lib/util/id';
@@ -34,13 +45,22 @@ import { type Rng } from '@/lib/util/random';
 import { formatInterval, MINUTE_MS } from '@/lib/util/time';
 import {
   CardState,
+  isReadingExercise,
+  type DomainCategory,
   type ExerciseType,
   type RatingGrade,
   type ReviewLog,
   type VocabCard,
 } from '@/types';
 
-export type DrillExercise = ClozeExercise | FoilExercise | MenuExercise | MeaningExercise;
+export type DrillExercise =
+  | ClozeExercise
+  | FoilExercise
+  | MenuExercise
+  | MeaningExercise
+  | TypedReadingExercise
+  | FindInTextExercise
+  | SoundFamilyExercise;
 
 /**
  * The most time one answer can add to the log, the summary and the day's
@@ -71,6 +91,12 @@ interface StepTiming {
 
 export type SessionStep =
   | { kind: 'card'; cardId: string }
+  /**
+   * A new word met face up: reading and meaning shown, nothing asked. The
+   * word goes to the back of the queue and its first test comes later in
+   * the sitting (see `faceUpDomains` in lib/stats).
+   */
+  | { kind: 'intro'; cardId: string }
   | { kind: 'drill'; exercise: DrillExercise }
   /**
    * Every remaining card was answered moments ago and nothing else can fill
@@ -133,9 +159,14 @@ export function describeDrillOutcome(
   correct: boolean,
   applyRating = true,
   now: Date = new Date(),
+  options: DrillVerdictOptions = {},
 ): string {
-  if (!applyRating) return 'No change to its schedule — that was a reading of another word.';
-  switch (drillVerdict(card, correct, now)) {
+  if (!applyRating) {
+    return options.reading
+      ? 'No change to its schedule — found on the second try.'
+      : 'No change to its schedule — that was a reading of another word.';
+  }
+  switch (drillVerdict(card, correct, now, undefined, options)) {
     case 'practice':
       // A pick minutes after the reveal is a memory of the screen; a second
       // miss the same day says nothing the first did not. Both are practice.
@@ -148,7 +179,9 @@ export function describeDrillOutcome(
     case 'again':
       return 'Again — it comes back sooner.';
     case 'good':
-      return 'Good — moves it toward long-term review.';
+      return options.reading
+        ? 'Good — you read it, so the schedule moves on as after a reading.'
+        : 'Good — moves it toward long-term review.';
     case 'unchanged':
       return 'In review 複習中 — no change; a miss would bring it back to read.';
     case 'book':
@@ -197,6 +230,17 @@ export interface EngineOptions {
    * answers FSRS ignores, which never reach the review log.
    */
   onEvent?: StudyEventSink;
+  /**
+   * Domains whose new words are met face up — reading and meaning first,
+   * the first test later in the sitting — instead of cold. See
+   * `faceUpDomains` in lib/stats for how a domain earns that.
+   */
+  faceUpDomains?: readonly DomainCategory[];
+  /**
+   * The deck's sound families for the Sound Families drill. Built from the
+   * pool when absent, once the composition table's chunk has loaded.
+   */
+  families?: SoundFamilyIndex;
 }
 
 /** The part of a session worth carrying across a pause (see `serialize`). */
@@ -214,6 +258,8 @@ export interface SessionProgress {
   answeredAt?: Record<string, number>;
   /** Cards a drill miss has already booked a reading for. */
   booked?: string[];
+  /** Cards met face up this session, so a resumed session does not show them twice. */
+  introduced?: string[];
 }
 
 export interface EngineSnapshot {
@@ -240,7 +286,7 @@ export interface EngineSnapshot {
   elapsedMs: number;
   /** How long the learner looked at the prompt before revealing (current card). */
   revealLatencyMs: number | null;
-  /** The sentence the reveal shows for the current card: rotated, so the frame changes. */
+  /** The sentence the reveal (or the face-up intro) shows for the current card: rotated, so the frame changes. */
   sentence: SentenceCandidate | null;
 }
 
@@ -263,6 +309,11 @@ export class StudyEngine {
   private readonly answeredAt = new Map<string, number>();
   /** Cards a drill miss has booked a recognition look for (once each a session). */
   private readonly booked = new Set<string>();
+  /** Cards met face up this session (see `SessionStep` 'intro'). */
+  private readonly introduced = new Set<string>();
+  private readonly faceUp: ReadonlySet<DomainCategory>;
+  /** The deck's sound families, once known (see `familyIndex`). */
+  private families: SoundFamilyIndex | null;
   private readonly scheduler: FSRS;
   private readonly clock: SchedulerClock;
   private readonly interleave: boolean;
@@ -291,8 +342,8 @@ export class StudyEngine {
   private answered = 0;
   private nextDrillAt = DRILL_EVERY_N_CARDS;
   private lastDrillType: ExerciseType | undefined;
-  /** Which of the two fresh-card drills ran last, so they take turns. */
-  private lastFreshType: 'cloze' | 'meaning_to_form' | undefined;
+  /** Which of the fresh-card drills ran last, so they take turns. */
+  private lastFreshType: DrillType | undefined;
   /**
    * Cards a drill has asked about this session: every target, and every
    * studied dish printed on a slip, since a studied dish on a slip is graded
@@ -326,6 +377,8 @@ export class StudyEngine {
     this.mode = options.interleaveDrills ? 'daily' : 'drill';
     this.drillType = options.drillType;
     this.onEvent = options.onEvent;
+    this.faceUp = new Set(options.faceUpDomains ?? []);
+    this.families = options.families ?? null;
     const restore = options.restore;
     // A resumed session counts from where it stopped: the clock excludes the pause.
     this.startedAt = this.now().getTime() - (restore?.elapsedMs ?? 0);
@@ -341,6 +394,7 @@ export class StudyEngine {
         this.answeredAt.set(id, at);
       }
       for (const id of restore.booked ?? []) this.booked.add(id);
+      for (const id of restore.introduced ?? []) this.introduced.add(id);
       this.nextDrillAt = restore.nextDrillAt;
       this.lastDrillType = restore.lastDrillType;
       for (const result of restore.results) {
@@ -368,6 +422,7 @@ export class StudyEngine {
       requeues: Object.fromEntries(this.requeues),
       answeredAt: Object.fromEntries(this.answeredAt),
       booked: Array.from(this.booked),
+      introduced: Array.from(this.introduced),
     };
   }
 
@@ -382,7 +437,9 @@ export class StudyEngine {
   /** Immutable view of the session; the same object is returned until something changes. */
   snapshot = (): EngineSnapshot => {
     if (this.cached) return this.cached;
-    const card = this.step?.kind === 'card' ? (this.cards.get(this.step.cardId) ?? null) : null;
+    const step = this.step;
+    const onCard = step?.kind === 'card' || step?.kind === 'intro';
+    const card = onCard ? (this.cards.get(step.cardId) ?? null) : null;
     this.cached = {
       status: this.status,
       step: this.step,
@@ -391,7 +448,7 @@ export class StudyEngine {
       previews: this.revealed && this.preview ? this.toPreviews(this.preview) : null,
       answered: this.answered,
       remaining: this.queue.length,
-      total: this.answered + (this.step?.kind === 'card' ? 1 : 0) + this.queue.length,
+      total: this.answered + (onCard ? 1 : 0) + this.queue.length,
       drillsRemaining: this.drillQueue.length,
       drillIndex: this.drillTotal - this.drillQueue.length,
       drillTotal: this.drillTotal,
@@ -400,7 +457,7 @@ export class StudyEngine {
       startedAt: this.startedAt,
       elapsedMs: (this.completedAt ?? this.now().getTime()) - this.startedAt,
       revealLatencyMs: this.revealLatencyMs,
-      sentence: this.revealed ? this.revealSentence : null,
+      sentence: this.revealed || this.step?.kind === 'intro' ? this.revealSentence : null,
     };
     return this.cached;
   };
@@ -432,8 +489,34 @@ export class StudyEngine {
 
   /** Ids of the cards still to be answered, current card first (for resume). */
   remainingCardIds(): string[] {
-    const current = this.step?.kind === 'card' ? [this.step.cardId] : [];
+    const current =
+      this.step?.kind === 'card' || this.step?.kind === 'intro' ? [this.step.cardId] : [];
     return [...current, ...this.queue];
+  }
+
+  /**
+   * The learner has looked at a word met face up. It goes to the back of
+   * the queue for its first test, after the minute like any other look, and
+   * the card remembers the introduction (`introducedAt`): the first-sight
+   * profile counts such words apart, and a session picked up tomorrow
+   * tests the word cold rather than show it again.
+   */
+  acknowledgeIntro(): void {
+    if (this.step?.kind !== 'intro') return;
+    const cardId = this.step.cardId;
+    const card = this.cards.get(cardId)!;
+    const now = this.now();
+    const timing = this.takeStepTiming(now);
+    const nowIso = now.toISOString();
+    this.cards.set(cardId, { ...card, introducedAt: nowIso, updatedAt: nowIso });
+    this.touched.add(cardId);
+    this.introduced.add(cardId);
+    this.answeredAt.set(cardId, now.getTime());
+    this.queue.push(cardId);
+    this.revealSentence = null;
+    this.emit({ kind: 'intro', cardId, latencyMs: timing.rawMs, stateBefore: card.fsrs.state });
+    this.advance();
+    this.touch();
   }
 
   /** Flip the recognition card: compute the four scheduling previews. */
@@ -522,9 +605,13 @@ export class StudyEngine {
       const verdict: DrillVerdict =
         outcome.applyRating === false || companion
           ? 'unchanged'
-          : drillVerdict(card, outcome.correct, now);
+          : drillVerdict(card, outcome.correct, now, undefined, {
+              reading: isReadingExercise(exerciseType),
+            });
       const detail = this.answerDetail(outcome.correct, outcome);
-      if (this.step.exercise.type === 'cloze') detail.sentence = this.step.exercise.sentence;
+      if (this.step.exercise.type === 'cloze' || this.step.exercise.type === 'find_in_text') {
+        detail.sentence = this.step.exercise.sentence;
+      }
       switch (verdict) {
         case 'again':
         case 'good':
@@ -812,8 +899,12 @@ export class StudyEngine {
     const updated: VocabCard = { ...card, fsrs: next, updatedAt: nowIso };
     // The one Again a day the scheduler hears; everything after it is a retry.
     if (rating === 1) updated.lastAgainAt = nowIso;
+    // …and, after the first sight, one more day the word slipped in reading.
+    if (rating === 1 && isReadingExercise(exerciseType) && card.fsrs.state !== CardState.New) {
+      updated.slipDays = (card.slipDays ?? 0) + 1;
+    }
     // The day's reading, after which a drill can no longer move the word.
-    if (rating >= 3 && exerciseType === 'rapid_recognition') updated.lastPassAt = nowIso;
+    if (rating >= 3 && isReadingExercise(exerciseType)) updated.lastPassAt = nowIso;
     this.cards.set(cardId, updated);
     const log: ReviewLog = {
       id: uuid(),
@@ -880,7 +971,8 @@ export class StudyEngine {
       const index = this.queue.findIndex((id) => this.readyAt(id) <= nowMs);
       if (index >= 0) {
         const [cardId] = this.queue.splice(index, 1);
-        this.step = { kind: 'card', cardId };
+        if (this.wantsIntro(cardId)) this.beginIntro(cardId);
+        else this.step = { kind: 'card', cardId };
         return;
       }
       // Everything left was answered moments ago. A drill on another word
@@ -919,21 +1011,23 @@ export class StudyEngine {
     const queued = new Set(this.queue);
     const usable = (c: VocabCard) =>
       isDrillCandidate(c) && !this.drilled.has(c.id) && !exclude.has(c.id);
+    const ctx: DrillContext = { families: this.familyIndex(pool) };
+    // The words in most trouble first: forgotten on the most days, or lapsed the most.
+    const byTrouble = (a: VocabCard, b: VocabCard) =>
+      troubleScore(b) - troubleScore(a) || b.fsrs.lapses - a.fsrs.lapses;
 
-    // Which Word starts from the meaning the reveal has just shown beside the
-    // word, so like the cloze it is kept for cards not seen this session; the
-    // two take turns on those cards.
-    if (this.lastDrillType !== 'cloze' && this.lastDrillType !== 'meaning_to_form') {
+    // Fill the Blank, Which Word and Say It start from what the reveal has
+    // just shown beside the word, so they are kept for cards not seen this
+    // session, and take turns on those cards.
+    if (!this.lastDrillType || !FRESH_CARD_DRILLS.includes(this.lastDrillType as DrillType)) {
       const fresh = pool
         .filter((c) => usable(c) && !seenIds.has(c.id) && !queued.has(c.id))
-        .sort((a, b) => b.fsrs.lapses - a.fsrs.lapses || a.fsrs.stability - b.fsrs.stability);
-      const order: ('cloze' | 'meaning_to_form')[] =
-        this.lastFreshType === 'cloze'
-          ? ['meaning_to_form', 'cloze']
-          : ['cloze', 'meaning_to_form'];
+        .sort((a, b) => byTrouble(a, b) || a.fsrs.stability - b.fsrs.stability);
+      const last = this.lastFreshType ? FRESH_CARD_DRILLS.indexOf(this.lastFreshType) : -1;
+      const order = [...FRESH_CARD_DRILLS.slice(last + 1), ...FRESH_CARD_DRILLS.slice(0, last + 1)];
       for (const type of order) {
         for (const card of fresh) {
-          if (type === 'cloze' ? !hasClozeSentence(card) : !hasMeaningCue(card)) continue;
+          if (!supportsDrill(card, type, ctx)) continue;
           const exercise = this.buildExercise(type, card, pool);
           if (!exercise) continue;
           this.drilled.add(card.id);
@@ -952,17 +1046,58 @@ export class StudyEngine {
     const candidates = [
       ...eligible.filter((c) => !recent.has(c.id)),
       ...eligible.filter((c) => recent.has(c.id)),
-    ].sort((a, b) => b.fsrs.lapses - a.fsrs.lapses);
+    ].sort(byTrouble);
     for (const card of candidates) {
-      const type = chooseDrillType(card, this.lastDrillType, ['cloze', 'meaning_to_form']);
-      if (!type) continue;
-      const exercise = this.buildExercise(type, card, pool);
-      if (!exercise) continue;
-      this.drilled.add(card.id);
-      this.lastDrillType = type;
-      return exercise;
+      // Every kind the card supports gets a try, in rotation: a kind that
+      // cannot be built right now (every sentence cooling off, no family
+      // tile to spare) gives way to the next rather than to the next card.
+      const tried: ExerciseType[] = [...FRESH_CARD_DRILLS];
+      for (;;) {
+        const type = chooseDrillType(card, this.lastDrillType, tried, ctx);
+        if (!type) break;
+        const exercise = this.buildExercise(type, card, pool);
+        if (exercise) {
+          this.drilled.add(card.id);
+          this.lastDrillType = type;
+          return exercise;
+        }
+        tried.push(type);
+      }
     }
     return null;
+  }
+
+  /** Whether a queued card is met face up rather than tested: new, in a face-up domain, not yet introduced. */
+  private wantsIntro(cardId: string): boolean {
+    const card = this.cards.get(cardId);
+    return (
+      card !== undefined &&
+      card.fsrs.state === CardState.New &&
+      this.faceUp.has(card.domain) &&
+      !this.introduced.has(cardId) &&
+      !card.introducedAt
+    );
+  }
+
+  /** Show a new word face up, with the sentence the reveal would have shown. */
+  private beginIntro(cardId: string): void {
+    const card = this.cards.get(cardId)!;
+    const now = this.now();
+    this.revealSentence = chooseSentence(card, Array.from(this.cards.values()), now, 'reveal');
+    if (this.revealSentence) {
+      this.noteShown(cardId, this.revealSentence.traditional, now, 'reveal');
+    }
+    this.step = { kind: 'intro', cardId };
+  }
+
+  /**
+   * The deck's sound families: given up front, or built from the pool the
+   * first time a drill asks after the composition table has loaded. Until
+   * then Sound Families sits the rotation out.
+   */
+  private familyIndex(pool: VocabCard[]): SoundFamilyIndex | null {
+    if (!this.families && isEtymologyLoaded()) this.families = soundFamilyIndex(pool);
+    return this.families;
   }
 
   /**
@@ -977,8 +1112,9 @@ export class StudyEngine {
       if (card && card.fsrs.state !== CardState.New) this.drilled.add(id);
     }
     this.lastDrillIds = new Set(ids);
-    // The sentence a cloze cut its blank from is held back for a week.
-    if (exercise.type === 'cloze') {
+    // The sentence a cloze cut its blank from, or Find It hid the word in,
+    // is held back for a week.
+    if (exercise.type === 'cloze' || exercise.type === 'find_in_text') {
       this.noteShown(exercise.cardId, exercise.sentence, this.now(), 'cloze');
     }
     this.step = { kind: 'drill', exercise };
@@ -1016,12 +1152,19 @@ export class StudyEngine {
     return { ids, words };
   }
 
-  private buildExercise(
-    type: Exclude<ExerciseType, 'rapid_recognition'>,
-    card: VocabCard,
-    pool: VocabCard[],
-  ): DrillExercise | null {
+  private buildExercise(type: DrillType, card: VocabCard, pool: VocabCard[]): DrillExercise | null {
     switch (type) {
+      case 'typed_reading':
+        return buildTypedReadingExercise(card);
+      case 'find_in_text':
+        return buildFindInTextExercise(card, pool, this.rng, {
+          avoid: this.wordsToKeepOut().words,
+          now: this.now(),
+        });
+      case 'sound_family': {
+        const families = this.familyIndex(pool);
+        return families ? buildSoundFamilyExercise(card, pool, families, this.rng) : null;
+      }
       case 'cloze': {
         // Not the sentence the learner has just been clozed on: another one,
         // or none — a word whose every sentence was clozed this week waits.

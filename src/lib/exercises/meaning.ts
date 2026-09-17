@@ -1,7 +1,7 @@
-import type { DomainCategory, ExampleSentence, VocabCard } from '@/types';
+import { CardState, type DomainCategory, type ExampleSentence, type VocabCard } from '@/types';
 import { shuffle, type Rng } from '@/lib/util/random';
 import { DAY_MS } from '@/lib/util/time';
-import { hasMeaningCue } from '@/lib/queue/session';
+import { hasMeaningCue, knockedDownToday, readToday } from '@/lib/queue/session';
 import { ownSentences, pickClozeDistractors, type ClozeOptionInfo } from './cloze';
 import { isVariantOf } from './foil';
 
@@ -58,9 +58,15 @@ export function readingOf(card: Pick<VocabCard, 'pinyin' | 'spoken'>): string {
 
 /**
  * Whether the ear check is due: never asked, or known long enough ago to be
- * worth asking again, or not known a day or more ago.
+ * worth asking again, or not known a day or more ago — and never on a day
+ * the word has already been read, because the reveal put its reading on
+ * screen and the ear would only be repeating the eye.
  */
-export function askByEar(card: Pick<VocabCard, 'byEar'>, now: Date): boolean {
+export function askByEar(
+  card: Pick<VocabCard, 'byEar' | 'lastPassAt' | 'lastAgainAt'>,
+  now: Date,
+): boolean {
+  if (readToday(card, now) || knockedDownToday(card, now)) return false;
   const last = card.byEar;
   if (!last) return true;
   const age = now.getTime() - Date.parse(last.at);
@@ -201,7 +207,15 @@ export function buildMeaningExercise(
         !words.includes(c.traditional) &&
         !isVariantOf(card, c.traditional),
     );
-    for (const c of shuffle(more, rng)) add(c);
+    // Words the learner has studied first: a reading never met is not a
+    // choice, it is noise, and the target would be the one familiar sound.
+    const studied = (c: VocabCard) => c.fsrs.state !== CardState.New;
+    for (const c of shuffle(more.filter(studied), rng)) add(c);
+    for (const c of shuffle(
+      more.filter((c) => !studied(c)),
+      rng,
+    ))
+      add(c);
     readings = readings.length >= 2 ? shuffle([reading, ...readings], rng) : [];
   }
 

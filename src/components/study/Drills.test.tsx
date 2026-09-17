@@ -4,14 +4,19 @@ import { buildClozeExercise } from '@/lib/exercises/cloze';
 import { buildFoilExercise } from '@/lib/exercises/foil';
 import { buildMeaningExercise } from '@/lib/exercises/meaning';
 import { buildMenuExercise } from '@/lib/exercises/menu';
+import { buildFindInTextExercise } from '@/lib/exercises/passage';
+import { buildSoundFamilyExercise, indexFromFamilies } from '@/lib/exercises/soundFamily';
 import { containsPinyin } from '@/lib/util/pinyin';
 import { mulberry32 } from '@/lib/util/random';
-import { makePool } from '@/test/factories';
+import { makeCard, makePool } from '@/test/factories';
 import { ClozeExerciseView } from './ClozeExerciseView';
+import { FindInTextView } from './FindInTextView';
 import { FoilExerciseView } from './FoilExerciseView';
 import { MeaningExerciseView } from './MeaningExerciseView';
 import { MenuExerciseView } from './MenuExerciseView';
 import { SessionSummary } from './SessionSummary';
+import { SoundFamilyView } from './SoundFamilyView';
+import { TypedReadingView } from './TypedReadingView';
 
 const pool = makePool();
 
@@ -365,5 +370,219 @@ describe('SessionSummary', () => {
     expect(screen.getByTestId('summary-streak')).toHaveTextContent('Day 12');
     await userEvent.click(screen.getByTestId('summary-done'));
     expect(onDone).toHaveBeenCalled();
+  });
+});
+
+describe('TypedReadingView', () => {
+  const card = pool[0];
+
+  it('shows the characters alone, marks a wrong try by syllable, then reports a second-try find', async () => {
+    const { buildTypedReadingExercise } = await import('@/lib/exercises/reading');
+    const exercise = buildTypedReadingExercise(card)!;
+    const onComplete = vi.fn();
+    render(<TypedReadingView exercise={exercise} card={card} onComplete={onComplete} />);
+    expect(screen.getByTestId('typed-prompt')).toHaveTextContent(card.traditional);
+    expect(screen.getByTestId('typed-exercise').textContent).not.toContain(card.pinyin);
+    expect(containsPinyin(screen.getByTestId('typed-prompt').textContent ?? '')).toBe(false);
+    expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByTestId('typed-input'), 'lu ruo fan');
+    await userEvent.click(screen.getByTestId('typed-check'));
+    expect(screen.getByTestId('typed-feedback')).toHaveTextContent(/不對/);
+    expect(screen.getByTestId('typed-feedback')).toHaveTextContent(/2nd syllable/);
+    const marks = screen.getAllByTestId('typed-syllable').map((el) => el.dataset.ok);
+    expect(marks).toEqual(['true', 'false', 'true']);
+    // Still no reading on screen: the syllables are marked, not spelled.
+    expect(screen.getByTestId('typed-exercise').textContent).not.toContain('ròu');
+    expect(screen.queryByTestId('typed-reading')).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByTestId('typed-input'), 'lu rou fan{Enter}');
+    expect(screen.getByTestId('typed-reading')).toHaveTextContent('lǔ ròu fàn');
+    expect(screen.getByTestId('typed-feedback')).toHaveTextContent(/Found it/);
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/No change/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: true, applyRating: false, misses: 1, picked: 'lu ruo fan' },
+    ]);
+  });
+
+  it('grades a first-try hit as a reading', async () => {
+    const { buildTypedReadingExercise } = await import('@/lib/exercises/reading');
+    const exercise = buildTypedReadingExercise(card)!;
+    const onComplete = vi.fn();
+    render(<TypedReadingView exercise={exercise} card={card} onComplete={onComplete} />);
+    await userEvent.type(screen.getByTestId('typed-input'), 'Lu3Rou4Fan4{Enter}');
+    expect(screen.getByTestId('typed-feedback')).toHaveTextContent(/Read it/);
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Good/);
+    expect(screen.getByTestId('typed-definition')).toHaveTextContent(card.definition);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: true, applyRating: true, misses: 0 },
+    ]);
+  });
+
+  it('shows the reading after two wrong tries, or on giving up, and counts a miss', async () => {
+    const { buildTypedReadingExercise } = await import('@/lib/exercises/reading');
+    const exercise = buildTypedReadingExercise(card)!;
+    const onComplete = vi.fn();
+    const { unmount } = render(
+      <TypedReadingView exercise={exercise} card={card} onComplete={onComplete} />,
+    );
+    await userEvent.type(screen.getByTestId('typed-input'), 'xx{Enter}');
+    await userEvent.type(screen.getByTestId('typed-input'), 'yy{Enter}');
+    expect(screen.getByTestId('typed-reading')).toHaveTextContent('lǔ ròu fàn');
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: false, applyRating: true, misses: 2, picked: 'xx' },
+    ]);
+    unmount();
+
+    const gaveUp = vi.fn();
+    render(<TypedReadingView exercise={exercise} card={card} onComplete={gaveUp} />);
+    await userEvent.click(screen.getByTestId('typed-giveup'));
+    expect(screen.getByTestId('typed-reading')).toHaveTextContent('lǔ ròu fàn');
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(gaveUp).toHaveBeenCalledWith([
+      { cardId: card.id, correct: false, applyRating: true, misses: 1 },
+    ]);
+  });
+});
+
+describe('FindInTextView', () => {
+  const passagePool = [
+    pool[0],
+    makeCard({
+      traditional: '牛肉麵',
+      pinyin: 'niú ròu miàn',
+      definition: 'Beef noodles',
+      exampleSentenceTraditional: '這家牛肉麵很好吃。',
+      exampleSentencePinyin: 'Zhè jiā niúròumiàn hěn hǎochī.',
+    }),
+    makeCard({
+      traditional: '貢丸湯',
+      pinyin: 'gòng wán tāng',
+      definition: 'Meatball soup',
+      exampleSentenceTraditional: '我要一碗貢丸湯。',
+      exampleSentencePinyin: 'Wǒ yào yī wǎn gòngwántāng.',
+    }),
+  ];
+  const card = passagePool[0];
+
+  it('names a wrong tap and retires it, then reports the find with no schedule change', async () => {
+    const exercise = buildFindInTextExercise(card, passagePool, mulberry32(1))!;
+    const onComplete = vi.fn();
+    render(<FindInTextView exercise={exercise} card={card} onComplete={onComplete} />);
+    expect(screen.getByTestId('find-cue')).toHaveTextContent('lǔ ròu fàn');
+    expect(screen.getAllByTestId('find-sentence')).toHaveLength(3);
+    for (const sentence of screen.getAllByTestId('find-sentence')) {
+      expect(containsPinyin(sentence.textContent ?? '')).toBe(false);
+    }
+    const words = screen.getAllByTestId('find-word');
+    expect(words.filter((w) => w.dataset.target === 'true').map((w) => w.textContent)).toEqual([
+      '滷肉飯',
+    ]);
+    const wrong = words.find((w) => w.textContent === '牛肉麵')!;
+    await userEvent.click(wrong);
+    expect(screen.getByTestId('find-misread')).toHaveTextContent('牛肉麵');
+    expect(screen.getByTestId('find-misread')).toHaveTextContent('niú ròu miàn');
+    expect(screen.getByTestId('find-misread')).toHaveTextContent('Beef noodles');
+    expect(wrong).toBeDisabled();
+    expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
+    await userEvent.click(words.find((w) => w.dataset.target === 'true')!);
+    expect(screen.getByTestId('find-feedback')).toHaveTextContent(/Found it/);
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/No change/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: true, applyRating: false, misses: 1, picked: '牛肉麵' },
+    ]);
+  });
+
+  it('marks a first-try tap correct, and two wrong taps a miss with one corrective tap', async () => {
+    const exercise = buildFindInTextExercise(card, passagePool, mulberry32(1))!;
+    const onComplete = vi.fn();
+    const { unmount } = render(
+      <FindInTextView exercise={exercise} card={card} onComplete={onComplete} />,
+    );
+    await userEvent.click(
+      screen.getAllByTestId('find-word').find((w) => w.dataset.target === 'true')!,
+    );
+    expect(screen.getByTestId('find-feedback')).toHaveTextContent(/Correct/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: true, applyRating: true, misses: 0 },
+    ]);
+    unmount();
+
+    const missed = vi.fn();
+    render(<FindInTextView exercise={exercise} card={card} onComplete={missed} />);
+    const wrongs = screen
+      .getAllByTestId('find-word')
+      .filter((w) => w.dataset.target === 'false' && (w.textContent?.length ?? 0) > 1);
+    await userEvent.click(wrongs[0]);
+    await userEvent.click(wrongs[1]);
+    expect(screen.getByTestId('find-gate-hint')).toHaveTextContent(card.traditional);
+    expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getAllByTestId('find-word').find((w) => w.dataset.target === 'true')!,
+    );
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(missed).toHaveBeenCalledWith([
+      {
+        cardId: card.id,
+        correct: false,
+        applyRating: true,
+        misses: 2,
+        picked: wrongs[0].textContent,
+      },
+    ]);
+  });
+});
+
+describe('SoundFamilyView', () => {
+  const families = indexFromFamilies({ 反: ['飯', '板', '版', '販'] });
+  const card = pool[0];
+
+  it('blanks the character, explains a wrong tile, and asks for it again', async () => {
+    const exercise = buildSoundFamilyExercise(card, pool, families, mulberry32(1))!;
+    expect(exercise.masked).toBe('滷肉＿');
+    const onComplete = vi.fn();
+    render(<SoundFamilyView exercise={exercise} card={card} onComplete={onComplete} />);
+    expect(screen.getByTestId('family-cue')).toHaveTextContent('滷肉＿');
+    expect(screen.getByTestId('family-stem')).toHaveTextContent('反');
+    expect(screen.getAllByTestId('family-option')).toHaveLength(4);
+    const wrong = screen
+      .getAllByTestId('family-option')
+      .find((b) => b.dataset.correct === 'false')!;
+    const wrongChar = wrong.textContent!.trim();
+    await userEvent.click(wrong);
+    expect(screen.getByTestId('family-feedback')).toHaveTextContent(/不對/);
+    expect(screen.getAllByTestId('family-member').length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByTestId('drill-continue')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByTestId('family-retry'));
+    expect(screen.getByTestId('family-retry-hint')).toBeInTheDocument();
+    await userEvent.click(
+      screen.getAllByTestId('family-option').find((b) => b.dataset.correct === 'true')!,
+    );
+    expect(screen.getByTestId('family-feedback')).toHaveTextContent(/Found it/);
+    expect(screen.getByTestId('family-answer')).toHaveTextContent('飯');
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Again/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: card.id, correct: false, misses: 1, picked: wrongChar },
+    ]);
+  });
+
+  it('marks a first-try tile correct', async () => {
+    const exercise = buildSoundFamilyExercise(card, pool, families, mulberry32(2))!;
+    const onComplete = vi.fn();
+    render(<SoundFamilyView exercise={exercise} card={card} onComplete={onComplete} />);
+    await userEvent.click(
+      screen.getAllByTestId('family-option').find((b) => b.dataset.correct === 'true')!,
+    );
+    expect(screen.getByTestId('family-feedback')).toHaveTextContent(/Correct/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([{ cardId: card.id, correct: true, misses: 0 }]);
   });
 });

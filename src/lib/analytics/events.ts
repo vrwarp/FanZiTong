@@ -10,7 +10,7 @@ export const STUDY_EVENT_VERSION = 1;
  */
 export const STUDY_EVENT_LIMIT = 50_000;
 
-export type StudyEventKind = 'session_start' | 'answer' | 'drill_skip' | 'session_end';
+export type StudyEventKind = 'session_start' | 'answer' | 'drill_skip' | 'intro' | 'session_end';
 
 /** A daily study session, or a standalone drill launched from Drills/Stats. */
 export type SessionMode = 'daily' | 'drill';
@@ -51,7 +51,7 @@ export interface StudyEvent {
   answered?: number;
   elapsedMs?: number;
 
-  // ---- answer / drill_skip ------------------------------------------
+  // ---- answer / drill_skip / intro ----------------------------------
   cardId?: string;
   exerciseType?: ExerciseType;
   rating?: RatingGrade;

@@ -1,11 +1,14 @@
 import { DEFAULT_SETTINGS, type VocabCard } from '@/types';
+import { indexFromFamilies } from '@/lib/exercises/soundFamily';
 import { makeCard, reviewState } from '@/test/factories';
 import {
   buildSessionQueue,
   chooseDrillType,
   drillVerdict,
+  hasAlignedSentence,
   hasClozeSentence,
   hasFoils,
+  hasReading,
   interleaveByDomain,
   isDrillCandidate,
   isRetry,
@@ -216,24 +219,54 @@ describe('requeue and drill helpers', () => {
     expect(chooseDrillType(food, 'cloze')).toBe('realia_menu');
     expect(chooseDrillType(food, 'realia_menu')).toBe('foil_discrimination');
     expect(chooseDrillType(food, 'foil_discrimination')).toBe('meaning_to_form');
-    expect(chooseDrillType(food, 'meaning_to_form')).toBe('cloze');
+    expect(chooseDrillType(food, 'meaning_to_form')).toBe('typed_reading');
+    // The default card's sentence lines up with its reading, so Find It is next…
+    expect(chooseDrillType(food, 'typed_reading')).toBe('find_in_text');
+    // …and Sound Families only once the deck's families are known.
+    expect(chooseDrillType(food, 'find_in_text')).toBe('cloze');
+    const families = indexFromFamilies({ 反: ['飯', '板', '版'] });
+    expect(chooseDrillType(food, 'find_in_text', [], { families })).toBe('sound_family');
+    expect(chooseDrillType(food, 'sound_family', [], { families })).toBe('cloze');
     expect(chooseDrillType(food, 'cloze', ['realia_menu', 'foil_discrimination'])).toBe(
       'meaning_to_form',
     );
     const church = makeCard({ domain: 'church', exampleSentenceTraditional: undefined });
     expect(chooseDrillType(church, undefined)).toBe('foil_discrimination');
     expect(chooseDrillType(church, 'foil_discrimination')).toBe('meaning_to_form');
-    expect(chooseDrillType(church, 'meaning_to_form')).toBe('foil_discrimination');
-    // Which Word needs only a meaning and a reading, so a bare card still has one drill…
+    expect(chooseDrillType(church, 'meaning_to_form')).toBe('typed_reading');
+    expect(chooseDrillType(church, 'typed_reading')).toBe('foil_discrimination');
+    // Which Word and Say It need only a meaning and a reading, so a bare card still has drills…
     const bare = makeCard({
       domain: 'slang',
       exampleSentenceTraditional: undefined,
       visualFoils: [],
     });
     expect(chooseDrillType(bare, undefined)).toBe('meaning_to_form');
-    expect(chooseDrillType(bare, undefined, ['meaning_to_form'])).toBeNull();
-    // …and a card with no definition has none.
-    expect(chooseDrillType({ ...bare, definition: ' ' }, undefined)).toBeNull();
+    expect(chooseDrillType(bare, undefined, ['meaning_to_form'])).toBe('typed_reading');
+    expect(chooseDrillType(bare, undefined, ['meaning_to_form', 'typed_reading'])).toBeNull();
+    // …and a card with no definition or reading has fewer.
+    expect(chooseDrillType({ ...bare, definition: ' ' }, undefined)).toBe('typed_reading');
+    expect(chooseDrillType({ ...bare, pinyin: ' ' }, undefined)).toBeNull();
+  });
+
+  it('checks what Say It and Find It need', () => {
+    expect(hasReading(makeCard())).toBe(true);
+    expect(hasReading(makeCard({ pinyin: ' ' }))).toBe(false);
+    expect(hasReading(makeCard({ traditional: 'OK' }))).toBe(false);
+    // The default sentence's reading lines up word by word with its characters…
+    expect(hasAlignedSentence(makeCard())).toBe(true);
+    // …a sentence with no reading, or one that does not line up, cannot be cut into words.
+    expect(hasAlignedSentence(makeCard({ exampleSentencePinyin: undefined }))).toBe(false);
+    expect(hasAlignedSentence(makeCard({ exampleSentencePinyin: 'lǔ ròu fàn' }))).toBe(false);
+    expect(
+      hasAlignedSentence(
+        makeCard({
+          exampleSentenceTraditional: '沒有目標詞。',
+          exampleSentencePinyin: 'Méiyǒu mùbiāo cí.',
+          extraSentences: [{ traditional: '我要一碗滷肉飯。', pinyin: 'Wǒ yào yī wǎn lǔròufàn.' }],
+        }),
+      ),
+    ).toBe(true);
   });
 });
 
@@ -310,5 +343,28 @@ describe('what a drill may do to a word', () => {
     // Relearning is still learning.
     const relearning = makeCard({ fsrs: reviewState({ state: 3, lapses: 1 }) });
     expect(drillVerdict(relearning, false, now)).toBe('again');
+  });
+
+  it('lets a reading drill move a word in Review, under the day rules', () => {
+    const reading = { reading: true };
+    const review = makeCard({ fsrs: reviewState() });
+    // Say It is a reading: a hit is Good and a miss Again, even in Review…
+    expect(drillVerdict(review, true, now, undefined, reading)).toBe('good');
+    expect(drillVerdict(review, false, now, undefined, reading)).toBe('again');
+    // …but a word already read or knocked down today has had its verdict.
+    expect(drillVerdict({ ...review, lastPassAt: earlier }, true, now, undefined, reading)).toBe(
+      'practice',
+    );
+    expect(drillVerdict({ ...review, lastPassAt: earlier }, false, now, undefined, reading)).toBe(
+      'practice',
+    );
+    expect(drillVerdict({ ...review, lastAgainAt: earlier }, true, now, undefined, reading)).toBe(
+      'practice',
+    );
+    expect(drillVerdict({ ...review, lastPassAt: yesterday }, false, now, undefined, reading)).toBe(
+      'again',
+    );
+    const learning = makeCard({ fsrs: reviewState({ state: 1 }) });
+    expect(drillVerdict(learning, true, now, undefined, reading)).toBe('good');
   });
 });

@@ -140,6 +140,9 @@ describe('buildActivity', () => {
         realia_menu: 0,
         foil_discrimination: 1,
         meaning_to_form: 0,
+        typed_reading: 0,
+        find_in_text: 0,
+        sound_family: 0,
       },
     });
     expect(activity.latencyMsByExercise.rapid_recognition).toEqual({
@@ -189,6 +192,9 @@ describe('practice, first sight and characters', () => {
         realia_menu: 0,
         foil_discrimination: 0,
         meaning_to_form: 0,
+        typed_reading: 0,
+        find_in_text: 0,
+        sound_family: 0,
       },
     });
     const report = buildReport([inReview], logs, settings, events);
@@ -262,6 +268,9 @@ describe('retries and recorded sessions', () => {
         realia_menu: 0,
         foil_discrimination: 1,
         meaning_to_form: 0,
+        typed_reading: 0,
+        find_in_text: 0,
+        sound_family: 0,
       },
     });
     expect(activity.days[0].retries).toBe(3);

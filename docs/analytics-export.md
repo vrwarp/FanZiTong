@@ -62,7 +62,8 @@ report
                     answer-time quantiles; where the lapses came from; retries
                     and booked readings by exercise; earChecks, how many
                     Which Word ear checks were asked and known; firstSight,
-                    how each domain was rated the first time its words were seen
+                    how each domain was rated the first time its words were
+                    seen cold, and how many were met face up instead
   characters      — the characters behind the studied words: how many were
                     met, how many have been read in a real test, and the ones
                     that have only ever been failed, with their words
@@ -70,8 +71,9 @@ report
                     the full answer history with the gap before each answer,
                     retries, booked readings, lapses charged by drills, whether
                     the word was known by ear when last asked, slipDays (the
-                    study days it was forgotten on after its first sight), and
-                    per-card flags
+                    study days it was forgotten on after its first sight),
+                    introducedAt when the word was shown face up before its
+                    first test, and per-card flags
   diagnostics[]   — the patterns the app found in its own data
 events            — real session boundaries and answers, including the ones
                     FSRS ignored (see below)
@@ -125,9 +127,11 @@ session was completed or abandoned, and the retries the review log never sees.
 Where both exist the diagnostics prefer the recorded sessions.
 
 `events` is the real thing. The engine emits one event per session boundary,
-answer and skip, into an IndexedDB table capped at 50,000 rows (oldest dropped
-first); the export carries the newest 5,000 and says how many it left behind.
-An event knows things a review log cannot:
+answer, skip and face-up introduction (`kind: "intro"`: a new word shown with
+its reading before its first test, with the time spent looking), into an
+IndexedDB table capped at 50,000 rows (oldest dropped first); the export
+carries the newest 5,000 and says how many it left behind. An event knows
+things a review log cannot:
 
 - the session it belongs to, and its position in that session;
 - `applied: false` answers — the ones FSRS ignored and never logged;
@@ -151,9 +155,18 @@ An event knows things a review log cannot:
   reading from the meaning alone before choosing the characters; absent when
   the ear check was not due. The written step is graded like a cloze, so
   `picked` and `misses` mean the same there;
-- `sentence`, on a Fill the Blank answer: the sentence the blank was cut from —
-  a word can now have several, its own and ones borrowed from other cards, so
-  a repeat is a fact about the sentence rather than the word;
+- `sentence`, on a Fill the Blank or Find It answer: the sentence the blank was
+  cut from, or the word was hidden in — a word can now have several, its own
+  and ones borrowed from other cards, so a repeat is a fact about the sentence
+  rather than the word;
+- `exerciseType` names the drill. Besides recognition, the cloze, the order
+  slip, the foil set and Which Word, there are `typed_reading` (Say It: the
+  reading typed; `picked` is the first wrong reading typed, `misses` how many
+  tries it took; a first-try hit is a reading and reaches the scheduler even
+  on a word in Review), `find_in_text` (Find It: the word tapped in running
+  text; `picked` is the first wrong word tapped) and `sound_family` (the
+  blanked character picked among deck characters sharing its sound part;
+  `picked` is the first wrong tile);
 - `foilSource` and `foilStrategy`: which confusion a Spot the Character set was
   built from (`homophone` or `shape`) and how it was balanced (`factorial`,
   `column` or `pair`). Accuracy is not comparable across these, and events

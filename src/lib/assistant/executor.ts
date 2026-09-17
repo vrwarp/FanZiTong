@@ -28,7 +28,15 @@ import {
   totalLapses,
 } from '@/lib/stats/analytics';
 import { ownSentences } from '@/lib/exercises/cloze';
-import { hasClozeSentence, hasFoils, hasMeaningCue } from '@/lib/queue/session';
+import {
+  hasAlignedSentence,
+  hasClozeSentence,
+  hasFoils,
+  hasMeaningCue,
+  hasReading,
+  hasSoundFamily,
+} from '@/lib/queue/session';
+import { soundFamilyIndex } from '@/lib/exercises/soundFamily';
 import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
 import { hanChars } from '@/lib/util/pinyin';
 import { buildBatch, type ChangeInput } from './journal';
@@ -38,6 +46,7 @@ import {
   isToolName,
   type CardDraft,
   type CardSummary,
+  type DRILL_TYPES,
   type ToolName,
 } from './tools';
 import { buildDeckIndex, validateCardDraft, type ValidationIssue } from './validateCard';
@@ -577,11 +586,17 @@ export function createToolExecutor(deps: ExecutorDeps) {
 
   async function drill(input: unknown): Promise<ToolOutcome> {
     const args = TOOLS.suggest_drill.input.parse(input) as {
-      type: 'cloze' | 'foil_discrimination' | 'realia_menu' | 'meaning_to_form';
+      type: (typeof DRILL_TYPES)[number];
       cardIds: string[];
       label: string;
     };
     const cards = await repo.getCards(args.cardIds);
+    // Sound Families needs the composition table and the whole deck's characters.
+    let families: ReturnType<typeof soundFamilyIndex> | null = null;
+    if (args.type === 'sound_family') {
+      await loadEtymologyTable();
+      families = soundFamilyIndex(await repo.getAllCards());
+    }
     const eligible: string[] = [];
     const skipped: { id: string; why: string }[] = [];
     for (const card of cards) {
@@ -593,6 +608,18 @@ export function createToolExecutor(deps: ExecutorDeps) {
         skipped.push({ id: card.id, why: `“${card.traditional}” is not a food word.` });
       } else if (args.type === 'meaning_to_form' && !hasMeaningCue(card)) {
         skipped.push({ id: card.id, why: `“${card.traditional}” has no definition yet.` });
+      } else if (args.type === 'typed_reading' && !hasReading(card)) {
+        skipped.push({ id: card.id, why: `“${card.traditional}” has no pinyin yet.` });
+      } else if (args.type === 'find_in_text' && !hasAlignedSentence(card)) {
+        skipped.push({
+          id: card.id,
+          why: `“${card.traditional}” has no sentence with a word-by-word reading yet.`,
+        });
+      } else if (args.type === 'sound_family' && families && !hasSoundFamily(card, families)) {
+        skipped.push({
+          id: card.id,
+          why: `“${card.traditional}” shares no sound component with two other deck characters.`,
+        });
       } else {
         eligible.push(card.id);
       }

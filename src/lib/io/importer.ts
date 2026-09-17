@@ -131,6 +131,7 @@ export function materializeImport(
         sentencesShown: row.sentencesShown ?? current.sentencesShown,
         byEar: row.byEar ?? current.byEar,
         slipDays: row.slipDays ?? current.slipDays,
+        introducedAt: row.introducedAt ?? current.introducedAt,
         updatedAt: nowIso,
       });
       continue;
@@ -154,6 +155,7 @@ export function materializeImport(
     if (row.sentencesShown?.length) card.sentencesShown = row.sentencesShown;
     if (row.byEar) card.byEar = row.byEar;
     if (row.slipDays) card.slipDays = row.slipDays;
+    if (row.introducedAt) card.introducedAt = row.introducedAt;
     if (row.extraSentences?.length) card.extraSentences = row.extraSentences;
     if (row.exampleSentenceTraditional)
       card.exampleSentenceTraditional = row.exampleSentenceTraditional;

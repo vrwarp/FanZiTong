@@ -78,6 +78,9 @@ export const DRILL_TYPES = [
   'foil_discrimination',
   'realia_menu',
   'meaning_to_form',
+  'typed_reading',
+  'find_in_text',
+  'sound_family',
 ] as const;
 
 /** A card as the model sees it in search results: compact, no FSRS internals. */
@@ -219,7 +222,7 @@ export const TOOLS = {
   },
   suggest_drill: {
     description:
-      'Offer the learner a practice run on specific cards. Returns a link the app shows as a button; cards that cannot support the drill are reported back to you.',
+      'Offer the learner a practice run on specific cards. Returns a link the app shows as a button; cards that cannot support the drill are reported back to you. Kinds: cloze (fill the blank), foil_discrimination (spot the character), realia_menu (order slip, food only), meaning_to_form (which word, from the meaning), typed_reading (say it: type the reading; a first-try hit counts as a reading), find_in_text (find it: tap the word in a few real sentences), sound_family (the blanked character among deck characters sharing its sound part).',
     input: z.object({
       type: z.enum(DRILL_TYPES),
       cardIds: z.array(uuid).min(1).max(30),

@@ -68,6 +68,9 @@ const EXERCISES: ExerciseType[] = [
   'realia_menu',
   'foil_discrimination',
   'meaning_to_form',
+  'typed_reading',
+  'find_in_text',
+  'sound_family',
 ];
 
 const STATE_NAMES = ['new', 'learning', 'review', 'relearning', 'unknown'] as const;
@@ -99,6 +102,9 @@ function emptyExercises(): ExerciseCounts {
     realia_menu: 0,
     foil_discrimination: 0,
     meaning_to_form: 0,
+    typed_reading: 0,
+    find_in_text: 0,
+    sound_family: 0,
   };
 }
 
@@ -623,6 +629,8 @@ export interface CardReport {
   byEar?: { known: boolean; at: string };
   /** Study days the word was forgotten on after its first sight (see VocabCard.slipDays). */
   slipDays: number;
+  /** When the word was shown face up before its first test, so it had no first sight. */
+  introducedAt?: string;
   /** How many of the card's lapses were charged by a drill rather than a reading. */
   lapsesFromDrills: number;
   /** Answers the export could not include, once the history cap was hit. */
@@ -705,6 +713,7 @@ export function buildCardReports(
         booked: bookedByCard.get(card.id) ?? 0,
         ...(card.byEar ? { byEar: { known: card.byEar.known, at: card.byEar.at } } : {}),
         slipDays: card.slipDays ?? 0,
+        ...(card.introducedAt ? { introducedAt: card.introducedAt } : {}),
         lapsesFromDrills: history.filter(
           (l) =>
             l.rating === 1 &&

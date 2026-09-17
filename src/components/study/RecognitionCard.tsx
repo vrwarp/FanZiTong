@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
 import { DomainBadge } from '@/components/ui/Badge';
 import type { RatingPreview } from '@/lib/fsrs/scheduler';
@@ -32,6 +33,12 @@ export interface RecognitionCardProps {
   keepsSlipping?: boolean;
   /** Already knocked down today: Again/Hard are one more look, not a new verdict. */
   practice?: boolean;
+  /**
+   * A new word met face up: the answer is shown from the start, nothing is
+   * rated, and the one control is "got it" — the word comes back for its
+   * first test later in the sitting.
+   */
+  intro?: { onDone: () => void };
 }
 
 const COACH_REVEALS = 3;
@@ -73,6 +80,7 @@ export function RecognitionCard({
   total,
   keepsSlipping = false,
   practice = false,
+  intro,
 }: RecognitionCardProps) {
   const [revealCount] = useState(readRevealCount);
   const [coachOpen, setCoachOpen] = useState(false);
@@ -82,28 +90,28 @@ export function RecognitionCard({
   // The sentence is the only connected-text retrieval on the card: once revealed,
   // scroll just enough for it to clear the rating footer.
   useEffect(() => {
-    if (!revealed) return;
+    if (!revealed && !intro) return;
     const el = exampleRef.current;
     if (el && typeof el.scrollIntoView === 'function') {
       el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
-  }, [revealed, card.id]);
+  }, [revealed, intro, card.id]);
 
   useEffect(() => {
-    if (revealed || autoRevealMs <= 0) return;
+    if (revealed || intro || autoRevealMs <= 0) return;
     const id = window.setTimeout(onReveal, autoRevealMs);
     return () => window.clearTimeout(id);
-  }, [card.id, revealed, autoRevealMs, onReveal]);
+  }, [card.id, revealed, intro, autoRevealMs, onReveal]);
 
   // Count reveals so the rating rubric only coaches the first few cards ever.
   useEffect(() => {
-    if (!revealed) return;
+    if (!revealed || intro) return;
     try {
       localStorage.setItem(COACH_KEY, String(readRevealCount() + 1));
     } catch {
       /* ignore */
     }
-  }, [revealed, card.id]);
+  }, [revealed, intro, card.id]);
 
   const glyphSize =
     card.traditional.length <= 2
@@ -134,7 +142,15 @@ export function RecognitionCard({
         {/* No domain chip on the prompt face: it is a retrieval cue no sign or chat carries. */}
         <span />
         <span className="flex items-center gap-2">
-          {isNew && (
+          {intro && (
+            <span
+              className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+              data-testid="intro-badge"
+            >
+              FIRST LOOK <span lang="zh-Hant-TW">先看一眼</span>
+            </span>
+          )}
+          {isNew && !intro && (
             <span
               className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-bold text-sky-800 dark:bg-sky-900/40 dark:text-sky-200"
               data-testid="new-badge"
@@ -150,12 +166,18 @@ export function RecognitionCard({
 
       <button
         type="button"
-        onClick={onReveal}
-        aria-label={revealed ? 'Answer revealed' : 'Tap to reveal pinyin and meaning'}
-        data-testid="recognition-prompt"
+        onClick={intro ? undefined : onReveal}
+        aria-label={
+          intro
+            ? 'A new word, shown with its reading'
+            : revealed
+              ? 'Answer revealed'
+              : 'Tap to reveal pinyin and meaning'
+        }
+        data-testid={intro ? 'intro-prompt' : 'recognition-prompt'}
         className={cn(
           'card-surface flex items-center justify-center px-4 text-center active:bg-stone-50 dark:active:bg-ink-3',
-          revealed ? 'min-h-[26dvh] py-6' : 'min-h-[38dvh] flex-1 py-8',
+          revealed || intro ? 'min-h-[26dvh] py-6' : 'min-h-[38dvh] flex-1 py-8',
         )}
       >
         <Hanzi
@@ -171,7 +193,7 @@ export function RecognitionCard({
         data-testid="answer-area"
         aria-live="polite"
       >
-        {revealed ? (
+        {revealed || intro ? (
           <div className="flex flex-col gap-2">
             <p
               className="text-2xl font-semibold text-brand-700 dark:text-brand-300"
@@ -268,34 +290,50 @@ export function RecognitionCard({
         )}
       </div>
 
-      <div
-        className={cn(
-          'relative',
-          revealed &&
-            'sticky bottom-0 z-10 -mx-4 bg-cream/95 px-4 pt-2 pb-3 backdrop-blur dark:bg-ink/95',
-        )}
-      >
-        <RatingButtons
-          previews={previews}
-          onRate={onRate}
-          visible={revealed}
-          latencyMs={revealLatencyMs}
-          showCoach={revealCount < COACH_REVEALS || coachOpen}
-          practice={practice}
-        />
-        {revealed && revealCount >= COACH_REVEALS && (
-          <button
-            type="button"
-            onClick={() => setCoachOpen((o) => !o)}
-            aria-label="What do the rating buttons mean?"
-            aria-expanded={coachOpen}
-            className="absolute top-1 right-4 flex h-6 w-6 items-center justify-center rounded-full border border-stone-300 text-xs font-bold text-stone-500 dark:border-stone-600"
-            data-testid="rating-help"
-          >
-            ?
-          </button>
-        )}
-      </div>
+      {intro ? (
+        <div
+          className="sticky bottom-0 z-10 -mx-4 flex flex-col gap-2 bg-cream/95 px-4 pt-2 pb-3 backdrop-blur dark:bg-ink/95"
+          data-testid="intro-controls"
+        >
+          <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="intro-note">
+            New in a domain you rarely read on sight, so here it is face up: read it, say it, look
+            at the parts. It comes back for a real try later in this session.{' '}
+            <span lang="zh-Hant-TW">先看一眼，等一下再考</span>
+          </p>
+          <Button block size="lg" onClick={intro.onDone} data-testid="intro-done">
+            Got it 記住了
+          </Button>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            'relative',
+            revealed &&
+              'sticky bottom-0 z-10 -mx-4 bg-cream/95 px-4 pt-2 pb-3 backdrop-blur dark:bg-ink/95',
+          )}
+        >
+          <RatingButtons
+            previews={previews}
+            onRate={onRate}
+            visible={revealed}
+            latencyMs={revealLatencyMs}
+            showCoach={revealCount < COACH_REVEALS || coachOpen}
+            practice={practice}
+          />
+          {revealed && revealCount >= COACH_REVEALS && (
+            <button
+              type="button"
+              onClick={() => setCoachOpen((o) => !o)}
+              aria-label="What do the rating buttons mean?"
+              aria-expanded={coachOpen}
+              className="absolute top-1 right-4 flex h-6 w-6 items-center justify-center rounded-full border border-stone-300 text-xs font-bold text-stone-500 dark:border-stone-600"
+              data-testid="rating-help"
+            >
+              ?
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

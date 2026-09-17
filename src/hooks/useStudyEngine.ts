@@ -12,6 +12,8 @@ export interface StudyEngineApi {
   snapshot: EngineSnapshot | null;
   reveal: () => void;
   rate: (rating: RatingGrade) => void;
+  /** The learner has looked at a word met face up; it goes back for its first test. */
+  acknowledgeIntro: () => void;
   answerDrill: (outcomes: DrillOutcome[]) => void;
   skipDrill: () => void;
   /** Re-check a waiting session once its gap has passed. */
@@ -65,6 +67,11 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
     },
     [engine, persist],
   );
+  const acknowledgeIntro = useCallback(() => {
+    engine?.acknowledgeIntro();
+    // No review is written for a look, but the card remembers it.
+    persist([]);
+  }, [engine, persist]);
   const answerDrill = useCallback(
     (outcomes: DrillOutcome[]) => {
       if (engine) persist(engine.answerDrill(outcomes));
@@ -81,5 +88,15 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
     persist([]);
   }, [engine, persist]);
 
-  return { snapshot, reveal, rate, answerDrill, skipDrill, tick, finish, saveError };
+  return {
+    snapshot,
+    reveal,
+    rate,
+    acknowledgeIntro,
+    answerDrill,
+    skipDrill,
+    tick,
+    finish,
+    saveError,
+  };
 }

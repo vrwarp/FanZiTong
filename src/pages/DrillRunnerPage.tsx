@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { useCards, useReviewLogs } from '@/hooks/useCards';
+import { useEtymology } from '@/hooks/useEtymology';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { useAssistant } from '@/lib/assistant/assistantContext';
@@ -18,6 +19,7 @@ import {
   type DrillType,
 } from '@/lib/session/drillPlan';
 import { MENU_MAX_TARGETS } from '@/lib/exercises/menu';
+import { soundFamilyIndex } from '@/lib/exercises/soundFamily';
 import { StudyEngine } from '@/lib/session/engine';
 import { computeStreak } from '@/lib/stats/analytics';
 import {
@@ -43,6 +45,8 @@ export default function DrillRunnerPage() {
   const cards = useCards();
   const logs = useReviewLogs();
   const { settings, loaded } = useSettings();
+  // Sound Families is built from the composition table, which arrives as its own chunk.
+  const etymologyLoaded = useEtymology();
 
   if (!isDrillType(drillType)) {
     return (
@@ -55,7 +59,9 @@ export default function DrillRunnerPage() {
       </div>
     );
   }
-  if (!cards || !logs || !loaded) return <LoadingScreen message="Preparing drill…" />;
+  if (!cards || !logs || !loaded || (drillType === 'sound_family' && !etymologyLoaded)) {
+    return <LoadingScreen message="Preparing drill…" />;
+  }
 
   const domainParam = params.get('domain');
   const cardsParam = params.get('cards');
@@ -96,14 +102,16 @@ function DrillSession({
     // For the Order Slip a "question" is one slip of up to three dishes.
     const cardCount =
       drillType === 'realia_menu' ? Math.min(30, options.count * MENU_MAX_TARGETS) : options.count;
+    const families = drillType === 'sound_family' ? soundFamilyIndex(initialCards) : undefined;
     const selected = selectDrillCards(initialCards, settings, {
       type: drillType,
       count: cardCount,
       now: new Date(),
       domain: options.domain,
       onlyIds: options.onlyIds,
+      families,
     });
-    const drills = buildDrillExercises(drillType, selected, initialCards);
+    const drills = buildDrillExercises(drillType, selected, initialCards, undefined, { families });
     if (drills.length === 0) return null;
     return new StudyEngine({
       pool: initialCards,
@@ -113,6 +121,7 @@ function DrillSession({
       interleaveDrills: false,
       drillType,
       onEvent: recordStudyEvent,
+      families,
     });
   });
   const api = useStudyEngine(engine);
@@ -124,7 +133,7 @@ function DrillSession({
         <EmptyState
           icon="🗂️"
           title="No cards fit this drill yet"
-          description="Cloze drills need an example sentence, menu drills need food-domain cards, foil drills need visual foils, and Which Word needs a definition and a few other words in the same domain. Add some in the Vocab tab."
+          description="Fill the Blank needs an example sentence, the Order Slip needs food words, Spot the Character needs foils, Which Word needs a definition and a few other words in the same domain, Say It needs pinyin, Find It needs a sentence with a word-by-word reading, and Sound Families needs two other deck characters built on the same sound part. Add some in the Vocab tab."
           action={<Button onClick={() => navigate('/drills')}>Back to Drills</Button>}
         />
       </div>

@@ -1,4 +1,4 @@
-import { CardState, type ReviewLog, type VocabCard } from '@/types';
+import { CardState, isReadingExercise, type ReviewLog, type VocabCard } from '@/types';
 import { DAY_START_HOUR, dayKey } from '@/lib/util/time';
 
 /**
@@ -18,7 +18,7 @@ export function troubleScore(card: Pick<VocabCard, 'fsrs' | 'slipDays'>): number
 
 /**
  * Count each card's slip days from its review log: the distinct study days
- * with a recognition Again that reached the scheduler, not counting the day
+ * with a reading Again that reached the scheduler, not counting the day
  * the word was first seen (a first sight fails for more than half of a
  * heritage reader's new words, and that is not slipping). A log with no
  * `stateBefore` predates that field and is counted.
@@ -29,7 +29,7 @@ export function countSlipDays(
 ): Map<string, number> {
   const days = new Map<string, Set<string>>();
   for (const log of logs) {
-    if (log.rating !== 1 || log.exerciseType !== 'rapid_recognition') continue;
+    if (log.rating !== 1 || !isReadingExercise(log.exerciseType)) continue;
     if (log.stateBefore === CardState.New) continue;
     let set = days.get(log.cardId);
     if (!set) {

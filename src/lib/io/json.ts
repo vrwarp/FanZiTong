@@ -73,6 +73,7 @@ export const importCardSchema = z.object({
   /** Whether the word was known by ear when last asked; malformed → dropped, never the card. */
   byEar: z.object({ at: isoDate, known: z.boolean() }).optional().catch(undefined),
   slipDays: z.number().int().nonnegative().optional().catch(undefined),
+  introducedAt: isoDate.optional().catch(undefined),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
 });
@@ -87,6 +88,9 @@ export const reviewLogSchema = z.object({
     'realia_menu',
     'foil_discrimination',
     'meaning_to_form',
+    'typed_reading',
+    'find_in_text',
+    'sound_family',
   ]),
   reviewTimestamp: isoDate,
   timeSpentMs: z.number().nonnegative(),
@@ -194,6 +198,7 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       sentencesShown: c.sentencesShown as SentenceShown[] | undefined,
       byEar: c.byEar,
       slipDays: c.slipDays,
+      introducedAt: c.introducedAt,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       warnings,

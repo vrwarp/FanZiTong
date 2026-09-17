@@ -325,3 +325,28 @@ What the ten days showed instead:
 - `scheduler_day_mismatch` kept counting after the scheduler had switched to
   study days; the export now records when the switch happened on the device
   and looks only before it.
+
+**Asked for by the learner after that** — "are there any adjustments or new
+drills to add?" — with audio ruled out. Two adjustments and three drills:
+
+- **A new word is met face up** in a domain the learner hardly reads on sight
+  (met ten cold, fewer than a third read on sight: slang and anime here). The
+  cold first sight in such a domain was a formality with a known result, and
+  that _Again_ set the word's initial difficulty near the ceiling for days.
+  The word is shown with its reading, meaning and sentence, one "got it",
+  then comes back for its first test later in the sitting. The card keeps
+  `introducedAt`, the first-sight profile counts such words apart, and the
+  event log records the look.
+- **The word in most trouble is drilled first** in a session: candidates are
+  ordered by slip days and lapses, and a word forgotten on some day is a
+  candidate even in Review.
+- **Say It 唸出來**: the characters alone, the reading typed, tones optional.
+  The one drill that is a reading, so a first-try hit is graded like a
+  recognition pass and can move a word in Review; a wrong try is marked
+  syllable by syllable without spelling the answer, and gets one more go.
+- **Find It 找字**: two or three real sentences, one holding the word; tap it
+  given its sound and meaning. Reading the way a chat or a menu is read. A
+  wrong tap is named and retired without charge, a second is a miss.
+- **Sound Families 聲旁**: the word with one character blanked, and tiles that
+  all share its sound part (＿嬌: 傲 敖 熬 遨), so only the meaning part can
+  settle it. Built from the composition layer over the deck's own characters.

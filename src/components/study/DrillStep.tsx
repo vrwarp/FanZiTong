@@ -1,9 +1,12 @@
 import type { DrillExercise, DrillOutcome } from '@/lib/session/engine';
 import type { VocabCard } from '@/types';
 import { ClozeExerciseView } from './ClozeExerciseView';
+import { FindInTextView } from './FindInTextView';
 import { FoilExerciseView } from './FoilExerciseView';
 import { MeaningExerciseView } from './MeaningExerciseView';
 import { MenuExerciseView } from './MenuExerciseView';
+import { SoundFamilyView } from './SoundFamilyView';
+import { TypedReadingView } from './TypedReadingView';
 
 export interface DrillStepProps {
   exercise: DrillExercise;
@@ -42,6 +45,33 @@ export function DrillStep({ exercise, getCard, onComplete, onSkip }: DrillStepPr
     case 'meaning_to_form':
       return (
         <MeaningExerciseView
+          key={exercise.cardId}
+          exercise={exercise}
+          card={getCard(exercise.cardId)}
+          onComplete={onComplete}
+        />
+      );
+    case 'typed_reading':
+      return (
+        <TypedReadingView
+          key={exercise.cardId}
+          exercise={exercise}
+          card={getCard(exercise.cardId)}
+          onComplete={onComplete}
+        />
+      );
+    case 'find_in_text':
+      return (
+        <FindInTextView
+          key={exercise.cardId}
+          exercise={exercise}
+          card={getCard(exercise.cardId)}
+          onComplete={onComplete}
+        />
+      );
+    case 'sound_family':
+      return (
+        <SoundFamilyView
           key={exercise.cardId}
           exercise={exercise}
           card={getCard(exercise.cardId)}

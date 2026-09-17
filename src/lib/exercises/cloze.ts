@@ -206,8 +206,10 @@ export function chooseSentence(
   pool: VocabCard[],
   now: Date,
   via: SentenceUse,
+  /** Only sentences this accepts are considered (Find It needs a word-by-word reading). */
+  accept: (candidate: SentenceCandidate) => boolean = () => true,
 ): SentenceCandidate | null {
-  const candidates = [...ownSentences(card), ...borrowedSentences(card, pool)];
+  const candidates = [...ownSentences(card), ...borrowedSentences(card, pool)].filter(accept);
   if (candidates.length === 0) return null;
   if (via === 'reveal') {
     return leastRecent(candidates, (c) => lastShownAt(card, c.traditional));

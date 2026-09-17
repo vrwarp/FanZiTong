@@ -2,6 +2,7 @@ import { dayKey } from '@/lib/util/time';
 import { hanChars } from '@/lib/util/pinyin';
 import {
   DOMAIN_CATEGORIES,
+  isReadingExercise,
   type DomainCategory,
   type RatingGrade,
   type ReviewLog,
@@ -32,9 +33,10 @@ export type CharacterKnowledge = Map<string, CharacterFact>;
 
 /**
  * A real test is the first answer a card ever had — the first-sight rating —
- * or a recognition answer on a later study day than that first sight. A
- * same-day look after the reveal is a memory of the screen and says nothing
- * about the characters; a drill is a four-tile pick and is left out too.
+ * or a reading (recognition, or a typed reading) on a later study day than
+ * that first sight. A same-day look after the reveal is a memory of the
+ * screen and says nothing about the characters; a four-tile drill is left
+ * out too.
  * Good and Easy count as read; Again as failed; Hard — "slow, or only part of
  * it" — as neither, since the part not read may be the character in question.
  */
@@ -70,8 +72,7 @@ export function characterKnowledge(cards: VocabCard[], logs: ReviewLog[]): Chara
     for (const [index, log] of ordered.entries()) {
       const realTest =
         index === 0 ||
-        (log.exerciseType === 'rapid_recognition' &&
-          dayKey(new Date(log.reviewTimestamp)) !== firstDay);
+        (isReadingExercise(log.exerciseType) && dayKey(new Date(log.reviewTimestamp)) !== firstDay);
       if (!realTest) continue;
       if (log.rating >= 3) for (const ch of chars) add(fact(ch).readIn, card.traditional);
       else if (log.rating === 1) for (const ch of chars) add(fact(ch).failedIn, card.traditional);
@@ -161,17 +162,21 @@ export type RatingTally = Record<RatingGrade, number>;
 
 export interface FirstSightDomain {
   domain: DomainCategory;
-  /** Words with at least one answer. */
+  /** Words met cold, with at least one answer: a real first sight. */
   met: number;
   ratings: RatingTally;
   /** Read on sight: rated Good or Easy the first time it was ever seen. */
   onSight: number;
+  /** Words shown face up before their first test, which therefore had no first sight. */
+  introduced: number;
 }
 
 /**
  * The heritage reader's fingerprint: how each domain was rated the first time
  * its words were seen. A word rated Good or Easy on sight was already in the
- * learner's lexicon; an Again was a shape they had never bound.
+ * learner's lexicon; an Again was a shape they had never bound. A word
+ * introduced face up (see `faceUpDomains`) is counted apart: its first test
+ * came after a look, so it says nothing about sight.
  */
 export function firstSightProfile(cards: VocabCard[], logs: ReviewLog[]): FirstSightDomain[] {
   const first = new Map<string, ReviewLog>();
@@ -182,13 +187,42 @@ export function firstSightProfile(cards: VocabCard[], logs: ReviewLog[]): FirstS
   return DOMAIN_CATEGORIES.map((domain) => {
     const ratings: RatingTally = { 1: 0, 2: 0, 3: 0, 4: 0 };
     let met = 0;
+    let introduced = 0;
     for (const card of cards) {
       if (card.domain !== domain) continue;
+      if (card.introducedAt) {
+        introduced += 1;
+        continue;
+      }
       const log = first.get(card.id);
       if (!log) continue;
       met += 1;
       ratings[log.rating] += 1;
     }
-    return { domain, met, ratings, onSight: ratings[3] + ratings[4] };
+    return { domain, met, ratings, onSight: ratings[3] + ratings[4], introduced };
   });
+}
+
+/** A domain's new words are met face up once this many have been met cold… */
+export const FACE_UP_MIN_MET = 10;
+/** …and fewer than this share of them were read on sight. */
+export const FACE_UP_MAX_ON_SIGHT = 1 / 3;
+
+/**
+ * The domains whose new words are better met face up: a first look with the
+ * reading and meaning, then the first test later in the same sitting.
+ *
+ * A first sight in a domain the learner reads on sight (food, two words in
+ * three) is a fair test and the honest first grade. In a domain they hardly
+ * read on sight (slang, one word in thirty), the cold test is a formality
+ * with a known result — Again — and that Again is not free: the first grade
+ * sets the word's initial difficulty, and a word that opens with Again
+ * starts near the ceiling and spends days climbing down. Meeting the word
+ * face up costs a look and gives up that first sight; the profile counts
+ * such words apart, so the domain's rate stays a rate of cold sights.
+ */
+export function faceUpDomains(cards: VocabCard[], logs: ReviewLog[]): DomainCategory[] {
+  return firstSightProfile(cards, logs)
+    .filter((d) => d.met >= FACE_UP_MIN_MET && d.onSight / d.met < FACE_UP_MAX_ON_SIGHT)
+    .map((d) => d.domain);
 }

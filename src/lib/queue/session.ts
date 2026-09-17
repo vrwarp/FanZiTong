@@ -7,6 +7,13 @@ import {
   type VocabCard,
 } from '@/types';
 import { DAY_START_HOUR, isSameLocalDay, MINUTE_MS } from '@/lib/util/time';
+import { hanChars } from '@/lib/util/pinyin';
+import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
+import { ownSentences } from '@/lib/exercises/cloze';
+import { hasSoundFamily, type SoundFamilyIndex } from '@/lib/exercises/soundFamily';
+import { troubleScore } from '@/lib/stats/slips';
+
+export { hasSoundFamily };
 
 /** Cards still in (re)learning that are due within this window are re-shown in the same session. */
 export const LEARN_AHEAD_MS = 20 * MINUTE_MS;
@@ -243,24 +250,39 @@ export function isRetry(
  */
 export type DrillVerdict = 'again' | 'good' | 'unchanged' | 'practice' | 'book';
 
+export interface DrillVerdictOptions {
+  /**
+   * The drill was a reading — the learner produced the word from the
+   * characters (Say It) rather than choosing among shapes. A reading is what
+   * moves a word in Review, so a hit is Good and a miss Again there too; the
+   * day's rules still hold, and a word already read today is practised.
+   */
+  reading?: boolean;
+}
+
 export function drillVerdict(
   card: Pick<VocabCard, 'fsrs' | 'lastAgainAt' | 'lastPassAt'>,
   correct: boolean,
   now: Date,
   dayStartHour: number = DAY_START_HOUR,
+  options: DrillVerdictOptions = {},
 ): DrillVerdict {
   if (knockedDownToday(card, now, dayStartHour)) return 'practice';
+  if (options.reading) {
+    if (readToday(card, now, dayStartHour)) return 'practice';
+    return correct ? 'good' : 'again';
+  }
   if (card.fsrs.state === CardState.Review) return correct ? 'unchanged' : 'book';
   if (readToday(card, now, dayStartHour)) return 'practice';
   return correct ? 'good' : 'again';
 }
 
-/** Cards eligible for a contextual drill: in Learning/Relearning, or with lapses. */
+/** Cards eligible for a contextual drill: in Learning/Relearning, or in trouble (lapsed, or forgotten on some day). */
 export function isDrillCandidate(card: VocabCard): boolean {
   return (
     card.fsrs.state === CardState.Learning ||
     card.fsrs.state === CardState.Relearning ||
-    card.fsrs.lapses > 0
+    troubleScore(card) > 0
   );
 }
 
@@ -279,19 +301,49 @@ export function hasMeaningCue(card: VocabCard): boolean {
   return card.definition.trim().length > 0 && card.pinyin.trim().length > 0;
 }
 
+/** Say It needs a reading to type, and characters to type it from. */
+export function hasReading(card: VocabCard): boolean {
+  return card.pinyin.trim().length > 0 && hanChars(card.traditional).length > 0;
+}
+
+/**
+ * Find It cuts a sentence into words by its reading, so it needs one of the
+ * card's own sentences whose reading lines up with its characters.
+ */
+export function hasAlignedSentence(card: VocabCard): boolean {
+  return ownSentences(card).some(
+    (s) => Boolean(s.pinyin) && alignSentenceReadings(s.traditional, s.pinyin!) !== null,
+  );
+}
+
+export type DrillType = Exclude<ExerciseType, 'rapid_recognition'>;
+
 /** The drill modalities in the order they take turns. */
-export const DRILL_ROTATION: Exclude<ExerciseType, 'rapid_recognition'>[] = [
+export const DRILL_ROTATION: DrillType[] = [
   'cloze',
   'realia_menu',
   'foil_discrimination',
   'meaning_to_form',
+  'typed_reading',
+  'find_in_text',
+  'sound_family',
 ];
 
+/**
+ * The drills that start from what the reveal has just put on screen — the
+ * sentence, the meaning, the reading — and so are kept, in a session, for
+ * cards not seen that day; on a card revealed minutes ago they would test
+ * the memory of the screen.
+ */
+export const FRESH_CARD_DRILLS: DrillType[] = ['cloze', 'meaning_to_form', 'typed_reading'];
+
+/** What a drill needs beyond the card: the deck's sound families, once the composition table is in. */
+export interface DrillContext {
+  families?: SoundFamilyIndex | null;
+}
+
 /** Whether the card's data can support a drill of this kind. */
-export function supportsDrill(
-  card: VocabCard,
-  type: Exclude<ExerciseType, 'rapid_recognition'>,
-): boolean {
+export function supportsDrill(card: VocabCard, type: DrillType, ctx: DrillContext = {}): boolean {
   switch (type) {
     case 'cloze':
       return hasClozeSentence(card);
@@ -301,6 +353,12 @@ export function supportsDrill(
       return hasFoils(card);
     case 'meaning_to_form':
       return hasMeaningCue(card);
+    case 'typed_reading':
+      return hasReading(card);
+    case 'find_in_text':
+      return hasAlignedSentence(card);
+    case 'sound_family':
+      return ctx.families ? hasSoundFamily(card, ctx.families) : false;
   }
 }
 
@@ -313,8 +371,9 @@ export function chooseDrillType(
   card: VocabCard,
   lastType: ExerciseType | undefined,
   exclude: ExerciseType[] = [],
-): Exclude<ExerciseType, 'rapid_recognition'> | null {
-  const options = DRILL_ROTATION.filter((t) => !exclude.includes(t) && supportsDrill(card, t));
+  ctx: DrillContext = {},
+): DrillType | null {
+  const options = DRILL_ROTATION.filter((t) => !exclude.includes(t) && supportsDrill(card, t, ctx));
   if (options.length === 0) return null;
   const last = (DRILL_ROTATION as ExerciseType[]).indexOf(lastType ?? 'rapid_recognition');
   const after = options.filter((t) => DRILL_ROTATION.indexOf(t) > last);

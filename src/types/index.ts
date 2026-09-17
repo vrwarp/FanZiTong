@@ -158,6 +158,12 @@ export interface VocabCard {
    * ever graduates has no lapses and never looked like a leech; this does.
    */
   slipDays?: number;
+  /**
+   * When the word was shown face up — reading and meaning, no test — before
+   * its first test (see `faceUpDomains` in lib/stats). Such a word had no
+   * first sight, and the first-sight profile counts it apart.
+   */
+  introducedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -178,7 +184,24 @@ export const RATING_LABELS: Record<RatingGrade, string> = {
 };
 
 export type ExerciseType =
-  'rapid_recognition' | 'cloze' | 'realia_menu' | 'foil_discrimination' | 'meaning_to_form';
+  | 'rapid_recognition'
+  | 'cloze'
+  | 'realia_menu'
+  | 'foil_discrimination'
+  | 'meaning_to_form'
+  | 'typed_reading'
+  | 'find_in_text'
+  | 'sound_family';
+/**
+ * The exercises in which the learner reads the characters and produces the
+ * word themselves — rapid recognition, and Say It, where the reading is
+ * typed. These are what move a word in Review and what count as its reading
+ * for the day; every other exercise is a choice among shapes.
+ */
+export const READING_EXERCISES: readonly ExerciseType[] = ['rapid_recognition', 'typed_reading'];
+export function isReadingExercise(type: ExerciseType): boolean {
+  return READING_EXERCISES.includes(type);
+}
 /** One plain name per exercise, used everywhere it appears. */
 export const EXERCISE_LABELS: Record<ExerciseType, { en: string; zh: string }> = {
   rapid_recognition: { en: 'Recognition', zh: '認字' },
@@ -186,6 +209,9 @@ export const EXERCISE_LABELS: Record<ExerciseType, { en: string; zh: string }> =
   realia_menu: { en: 'Order Slip', zh: '點菜單' },
   foil_discrimination: { en: 'Spot the Character', zh: '辨字' },
   meaning_to_form: { en: 'Which Word', zh: '選詞' },
+  typed_reading: { en: 'Say It', zh: '唸出來' },
+  find_in_text: { en: 'Find It', zh: '找字' },
+  sound_family: { en: 'Sound Families', zh: '聲旁' },
 };
 
 export interface ReviewLog {

@@ -163,3 +163,92 @@ test.describe('Drills tab (standalone modalities)', () => {
     await expect(page.getByTestId('summary-retention')).not.toHaveText(/^(\d+)\/\1$/);
   });
 });
+
+test.describe('Drills tab (reading, text and families)', () => {
+  test('say it: the reading is typed, marked by syllable, and shown only after the second miss', async ({
+    page,
+  }) => {
+    await openApp(page, '/drills');
+    await page.goto('/drills/typed_reading?count=1');
+    await expect(page.getByTestId('typed-exercise')).toBeVisible({ timeout: 20_000 });
+    const word = (await page.getByTestId('typed-prompt').textContent()) ?? '';
+    expect(word).not.toMatch(TONE_MARK_RE);
+    expect(await page.getByTestId('typed-exercise').textContent()).not.toMatch(TONE_MARK_RE);
+
+    await page.getByTestId('typed-input').fill('xx');
+    await page.getByTestId('typed-check').click();
+    await expect(page.getByTestId('typed-feedback')).toContainText('不對');
+    await expect(page.getByTestId('typed-syllable').first()).toBeVisible();
+    // A wrong try does not spell the reading.
+    expect(await page.getByTestId('typed-exercise').textContent()).not.toMatch(TONE_MARK_RE);
+    await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+
+    await page.getByTestId('typed-input').fill('yy');
+    await page.getByTestId('typed-input').press('Enter');
+    const reading = (await page.getByTestId('typed-reading').textContent()) ?? '';
+    expect(reading).toMatch(TONE_MARK_RE);
+    await expect(page.getByTestId('drill-outcome')).toContainText('Again');
+    await page.getByTestId('drill-continue').click();
+
+    // The missed word comes back once more; typing the reading it showed is a
+    // hit — practice, since the word was knocked down a moment ago.
+    await expect(page.getByTestId('drill-progress')).toContainText('2 of 2');
+    await expect(page.getByTestId('typed-prompt')).toHaveText(word);
+    await page.getByTestId('typed-input').fill(reading);
+    await page.getByTestId('typed-check').click();
+    await expect(page.getByTestId('typed-feedback')).toContainText('Read it');
+    await expect(page.getByTestId('drill-outcome')).toContainText('Practice');
+    await page.getByTestId('drill-continue').click();
+    await expect(page.getByTestId('session-summary')).toBeVisible();
+    await expect(page.getByTestId('summary-answers')).toHaveText('2');
+    await expect(page.getByTestId('summary-retention')).toHaveText('0/1');
+  });
+
+  test('find it: the word is spotted in running text; a wrong tap is named, not charged', async ({
+    page,
+  }) => {
+    await openApp(page, '/drills');
+    await page.getByTestId('drill-domain').selectOption('food');
+    await page.getByTestId('drill-count').selectOption('3');
+    await page.getByTestId('start-drill-find_in_text').click();
+
+    await expect(page.getByTestId('find-exercise')).toBeVisible();
+    await expect(page.getByTestId('find-cue')).toHaveText(TONE_MARK_RE);
+    expect(await page.getByTestId('find-sentence').count()).toBeGreaterThanOrEqual(2);
+    for (const text of await page.getByTestId('find-sentence').allTextContents()) {
+      expect(text).not.toMatch(TONE_MARK_RE);
+    }
+    await expect(page.locator('[data-testid="find-word"][data-target="true"]')).toHaveCount(1);
+
+    await page.locator('[data-testid="find-word"][data-target="false"]').first().click();
+    await expect(page.getByTestId('find-misread')).toBeVisible();
+    await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+    await page.locator('[data-testid="find-word"][data-target="true"]').click();
+    await expect(page.getByTestId('find-feedback')).toContainText('Found it');
+    await expect(page.getByTestId('drill-outcome')).toContainText('No change');
+    await page.getByTestId('drill-continue').click();
+    await expect(page.getByTestId('find-exercise')).toBeVisible();
+    await expect(page.getByTestId('drill-progress')).toContainText('2 of 3');
+  });
+
+  test('sound families: the blanked character is found among its family', async ({ page }) => {
+    await openApp(page, '/drills');
+    await page.getByTestId('drill-count').selectOption('3');
+    await page.getByTestId('start-drill-sound_family').click();
+
+    await expect(page.getByTestId('family-exercise')).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByTestId('family-cue')).toContainText('＿');
+    expect(await page.getByTestId('family-option').count()).toBeGreaterThanOrEqual(3);
+    await expect(page.locator('[data-testid="family-option"][data-correct="true"]')).toHaveCount(1);
+    await page.locator('[data-testid="family-option"][data-correct="false"]').first().click();
+    await expect(page.getByTestId('family-feedback')).toContainText('不對');
+    await expect(page.getByTestId('drill-continue')).toHaveCount(0);
+    await page.getByTestId('family-retry').click();
+    await page.locator('[data-testid="family-option"][data-correct="true"]').click();
+    await expect(page.getByTestId('family-feedback')).toContainText('Found it');
+    await expect(page.getByTestId('drill-outcome')).toContainText('Again');
+    await page.getByTestId('drill-continue').click();
+    await expect(page.getByTestId('drill-requeue-note')).toBeVisible();
+    await expect(page.getByTestId('family-exercise')).toBeVisible();
+  });
+});

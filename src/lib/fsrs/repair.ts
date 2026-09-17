@@ -1,7 +1,13 @@
 import { createEmptyCard, type FSRS, type Grade, type StepUnit } from 'ts-fsrs';
 import { drillVerdict, isRetry, knockedDownToday } from '@/lib/queue/session';
 import { DAY_START_HOUR } from '@/lib/util/time';
-import type { FsrsState, ReviewLog, UserSettings, VocabCard } from '@/types';
+import {
+  isReadingExercise,
+  type FsrsState,
+  type ReviewLog,
+  type UserSettings,
+  type VocabCard,
+} from '@/types';
 import {
   createScheduler,
   fromFsrsCard,
@@ -105,7 +111,9 @@ export function reachesScheduler(
     return !isRetry(card, log.rating, at, rule.dayStartHour);
   }
   if (rule.version === 1) return !knockedDownToday(card, at, rule.dayStartHour);
-  const verdict = drillVerdict(card, log.rating !== 1, at, rule.dayStartHour);
+  const verdict = drillVerdict(card, log.rating !== 1, at, rule.dayStartHour, {
+    reading: isReadingExercise(log.exerciseType),
+  });
   return verdict === 'again' || verdict === 'good';
 }
 
@@ -146,7 +154,7 @@ export function replayCard(
       ruleSet.clock,
     );
     if (log.rating === 1) lastAgainAt = log.reviewTimestamp;
-    if (log.rating >= 3 && log.exerciseType === 'rapid_recognition') {
+    if (log.rating >= 3 && isReadingExercise(log.exerciseType)) {
       lastPassAt = log.reviewTimestamp;
     }
   }

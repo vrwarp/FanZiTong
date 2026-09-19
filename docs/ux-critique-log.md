@@ -350,3 +350,27 @@ drills to add?" — with audio ruled out. Two adjustments and three drills:
 - **Sound Families 聲旁**: the word with one character blanked, and tiles that
   all share its sound part (＿嬌: 傲 敖 熬 遨), so only the meaning part can
   settle it. Built from the composition layer over the deck's own characters.
+
+## Feedback from the first sessions on that build, 2026-09-19
+
+Three screenshots (a face-up 潛水, a face-up 認罪, a revealed 機車) and five
+notes from the learner:
+
+- **"Why are the definitions per character sometimes missing?"** and **"same
+  for pronunciation."** The hand-written character table covered the confusable
+  pairs and little else, so 潛 had a reading but no meaning, and 朁 and 忍 in
+  the breakdown had neither. A generated dictionary now gives every character
+  the deck touches, and every component a breakdown names, a reading and a
+  one-line gloss; the chips carry the gloss, the breakdown parts carry reading,
+  gloss and role.
+- **"Show other characters I've seen that share the same phonetic."** The
+  sound family under a breakdown now leads with the characters the learner has
+  met, each with the word they met it in and whether it was read or missed,
+  and the sound part's own reading and meaning; unmet deck characters follow.
+- **"Words with other common definitions should surface them, no more than
+  three."** CC-CEDICT senses for the deck's words, minus the sense the card
+  teaches, under a "dictionary" label on the reveal: 機車 shows the locomotive
+  and the motorcycle behind the difficult person.
+- **"Let me spell out either the Taiwanese or the pinyin."** Say It accepts the
+  as-heard reading in Tâi-lô or POJ spelling as well as the pinyin, says so,
+  and marks a wrong Taiwanese try against the Taiwanese syllables.

@@ -2,8 +2,12 @@ import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createScheduler, previewRatings } from '@/lib/fsrs/scheduler';
 import { containsPinyin } from '@/lib/util/pinyin';
+import { loadEtymologyTable } from '@/lib/etymology';
 import { makeCard } from '@/test/factories';
 import { RecognitionCard } from './RecognitionCard';
+
+// The dictionary line on the reveal comes from the composition chunk.
+beforeAll(() => loadEtymologyTable());
 
 const scheduler = createScheduler({ targetRetention: 0.9 }, { enableFuzz: false });
 
@@ -123,5 +127,57 @@ describe('RecognitionCard — a new word met face up', () => {
     await userEvent.click(screen.getByTestId('intro-done'));
     expect(onDone).toHaveBeenCalledTimes(1);
     expect(onRate).not.toHaveBeenCalled();
+  });
+});
+
+describe('RecognitionCard — the dictionary’s other senses', () => {
+  it('lists the meanings the card does not teach, at most three, once revealed', async () => {
+    const card = makeCard({
+      traditional: '機車',
+      pinyin: 'jī chē',
+      definition: 'Annoying, hard to deal with (of a person)',
+      domain: 'slang',
+      exampleSentenceTraditional: '你不要那麼機車好不好？',
+    });
+    const previews = previewRatings(scheduler, card.fsrs, new Date());
+    render(
+      <RecognitionCard
+        card={card}
+        pool={[card]}
+        revealed={true}
+        previews={previews}
+        onReveal={() => {}}
+        onRate={() => {}}
+        autoRevealMs={0}
+        position={1}
+        total={1}
+      />,
+    );
+    const senses = await screen.findByTestId('dictionary-senses');
+    expect(senses).toHaveTextContent('Dictionary');
+    expect(senses).toHaveTextContent('locomotive');
+    expect(senses).toHaveTextContent('motorcycle');
+    expect(senses).not.toHaveTextContent('annoying');
+    expect(senses.textContent?.split(' · ').length).toBeLessThanOrEqual(3);
+  });
+
+  it('stays quiet before the reveal and for a word with nothing to add', () => {
+    const { rerender } = renderCard();
+    expect(screen.queryByTestId('dictionary-senses')).not.toBeInTheDocument();
+    const card = makeCard(); // 滷肉飯: the dictionary sense is the card's own
+    rerender(
+      <RecognitionCard
+        card={card}
+        pool={[card]}
+        revealed={true}
+        previews={null}
+        onReveal={() => {}}
+        onRate={() => {}}
+        autoRevealMs={0}
+        position={1}
+        total={1}
+      />,
+    );
+    expect(screen.queryByTestId('dictionary-senses')).not.toBeInTheDocument();
   });
 });

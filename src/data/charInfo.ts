@@ -1,7 +1,13 @@
+import { dictionaryEntry } from '@/lib/etymology/table';
+
 /**
- * Small offline character table used to explain wrong picks at the grain
- * where the error lives (內 vs 肉), with a "tell" for the pairs heritage
- * learners most often blur. Absence of an entry degrades gracefully.
+ * Offline character table used to explain wrong picks at the grain where the
+ * error lives (內 vs 肉), with a "tell" for the pairs heritage learners most
+ * often blur. The hand-written entries below carry the tells; every other
+ * character the app can show falls back to `src/data/dictionary.json`, a
+ * generated reading-and-gloss table (see scripts/build-dictionary.mjs), so a
+ * chip or a breakdown part is never left without a reading and a meaning.
+ * Before that chunk has loaded, only the hand-written entries answer.
  */
 export interface CharInfo {
   pinyin: string;
@@ -1536,5 +1542,19 @@ export const CHAR_INFO: Record<string, CharInfo> = {
 };
 
 export function charInfo(ch: string): CharInfo | undefined {
-  return CHAR_INFO[ch];
+  const hand = CHAR_INFO[ch];
+  if (hand) return hand;
+  const entry = dictionaryEntry(ch);
+  if (!entry || (!entry.pinyin && !entry.gloss)) return undefined;
+  return { pinyin: entry.pinyin, gloss: entry.gloss };
+}
+
+/**
+ * The gloss cut to what a chip has room for: the first clause. "to hide;
+ * secret, latent, hidden" → "to hide"; "cart, vehicle; to move in a cart" →
+ * "cart, vehicle".
+ */
+export function briefGloss(gloss: string): string {
+  const clause = gloss.split(/[;—]/)[0].trim();
+  return clause.length > 28 ? `${clause.slice(0, 27).trimEnd()}…` : clause;
 }

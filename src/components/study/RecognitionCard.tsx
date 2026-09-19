@@ -6,6 +6,9 @@ import type { RatingPreview } from '@/lib/fsrs/scheduler';
 import { cn } from '@/lib/util/cn';
 import type { CharacterKnowledge } from '@/lib/stats/characters';
 import type { SentenceCandidate } from '@/lib/exercises/cloze';
+import { useEtymology } from '@/hooks/useEtymology';
+import { wordSenses } from '@/lib/etymology/table';
+import { otherSenses } from '@/lib/util/definitions';
 import { CardState, type DomainCategory, type RatingGrade, type VocabCard } from '@/types';
 import { CharacterChips } from './CharacterChips';
 import { ExampleSentence } from './ExampleSentence';
@@ -86,6 +89,14 @@ export function RecognitionCard({
   const [coachOpen, setCoachOpen] = useState(false);
   const [selectedChar, setSelectedChar] = useState<string | null>(null);
   const exampleRef = useRef<HTMLDivElement | null>(null);
+  // The dictionary's other senses of the word (機車 the scooter behind 機車 the
+  // pain in the neck) come from the same chunk as the character breakdowns.
+  useEtymology();
+  const senses = otherSenses(
+    card.definition,
+    wordSenses(card.traditional) ??
+      (card.variants ?? []).map((v) => wordSenses(v)).find((s) => s !== undefined),
+  );
 
   // The sentence is the only connected-text retrieval on the card: once revealed,
   // scroll just enough for it to clear the rating footer.
@@ -219,6 +230,17 @@ export function RecognitionCard({
             <p className="text-lg" data-testid="definition">
               {card.definition}
             </p>
+            {senses.length > 0 && (
+              <p
+                className="-mt-1 text-sm text-stone-600 dark:text-stone-300"
+                data-testid="dictionary-senses"
+              >
+                <span className="text-xs font-semibold text-stone-500 dark:text-stone-400">
+                  Dictionary <span lang="zh-Hant-TW">字典</span>
+                </span>{' '}
+                {senses.join(' · ')}
+              </p>
+            )}
             {card.byEar && (
               <p className="-mt-1 text-xs text-stone-500 dark:text-stone-400" data-testid="by-ear">
                 {card.byEar.known

@@ -1,7 +1,12 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { loadEtymologyTable } from '@/lib/etymology';
 import { characterKnowledge, describeElsewhere } from '@/lib/stats/characters';
 import { makeCard, makeLog } from '@/test/factories';
 import { CharacterChips } from './CharacterChips';
+
+// Readings and glosses arrive with the dictionary chunk; load it once.
+beforeAll(() => loadEtymologyTable());
 
 const day = (d: number) => new Date(2026, 8, d, 10, 0).toISOString();
 
@@ -64,5 +69,42 @@ describe('CharacterChips — what the learner has read each character in', () =>
     render(<CharacterChips card={luWei} pool={pool} selected={null} onSelect={() => undefined} />);
     expect(screen.queryByTestId('character-elsewhere')).not.toBeInTheDocument();
     expect(screen.getAllByTestId('character-chip')[0]).toHaveTextContent('1 more word');
+  });
+});
+
+describe('CharacterChips — every character has a reading and a meaning', () => {
+  const qianShui = makeCard({
+    traditional: '潛水',
+    pinyin: 'qián shuǐ',
+    definition: 'To lurk in a group without posting',
+    domain: 'slang',
+  });
+
+  it('glosses each chip from the dictionary, with the word’s own syllable', () => {
+    render(
+      <CharacterChips card={qianShui} pool={[qianShui]} selected={null} onSelect={() => {}} />,
+    );
+    const chips = screen.getAllByTestId('character-chip');
+    expect(chips[0]).toHaveTextContent('潛');
+    expect(chips[0]).toHaveTextContent('qián');
+    expect(chips[0]).toHaveTextContent('to hide');
+    expect(chips[1]).toHaveTextContent('shuǐ');
+    expect(chips[1]).toHaveTextContent('water');
+    expect(screen.getAllByTestId('character-gloss')).toHaveLength(2);
+  });
+
+  it('opens the character with its reading and full meaning', async () => {
+    const onSelect = vi.fn();
+    const { rerender } = render(
+      <CharacterChips card={qianShui} pool={[qianShui]} selected={null} onSelect={onSelect} />,
+    );
+    await userEvent.click(screen.getAllByTestId('character-chip')[0]);
+    expect(onSelect).toHaveBeenCalledWith('潛');
+    rerender(
+      <CharacterChips card={qianShui} pool={[qianShui]} selected="潛" onSelect={onSelect} />,
+    );
+    expect(screen.getByTestId('character-also-in')).toHaveTextContent(
+      '潛 qián “to hide; secret, latent, hidden” · no other deck word yet',
+    );
   });
 });

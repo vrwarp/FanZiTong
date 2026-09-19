@@ -133,6 +133,40 @@ gets no breakdown at all, because that is true of the shape and worthless to a
 reader. 200 characters were dropped on exactly that test. Silence, then a link
 to the oracle bones.
 
+## Readings, glosses and the other senses of a word
+
+The composition layer says how a character is built; a chip still needs to say
+what the character _is_. The hand-written table `src/data/charInfo.ts` covers
+the pairs heritage readers blur, with a tell for each, but it was never going
+to cover every character the deck touches — and a chip reading "潛 qián · new
+here" with no meaning, or a breakdown part reading "朁 on the right" with no
+reading, is a hole where a tutor would have said one word.
+
+`src/data/dictionary.json` (`npm run dictionary`, `scripts/build-dictionary.mjs`)
+fills the holes mechanically, and the hand-written entry still wins wherever
+there is one:
+
+| What                                         | Source                                                                                                         | Licence         |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | --------------- |
+| A reading and a one-line gloss per character | Make Me a Hanzi `dictionary.txt` — its `pinyin` and `definition`, which are Unihan's kMandarin and kDefinition | LGPL-3.0 (data) |
+| Fallback for the characters it lacks         | [CC-CEDICT](https://www.mdbg.net/chinese/dictionary?page=cedict) single-character entries                      | CC BY-SA 4.0    |
+| The other senses of each deck word           | CC-CEDICT entries for the deck's own words and their accepted variants                                         | CC BY-SA 4.0    |
+
+The character set is every character of every deck word, variant and foil,
+every character in the composition table and every component it names: 2,498
+characters, all but five bare stroke shapes with a reading or a gloss. The
+word senses are cleaned of cross-references, classifiers, pinyin brackets and
+the "(Tw)" tag a Taiwanese deck does not need; the sense the card itself
+teaches, and near-repeats of a kept sense, are dropped at build time by the
+same content-word test Which Word uses for near-synonyms. What remains is
+shown under a "dictionary" label, never more than three, because a paraphrase
+the test cannot see may still slip through and "dictionary: to admit guilt" is
+true where "also means: to admit guilt" would be odd.
+
+CC-CEDICT is CC BY-SA 4.0: the extracted senses in `dictionary.json` carry
+that licence, the app credits both sources under _Settings › App version_, and
+nothing else in the repository depends on them.
+
 ## Where it shows up
 
 - **On the reveal**, under the character chips: the parts, colour-coded amber

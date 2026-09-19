@@ -369,6 +369,11 @@ export default function SettingsPage() {
         <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="update-status">
           {updateStatusText}
         </p>
+        <p className="text-xs text-stone-500 dark:text-stone-400" data-testid="data-credits">
+          Character composition, readings and glosses from Make Me a Hanzi (LGPL-3.0, itself from
+          Unihan); other senses of the deck's words from CC-CEDICT (CC BY-SA 4.0). Ancient forms are
+          linked to 字源, not copied.
+        </p>
         <div className="flex flex-wrap gap-2">
           {appUpdate.updateReady ? (
             <Button onClick={appUpdate.applyUpdate} data-testid="install-update">

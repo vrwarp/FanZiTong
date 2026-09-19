@@ -17,6 +17,9 @@ import { readingOf } from './meaning';
  * verdict is in. A wrong try is shown syllable by syllable without the
  * answer and given one more go; right on the second try is recorded and
  * changes nothing; wrong twice, or giving up, is a miss.
+ *
+ * A word said the Taiwanese way (蚵仔煎 ô-á-tsian) may be typed that way, in
+ * Tâi-lô or in POJ spelling, as well as in pinyin.
  */
 export interface TypedReadingExercise {
   type: 'typed_reading';
@@ -25,8 +28,14 @@ export interface TypedReadingExercise {
   definition: string;
   /** The Mandarin reading one syllable per entry, as the feedback shows it. */
   syllables: string[];
-  /** The readings a typed answer may match, normalized (see `normalizeReading`). */
+  /** The pinyin readings a typed answer may match, normalized (see `normalizeReading`). */
   accepted: string[];
+  /** The as-heard reading, when the card has one that differs from the pinyin. */
+  spoken?: string;
+  /** The as-heard reading one syllable per entry, for marking a Taiwanese answer. */
+  spokenSyllables?: string[];
+  /** The as-heard readings a typed answer may match, as Taiwanese keys (see `taiwaneseKey`). */
+  acceptedSpoken: string[];
   /** The reading to show once answered: as heard when the card has one, else pinyin. */
   reading: string;
   /** The Mandarin reading, shown beside `reading` when that is the as-heard one. */
@@ -55,10 +64,55 @@ export function normalizeReading(input: string): string {
     .replace(/[^a-z]/g, '');
 }
 
-/** Whether a typed answer is one of the readings the exercise accepts. */
-export function readingMatches(typed: string, accepted: readonly string[]): boolean {
+/**
+ * A Taiwanese reading reduced to one key, whichever way it was spelled.
+ * Tâi-lô and POJ differ in a handful of regular ways — ts/ch, tsh/chh, ua/oa,
+ * ue/oe, ik/ek, ing/eng, oo/o͘ — and both mark the nasal vowel (nn, ⁿ) and
+ * the tones with signs nobody types on a phone. Each spelling is folded onto
+ * the other symmetrically, so a reading typed with the syllables run together
+ * still meets the card's hyphenated one: "ô-á-tsian", "o a chian", "oa tsian"
+ * and "oatsian" all come out "oatsian".
+ */
+export function taiwaneseKey(input: string): string {
+  return input
+    .trim()
+    .split(/[\s'’-]+/)
+    .filter(Boolean)
+    .map((token) =>
+      normalizeReading(token)
+        .replace(/chh/g, 'tsh')
+        .replace(/ch/g, 'ts')
+        .replace(/ua/g, 'oa')
+        .replace(/ue/g, 'oe')
+        .replace(/ing/g, 'eng')
+        .replace(/ik/g, 'ek')
+        .replace(/oo/g, 'o')
+        .replace(/nn(?=[^aeiou]|$)/g, ''),
+    )
+    .join('');
+}
+
+/** The as-heard reading cut into syllables: Tâi-lô joins them with hyphens. */
+export function spokenSyllablesOf(spoken: string): string[] {
+  return spoken
+    .trim()
+    .split(/[\s-]+/)
+    .filter((s) => normalizeReading(s).length > 0);
+}
+
+/**
+ * Whether a typed answer is one of the readings the exercise accepts: the
+ * pinyin however it was typed, or the as-heard reading in Tâi-lô or POJ.
+ */
+export function readingMatches(
+  typed: string,
+  accepted: readonly string[],
+  acceptedSpoken: readonly string[] = [],
+): boolean {
   const value = normalizeReading(typed);
-  return value.length > 0 && accepted.includes(value);
+  if (value.length > 0 && accepted.includes(value)) return true;
+  const key = taiwaneseKey(typed);
+  return key.length > 0 && acceptedSpoken.includes(key);
 }
 
 /**
@@ -66,14 +120,19 @@ export function readingMatches(typed: string, accepted: readonly string[]): bool
  * second syllable rather than the whole word. Typed one syllable per space,
  * as the prompt asks, syllables are compared one to one; run together, the
  * reading is consumed from the front and a wrong syllable is skipped up to
- * where the next one begins.
+ * where the next one begins. `normalize` says how a syllable is reduced for
+ * the comparison: pinyin by default, the Taiwanese key for an as-heard reading.
  */
-export function markSyllables(typed: string, syllables: readonly string[]): SyllableMark[] {
-  const expected = syllables.map(normalizeReading);
+export function markSyllables(
+  typed: string,
+  syllables: readonly string[],
+  normalize: (s: string) => string = normalizeReading,
+): SyllableMark[] {
+  const expected = syllables.map(normalize);
   const tokens = typed
     .trim()
     .split(/[\s'’-]+/)
-    .map(normalizeReading)
+    .map(normalize)
     .filter(Boolean);
   if (tokens.length === expected.length) {
     return expected.map((s, i) => ({ syllable: syllables[i], ok: tokens[i] === s }));
@@ -89,6 +148,28 @@ export function markSyllables(typed: string, syllables: readonly string[]): Syll
     rest = cut >= 0 ? rest.slice(cut) : rest.slice(Math.min(rest.length, s.length));
     return { syllable: syllables[i], ok: false };
   });
+}
+
+/** Which reading a wrong try was marked against. */
+export type MarkedReading = 'pinyin' | 'spoken';
+
+/**
+ * Mark a wrong try against the reading it was closest to: the pinyin, or the
+ * as-heard reading when the word has one and the answer matches more of it.
+ * A learner who typed "o a chian" for 蚵仔煎 is told which Taiwanese syllable
+ * is off, not that every Mandarin one is.
+ */
+export function markReading(
+  typed: string,
+  exercise: Pick<TypedReadingExercise, 'syllables' | 'spokenSyllables'>,
+): { marks: SyllableMark[]; against: MarkedReading } {
+  const pinyin = markSyllables(typed, exercise.syllables);
+  if (!exercise.spokenSyllables?.length) return { marks: pinyin, against: 'pinyin' };
+  const spoken = markSyllables(typed, exercise.spokenSyllables, taiwaneseKey);
+  const hits = (marks: SyllableMark[]) => marks.filter((m) => m.ok).length;
+  return hits(spoken) > hits(pinyin)
+    ? { marks: spoken, against: 'spoken' }
+    : { marks: pinyin, against: 'pinyin' };
 }
 
 /** The reading cut into syllables: one per character when they line up, else by the syllable rule. */
@@ -109,11 +190,12 @@ export function buildTypedReadingExercise(
 ): TypedReadingExercise | null {
   if (!hasReading(card)) return null;
   const pinyin = card.pinyin.trim();
-  const accepted = Array.from(
-    new Set([normalizeReading(pinyin), ...(card.spoken ? [normalizeReading(card.spoken)] : [])]),
-  ).filter(Boolean);
+  const accepted = [normalizeReading(pinyin)].filter(Boolean);
   const syllables = readingSyllables(card);
   if (accepted.length === 0 || syllables.length === 0) return null;
+  const spoken = card.spoken?.trim();
+  const spokenKey = spoken ? taiwaneseKey(spoken) : '';
+  const acceptedSpoken = spokenKey ? [spokenKey] : [];
   const sentence = opts.sentence ?? ownSentences(card)[0];
   return {
     type: 'typed_reading',
@@ -122,6 +204,9 @@ export function buildTypedReadingExercise(
     definition: card.definition,
     syllables,
     accepted,
+    ...(spoken && spokenKey
+      ? { spoken, spokenSyllables: spokenSyllablesOf(spoken), acceptedSpoken }
+      : { acceptedSpoken }),
     reading: readingOf(card),
     pinyin,
     ...(sentence

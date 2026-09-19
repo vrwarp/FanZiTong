@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/Button';
 import { inputClass } from '@/components/ui/Field';
 import { Hanzi } from '@/components/ui/Hanzi';
 import {
-  markSyllables,
+  markReading,
   readingMatches,
+  type MarkedReading,
   type SyllableMark,
   type TypedReadingExercise,
 } from '@/lib/exercises/reading';
@@ -38,6 +39,7 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
   const [typed, setTyped] = useState('');
   const [tries, setTries] = useState<string[]>([]);
   const [marks, setMarks] = useState<SyllableMark[] | null>(null);
+  const [against, setAgainst] = useState<MarkedReading>('pinyin');
   const [gaveUp, setGaveUp] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -57,14 +59,16 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
     if (done) return;
     const value = typed.trim();
     if (!value) return;
-    if (readingMatches(value, exercise.accepted)) {
+    if (readingMatches(value, exercise.accepted, exercise.acceptedSpoken)) {
       setMarks(null);
       setPhase('done');
       return;
     }
     const next = [...tries, value];
     setTries(next);
-    setMarks(markSyllables(value, exercise.syllables));
+    const marked = markReading(value, exercise);
+    setMarks(marked.marks);
+    setAgainst(marked.against);
     if (next.length >= MAX_TYPED_TRIES) {
       setPhase('done');
     } else {
@@ -87,8 +91,17 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
           Say It · <span lang="zh-Hant-TW">唸出來</span>
         </p>
         <p className="text-sm text-stone-500 dark:text-stone-400">
-          Read it, then type the pinyin — tones optional.{' '}
-          <span lang="zh-Hant-TW">唸出來，再打拼音</span>
+          {exercise.spoken ? (
+            <>
+              Read it, then type the reading — pinyin, or the Taiwanese (Tâi-lô or POJ); tones
+              optional. <span lang="zh-Hant-TW">唸出來，再打拼音或台羅</span>
+            </>
+          ) : (
+            <>
+              Read it, then type the pinyin — tones optional.{' '}
+              <span lang="zh-Hant-TW">唸出來，再打拼音</span>
+            </>
+          )}
         </p>
       </div>
 
@@ -117,7 +130,7 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
             className={cn(inputClass, 'text-lg')}
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
-            placeholder={`${exercise.syllables.length} syllable${exercise.syllables.length === 1 ? '' : 's'}, one per space`}
+            placeholder={`${exercise.syllables.length} syllable${exercise.syllables.length === 1 ? '' : 's'}, one per space${exercise.spoken ? ' · pinyin or Taiwanese' : ''}`}
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"
@@ -146,8 +159,9 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
         )}
         {phase === 'wrong' && marks && (
           <div className="flex flex-col gap-2">
-            <p className="font-bold text-red-600">
-              <Hanzi>不對</Hanzi> — {describeMarks(marks)}. Once more.{' '}
+            <p className="font-bold text-red-600" data-testid="typed-wrong" data-against={against}>
+              <Hanzi>不對</Hanzi> — {describeMarks(marks)}
+              {against === 'spoken' && ' (against the Taiwanese)'}. Once more.{' '}
               <span lang="zh-Hant-TW">再試一次</span>
             </p>
             <Syllables marks={marks} />

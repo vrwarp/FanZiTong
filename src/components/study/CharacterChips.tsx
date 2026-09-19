@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Hanzi } from '@/components/ui/Hanzi';
-import { charInfo } from '@/data/charInfo';
+import { briefGloss, charInfo } from '@/data/charInfo';
+import { useEtymology } from '@/hooks/useEtymology';
 import { CharacterBreakdown } from './CharacterBreakdown';
 import { cn } from '@/lib/util/cn';
 import { hanChars, syllablesPerCharacter } from '@/lib/util/pinyin';
@@ -34,6 +35,8 @@ export interface CharacterChipsProps {
  * which is the honest answer rather than a missing panel.
  */
 export function CharacterChips({ card, pool, knowledge, selected, onSelect }: CharacterChipsProps) {
+  // The readings and glosses come from the dictionary chunk; re-render when it lands.
+  useEtymology();
   // Every character the deck contains, so the sound family only ever points at
   // words this learner is actually studying. Computed before the early return
   // below, because a hook cannot be skipped for one-character words.
@@ -63,6 +66,7 @@ export function CharacterChips({ card, pool, knowledge, selected, onSelect }: Ch
           const related = alsoIn(ch);
           const elsewhere = describeElsewhere(knowledge, ch, card.traditional);
           const active = selected === ch;
+          const info = charInfo(ch);
           return (
             <button
               key={`${ch}-${i}`}
@@ -73,7 +77,7 @@ export function CharacterChips({ card, pool, knowledge, selected, onSelect }: Ch
               }}
               aria-expanded={active}
               className={cn(
-                'flex min-h-9 items-center gap-1 rounded-lg border px-2 text-sm',
+                'flex min-h-9 flex-wrap items-center gap-x-1 rounded-lg border px-2 py-1 text-left text-sm',
                 active
                   ? 'border-jade-500 bg-jade-500/10'
                   : 'border-stone-200 dark:border-stone-700',
@@ -81,8 +85,18 @@ export function CharacterChips({ card, pool, knowledge, selected, onSelect }: Ch
               data-testid="character-chip"
             >
               <Hanzi className="text-base font-semibold">{ch}</Hanzi>
-              {syllables && (
-                <span className="text-xs text-stone-500 dark:text-stone-400">{syllables[i]}</span>
+              {(syllables?.[i] ?? info?.pinyin) && (
+                <span className="text-xs text-stone-500 dark:text-stone-400">
+                  {syllables?.[i] ?? info?.pinyin}
+                </span>
+              )}
+              {info?.gloss && (
+                <span
+                  className="text-xs text-stone-600 dark:text-stone-300"
+                  data-testid="character-gloss"
+                >
+                  {briefGloss(info.gloss)}
+                </span>
               )}
               {elsewhere ? (
                 <span
@@ -119,8 +133,12 @@ export function CharacterChips({ card, pool, knowledge, selected, onSelect }: Ch
         <div className="flex flex-col gap-1.5">
           <p className="text-xs text-stone-600 dark:text-stone-300" data-testid="character-also-in">
             <Hanzi className="font-semibold">{chars[selectedIndex]}</Hanzi>
-            {charInfo(chars[selectedIndex]) &&
-              ` ${charInfo(chars[selectedIndex])!.pinyin} “${charInfo(chars[selectedIndex])!.gloss}”`}
+            {(() => {
+              const info = charInfo(chars[selectedIndex]);
+              const reading = syllables?.[selectedIndex] ?? info?.pinyin;
+              if (!info && !reading) return null;
+              return ` ${reading ?? ''}${info?.gloss ? ` “${info.gloss}”` : ''}`;
+            })()}
             {alsoIn(chars[selectedIndex]).length > 0 ? (
               <>
                 {' '}
@@ -130,7 +148,12 @@ export function CharacterChips({ card, pool, knowledge, selected, onSelect }: Ch
               ' · no other deck word yet'
             )}
           </p>
-          <CharacterBreakdown char={chars[selectedIndex]} deckChars={deckChars} />
+          <CharacterBreakdown
+            char={chars[selectedIndex]}
+            deckChars={deckChars}
+            pool={pool}
+            knowledge={knowledge}
+          />
         </div>
       )}
     </div>

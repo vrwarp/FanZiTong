@@ -2,6 +2,7 @@ import { CardState, type DomainCategory, type ExampleSentence, type VocabCard } 
 import { shuffle, type Rng } from '@/lib/util/random';
 import { DAY_MS } from '@/lib/util/time';
 import { hasMeaningCue, knockedDownToday, readToday } from '@/lib/queue/session';
+import { nearSynonyms } from '@/lib/util/definitions';
 import { ownSentences, pickClozeDistractors, type ClozeOptionInfo } from './cloze';
 import { isVariantOf } from './foil';
 
@@ -74,74 +75,7 @@ export function askByEar(
   return age >= (last.known ? BY_EAR_RECHECK_MS : BY_EAR_RETRY_MS);
 }
 
-const STOPWORDS = new Set([
-  'a',
-  'an',
-  'the',
-  'of',
-  'to',
-  'in',
-  'on',
-  'with',
-  'and',
-  'or',
-  'for',
-  'as',
-  'by',
-  'at',
-  'from',
-  'is',
-  'are',
-  'be',
-  'it',
-  'its',
-  'one',
-  'very',
-  'kind',
-  'sort',
-  'type',
-  'style',
-  'taiwanese',
-  'taiwan',
-  'chinese',
-  'slang',
-]);
-
-const WORDS_CACHE = new Map<string, Set<string>>();
-const WORDS_CACHE_LIMIT = 5000;
-
-/** The words a definition is made of, lowercased and roughly singular; parentheticals dropped. */
-export function contentWords(definition: string): Set<string> {
-  const cached = WORDS_CACHE.get(definition);
-  if (cached) return cached;
-  const words = definition
-    .toLowerCase()
-    .replace(/\([^)]*\)/g, ' ')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length > 1 && !STOPWORDS.has(w))
-    .map((w) => (w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w));
-  const set = new Set(words);
-  if (WORDS_CACHE.size >= WORDS_CACHE_LIMIT) WORDS_CACHE.clear();
-  WORDS_CACHE.set(definition, set);
-  return set;
-}
-
-/**
- * Two definitions close enough that a learner given one could fairly pick
- * the other's word: they share two content words, or the shorter is
- * contained in the longer ("Rice" and "Plain steamed rice"). Such a word is
- * never offered as a distractor.
- */
-export function nearSynonyms(a: string, b: string): boolean {
-  const x = contentWords(a);
-  const y = contentWords(b);
-  if (x.size === 0 || y.size === 0) return false;
-  let shared = 0;
-  for (const w of x) if (y.has(w)) shared += 1;
-  if (shared >= 2) return true;
-  return shared === Math.min(x.size, y.size);
-}
+export { contentWords, nearSynonyms } from '@/lib/util/definitions';
 
 /** Build a Which Word exercise, or null when the deck cannot supply the options. */
 export function buildMeaningExercise(

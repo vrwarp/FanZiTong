@@ -167,6 +167,13 @@ CC-CEDICT is CC BY-SA 4.0: the extracted senses in `dictionary.json` carry
 that licence, the app credits both sources under _Settings › App version_, and
 nothing else in the repository depends on them.
 
+**The as-heard readings** (`spoken` in `starterDeck.json`) are hand-entered
+Tâi-lô, not generated: a reading is given only to a word people say the
+Taiwanese way, and a dictionary would give one to nearly every word. Each was
+checked against the Ministry of Education's 臺灣台語常用詞辭典 in the g0v
+open-data copy (`moedict-data-twblg`, CC BY-ND 3.0 TW), a reference at
+authoring time that ships nowhere in the app.
+
 ## Where it shows up
 
 - **On the reveal**, under the character chips: the parts, colour-coded amber

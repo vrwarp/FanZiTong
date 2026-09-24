@@ -382,3 +382,22 @@ Taiwanese with the Mandarin heard too (蚵仔煎), either as often (拍謝), or
 usually the Mandarin with the Taiwanese heard from Taiwanese speakers (動畫).
 The reveal says which, the drills cue with the reading people actually use,
 and the editor, CSV and JSON carry it.
+
+**"Rebase and then check to make sure all words are accounted for."** That
+first pass had classified only the seventy-nine words that already carried an
+as-heard reading; the deck holds 1,967. Every word was matched against the
+Ministry of Education's Taiwanese dictionary (the g0v open-data copy of
+臺灣台語常用詞辭典) and the candidates read one by one. 108 more words are
+genuinely said the Taiwanese way and now carry a reading and a verdict: the
+night-market food the dictionary lists under its own name (滷肉飯 lóo-bah-pn̄g,
+鹹酥雞 kiâm-soo-ke, 粿汁 kué-tsiap), the slang that only makes sense as
+Taiwanese (蛤 hannh, 龜毛 ku-moo, 北七 pe̍h-tshi), the folk-religion words
+(廟公 biō-kong, 地基主 Tē-ki-tsú), and the words a Taiwanese-language
+congregation hears in Taiwanese (禮拜 lé-pài, 祈禱 kî-tó, 上帝 Siōng-tè, all
+"usually Mandarin"). The Mandarin-church register (禱告, 團契, 主日, 查經) and
+the anime vocabulary (聲優, 追番, 動漫) have a Taiwanese reading in the
+dictionary too, as nearly every Chinese word does, but nobody in the learner's
+world says them that way, so they stay Mandarin: a reading on such a word would
+be noise on the reveal and a wrong cue in the drills. 187 of 1,967 words now
+carry a reading; the verdicts are judgment calls held in one map in
+`starterDeck.json`, easy to correct.

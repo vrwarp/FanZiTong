@@ -2,6 +2,7 @@ import { CardState, type ExampleSentence, type SentenceShown, type VocabCard } f
 import { hanChars } from '@/lib/util/pinyin';
 import { pick, shuffle, type Rng } from '@/lib/util/random';
 import { DAY_MS } from '@/lib/util/time';
+import { spokenCue } from '@/lib/util/spoken';
 import { expandFoil, isVariantOf } from './foil';
 
 export const CLOZE_BLANK_CHAR = '＿';
@@ -383,7 +384,7 @@ export function buildClozeExercise(
       optionInfo[option] = {
         pinyin: match.pinyin,
         definition: match.definition,
-        spoken: match.spoken,
+        spoken: spokenCue(match),
       };
     }
   }

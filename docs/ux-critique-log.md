@@ -374,3 +374,11 @@ notes from the learner:
 - **"Let me spell out either the Taiwanese or the pinyin."** Say It accepts the
   as-heard reading in Tâi-lô or POJ spelling as well as the pinyin, says so,
   and marks a wrong Taiwanese try against the Taiwanese syllables.
+
+**Asked for after that:** for a word said the Taiwanese way, whether the
+Mandarin reading is also in use — is the term exclusively Taiwanese? Each such
+card now carries `spokenUse`: only ever the Taiwanese (電風), usually the
+Taiwanese with the Mandarin heard too (蚵仔煎), either as often (拍謝), or
+usually the Mandarin with the Taiwanese heard from Taiwanese speakers (動畫).
+The reveal says which, the drills cue with the reading people actually use,
+and the editor, CSV and JSON carry it.

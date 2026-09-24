@@ -169,3 +169,20 @@ describe('the restore control', () => {
     );
   });
 });
+
+describe('starter deck — how each as-heard reading is used', () => {
+  it('says for every Taiwanese-read word whether the Mandarin reading is used too', async () => {
+    const deck = await buildStarterDeck();
+    const spoken = deck.filter((c) => c.spoken);
+    expect(spoken.length).toBeGreaterThan(50);
+    for (const card of spoken) expect(card.spokenUse, card.traditional).toBeDefined();
+    for (const card of deck.filter((c) => !c.spoken)) {
+      expect(card.spokenUse, card.traditional).toBeUndefined();
+    }
+    const by = (w: string) => deck.find((c) => c.traditional === w)?.spokenUse;
+    expect(by('電風')).toBe('only');
+    expect(by('蚵仔煎')).toBe('usual');
+    expect(by('拍謝')).toBe('either');
+    expect(by('動畫')).toBe('also');
+  });
+});

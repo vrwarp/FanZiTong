@@ -22,6 +22,9 @@ import {
   type CardStateValue,
   type DomainCategory,
   type VocabCard,
+  SPOKEN_USES,
+  SPOKEN_USE_LABELS,
+  type SpokenUse,
 } from '@/types';
 
 interface FormState {
@@ -39,6 +42,7 @@ interface FormState {
   homophoneFoils: string;
   variants: string;
   spoken: string;
+  spokenUse: SpokenUse | '';
   variantNote: string;
   notes: string;
   clozeDistractors: string;
@@ -58,6 +62,7 @@ const EMPTY_FORM: FormState = {
   homophoneFoils: '',
   variants: '',
   spoken: '',
+  spokenUse: '',
   variantNote: '',
   notes: '',
   clozeDistractors: '',
@@ -78,6 +83,7 @@ function toForm(card: VocabCard): FormState {
     homophoneFoils: (card.homophoneFoils ?? []).join(' | '),
     variants: (card.variants ?? []).join(' | '),
     spoken: card.spoken ?? '',
+    spokenUse: card.spokenUse ?? '',
     variantNote: card.variantNote ?? '',
     notes: card.notes ?? '',
     clozeDistractors: (card.clozeDistractors ?? []).join(' | '),
@@ -174,6 +180,7 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     const variants = splitList(form.variants);
     card.variants = variants.length ? variants : undefined;
     card.spoken = form.spoken.trim() || undefined;
+    card.spokenUse = card.spoken && form.spokenUse ? form.spokenUse : undefined;
     card.variantNote = form.variantNote.trim() || undefined;
     card.notes = form.notes.trim() || undefined;
     const clozeDistractors = splitList(form.clozeDistractors);
@@ -384,6 +391,28 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
           data-testid="field-spoken"
         />
       </Field>
+      {form.spoken.trim() && (
+        <Field
+          label="Is the Mandarin reading used too? 國語唸法也常用嗎"
+          htmlFor="spokenUse"
+          hint="Shown on the reveal, so you know whether to say it the Taiwanese way only or either way."
+        >
+          <select
+            id="spokenUse"
+            className={inputClass}
+            value={form.spokenUse}
+            onChange={set('spokenUse')}
+            data-testid="field-spoken-use"
+          >
+            <option value="">Not sure</option>
+            {SPOKEN_USES.map((use) => (
+              <option key={use} value={use}>
+                {SPOKEN_USE_LABELS[use].en} {SPOKEN_USE_LABELS[use].zh}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
       <Field
         label="Also written 也寫作"
         htmlFor="variants"

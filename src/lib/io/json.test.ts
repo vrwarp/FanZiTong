@@ -176,3 +176,24 @@ describe('slip days', () => {
     expect(bad.rows[0].slipDays).toBeUndefined();
   });
 });
+
+describe('how an as-heard reading is used', () => {
+  it('round-trips the verdict, keeps it only beside a reading, and drops a bad one', () => {
+    const card = makeCard({
+      traditional: '電風',
+      pinyin: 'diàn fēng',
+      spoken: 'tiān-hong',
+      spokenUse: 'only',
+    });
+    const parsed = parseJsonDeck(serializeJsonDeck(toJsonDeck([card])));
+    expect(parsed.issues).toEqual([]);
+    expect(parsed.rows[0].spokenUse).toBe('only');
+    const stray = parseJsonDeck('[{"traditional":"火鍋","pinyin":"huǒ guō","spokenUse":"only"}]');
+    expect(stray.rows[0].spokenUse).toBeUndefined();
+    const bad = parseJsonDeck(
+      '[{"traditional":"火鍋","pinyin":"huǒ guō","spoken":"hué-ko","spokenUse":"sometimes"}]',
+    );
+    expect(bad.rows.map((r) => r.traditional)).toEqual(['火鍋']);
+    expect(bad.rows[0].spokenUse).toBeUndefined();
+  });
+});

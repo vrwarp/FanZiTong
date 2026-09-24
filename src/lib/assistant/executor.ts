@@ -114,6 +114,7 @@ export function toCardSummary(card: VocabCard): CardSummary {
   };
   if (card.variants?.length) summary.variants = card.variants;
   if (card.spoken) summary.spoken = card.spoken;
+  if (card.spoken && card.spokenUse) summary.spokenUse = card.spokenUse;
   return summary;
 }
 
@@ -332,6 +333,7 @@ export function createToolExecutor(deps: ExecutorDeps) {
         ? keep.clozeDistractors
         : drop.clozeDistractors,
       spoken: keep.spoken ?? drop.spoken,
+      spokenUse: keep.spoken ? keep.spokenUse : drop.spokenUse,
       notes: keep.notes ?? drop.notes,
       variantNote: keep.variantNote ?? drop.variantNote,
       variants: variants.size > 0 ? [...variants] : undefined,

@@ -55,6 +55,27 @@ const VARIANT_DEFAULTS: Record<DomainCategory, string> = {
   custom: 'Both spellings are in use.',
 };
 
+/**
+ * Whether the word is only ever said the Taiwanese way, or the Mandarin
+ * reading is in use too — the thing a heritage reader wants to know before
+ * saying it out loud. A card that has an as-heard reading but no verdict on
+ * it gets the neutral line.
+ */
+function describeSpokenUse(card: Pick<VocabCard, 'pinyin' | 'spoken' | 'spokenUse'>): string {
+  switch (card.spokenUse) {
+    case 'only':
+      return `Only ever said the Taiwanese way — nobody says ${card.pinyin}. 只有台語說法`;
+    case 'usual':
+      return `Usually said the Taiwanese way; ${card.pinyin} is heard too. 通常用台語說`;
+    case 'either':
+      return `Said either way, about as often: ${card.spoken} or ${card.pinyin}. 台語國語都常說`;
+    case 'also':
+      return `Usually said in Mandarin; ${card.spoken} is how it sounds in Taiwanese. 通常用國語說`;
+    default:
+      return 'Said the Taiwanese way; the Mandarin reading is what the characters spell.';
+  }
+}
+
 function readRevealCount(): number {
   try {
     return Number(localStorage.getItem(COACH_KEY) ?? 0) || 0;
@@ -210,7 +231,15 @@ export function RecognitionCard({
               className="text-2xl font-semibold text-brand-700 dark:text-brand-300"
               data-testid="pinyin"
             >
-              {card.spoken ? (
+              {card.spoken && card.spokenUse === 'also' ? (
+                <>
+                  {card.pinyin}
+                  <span className="text-base font-medium text-stone-500 dark:text-stone-400">
+                    {' '}
+                    · <span data-testid="spoken">{card.spoken}</span>
+                  </span>
+                </>
+              ) : card.spoken ? (
                 <>
                   <span data-testid="spoken">{card.spoken}</span>
                   <span className="text-base font-medium text-stone-500 dark:text-stone-400">
@@ -223,8 +252,12 @@ export function RecognitionCard({
               )}
             </p>
             {card.spoken && (
-              <p className="-mt-1 text-xs text-stone-500 dark:text-stone-400">
-                Said the Taiwanese way; the Mandarin reading is what the characters spell.
+              <p
+                className="-mt-1 text-xs text-stone-500 dark:text-stone-400"
+                data-testid="spoken-use"
+                data-use={card.spokenUse ?? 'unknown'}
+              >
+                {describeSpokenUse(card)}
               </p>
             )}
             <p className="text-lg" data-testid="definition">

@@ -28,11 +28,20 @@ COPY --from=build /build/agent/package.json ./package.json
 # (@anthropic-ai/claude-agent-sdk-linux-{x64,arm64}[-musl]), so the path is
 # found rather than assumed — and the build fails if it is missing, because
 # signing in inside the container depends on it.
+#
+# npm installs both the glibc and the musl package for the architecture, and
+# a musl binary on this glibc image is a file that exists, is executable, and
+# says "not found" when run, because its loader is not here. So the musl
+# package is skipped, and the binary is run — not merely found — before it
+# is installed as the command.
 RUN set -eu; \
-  binary="$(find /app/node_modules/@anthropic-ai -maxdepth 2 -type f -name claude -perm -u+x | head -n1)"; \
+  binary="$(find /app/node_modules/@anthropic-ai -maxdepth 2 \
+    \( -type d -name '*-musl' -prune \) -o \( -type f -name claude -perm -u+x -print \) \
+    | head -n1)"; \
   test -n "$binary"; \
+  "$binary" --version; \
   ln -sf "$binary" /usr/local/bin/claude; \
-  test -x /usr/local/bin/claude
+  claude --version
 
 # Credentials and session transcripts share one volume, so a container restart
 # keeps the learner signed in.

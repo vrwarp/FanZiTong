@@ -61,6 +61,7 @@ export const importCardSchema = z.object({
   homophoneFoils: stringList,
   variants: stringList,
   spoken: z.string().optional(),
+  spokenUse: z.enum(['only', 'usual', 'either', 'also']).optional().catch(undefined),
   variantNote: z.string().optional(),
   notes: z.string().optional(),
   clozeDistractors: stringList,
@@ -222,6 +223,7 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       });
     }
     if (c.spoken?.trim()) row.spoken = c.spoken.trim();
+    if (c.spokenUse && row.spoken) row.spokenUse = c.spokenUse;
     if (c.variantNote?.trim()) row.variantNote = c.variantNote.trim();
     if (c.notes?.trim()) row.notes = c.notes.trim();
     rows.push(row);

@@ -119,6 +119,7 @@ export function materializeImport(
         homophoneFoils: row.homophoneFoils.length ? row.homophoneFoils : current.homophoneFoils,
         variants: row.variants.length ? row.variants : current.variants,
         spoken: row.spoken ?? current.spoken,
+        spokenUse: row.spokenUse ?? (row.spoken ? undefined : current.spokenUse),
         variantNote: row.variantNote ?? current.variantNote,
         notes: row.notes ?? current.notes,
         clozeDistractors: row.clozeDistractors.length
@@ -166,6 +167,7 @@ export function materializeImport(
     if (row.homophoneFoils.length) card.homophoneFoils = row.homophoneFoils;
     if (row.variants.length) card.variants = row.variants;
     if (row.spoken) card.spoken = row.spoken;
+    if (row.spoken && row.spokenUse) card.spokenUse = row.spokenUse;
     if (row.variantNote) card.variantNote = row.variantNote;
     if (row.notes) card.notes = row.notes;
     if (row.clozeDistractors.length) card.clozeDistractors = row.clozeDistractors;

@@ -159,6 +159,8 @@ export function mergeDraft(draft: CardDraft, existing: VocabCard | null, now: Da
   assignOptional('exampleSentencePinyin');
   assignOptional('exampleSentenceTranslation');
   assignOptional('spoken');
+  if (draft.spokenUse !== undefined) card.spokenUse = draft.spokenUse ?? undefined;
+  if (!card.spoken) card.spokenUse = undefined;
   assignOptional('variantNote');
   assignOptional('notes');
   if (card.exampleSentencePinyin) {

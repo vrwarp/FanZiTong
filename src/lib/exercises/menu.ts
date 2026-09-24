@@ -1,4 +1,5 @@
 import type { VocabCard } from '@/types';
+import { spokenCue } from '@/lib/util/spoken';
 import {
   MENU_SIZES,
   SHOP_TEMPLATES,
@@ -140,7 +141,7 @@ export function buildMenuExercise(
       variantOf: printed === card.traditional ? undefined : card.traditional,
       pinyin: card.pinyin,
       gloss: card.definition,
-      spoken: card.spoken,
+      spoken: spokenCue(card),
     });
     const size = template.sized ? pick([...MENU_SIZES], rng) : undefined;
     targets.push({
@@ -149,7 +150,7 @@ export function buildMenuExercise(
       label: printed,
       standard: card.traditional,
       pinyin: card.pinyin,
-      spoken: card.spoken,
+      spoken: spokenCue(card),
       definition: card.definition,
       size,
       key: selectionKey(item.id, size),

@@ -1,4 +1,11 @@
-import type { ByEar, DomainCategory, ExampleSentence, FsrsState, SentenceShown } from '@/types';
+import type {
+  ByEar,
+  DomainCategory,
+  ExampleSentence,
+  FsrsState,
+  SentenceShown,
+  SpokenUse,
+} from '@/types';
 
 /** A card-shaped row parsed from CSV or JSON, before it becomes a VocabCard. */
 export interface ImportRow {
@@ -17,6 +24,8 @@ export interface ImportRow {
   homophoneFoils: string[];
   variants: string[];
   spoken?: string;
+  /** How the as-heard and Mandarin readings share the word (see VocabCard.spokenUse). */
+  spokenUse?: SpokenUse;
   variantNote?: string;
   notes?: string;
   clozeDistractors: string[];

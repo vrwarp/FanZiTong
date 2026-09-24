@@ -7,6 +7,7 @@ import type { FoilExercise } from '@/lib/exercises/foil';
 import { diffCharacters } from '@/lib/exercises/foil';
 import type { DrillOutcome as DrillOutcomeType } from '@/lib/session/engine';
 import { cn } from '@/lib/util/cn';
+import { readingOf } from '@/lib/util/spoken';
 import { mulberry32, shuffle } from '@/lib/util/random';
 import type { VocabCard } from '@/types';
 import { DrillOutcome } from './DrillOutcome';
@@ -76,7 +77,7 @@ export function FoilExerciseView({ exercise, card, onComplete }: FoilExerciseVie
   const diffs = picked && picked !== exercise.answer ? diffCharacters(picked, exercise.answer) : [];
   const diffIndices = diffs.map((d) => d.index);
   const big = exercise.answer.length <= 2 ? 'text-5xl' : 'text-3xl';
-  const cue = card?.spoken ?? exercise.pinyin;
+  const cue = card ? readingOf({ ...card, pinyin: exercise.pinyin }) : exercise.pinyin;
 
   const choose = (option: string) => {
     if (phase === 'done' || phase === 'wrong') return;

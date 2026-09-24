@@ -181,3 +181,55 @@ describe('RecognitionCard — the dictionary’s other senses', () => {
     expect(screen.queryByTestId('dictionary-senses')).not.toBeInTheDocument();
   });
 });
+
+describe('RecognitionCard — is the Mandarin reading used too?', () => {
+  const show = (spokenUse?: 'only' | 'usual' | 'either' | 'also') => {
+    const card = makeCard({
+      traditional: '蚵仔煎',
+      pinyin: 'kē zǎi jiān',
+      spoken: 'ô-á-tsian',
+      ...(spokenUse ? { spokenUse } : {}),
+    });
+    return render(
+      <RecognitionCard
+        card={card}
+        pool={[card]}
+        revealed={true}
+        previews={null}
+        onReveal={() => {}}
+        onRate={() => {}}
+        autoRevealMs={0}
+        position={1}
+        total={1}
+      />,
+    );
+  };
+
+  it('says when the word is only ever said the Taiwanese way', () => {
+    show('only');
+    expect(screen.getByTestId('spoken-use')).toHaveTextContent(/Only ever said the Taiwanese way/);
+    expect(screen.getByTestId('spoken-use')).toHaveTextContent('nobody says kē zǎi jiān');
+    expect(screen.getByTestId('pinyin').textContent).toMatch(/^ô-á-tsian/);
+  });
+
+  it('says when either reading is common, and when the Taiwanese one is usual', () => {
+    const { unmount } = show('either');
+    expect(screen.getByTestId('spoken-use')).toHaveTextContent(/Said either way/);
+    unmount();
+    show('usual');
+    expect(screen.getByTestId('spoken-use')).toHaveTextContent(/Usually said the Taiwanese way/);
+  });
+
+  it('puts the pinyin first when Mandarin is the usual way to say it', () => {
+    show('also');
+    expect(screen.getByTestId('spoken-use')).toHaveTextContent(/Usually said in Mandarin/);
+    expect(screen.getByTestId('pinyin').textContent).toMatch(/^kē zǎi jiān/);
+    expect(screen.getByTestId('spoken')).toHaveTextContent('ô-á-tsian');
+  });
+
+  it('keeps the neutral line for a card with no verdict', () => {
+    show();
+    expect(screen.getByTestId('spoken-use')).toHaveAttribute('data-use', 'unknown');
+    expect(screen.getByTestId('spoken-use')).toHaveTextContent(/Said the Taiwanese way/);
+  });
+});

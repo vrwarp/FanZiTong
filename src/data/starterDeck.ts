@@ -1,4 +1,4 @@
-import type { DomainCategory, ExampleSentence, VocabCard } from '@/types';
+import type { DomainCategory, ExampleSentence, SpokenUse, VocabCard } from '@/types';
 import { newFsrsState } from '@/lib/fsrs/scheduler';
 import { uuid } from '@/lib/util/id';
 
@@ -64,6 +64,8 @@ export interface StarterDeckData {
   name: string;
   /** As-heard readings for words nobody says in dictionary Mandarin. */
   spoken: Record<string, string>;
+  /** For each as-heard reading, whether the Mandarin reading is in use too. */
+  spokenUse?: Record<string, SpokenUse>;
   /** Notes shown after the reveal: a spelling that is only a sound, a loan, an image. */
   notes: Record<string, string>;
   /** Per-word notes about the accepted spelling variants. */
@@ -146,6 +148,7 @@ export function materializeStarterDeck(
         variantNote: data.variantNotes[traditional],
         notes: data.notes[traditional],
         spoken: data.spoken[traditional],
+        spokenUse: data.spokenUse?.[traditional],
         fsrs: newFsrsState(now),
         createdAt,
         updatedAt: createdAt,
@@ -187,6 +190,7 @@ const CONTENT_KEYS = [
   'traditional',
   'pinyin',
   'spoken',
+  'spokenUse',
   'definition',
   'domain',
   'tags',

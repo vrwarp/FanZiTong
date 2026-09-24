@@ -93,6 +93,13 @@ export interface VocabCard {
    * primary cue in drills and shown first on the reveal when present.
    */
   spoken?: string;
+  /**
+   * How the as-heard reading and the Mandarin one share the word, when the
+   * card has both: only ever the Taiwanese (電風), usually the Taiwanese with
+   * the Mandarin heard too (蚵仔煎), either as often (拍謝), or usually the
+   * Mandarin with the Taiwanese heard from Taiwanese speakers (動畫).
+   */
+  spokenUse?: SpokenUse;
   /** English and/or vernacular definition */
   definition: string;
   domain: DomainCategory;
@@ -167,6 +174,22 @@ export interface VocabCard {
   createdAt: string;
   updatedAt: string;
 }
+
+export const SPOKEN_USES = ['only', 'usual', 'either', 'also'] as const;
+export type SpokenUse = (typeof SPOKEN_USES)[number];
+export function isSpokenUse(value: unknown): value is SpokenUse {
+  return typeof value === 'string' && (SPOKEN_USES as readonly string[]).includes(value);
+}
+/** What each use means, for the editor and the reveal. */
+export const SPOKEN_USE_LABELS: Record<SpokenUse, { en: string; zh: string }> = {
+  only: { en: 'Only ever said the Taiwanese way', zh: '只有台語說法' },
+  usual: {
+    en: 'Usually said the Taiwanese way; the Mandarin reading is heard too',
+    zh: '通常用台語說',
+  },
+  either: { en: 'Said either way, about as often', zh: '台語國語都常說' },
+  also: { en: 'Usually said in Mandarin; the Taiwanese reading is heard too', zh: '通常用國語說' },
+};
 
 /** One check of whether a word is known by ear (see `VocabCard.byEar`). */
 export interface ByEar {

@@ -1,5 +1,5 @@
 import Papa from 'papaparse';
-import type { ExampleSentence, VocabCard } from '@/types';
+import { isSpokenUse, type ExampleSentence, type VocabCard } from '@/types';
 import { numberedToMarks } from '@/lib/util/pinyin';
 import { normalizeDomain, splitList } from './domain';
 import type { ImportRow, ParseIssue, ParseResult } from './types';
@@ -17,6 +17,7 @@ export const CSV_HEADERS = [
   'example_translation',
   'variants',
   'spoken',
+  'spoken_use',
   'variant_note',
   'cloze_distractors',
   'notes',
@@ -68,6 +69,8 @@ const HEADER_ALIASES: Record<string, (typeof CSV_HEADERS)[number]> = {
   spoken: 'spoken',
   as_heard: 'spoken',
   taiwanese: 'spoken',
+  spoken_use: 'spoken_use',
+  spokenuse: 'spoken_use',
   variant_note: 'variant_note',
   cloze_distractors: 'cloze_distractors',
   distractors: 'cloze_distractors',
@@ -185,6 +188,11 @@ export function parseCsv(text: string): ParseResult {
     };
     const spoken = (record.spoken ?? '').trim();
     if (spoken) row.spoken = spoken;
+    const spokenUse = (record.spoken_use ?? '').trim().toLowerCase();
+    if (spokenUse && spoken) {
+      if (isSpokenUse(spokenUse)) row.spokenUse = spokenUse;
+      else warnings.push(`spoken_use “${spokenUse}” is not one of only / usual / either / also.`);
+    }
     const variantNote = (record.variant_note ?? '').trim();
     if (variantNote) row.variantNote = variantNote;
     const notes = (record.notes ?? '').trim();
@@ -221,6 +229,7 @@ export function toCsv(cards: VocabCard[]): string {
     example_translation: c.exampleSentenceTranslation ?? '',
     variants: (c.variants ?? []).join('|'),
     spoken: c.spoken ?? '',
+    spoken_use: c.spoken ? (c.spokenUse ?? '') : '',
     variant_note: c.variantNote ?? '',
     cloze_distractors: (c.clozeDistractors ?? []).join('|'),
     notes: c.notes ?? '',

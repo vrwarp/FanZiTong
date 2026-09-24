@@ -54,6 +54,12 @@ export const cardDraftSchema = z.object({
   variants: z.array(z.string().trim().min(1).max(20)).max(6).nullish(),
   variantNote: z.string().trim().max(200).nullish(),
   spoken: z.string().trim().max(60).nullish(),
+  spokenUse: z
+    .enum(['only', 'usual', 'either', 'also'])
+    .nullish()
+    .describe(
+      'With spoken: whether the Mandarin reading is used too — only (never), usual (Taiwanese usual), either, also (Mandarin usual).',
+    ),
   notes: z.string().trim().max(300).nullish(),
   clozeDistractors: z.array(z.string().trim().min(1).max(20)).max(6).nullish(),
 });
@@ -93,6 +99,7 @@ export interface CardSummary {
   tags: string[];
   variants?: string[];
   spoken?: string;
+  spokenUse?: string;
   hasSentence: boolean;
   sentenceAligned: boolean;
   /** How many sentences the word has of its own, primary included. */

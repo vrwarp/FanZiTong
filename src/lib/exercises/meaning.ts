@@ -3,6 +3,7 @@ import { shuffle, type Rng } from '@/lib/util/random';
 import { DAY_MS } from '@/lib/util/time';
 import { hasMeaningCue, knockedDownToday, readToday } from '@/lib/queue/session';
 import { nearSynonyms } from '@/lib/util/definitions';
+import { readingOf, spokenCue } from '@/lib/util/spoken';
 import { ownSentences, pickClozeDistractors, type ClozeOptionInfo } from './cloze';
 import { isVariantOf } from './foil';
 
@@ -52,10 +53,7 @@ export interface MeaningExercise {
   sentence?: ExampleSentence;
 }
 
-/** The reading the learner would hear for this word. */
-export function readingOf(card: Pick<VocabCard, 'pinyin' | 'spoken'>): string {
-  return (card.spoken ?? card.pinyin).trim();
-}
+export { readingOf } from '@/lib/util/spoken';
 
 /**
  * Whether the ear check is due: never asked, or known long enough ago to be
@@ -110,7 +108,7 @@ export function buildMeaningExercise(
       optionInfo[option] = {
         pinyin: match.pinyin,
         definition: match.definition,
-        spoken: match.spoken,
+        spoken: spokenCue(match),
       };
     }
   }

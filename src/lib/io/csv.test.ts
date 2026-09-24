@@ -158,3 +158,24 @@ describe('extra sentences', () => {
     ).toBeUndefined();
   });
 });
+
+describe('spoken_use column', () => {
+  it('round-trips the verdict beside the as-heard reading and warns on a stray value', () => {
+    const card = makeCard({
+      traditional: '拍謝',
+      pinyin: 'pāi xiè',
+      spoken: 'pháinn-sè',
+      spokenUse: 'either',
+    });
+    const csv = toCsv([card]);
+    expect(csv).toContain('spoken_use');
+    const parsed = parseCsv(csv);
+    expect(parsed.rows[0].spoken).toBe('pháinn-sè');
+    expect(parsed.rows[0].spokenUse).toBe('either');
+    const odd = parseCsv(
+      'traditional,pinyin,definition,spoken,spoken_use\n拍謝,pāi xiè,Sorry,pháinn-sè,often\n',
+    );
+    expect(odd.rows[0].spokenUse).toBeUndefined();
+    expect(odd.rows[0].warnings.join(' ')).toMatch(/spoken_use/);
+  });
+});

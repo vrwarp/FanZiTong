@@ -1,4 +1,10 @@
-import type { DomainCategory, ExampleSentence, SpokenUse, VocabCard } from '@/types';
+import {
+  withLearnerState,
+  type DomainCategory,
+  type ExampleSentence,
+  type SpokenUse,
+  type VocabCard,
+} from '@/types';
 import { newFsrsState } from '@/lib/fsrs/scheduler';
 import { uuid } from '@/lib/util/id';
 
@@ -183,8 +189,9 @@ export interface StarterRestorePlan {
 }
 
 /**
- * The authored fields. `id`, `fsrs`, `createdAt` and `updatedAt` are the
- * learner's rather than the deck's, so they are neither compared nor replaced.
+ * The authored fields. `id`, `updatedAt` and everything the learner's study
+ * wrote on the card (`LEARNER_STATE_KEYS`) are the learner's rather than the
+ * deck's, so they are neither compared nor replaced.
  */
 const CONTENT_KEYS = [
   'traditional',
@@ -232,15 +239,12 @@ export function planStarterRestore(
     if (!mine) {
       add.push(shipped);
     } else if (!sameContent(mine, shipped)) {
-      // The words come back; the schedule stays the learner's. Restoring a
-      // card must never cost the reviews that were done on it.
-      repair.push({
-        ...shipped,
-        id: mine.id,
-        fsrs: mine.fsrs,
-        createdAt: mine.createdAt,
-        updatedAt,
-      });
+      // The words come back; everything the learner's study wrote on the
+      // card stays theirs — the schedule, the day's verdicts, the slip and
+      // hard days, the face-up introduction, the ear check. Restoring a card
+      // must never cost the reviews that were done on it, nor the record of
+      // them: keeping only the schedule once emptied the leech list.
+      repair.push({ ...withLearnerState(shipped, mine), id: mine.id, updatedAt });
     }
   }
   return { add, repair };

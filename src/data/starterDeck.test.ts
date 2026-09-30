@@ -147,6 +147,39 @@ describe('the restore control', () => {
     expect(repaired.updatedAt).toBe(now.toISOString());
   });
 
+  it('keeps everything the learner’s study wrote on the card, not only the schedule', () => {
+    // One device restored its deck after a content update and lost the slip
+    // days on forty-six words, the face-up introduction on eighteen and the
+    // ear check on sixteen: the leech list went from nine words to one.
+    const studied = {
+      ...shipped[0],
+      definition: 'drifted',
+      fsrs: { ...shipped[0].fsrs, state: CardState.Review, reps: 9 },
+      lastAgainAt: '2026-09-22T16:42:00.000Z',
+      lastHardAt: '2026-09-24T16:17:00.000Z',
+      lastPassAt: '2026-09-25T06:56:00.000Z',
+      slipDays: 4,
+      hardDays: 3,
+      introducedAt: '2026-09-21T07:33:00.000Z',
+      byEar: { at: '2026-09-15T17:58:00.000Z', known: true },
+      sentencesShown: [{ text: '踹共！', at: '2026-09-25T06:56:00.000Z', via: 'reveal' as const }],
+      restartedAt: '2026-09-20T00:00:00.000Z',
+    };
+    const [repaired] = planStarterRestore([studied, ...shipped.slice(1)], shipped, { now }).repair;
+    expect(repaired.definition).toBe(shipped[0].definition);
+    expect(repaired).toMatchObject({
+      lastAgainAt: studied.lastAgainAt,
+      lastHardAt: studied.lastHardAt,
+      lastPassAt: studied.lastPassAt,
+      slipDays: 4,
+      hardDays: 3,
+      introducedAt: studied.introducedAt,
+      byEar: studied.byEar,
+      sentencesShown: studied.sentencesShown,
+      restartedAt: studied.restartedAt,
+    });
+  });
+
   it('does not call an absent field a difference', () => {
     // The seed rows spell "nothing here" as undefined in one column and an
     // empty list in another, and a card that came back from JSON has been

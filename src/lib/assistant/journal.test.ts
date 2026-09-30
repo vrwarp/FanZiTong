@@ -49,7 +49,7 @@ describe('assistant journal in the repository', () => {
     await repo.db.delete();
   });
 
-  it('keeps the learner’s scheduling when undoing a content change', async () => {
+  it('keeps the learner’s study — schedule, verdicts, slip days — when undoing a content change', async () => {
     const repo = freshRepo('journal-update');
     const original = makeCard({ notes: undefined });
     await repo.putCard(original);
@@ -63,13 +63,26 @@ describe('assistant journal in the repository', () => {
     expect((await repo.getCard(original.id))?.notes).toBe('A mnemonic');
 
     // The learner studies the card after the assistant touched it.
-    const studied = { ...edited, fsrs: { ...edited.fsrs, reps: 7, state: 2 } };
+    const studied = {
+      ...edited,
+      fsrs: { ...edited.fsrs, reps: 7, state: 2 },
+      lastAgainAt: '2026-09-22T16:42:00.000Z',
+      slipDays: 2,
+      hardDays: 1,
+      introducedAt: '2026-09-21T07:33:00.000Z',
+    };
     await repo.putCard(studied);
 
     await repo.undoAssistantBatch(batch.id);
     const after = await repo.getCard(original.id);
     expect(after?.notes).toBeUndefined();
     expect(after?.fsrs.reps).toBe(7);
+    expect(after).toMatchObject({
+      lastAgainAt: studied.lastAgainAt,
+      slipDays: 2,
+      hardDays: 1,
+      introducedAt: studied.introducedAt,
+    });
     await repo.db.delete();
   });
 

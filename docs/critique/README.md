@@ -24,3 +24,8 @@ can be regenerated with that script.
   words that never graduate and so never looked like leeches, the ear check
   that was half contaminated, and the familiar word that gave itself away
   among strangers; with the patch set that followed.
+- `analytics-2026-09-30/critique-study-effectiveness.md` — the fourth export,
+  twenty-three days in: a third of the week's answers on twenty-three words
+  pinned at maximum difficulty by the _Hard_ button rather than by
+  forgetting, and the bookkeeping the leech list reads reset by a starter-deck
+  restore; with the patch set that followed.

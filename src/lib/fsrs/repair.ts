@@ -37,13 +37,15 @@ export const REPLAY_TOLERANCE = 1e-4;
  *   word already read that day is practice); the scheduler is told the time
  *   in study days, which turn over at 4 a.m.; and a new word has a third
  *   learning step at three hours.
+ * - 3: rule 2, plus Hard is heard once a day: after the day's first Hard or
+ *   Again, a further Hard is a retry (`isRetry` in lib/queue).
  *
  * A rule carries everything a replay needs to reproduce what the engine of
  * its day did — the clock, the day boundary and the learning steps — because
  * a stored state can only be proved to be the log's if it is recomputed the
  * way it was first computed.
  */
-export type RuleVersion = 0 | 1 | 2;
+export type RuleVersion = 0 | 1 | 2 | 3;
 
 export interface RuleSet {
   version: RuleVersion;
@@ -68,10 +70,17 @@ export const RULES: Record<RuleVersion, RuleSet> = {
     learningSteps: LEARNING_STEPS,
     relearningSteps: RELEARNING_STEPS,
   },
+  3: {
+    version: 3,
+    clock: STUDY_DAY_CLOCK,
+    dayStartHour: DAY_START_HOUR,
+    learningSteps: LEARNING_STEPS,
+    relearningSteps: RELEARNING_STEPS,
+  },
 };
 
 /** The rules in force. */
-export const CURRENT_RULE: RuleSet = RULES[2];
+export const CURRENT_RULE: RuleSet = RULES[3];
 
 /** A fuzz-free scheduler that steps the way a rule's engine did. */
 export function schedulerFor(rule: RuleSet, settings: Pick<UserSettings, 'targetRetention'>): FSRS {
@@ -87,6 +96,8 @@ export interface Replay {
   fsrs: FsrsState;
   /** When the scheduler last heard Again, as the replay saw it. */
   lastAgainAt?: string;
+  /** When the scheduler last heard Hard in a reading, as the replay saw it (rule 3 on). */
+  lastHardAt?: string;
   /** When the scheduler last heard a recognition pass, as the replay saw it. */
   lastPassAt?: string;
   /** Logs the rule left out of the scheduler's view. */
@@ -94,7 +105,7 @@ export interface Replay {
 }
 
 /** The card as the replay knows it so far: its memory state and the day's verdicts. */
-export type ReplayCard = Pick<VocabCard, 'fsrs' | 'lastAgainAt' | 'lastPassAt'>;
+export type ReplayCard = Pick<VocabCard, 'fsrs' | 'lastAgainAt' | 'lastHardAt' | 'lastPassAt'>;
 
 /**
  * Whether one logged answer would have reached the scheduler under a rule,
@@ -108,7 +119,9 @@ export function reachesScheduler(
   if (rule.version === 0) return true;
   const at = new Date(log.reviewTimestamp);
   if (log.exerciseType === 'rapid_recognition') {
-    return !isRetry(card, log.rating, at, rule.dayStartHour);
+    // Before rule 3 the engine kept no record of a Hard: only an Again guarded the day.
+    const guard = rule.version >= 3 ? card : { ...card, lastHardAt: undefined };
+    return !isRetry(guard, log.rating, at, rule.dayStartHour);
   }
   if (rule.version === 1) return !knockedDownToday(card, at, rule.dayStartHour);
   const verdict = drillVerdict(card, log.rating !== 1, at, rule.dayStartHour, {
@@ -125,7 +138,8 @@ export function reachesScheduler(
  * back are skipped, and every later answer is scheduled from the state that
  * leaves, on that rule's clock. Stability and difficulty are deterministic;
  * only the interval carries fuzz, so a replay with fuzz off can be compared
- * to the stored state.
+ * to the stored state. A word that was started over is replayed from its
+ * restart: the answers before it belong to the word it used to be.
  */
 export function replayCard(
   card: VocabCard,
@@ -134,13 +148,17 @@ export function replayCard(
   rule: RuleSet | boolean = CURRENT_RULE,
 ): Replay {
   const ruleSet = typeof rule === 'boolean' ? (rule ? RULES[1] : RULES[0]) : rule;
-  const ordered = [...logs].sort((a, b) => a.reviewTimestamp.localeCompare(b.reviewTimestamp));
-  let state = fromFsrsCard(createEmptyCard(new Date(card.createdAt)));
+  const since = card.restartedAt;
+  const ordered = logs
+    .filter((log) => !since || log.reviewTimestamp >= since)
+    .sort((a, b) => a.reviewTimestamp.localeCompare(b.reviewTimestamp));
+  let state = fromFsrsCard(createEmptyCard(new Date(since ?? card.createdAt)));
   let lastAgainAt: string | undefined;
+  let lastHardAt: string | undefined;
   let lastPassAt: string | undefined;
   const skipped: ReviewLog[] = [];
   for (const log of ordered) {
-    if (!reachesScheduler({ fsrs: state, lastAgainAt, lastPassAt }, log, ruleSet)) {
+    if (!reachesScheduler({ fsrs: state, lastAgainAt, lastHardAt, lastPassAt }, log, ruleSet)) {
       skipped.push(log);
       continue;
     }
@@ -154,12 +172,17 @@ export function replayCard(
       ruleSet.clock,
     );
     if (log.rating === 1) lastAgainAt = log.reviewTimestamp;
+    // Before rule 3 the engine kept no record of a Hard, so the replay keeps none either.
+    if (log.rating === 2 && ruleSet.version >= 3 && isReadingExercise(log.exerciseType)) {
+      lastHardAt = log.reviewTimestamp;
+    }
     if (log.rating >= 3 && isReadingExercise(log.exerciseType)) {
       lastPassAt = log.reviewTimestamp;
     }
   }
   const replay: Replay = { fsrs: state, skipped };
   if (lastAgainAt) replay.lastAgainAt = lastAgainAt;
+  if (lastHardAt) replay.lastHardAt = lastHardAt;
   if (lastPassAt) replay.lastPassAt = lastPassAt;
   return replay;
 }
@@ -203,11 +226,12 @@ export interface RepairResult {
  *
  * The history is all there, so the repair replays it: first under each rule
  * the card's stored state could have been made with — every answer applied,
- * the once-a-day rule, or the rules in force — to prove the log really is
- * the history behind the stored state (a card that reproduces under none of
- * them is left alone); then under the current rule and clock, and the card
- * takes the state that produces. A state that comes out the same only gains
- * the day's verdicts (`lastAgainAt`, `lastPassAt`) the engine now keeps.
+ * the once-a-day rule, the reading-only rule, or the rules in force — to
+ * prove the log really is the history behind the stored state (a card that
+ * reproduces under none of them is left alone); then under the current rule
+ * and clock, and the card takes the state that produces. A state that comes
+ * out the same only gains the day's verdicts (`lastAgainAt`, `lastHardAt`,
+ * `lastPassAt`) the engine now keeps.
  */
 export function repairSchedules(
   cards: VocabCard[],
@@ -215,7 +239,7 @@ export function repairSchedules(
   settings: Pick<UserSettings, 'targetRetention'>,
   options: { from?: RuleVersion[]; to?: RuleSet } = {},
 ): RepairResult {
-  const from = options.from ?? [0, 1, 2];
+  const from = options.from ?? [0, 1, 2, 3];
   const to = options.to ?? CURRENT_RULE;
   const schedulers = new Map<RuleVersion, FSRS>();
   const schedulerOf = (rule: RuleSet) => {
@@ -246,6 +270,7 @@ export function repairSchedules(
     const ruled = replayCard(card, history, schedulerOf(to), to);
     const next: VocabCard = { ...card, fsrs: ruled.fsrs };
     if (ruled.lastAgainAt) next.lastAgainAt = ruled.lastAgainAt;
+    if (ruled.lastHardAt) next.lastHardAt = ruled.lastHardAt;
     if (ruled.lastPassAt) next.lastPassAt = ruled.lastPassAt;
     if (!statesMatch(card.fsrs, ruled.fsrs)) {
       result.repaired.push({
@@ -254,7 +279,11 @@ export function repairSchedules(
         after: ruled.fsrs,
         skipped: ruled.skipped.length,
       });
-    } else if (card.lastAgainAt !== next.lastAgainAt || card.lastPassAt !== next.lastPassAt) {
+    } else if (
+      card.lastAgainAt !== next.lastAgainAt ||
+      card.lastHardAt !== next.lastHardAt ||
+      card.lastPassAt !== next.lastPassAt
+    ) {
       result.annotated.push({ ...next, fsrs: card.fsrs });
     }
   }

@@ -8,11 +8,14 @@ import {
   reviewState,
   studyOldWay,
 } from '@/test/factories';
+import type { StudyEvent } from '@/lib/analytics/events';
 import {
-  backfillSlipDaysOnce,
+  backfillLearnerStateOnce,
   bootstrapDatabase,
   parseRepairSummary,
+  reconcileStudyCounts,
   repairSchedulesOnce,
+  restoreFromEvents,
 } from './useBootstrap';
 
 describe('bootstrapDatabase', () => {
@@ -70,7 +73,7 @@ describe('the one-time schedule repair', () => {
       expect(stored?.lastAgainAt).toBe('2026-09-08T13:58:49.000Z');
       expect(stored?.lastPassAt).toBe('2026-09-08T14:01:16.000Z');
       const summary = parseRepairSummary(await repo.getMeta(META_KEYS.scheduleRepair));
-      expect(summary).toMatchObject({ rule: 2, repaired: 1, annotated: 0, words: ['貢丸湯'] });
+      expect(summary).toMatchObject({ rule: 3, repaired: 1, annotated: 0, words: ['貢丸湯'] });
       expect(await repo.getMeta(META_KEYS.scheduleRepairV1)).toBeUndefined();
 
       // A second launch finds the marker and touches nothing.
@@ -107,29 +110,131 @@ describe('the one-time schedule repair', () => {
   });
 });
 
-describe('backfillSlipDaysOnce', () => {
-  it('counts each studied word’s slip days from its log once, and never again', async () => {
-    const repo = createRepository(createDatabase('bootstrap-slips'));
+describe('reconcileStudyCounts', () => {
+  const logsFor = (cardId: string) =>
+    (
+      [
+        [1, 0, '2026-09-09T15:00:00.000Z'], // first sight: not a slip
+        [1, 1, '2026-09-10T15:00:00.000Z'],
+        [1, 1, '2026-09-11T15:00:00.000Z'],
+        [2, 1, '2026-09-12T15:00:00.000Z'],
+        [2, 2, '2026-09-13T15:00:00.000Z'],
+        [2, 2, '2026-09-13T16:00:00.000Z'], // same day: one hard day
+      ] as const
+    ).map(([rating, stateBefore, reviewTimestamp]) =>
+      makeLog({ cardId, rating, stateBefore, reviewTimestamp }),
+    );
+
+  it('counts each studied word’s slip days and hard days from its log, on every launch', async () => {
+    const repo = createRepository(createDatabase('bootstrap-counts'));
     try {
-      const card = makeCard({ fsrs: reviewState({ reps: 4, lapses: 0 }) });
+      const card = makeCard({ fsrs: reviewState({ reps: 6, lapses: 0 }) });
       await repo.putCard(card);
-      for (const [stateBefore, reviewTimestamp] of [
-        [0, '2026-09-09T15:00:00.000Z'],
-        [1, '2026-09-10T15:00:00.000Z'],
-        [1, '2026-09-11T15:00:00.000Z'],
-      ] as const) {
-        await repo.addReviewLog(
-          makeLog({ cardId: card.id, rating: 1, stateBefore, reviewTimestamp }),
-        );
-      }
-      expect(await backfillSlipDaysOnce(repo)).toBe(1);
-      expect((await repo.getCard(card.id))?.slipDays).toBe(2);
-      expect(await repo.getMeta(META_KEYS.slipDaysBackfill)).toBeTruthy();
-      await repo.putCard({ ...card, slipDays: undefined });
-      expect(await backfillSlipDaysOnce(repo)).toBe(0);
-      expect((await repo.getCard(card.id))?.slipDays).toBeUndefined();
+      for (const log of logsFor(card.id)) await repo.addReviewLog(log);
+      expect(await reconcileStudyCounts(repo)).toBe(1);
+      expect(await repo.getCard(card.id)).toMatchObject({ slipDays: 2, hardDays: 2 });
+      // Nothing to do while the counts agree with the log.
+      expect(await reconcileStudyCounts(repo)).toBe(0);
+      // A count rolled back by a restore is put right on the next launch.
+      await repo.putCard({ ...card, slipDays: 0, hardDays: undefined });
+      expect(await reconcileStudyCounts(repo)).toBe(1);
+      expect(await repo.getCard(card.id)).toMatchObject({ slipDays: 2, hardDays: 2 });
+      // A word never studied stays untouched.
+      const fresh = makeCard({ traditional: '蛋餅' });
+      await repo.putCard(fresh);
+      expect(await reconcileStudyCounts(repo)).toBe(0);
+      expect((await repo.getCard(fresh.id))?.slipDays).toBeUndefined();
     } finally {
       await repo.db.delete();
     }
+  });
+
+  it('reads a word that was started over from its restart', async () => {
+    const repo = createRepository(createDatabase('bootstrap-counts-restart'));
+    try {
+      const card = makeCard({
+        fsrs: reviewState({ reps: 6 }),
+        restartedAt: '2026-09-12T00:00:00.000Z',
+        slipDays: 4,
+      });
+      await repo.putCard(card);
+      for (const log of logsFor(card.id)) await repo.addReviewLog(log);
+      expect(await reconcileStudyCounts(repo)).toBe(1);
+      expect(await repo.getCard(card.id)).toMatchObject({ slipDays: 0, hardDays: 2 });
+    } finally {
+      await repo.db.delete();
+    }
+  });
+});
+
+describe('backfillLearnerStateOnce', () => {
+  const event = (over: Partial<StudyEvent>): StudyEvent => ({
+    id: over.id ?? `${over.kind}-${over.at}`,
+    sessionId: 's1',
+    seq: 0,
+    at: '2026-09-21T07:33:00.000Z',
+    kind: 'intro',
+    mode: 'daily',
+    ...over,
+  });
+
+  it('writes back the introduction and the ear check the events remember, once', async () => {
+    const repo = createRepository(createDatabase('bootstrap-learner-state'));
+    try {
+      const lost = makeCard({ fsrs: reviewState({ reps: 3 }) });
+      const kept = makeCard({
+        traditional: '傲嬌',
+        fsrs: reviewState({ reps: 3 }),
+        introducedAt: '2026-09-01T00:00:00.000Z',
+        byEar: { at: '2026-09-02T00:00:00.000Z', known: false },
+      });
+      await repo.putCards([lost, kept]);
+      const events: StudyEvent[] = [
+        event({ cardId: lost.id, seq: 1 }),
+        event({ cardId: lost.id, seq: 5, at: '2026-09-22T07:33:00.000Z' }),
+        event({ cardId: kept.id, seq: 2, at: '2026-09-21T07:40:00.000Z' }),
+        event({
+          kind: 'answer',
+          cardId: lost.id,
+          seq: 3,
+          at: '2026-09-23T08:00:00.000Z',
+          exerciseType: 'meaning_to_form',
+          heard: false,
+        }),
+        event({
+          kind: 'answer',
+          cardId: lost.id,
+          seq: 4,
+          at: '2026-09-26T08:00:00.000Z',
+          exerciseType: 'meaning_to_form',
+          heard: true,
+        }),
+      ];
+      for (const e of events) await repo.addStudyEvent(e);
+
+      expect(await backfillLearnerStateOnce(repo)).toBe(1);
+      expect(await repo.getCard(lost.id)).toMatchObject({
+        introducedAt: '2026-09-21T07:33:00.000Z',
+        byEar: { at: '2026-09-26T08:00:00.000Z', known: true },
+      });
+      // A card that still has its record keeps it.
+      expect(await repo.getCard(kept.id)).toMatchObject({
+        introducedAt: kept.introducedAt,
+        byEar: kept.byEar,
+      });
+      expect(await repo.getMeta(META_KEYS.learnerStateBackfill)).toBeTruthy();
+      // Once: a later loss is not repaired from events again.
+      await repo.putCard({ ...lost, introducedAt: undefined });
+      expect(await backfillLearnerStateOnce(repo)).toBe(0);
+      expect((await repo.getCard(lost.id))?.introducedAt).toBeUndefined();
+    } finally {
+      await repo.db.delete();
+    }
+  });
+
+  it('touches only the cards with something to restore', () => {
+    const card = makeCard();
+    expect(restoreFromEvents([card], [])).toEqual([]);
+    expect(restoreFromEvents([card], [event({ cardId: 'someone-else' })])).toEqual([]);
   });
 });

@@ -128,11 +128,14 @@ export function materializeImport(
         // A backup restore carries FSRS state; a plain vocab file keeps the learner's progress.
         fsrs: row.fsrs ?? current.fsrs,
         lastAgainAt: row.lastAgainAt ?? current.lastAgainAt,
+        lastHardAt: row.lastHardAt ?? current.lastHardAt,
         lastPassAt: row.lastPassAt ?? current.lastPassAt,
         sentencesShown: row.sentencesShown ?? current.sentencesShown,
         byEar: row.byEar ?? current.byEar,
         slipDays: row.slipDays ?? current.slipDays,
+        hardDays: row.hardDays ?? current.hardDays,
         introducedAt: row.introducedAt ?? current.introducedAt,
+        restartedAt: row.restartedAt ?? current.restartedAt,
         updatedAt: nowIso,
       });
       continue;
@@ -152,11 +155,14 @@ export function materializeImport(
       updatedAt: row.updatedAt ?? createdAt,
     };
     if (row.lastAgainAt) card.lastAgainAt = row.lastAgainAt;
+    if (row.lastHardAt) card.lastHardAt = row.lastHardAt;
     if (row.lastPassAt) card.lastPassAt = row.lastPassAt;
     if (row.sentencesShown?.length) card.sentencesShown = row.sentencesShown;
     if (row.byEar) card.byEar = row.byEar;
     if (row.slipDays) card.slipDays = row.slipDays;
+    if (row.hardDays) card.hardDays = row.hardDays;
     if (row.introducedAt) card.introducedAt = row.introducedAt;
+    if (row.restartedAt) card.restartedAt = row.restartedAt;
     if (row.extraSentences?.length) card.extraSentences = row.extraSentences;
     if (row.exampleSentenceTraditional)
       card.exampleSentenceTraditional = row.exampleSentenceTraditional;

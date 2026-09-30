@@ -22,14 +22,14 @@ words it was built to catch. Scheduling state is intact.
 
 ## 1. Where the time goes
 
-| last 7 study days (09-23 → 09-29)         | value               |
-| ----------------------------------------- | ------------------- |
-| recorded answers                          | 836                 |
-| on the 23 words at difficulty ≥ 9.5       | 277 (33%)           |
-| on slang (68 of 294 studied words)        | 46%                 |
-| all-time answers + retries on those 23    | 599 of 2,102 (28%)  |
-| study time, capped at 2 min per answer    | ≈ 24 min/day        |
-| sittings per day since 09-25              | 1 (≈ 23:40 → 01:10) |
+| last 7 study days (09-23 → 09-29)      | value               |
+| -------------------------------------- | ------------------- |
+| recorded answers                       | 836                 |
+| on the 23 words at difficulty ≥ 9.5    | 277 (33%)           |
+| on slang (68 of 294 studied words)     | 46%                 |
+| all-time answers + retries on those 23 | 599 of 2,102 (28%)  |
+| study time, capped at 2 min per answer | ≈ 24 min/day        |
+| sittings per day since 09-25           | 1 (≈ 23:40 → 01:10) |
 
 Time by exercise (events, capped): recognition 69%, Fill the Blank 9.6% (26 s
 per answer), face-up intros 8.5% (26 s each), Spot the Character 4.2%, Order
@@ -45,31 +45,31 @@ church 4.5, food 2.8. Review-state next-day pass rate: food 0.95, church
 23 cards sit at difficulty ≥ 9.5 (13 slang, 8 anime, 1 church, 1 food); 34
 more sit between 8.5 and 9.5.
 
-| word   | dom.   | D    | S (d) | A/H/G/E    | retries | lapses | Say It first-try |
-| ------ | ------ | ---- | ----- | ---------- | ------- | ------ | ---------------- |
-| 歸剛   | slang  | 9.95 | 2.6   | 5/7/12/0   | 17      | 3      |                  |
-| 抓耙仔 | slang  | 9.94 | 3.2   | 2/20/3/0   | 12      | 0      |                  |
-| 總鋪師 | slang  | 9.93 | 2.0   | 2/15/3/0   | 10      | 0      |                  |
-| 踹共   | slang  | 9.93 | 1.3   | 5/13/4/0   | 18      | 0      |                  |
-| 田僑仔 | slang  | 9.92 | 1.6   | 2/11/3/0   | 6       | 0      |                  |
-| 鬱卒   | slang  | 9.90 | 3.1   | 2/8/3/0    | 10      | 0      |                  |
-| 預告   | anime  | 9.89 | 1.3   | 3/5/4/0    | 5       | 0      |                  |
-| 壓軸   | slang  | 9.88 | 1.6   | 9/3/13/0   | 17      | 1      |                  |
-| 傻眼   | slang  | 9.87 | 4.5   | 5/4/15/1   | 4       | 2      |                  |
-| 吐槽   | anime  | 9.86 | 6.7   | 7/6/14/0   | 9       | 1      |                  |
-| 很瞎   | slang  | 9.84 | 3.1   | 3/4/9/0    | 6       | 2      |                  |
-| 撇步   | slang  | 9.83 | 3.1   | 2/6/5/0    | 10      | 0      |                  |
-| 治癒系 | anime  | 9.80 | 4.7   | 11/1/14/2  | 8       | 2      |                  |
-| 等級   | anime  | 9.80 | 3.9   | 1/7/4/0    | 3       | 0      |                  |
-| 饒恕   | church | 9.80 | 7.1   | 2/6/6/1    | 5       | 1      |                  |
-| 連載   | anime  | 9.79 | 1.8   | 2/5/5/0    | 5       | 1      |                  |
-| 聲優   | anime  | 9.78 | 5.6   | 5/3/11/1   | 8       | 1      |                  |
-| 擺爛   | slang  | 9.77 | 4.0   | 3/3/11/0   | 5       | 1      |                  |
-| 傲嬌   | anime  | 9.76 | 5.6   | 11/4/16/0  | 12      | 1      |                  |
-| 摃龜   | slang  | 9.71 | 1.7   | 2/4/5/0    | 5       | 1      |                  |
-| 布袋戲 | anime  | 9.61 | 5.1   | 2/3/5/0    | 2       | 0      |                  |
-| 烏魚子 | food   | 9.60 | 1.9   | 2/3/4/0    | 4       | 0      |                  |
-| 吸睛   | slang  | 9.59 | 4.1   | 2/3/7/0    | 3       | 1      |                  |
+| word   | dom.   | D    | S (d) | A/H/G/E   | retries | lapses | Say It first-try |
+| ------ | ------ | ---- | ----- | --------- | ------- | ------ | ---------------- |
+| 歸剛   | slang  | 9.95 | 2.6   | 5/7/12/0  | 17      | 3      |                  |
+| 抓耙仔 | slang  | 9.94 | 3.2   | 2/20/3/0  | 12      | 0      |                  |
+| 總鋪師 | slang  | 9.93 | 2.0   | 2/15/3/0  | 10      | 0      |                  |
+| 踹共   | slang  | 9.93 | 1.3   | 5/13/4/0  | 18      | 0      |                  |
+| 田僑仔 | slang  | 9.92 | 1.6   | 2/11/3/0  | 6       | 0      |                  |
+| 鬱卒   | slang  | 9.90 | 3.1   | 2/8/3/0   | 10      | 0      |                  |
+| 預告   | anime  | 9.89 | 1.3   | 3/5/4/0   | 5       | 0      |                  |
+| 壓軸   | slang  | 9.88 | 1.6   | 9/3/13/0  | 17      | 1      |                  |
+| 傻眼   | slang  | 9.87 | 4.5   | 5/4/15/1  | 4       | 2      |                  |
+| 吐槽   | anime  | 9.86 | 6.7   | 7/6/14/0  | 9       | 1      |                  |
+| 很瞎   | slang  | 9.84 | 3.1   | 3/4/9/0   | 6       | 2      |                  |
+| 撇步   | slang  | 9.83 | 3.1   | 2/6/5/0   | 10      | 0      |                  |
+| 治癒系 | anime  | 9.80 | 4.7   | 11/1/14/2 | 8       | 2      |                  |
+| 等級   | anime  | 9.80 | 3.9   | 1/7/4/0   | 3       | 0      |                  |
+| 饒恕   | church | 9.80 | 7.1   | 2/6/6/1   | 5       | 1      |                  |
+| 連載   | anime  | 9.79 | 1.8   | 2/5/5/0   | 5       | 1      |                  |
+| 聲優   | anime  | 9.78 | 5.6   | 5/3/11/1  | 8       | 1      |                  |
+| 擺爛   | slang  | 9.77 | 4.0   | 3/3/11/0  | 5       | 1      |                  |
+| 傲嬌   | anime  | 9.76 | 5.6   | 11/4/16/0 | 12      | 1      |                  |
+| 摃龜   | slang  | 9.71 | 1.7   | 2/4/5/0   | 5       | 1      |                  |
+| 布袋戲 | anime  | 9.61 | 5.1   | 2/3/5/0   | 2       | 0      |                  |
+| 烏魚子 | food   | 9.60 | 1.9   | 2/3/4/0   | 4       | 0      |                  |
+| 吸睛   | slang  | 9.59 | 4.1   | 2/3/7/0   | 3       | 1      |                  |
 
 Across the 23, Say It (the typed reading) was right on the first try 26
 times out of 29. The learner can produce these readings; the self-rating on
@@ -77,10 +77,10 @@ the same words says _Hard_.
 
 ### What FSRS-6 does with each rating (observed in this file)
 
-| difficulty before | Again  | Hard   | Good   | Easy   |
-| ----------------- | ------ | ------ | ------ | ------ |
-| 5 – 8 (n=606)     | +2.52  | +1.23  | −0.01  | −1.34  |
-| ≥ 9.5 (n=217)     | +0.13  | +0.04  | −0.015 | −0.12  |
+| difficulty before | Again | Hard  | Good   | Easy  |
+| ----------------- | ----- | ----- | ------ | ----- |
+| 5 – 8 (n=606)     | +2.52 | +1.23 | −0.01  | −1.34 |
+| ≥ 9.5 (n=217)     | +0.13 | +0.04 | −0.015 | −0.12 |
 
 _Good_ never lowers difficulty; _Easy_ lowers it by about 1.3 in the middle
 of the scale and by 0.12 at the top. A pinned card needs twenty or more
@@ -138,12 +138,12 @@ these means the shape was slow, or that the Mandarin reading on the reveal
 
 ## 3. Out of place: the bookkeeping was rolled back
 
-| field         | evidence                                                                                                                                 |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `slipDays`    | 46 of 294 cards store fewer slip days than their own review logs show (傲嬌 0 vs 4, 治癒系 0 vs 5, 踹共 1 vs 4, 預告 1 vs 3 …)              |
-| `introducedAt` | 18 of 112 face-up introductions (intro events) have no `introducedAt` on the card; all 18 are words with a Taiwanese `spoken` form       |
-| `byEar`       | 16 of 32 ear checks in the events are not on the card (every check on 09-14/09-15, plus 魯蛇, 傲嬌, 壓軸)                                  |
-| `fsrs`        | intact: all 1,288 logs match their events; the 40 state discontinuities all fall on the two repair dates and the three repaired dishes |
+| field          | evidence                                                                                                                               |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `slipDays`     | 46 of 294 cards store fewer slip days than their own review logs show (傲嬌 0 vs 4, 治癒系 0 vs 5, 踹共 1 vs 4, 預告 1 vs 3 …)         |
+| `introducedAt` | 18 of 112 face-up introductions (intro events) have no `introducedAt` on the card; all 18 are words with a Taiwanese `spoken` form     |
+| `byEar`        | 16 of 32 ear checks in the events are not on the card (every check on 09-14/09-15, plus 魯蛇, 傲嬌, 壓軸)                              |
+| `fsrs`         | intact: all 1,288 logs match their events; the 40 state discontinuities all fall on the two repair dates and the three repaired dishes |
 
 The leech list built on 09-16 should today hold nine words (≥ 3 slip days
 or lapses: 傲嬌 4, 治癒系 5, 吐槽 4, 傻眼 4, 壓軸 4, 歸剛 4, 踹共 4, 聲優 4,
@@ -187,8 +187,7 @@ card, so no writer can lose them.
   a minute, one 4.5 s after; `makeDrill` exempts drills from the minute).
   Fill the Blank costs 26 s per answer and 9.6% of study time. Say It is
   the one drill whose result carries information.
-- **Retention counts _Hard_ as a pass.** 09-29's 0.95 came with 26 _Hard_ of
-  105. Stats should show the Hard share, or a Good+Easy rate, beside it.
+- **Retention counts _Hard_ as a pass.** 09-29's 0.95 came with 26 _Hard_ of 105. Stats should show the Hard share, or a Good+Easy rate, beside it.
 - **傻眼** was not known by ear (09-26) and is pinned at 9.87 with two
   lapses. By the app's own rule it needs the word before the shape; there is
   no way to set a card aside.
@@ -245,3 +244,41 @@ _Again_ since 09-10), the settling hold (4 settling against 20), the 4 a.m.
 day, Say It as a reading (41 applied, 38 Good), the domain round-robin (the
 next 200 new cards alternate food / church / slang / anime exactly), and a
 23-of-24-day streak.
+
+## Patch set (what followed this round)
+
+1. **A restore keeps the learner's state.** `planStarterRestore` and the
+   assistant undo carry every field the learner's study wrote on a card
+   (`LEARNER_STATE_KEYS` in `types`) over the shipped content, not only the
+   schedule. Bootstrap recounts slip days and hard days from the review log on
+   every launch, and once wrote the face-up introductions and ear checks back
+   from the event log. On this device that puts nine words on the leech list.
+2. **Hard is heard once a day.** After the day's first _Hard_ or _Again_, a
+   further _Hard_ is a retry (`lastHardAt`, `isRetry`); the day's first
+   _Again_ is still heard after a _Hard_. Rule 3 in `lib/fsrs/repair` replays
+   every history under it once: on this device that removes the 88 stacked
+   _Hard_ ratings from fifteen of the twenty-three pinned words.
+3. **The hint says the opposite.** Above five seconds the reveal now says
+   "slow, but if you read it, that is Good"; the rubric reads _Hard_ = "part
+   of it wrong, or the sentence gave it away", _Good_ = "sound and meaning
+   came, however slowly".
+4. **A Hard loop is a leech, and a pinned word can start over.** A card
+   counts its hard days; rated _Hard_ on the threshold number of days at
+   difficulty 9 or above, it keeps slipping (§4's fifteen words). Stats lists
+   the words at difficulty 9.5 or above and offers _Start over_
+   (`lib/fsrs/restart`): back to new, history kept, replayed and counted from
+   the restart, tested cold. The editor's _Reset progress_ became the same
+   _Start over_.
+5. **Drills rest, and Say It leads.** A shape drill waits three minutes after
+   the word's last look; a troubled word in Review takes Say It every other
+   fresh turn.
+
+## Exit criteria for the next export
+
+- the nine words in §3 on the leech list, and `hard_loop` on the fifteen in §4;
+- no `applied: true` _Hard_ on a word already rated _Hard_ or _Again_ that day
+  after the build;
+- the Hard share at 5–8 s of reveal latency falling from 44% toward the
+  3–5 s band's 10%, with the Again share unchanged;
+- the pinned words started over reaching a week of stability within two;
+- no Spot the Character or Find It within three minutes of the word's reading.

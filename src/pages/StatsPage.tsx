@@ -6,7 +6,11 @@ import { DomainMasteryBars } from '@/components/stats/DomainMasteryBars';
 import { RetentionGauge } from '@/components/stats/RetentionGauge';
 import { Button } from '@/components/ui/Button';
 import { Hanzi } from '@/components/ui/Hanzi';
+import { Modal } from '@/components/ui/Modal';
 import { charInfo } from '@/data/charInfo';
+import { repository } from '@/db/repository';
+import { isPinned, restartCard } from '@/lib/fsrs/restart';
+import { troubleLabel } from '@/lib/stats/slips';
 import { breakdown, describeBreakdown } from '@/lib/etymology';
 import { useEtymology } from '@/hooks/useEtymology';
 import { diffCharacters, expandFoil } from '@/lib/exercises/foil';
@@ -59,6 +63,12 @@ export default function StatsPage() {
       series: dailySeries(logs, 30, now),
       mastery: domainMastery(cards),
       leeches: findLeeches(cards, settings.leechThreshold),
+      pinned: cards
+        .filter(isPinned)
+        .sort(
+          (a, b) =>
+            b.fsrs.difficulty - a.fsrs.difficulty || a.traditional.localeCompare(b.traditional),
+        ),
       lapses: totalLapses(cards),
       states: stateDistribution(cards),
       firstSight: firstSightProfile(cards, logs).filter((d) => d.met > 0 || d.introduced > 0),
@@ -67,6 +77,12 @@ export default function StatsPage() {
   }, [cards, logs, settings, now]);
 
   const total = Math.max(1, cards.length);
+  const [restarting, setRestarting] = useState<VocabCard | null>(null);
+  const restart = async () => {
+    if (!restarting) return;
+    await repository.putCard(restartCard(restarting, new Date()));
+    setRestarting(null);
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -251,7 +267,7 @@ export default function StatsPage() {
             Words that keep slipping <span lang="zh-Hant-TW">常忘的字</span>
           </h2>
           <span className="shrink-0 text-xs text-stone-500">
-            forgotten on ≥ {settings.leechThreshold} days
+            forgotten, or Hard at the ceiling, on ≥ {settings.leechThreshold} days
           </span>
         </div>
         {model.leeches.length === 0 ? (
@@ -283,6 +299,72 @@ export default function StatsPage() {
           </>
         )}
       </section>
+
+      {model.pinned.length > 0 && (
+        <section className="card-surface p-4" aria-labelledby="pinned-heading">
+          <h2
+            id="pinned-heading"
+            className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400"
+          >
+            Pinned at maximum difficulty <span lang="zh-Hant-TW">難度到頂</span>
+          </h2>
+          <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            The scheduler has no harsher verdict left for these, so their intervals stop growing and
+            no rating brings them down. Starting a word over keeps its history and tests it fresh:
+            read it right the first time and it is scheduled like a word you know.
+          </p>
+          <ul
+            className="mt-2 divide-y divide-stone-200 dark:divide-stone-700"
+            data-testid="pinned-list"
+          >
+            {model.pinned.map((card) => (
+              <li key={card.id} className="flex items-center gap-3 py-2" data-testid="pinned-row">
+                <Link to={`/vocab/${card.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                  <Hanzi className="text-2xl font-bold">{card.traditional}</Hanzi>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm">{card.definition}</span>
+                    <span className="block text-xs text-stone-500 dark:text-stone-400">
+                      difficulty {card.fsrs.difficulty.toFixed(1)} · every{' '}
+                      {Math.max(1, Math.round(card.fsrs.stability))}{' '}
+                      {Math.max(1, Math.round(card.fsrs.stability)) === 1 ? 'day' : 'days'}
+                    </span>
+                  </span>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRestarting(card)}
+                  data-testid="pinned-restart"
+                >
+                  Start over
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <Modal
+        open={restarting !== null}
+        title={`Start ${restarting?.traditional ?? 'this word'} over?`}
+        onClose={() => setRestarting(null)}
+        testId="restart-dialog"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRestarting(null)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void restart()} data-testid="confirm-restart">
+              Start over
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm">
+          It goes back to new and comes up as a fresh word in your next session. Its review history
+          stays.
+        </p>
+      </Modal>
     </div>
   );
 }
@@ -321,8 +403,11 @@ function LeechRow({ card }: { card: VocabCard }) {
         >
           {showReading ? (card.spoken ?? card.pinyin) : 'reading'}
         </button>
-        <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
-          forgotten {card.fsrs.lapses}×
+        <span
+          className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200"
+          data-testid="leech-trouble"
+        >
+          {troubleLabel(card)}
         </span>
       </div>
       <p className="text-xs text-stone-600 dark:text-stone-300" data-testid="leech-cues">

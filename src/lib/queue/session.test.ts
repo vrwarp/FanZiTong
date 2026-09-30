@@ -11,6 +11,7 @@ import {
   hasReading,
   interleaveByDomain,
   isDrillCandidate,
+  hardToday,
   isRetry,
   isSettling,
   knockedDownToday,
@@ -301,6 +302,24 @@ describe('settling and the one-Again-a-day rule', () => {
     expect(isRetry(card, 3, evening)).toBe(false);
     expect(isRetry(card, 4, evening)).toBe(false);
     expect(isRetry(card, 1, nextDay)).toBe(false);
+  });
+
+  it('treats a second Hard on the same study day as a retry, but hears the day’s first Again', () => {
+    const morning = new Date(2026, 8, 5, 8, 0);
+    const evening = new Date(2026, 8, 5, 22, 0);
+    const nextDay = new Date(2026, 8, 6, 5, 0);
+    const hard = { lastHardAt: morning.toISOString() };
+    expect(hardToday(hard, evening)).toBe(true);
+    expect(hardToday(hard, nextDay)).toBe(false);
+    expect(hardToday({}, evening)).toBe(false);
+    expect(isRetry(hard, 2, evening)).toBe(true);
+    // A word read slowly at noon and not at all at ten is a word forgotten.
+    expect(isRetry(hard, 1, evening)).toBe(false);
+    expect(isRetry(hard, 3, evening)).toBe(false);
+    expect(isRetry(hard, 4, evening)).toBe(false);
+    expect(isRetry(hard, 2, nextDay)).toBe(false);
+    // And after an Again, Hard is a retry whether or not a Hard came first.
+    expect(isRetry({ lastAgainAt: morning.toISOString() }, 2, evening)).toBe(true);
   });
 
   it('knows when a word has been read today', () => {

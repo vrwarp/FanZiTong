@@ -147,6 +147,14 @@ export interface VocabCard {
    */
   lastAgainAt?: string;
   /**
+   * When the scheduler last heard "Hard" for this card in a reading. Hard is
+   * heard once a day too: FSRS-6 adds more than a point of difficulty for a
+   * Hard on a word mid-scale, and one export showed 88 same-day Hards stacked
+   * on words already rated Hard or Again that day. After the day's first Hard
+   * or Again, a further Hard is a retry (`isRetry` in lib/queue).
+   */
+  lastHardAt?: string;
+  /**
    * When the scheduler last heard a recognition pass (Good or Easy) for this
    * card. A drill can move a word only while it is still being learned and
    * has not been read today; after a reading, the day's verdict is in.
@@ -166,13 +174,66 @@ export interface VocabCard {
    */
   slipDays?: number;
   /**
+   * Study days on which the scheduler heard Hard for this word in a reading,
+   * after its first sight. A word rated Hard day after day at the top of the
+   * difficulty scale is in a Hard loop — FSRS has no harsher verdict left and
+   * the intervals stop growing — and it never lapses, so lapses and slip days
+   * both miss it; this count is what catches it (`isHardLoop` in lib/stats).
+   */
+  hardDays?: number;
+  /**
    * When the word was shown face up — reading and meaning, no test — before
    * its first test (see `faceUpDomains` in lib/stats). Such a word had no
    * first sight, and the first-sight profile counts it apart.
    */
   introducedAt?: string;
+  /**
+   * When the learner started the word over (`restartCard` in lib/fsrs): the
+   * schedule went back to new, the review log stayed, and everything that
+   * reads the log for this card — the replay, the slip and hard days — reads
+   * it from here. A word pinned at maximum difficulty cannot climb down by
+   * rating; a fresh first sight seeds its difficulty from what the learner
+   * knows now.
+   */
+  restartedAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/**
+ * The fields of a card that record the learner's study rather than the deck's
+ * content: the schedule, the day's verdicts, the rotation memory, the ear
+ * check, the days the word slipped or was hard, the face-up introduction, a
+ * restart, and when the card entered the deck. Anything that rebuilds a card
+ * from authored content — the starter-deck restore, an assistant undo —
+ * carries every one of these over. Keeping only the schedule is how one
+ * export found forty-six words with their slip days gone, eighteen face-up
+ * introductions forgotten, and the leech list holding one of the nine words
+ * it should.
+ */
+export const LEARNER_STATE_KEYS = [
+  'fsrs',
+  'lastAgainAt',
+  'lastHardAt',
+  'lastPassAt',
+  'sentencesShown',
+  'byEar',
+  'slipDays',
+  'hardDays',
+  'introducedAt',
+  'restartedAt',
+  'createdAt',
+] as const satisfies readonly (keyof VocabCard)[];
+
+/** The authored content of one card with the learner's state of another. */
+export function withLearnerState(content: VocabCard, learner: VocabCard): VocabCard {
+  const next: Record<string, unknown> = { ...content };
+  for (const key of LEARNER_STATE_KEYS) {
+    const value = learner[key];
+    if (value === undefined) delete next[key];
+    else next[key] = value;
+  }
+  return next as unknown as VocabCard;
 }
 
 export const SPOKEN_USES = ['only', 'usual', 'either', 'also'] as const;

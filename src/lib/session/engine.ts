@@ -23,6 +23,7 @@ import {
   type SchedulerClock,
 } from '@/lib/fsrs/scheduler';
 import {
+  DRILL_AFTER_LOOK_MS,
   DRILL_EVERY_N_CARDS,
   FRESH_CARD_DRILLS,
   MAX_SESSION_REQUEUES,
@@ -215,6 +216,8 @@ export interface EngineOptions {
   requeueLearning?: boolean;
   /** How long a card must wait after an answer before it is shown again. */
   retryGapMs?: number;
+  /** How long a card rests after a look before a shape drill may ask about it. */
+  drillGapMs?: number;
   now?: () => Date;
   rng?: Rng;
   /** Cache window in which the previewed schedule is reused for the actual rating. */
@@ -319,6 +322,7 @@ export class StudyEngine {
   private readonly interleave: boolean;
   private readonly requeueLearning: boolean;
   private readonly retryGapMs: number;
+  private readonly drillGapMs: number;
   private readonly now: () => Date;
   private readonly rng: Rng;
   private readonly previewReuseMs: number;
@@ -370,6 +374,7 @@ export class StudyEngine {
     this.interleave = options.interleaveDrills;
     this.requeueLearning = options.requeueLearning ?? options.interleaveDrills;
     this.retryGapMs = options.retryGapMs ?? MIN_RETRY_GAP_MS;
+    this.drillGapMs = options.drillGapMs ?? DRILL_AFTER_LOOK_MS;
     this.now = options.now ?? (() => new Date());
     this.rng = options.rng ?? Math.random;
     this.previewReuseMs = options.previewReuseMs ?? 60_000;
@@ -899,9 +904,13 @@ export class StudyEngine {
     const updated: VocabCard = { ...card, fsrs: next, updatedAt: nowIso };
     // The one Again a day the scheduler hears; everything after it is a retry.
     if (rating === 1) updated.lastAgainAt = nowIso;
-    // …and, after the first sight, one more day the word slipped in reading.
-    if (rating === 1 && isReadingExercise(exerciseType) && card.fsrs.state !== CardState.New) {
-      updated.slipDays = (card.slipDays ?? 0) + 1;
+    // The one Hard a day, likewise.
+    if (rating === 2 && isReadingExercise(exerciseType)) updated.lastHardAt = nowIso;
+    // …and, after the first sight, one more day the word slipped in reading,
+    // or was read but hard: what the leech list counts.
+    if (isReadingExercise(exerciseType) && card.fsrs.state !== CardState.New) {
+      if (rating === 1) updated.slipDays = (card.slipDays ?? 0) + 1;
+      if (rating === 2) updated.hardDays = (card.hardDays ?? 0) + 1;
     }
     // The day's reading, after which a drill can no longer move the word.
     if (rating >= 3 && isReadingExercise(exerciseType)) updated.lastPassAt = nowIso;
@@ -1001,16 +1010,21 @@ export class StudyEngine {
    * still being learned that are NOT part of today's session; the cards seen
    * this session get Spot the Character or the Order Slip instead. Those ask
    * a different question from the reveal — which of these shapes is it — and
-   * cannot advance a word knocked down today, so the minute between looks does
-   * not apply to them; `exclude` is for the gap-filling drill, which must not
-   * touch the very cards that are waiting out that minute.
+   * cannot advance a word knocked down today, but a four-tile pick seconds
+   * after the reading is answered from the screen, so a seen card rests
+   * `drillGapMs` after its last look before a drill may ask about it;
+   * `exclude` is for the gap-filling drill, which must not touch the very
+   * cards that are waiting out the minute between looks.
    */
   private makeDrill(exclude: ReadonlySet<string> = new Set()): DrillExercise | null {
     const pool = Array.from(this.cards.values());
+    const nowMs = this.now().getTime();
     const seenIds = new Set(this.results.map((r) => r.cardId));
     const queued = new Set(this.queue);
     const usable = (c: VocabCard) =>
       isDrillCandidate(c) && !this.drilled.has(c.id) && !exclude.has(c.id);
+    const rested = (c: VocabCard) =>
+      nowMs - (this.answeredAt.get(c.id) ?? Number.NEGATIVE_INFINITY) >= this.drillGapMs;
     const ctx: DrillContext = { families: this.familyIndex(pool) };
     // The words in most trouble first: forgotten on the most days, or lapsed the most.
     const byTrouble = (a: VocabCard, b: VocabCard) =>
@@ -1023,6 +1037,21 @@ export class StudyEngine {
       const fresh = pool
         .filter((c) => usable(c) && !seenIds.has(c.id) && !queued.has(c.id))
         .sort((a, b) => byTrouble(a, b) || a.fsrs.stability - b.fsrs.stability);
+      // Say It is the one drill whose answer carries information about a word
+      // in Review — a typed reading has no guess floor, and moves the word —
+      // so a troubled Review word takes it every other fresh turn.
+      if (this.lastFreshType !== 'typed_reading') {
+        const reviewing = fresh.find(
+          (c) => c.fsrs.state === CardState.Review && supportsDrill(c, 'typed_reading', ctx),
+        );
+        const exercise = reviewing ? this.buildExercise('typed_reading', reviewing, pool) : null;
+        if (reviewing && exercise) {
+          this.drilled.add(reviewing.id);
+          this.lastDrillType = 'typed_reading';
+          this.lastFreshType = 'typed_reading';
+          return exercise;
+        }
+      }
       const last = this.lastFreshType ? FRESH_CARD_DRILLS.indexOf(this.lastFreshType) : -1;
       const order = [...FRESH_CARD_DRILLS.slice(last + 1), ...FRESH_CARD_DRILLS.slice(0, last + 1)];
       for (const type of order) {
@@ -1042,7 +1071,7 @@ export class StudyEngine {
     const recent = new Set(this.results.slice(-3).map((r) => r.cardId));
     const eligible = Array.from(seenIds)
       .map((id) => this.cards.get(id)!)
-      .filter((c) => usable(c) && c.id !== this.queue[0]);
+      .filter((c) => usable(c) && c.id !== this.queue[0] && rested(c));
     const candidates = [
       ...eligible.filter((c) => !recent.has(c.id)),
       ...eligible.filter((c) => recent.has(c.id)),
@@ -1067,7 +1096,11 @@ export class StudyEngine {
     return null;
   }
 
-  /** Whether a queued card is met face up rather than tested: new, in a face-up domain, not yet introduced. */
+  /**
+   * Whether a queued card is met face up rather than tested: new, in a face-up
+   * domain, not yet introduced. A word started over is new again but not
+   * unknown; it is tested cold.
+   */
   private wantsIntro(cardId: string): boolean {
     const card = this.cards.get(cardId);
     return (
@@ -1075,7 +1108,8 @@ export class StudyEngine {
       card.fsrs.state === CardState.New &&
       this.faceUp.has(card.domain) &&
       !this.introduced.has(cardId) &&
-      !card.introducedAt
+      !card.introducedAt &&
+      !card.restartedAt
     );
   }
 

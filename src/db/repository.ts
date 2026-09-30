@@ -1,6 +1,7 @@
 import { STUDY_EVENT_LIMIT, type StudyEvent } from '@/lib/analytics/events';
 import {
   DEFAULT_SETTINGS,
+  withLearnerState,
   type AiBatch,
   type AiChange,
   type ReviewLog,
@@ -17,13 +18,19 @@ export const META_KEYS = {
   doneForTodayDate: 'doneForTodayDate',
   /** JSON summary of the first one-time schedule repair (the once-a-day rule); its presence means it ran. */
   scheduleRepairV1: 'scheduleRepairV1',
-  /** Set once the cards' slip days have been counted from the review log. */
-  slipDaysBackfill: 'slipDaysBackfillV1',
+  /** JSON summary of the second (a word in Review moved only by reading; study days). */
+  scheduleRepairV2: 'scheduleRepairV2',
   /**
-   * JSON summary of the second repair (a word in Review moved only by reading;
-   * the scheduler told the time in study days). See lib/fsrs/repair.
+   * Set once the face-up introductions and ear checks the event log remembers
+   * were written back onto the cards that had lost them. See useBootstrap.
    */
-  scheduleRepair: 'scheduleRepairV2',
+  learnerStateBackfill: 'learnerStateBackfillV1',
+  /**
+   * JSON summary of the latest repair (Hard heard once a day). Each rule the
+   * app adopts gets its own key, so the replay runs once per rule. See
+   * lib/fsrs/repair.
+   */
+  scheduleRepair: 'scheduleRepairV3',
 } as const;
 
 /**
@@ -197,8 +204,10 @@ export function createRepository(db: FanZiTongDatabase = defaultDb) {
     /**
      * Put the deck back the way it was before one batch.
      *
-     * Scheduling is never rolled back: a card whose text the assistant changed
-     * keeps the FSRS state it has now, because the learner has studied it since.
+     * The learner's study is never rolled back: a card whose text the
+     * assistant changed keeps the FSRS state, the day's verdicts, the slip
+     * and hard days and every other record of study it has now, because the
+     * learner has studied it since (`LEARNER_STATE_KEYS`).
      */
     async undoAssistantBatch(batchId: string): Promise<{ restored: number; error?: string }> {
       return db.transaction('rw', db.cards, db.reviewLogs, db.aiBatches, db.aiChanges, async () => {
@@ -218,7 +227,7 @@ export function createRepository(db: FanZiTongDatabase = defaultDb) {
             await db.reviewLogs.where('cardId').equals(change.cardId).delete();
             restored += 1;
           } else if (change.op === 'update' && change.before) {
-            await db.cards.put(current ? { ...change.before, fsrs: current.fsrs } : change.before);
+            await db.cards.put(current ? withLearnerState(change.before, current) : change.before);
             // Undo a merge: send the borrowed history back where it came from.
             for (const log of change.reviewLogs ?? []) await db.reviewLogs.put(log);
             restored += 1;

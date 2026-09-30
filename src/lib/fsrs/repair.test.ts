@@ -1,4 +1,5 @@
 import { State } from 'ts-fsrs';
+import { restartCard } from '@/lib/fsrs/restart';
 import { DEFAULT_SETTINGS, type RatingGrade, type ReviewLog } from '@/types';
 import {
   GONG_WAN_TANG_HISTORY,
@@ -68,6 +69,65 @@ describe('reachesScheduler', () => {
     ).toBe(false);
     // Rule 0 hears everything.
     expect(reachesScheduler(review, log(1, 'foil_discrimination'), RULES[0])).toBe(true);
+  });
+
+  it('under the rules in force, hears Hard once a day, and the day’s first Again after it', () => {
+    const hardOnce = { fsrs: learning, lastHardAt: morning };
+    expect(reachesScheduler(hardOnce, log(2, 'rapid_recognition'))).toBe(false);
+    expect(reachesScheduler(hardOnce, log(1, 'rapid_recognition'))).toBe(true);
+    expect(reachesScheduler(hardOnce, log(3, 'rapid_recognition'))).toBe(true);
+    const nextDay = '2026-09-08T09:00:00.000Z';
+    expect(reachesScheduler(hardOnce, log(2, 'rapid_recognition', nextDay))).toBe(true);
+    // Rule 2 kept no record of a Hard, so it heard every one.
+    expect(reachesScheduler(hardOnce, log(2, 'rapid_recognition'), RULES[2])).toBe(true);
+  });
+});
+
+/**
+ * 抓耙仔 on one learner's phone: a first sight failed, a Hard the next day,
+ * then three Hards inside thirteen minutes and a Good, all applied. The
+ * stacked Hards took the word from difficulty 8.8 to 9.9.
+ */
+const STACKED_HARDS = [
+  { at: '2026-09-22T16:00:00.000Z', rating: 1 as RatingGrade },
+  { at: '2026-09-23T16:00:00.000Z', rating: 2 as RatingGrade },
+  { at: '2026-09-24T16:17:00.000Z', rating: 2 as RatingGrade },
+  { at: '2026-09-24T16:21:00.000Z', rating: 2 as RatingGrade },
+  { at: '2026-09-24T16:28:00.000Z', rating: 2 as RatingGrade },
+  { at: '2026-09-24T16:30:00.000Z', rating: 3 as RatingGrade },
+];
+
+describe('replayCard — Hard once a day', () => {
+  it('replays the second and third same-day Hards as retries, and the difficulty comes down', () => {
+    const { card, logs } = studyOldWay(makeCard({ traditional: '抓耙仔' }), STACKED_HARDS);
+    const readingOnly = replayCard(card, logs, schedulerFor(RULES[2], DEFAULT_SETTINGS), RULES[2]);
+    expect(readingOnly.skipped).toEqual([]);
+    const ruled = replayCard(card, logs, current, CURRENT_RULE);
+    expect(ruled.skipped.map((l) => l.reviewTimestamp)).toEqual([
+      '2026-09-24T16:21:00.000Z',
+      '2026-09-24T16:28:00.000Z',
+    ]);
+    expect(ruled.fsrs.reps).toBe(4);
+    expect(ruled.fsrs.difficulty).toBeLessThan(readingOnly.fsrs.difficulty - 0.5);
+    expect(ruled.lastHardAt).toBe('2026-09-24T16:17:00.000Z');
+    expect(readingOnly.lastHardAt).toBeUndefined();
+  });
+
+  it('replays a word started over from its restart', () => {
+    const studied = studyOldWay(makeCard({ traditional: '踹共' }), STACKED_HARDS);
+    const restarted = restartCard(studied.card, new Date('2026-09-25T00:00:00.000Z'));
+    // Nothing since the restart: nothing to replay, and nothing to repair.
+    expect(repairSchedules([restarted], studied.logs, DEFAULT_SETTINGS)).toEqual({
+      repaired: [],
+      annotated: [],
+      unverifiable: 0,
+    });
+    // One answer since: the replay starts from new at the restart.
+    const after = studyOldWay(restarted, [{ at: '2026-09-26T08:00:00.000Z', rating: 3 }], current);
+    const replay = replayCard(after.card, [...studied.logs, ...after.logs], current, CURRENT_RULE);
+    expect(replay.fsrs.reps).toBe(1);
+    expect(replay.skipped).toEqual([]);
+    expect(replayMatches(after.card, replay)).toBe(true);
   });
 });
 
@@ -187,6 +247,28 @@ describe('repairSchedules', () => {
     expect(result.unverifiable).toBe(0);
     expect(result.repaired).toHaveLength(1);
     expect(result.repaired[0].after.lapses).toBe(0);
+  });
+
+  it('accepts a card the reading-only repair already rewrote, and moves it on to rule 3', () => {
+    const stacked = studyOldWay(makeCard({ traditional: '抓耙仔' }), STACKED_HARDS);
+    const v2 = replayCard(
+      stacked.card,
+      stacked.logs,
+      schedulerFor(RULES[2], DEFAULT_SETTINGS),
+      RULES[2],
+    );
+    const repairedTwice = {
+      ...stacked.card,
+      fsrs: v2.fsrs,
+      lastAgainAt: v2.lastAgainAt,
+      lastPassAt: v2.lastPassAt,
+    };
+    const result = repairSchedules([repairedTwice], stacked.logs, DEFAULT_SETTINGS);
+    expect(result.unverifiable).toBe(0);
+    expect(result.repaired).toHaveLength(1);
+    expect(result.repaired[0].skipped).toBe(2);
+    expect(result.repaired[0].card.lastHardAt).toBe('2026-09-24T16:17:00.000Z');
+    expect(result.repaired[0].after.difficulty).toBeLessThan(result.repaired[0].before.difficulty);
   });
 
   it('is idempotent: a second pass has nothing left to do', () => {

@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { gunzipSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
 import { leechBackup, openApp } from './helpers';
 
@@ -82,7 +84,9 @@ test.describe('Settings and Stats (Journey 3)', () => {
       page.waitForEvent('download'),
       page.getByTestId('export-analytics').click(),
     ]);
-    expect(analytics.suggestedFilename()).toMatch(/^fanzitong-analytics-.*\.json$/);
+    expect(analytics.suggestedFilename()).toMatch(/^fanzitong-analytics-.*\.json\.gz$/);
+    const unzipped = gunzipSync(await readFile(await analytics.path()));
+    expect(JSON.parse(unzipped.toString('utf8')).schema).toBe('fanzitong.analytics');
     await expect(page.getByTestId('settings-notice')).toContainText('Analytics exported');
 
     await page.getByTestId('reset-data').click();

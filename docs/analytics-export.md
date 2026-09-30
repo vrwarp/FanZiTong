@@ -1,7 +1,12 @@
 # The analytics export
 
 Settings → Data → **📊 Export study analytics** writes
-`fanzitong-analytics-<timestamp>.json`.
+`fanzitong-analytics-<timestamp>.json.gz`: the JSON described below, gzipped.
+The event log and the per-card histories repeat the same keys thousands of
+times, so gzip shrinks the file twenty- to thirty-fold (a synthetic export with
+300 studied cards and 5,000 events: 2.7 MB of JSON, 84 KB gzipped). Unpack it
+with `gunzip`, or any archive tool, before reading. A browser without
+`CompressionStream` gets the plain `.json` instead.
 
 It is not a backup. It cannot restore a deck, and nothing in the app reads it
 back. It exists to be handed to somebody — a person, or an assistant — who is

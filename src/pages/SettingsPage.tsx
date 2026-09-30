@@ -10,7 +10,7 @@ import { META_KEYS, repository } from '@/db/repository';
 import { useCardsOrEmpty, useReviewLogsOrEmpty } from '@/hooks/useCards';
 import { useSettings } from '@/hooks/useSettings';
 import { buildAnalyticsExport, serializeAnalyticsExport } from '@/lib/analytics/export';
-import { downloadTextFile, timestampForFilename } from '@/lib/io/download';
+import { downloadBlob, downloadTextFile, gzipText, timestampForFilename } from '@/lib/io/download';
 import { serializeJsonDeck, toJsonDeck } from '@/lib/io/json';
 import { cn } from '@/lib/util/cn';
 import { resetIntro } from '@/lib/util/intro';
@@ -99,11 +99,13 @@ export default function SettingsPage() {
       events,
       studyDayClockSince: repair?.at,
     });
-    downloadTextFile(
-      `fanzitong-analytics-${timestampForFilename()}.json`,
-      serializeAnalyticsExport(report),
-      'application/json',
-    );
+    // Gzipped: the event log and per-card histories repeat the same keys
+    // thousands of times, so the file shrinks twenty- to thirty-fold.
+    const name = `fanzitong-analytics-${timestampForFilename()}.json`;
+    const json = serializeAnalyticsExport(report);
+    const gzipped = await gzipText(json);
+    if (gzipped) downloadBlob(`${name}.gz`, gzipped);
+    else downloadTextFile(name, json, 'application/json');
     setNotice(
       `Analytics exported: ${report.report.cards.length} studied cards, ` +
         `${report.report.activity.totalAnswers} answers, ` +

@@ -270,7 +270,8 @@ next 200 new cards alternate food / church / slang / anime exactly), and a
    the restart, tested cold. The editor's _Reset progress_ became the same
    _Start over_.
 5. **Drills rest, and Say It leads.** A shape drill waits three minutes after
-   the word's last look; a troubled word in Review takes Say It every other
+   the word's last look, and a drill slot no word can fill yet stays open
+   until one has rested; a troubled word in Review takes Say It every other
    fresh turn.
 
 ## Exit criteria for the next export

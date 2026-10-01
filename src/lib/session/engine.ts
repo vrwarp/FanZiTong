@@ -967,10 +967,13 @@ export class StudyEngine {
       this.serveDrill(this.drillQueue.shift()!);
       return;
     }
+    // A slot no word can fill yet — every candidate was looked at moments
+    // ago and is resting (`DRILL_AFTER_LOOK_MS`) — stays open, so the drill
+    // comes as soon as one has rested rather than five answers later.
     if (this.interleave && this.answered >= this.nextDrillAt) {
-      this.nextDrillAt = this.answered + DRILL_EVERY_N_CARDS;
       const drill = this.makeDrill();
       if (drill) {
+        this.nextDrillAt = this.answered + DRILL_EVERY_N_CARDS;
         this.serveDrill(drill);
         return;
       }

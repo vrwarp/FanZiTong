@@ -73,7 +73,9 @@ test.describe('Daily study session (Journey 1)', () => {
   }) => {
     await openApp(page, '/', { fakeClock: true });
     await page.getByTestId('start-session').click();
-    const run = await completeSession(page, { firstRating: 1 });
+    // The failed card is the only one a drill can ask about, and a drill never
+    // asks about a word looked at in the last three minutes: take that long.
+    const run = await completeSession(page, { firstRating: 1, restAfterFirstMs: 181_000 });
     expect(run.recognitions).toBeGreaterThanOrEqual(11); // 10 new + the re-queued "Again" card
     expect(run.drills.length).toBeGreaterThanOrEqual(1); // every 5th card triggers a drill
 

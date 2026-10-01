@@ -966,7 +966,7 @@ describe('StudyEngine — a card waits its turn', () => {
     expect(engine.snapshot().results.at(-1)).toMatchObject({ retry: true, applied: false });
   });
 
-  it('does not drill a card looked at seconds ago, even on the fifth answer', () => {
+  it('does not drill a card looked at seconds ago, and keeps the slot open until it has rested', () => {
     const pool = makePool();
     const c = clock();
     const engine = engineFor(
@@ -979,8 +979,17 @@ describe('StudyEngine — a card waits its turn', () => {
       c.advance(2_000);
       engine.rate(4);
     }
-    // The slot passes: the next card is served instead.
+    // Nothing has rested: the next card is served instead...
     expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[5].id });
+    // ...and the slot stays open, so the drill comes once the word has rested.
+    c.advance(DRILL_AFTER_LOOK_MS);
+    engine.rate(4);
+    const s = engine.snapshot();
+    if (s.step?.kind !== 'drill') throw new Error(`expected a drill, got ${s.step?.kind}`);
+    const ids =
+      s.step.exercise.type === 'realia_menu' ? s.step.exercise.cardIds : [s.step.exercise.cardId];
+    expect(ids).toContain(pool[0].id);
+    expect(engine.snapshot().answered).toBe(6);
   });
 
   it('never fills the gap with a drill on a card that is waiting it out', () => {

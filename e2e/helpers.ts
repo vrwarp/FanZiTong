@@ -117,10 +117,17 @@ export interface SessionRunSummary {
  * `firstRating`, every other one gets Easy so the session stays short. A card
  * that comes back is not shown within a minute of its last answer; when the
  * session is waiting that minute out, the fake clock (see `openApp`) jumps it.
+ * `restAfterFirstMs` jumps the fake clock once after the first answer, for a
+ * learner who takes their time: a drill never asks about a word looked at in
+ * the last three minutes.
  */
 export async function completeSession(
   page: Page,
-  { firstRating = 4, maxSteps = 120 }: { firstRating?: 1 | 2 | 3 | 4; maxSteps?: number } = {},
+  {
+    firstRating = 4,
+    maxSteps = 120,
+    restAfterFirstMs = 0,
+  }: { firstRating?: 1 | 2 | 3 | 4; maxSteps?: number; restAfterFirstMs?: number } = {},
 ): Promise<SessionRunSummary> {
   const summary: SessionRunSummary = { recognitions: 0, drills: [] };
   for (let step = 0; step < maxSteps; step += 1) {
@@ -142,6 +149,9 @@ export async function completeSession(
       const rating = summary.recognitions === 0 ? firstRating : 4;
       await page.getByTestId(`rate-${rating}`).click();
       summary.recognitions += 1;
+      if (summary.recognitions === 1 && restAfterFirstMs > 0) {
+        await page.clock.fastForward(restAfterFirstMs);
+      }
       continue;
     }
     const drill = await solveDrill(page);

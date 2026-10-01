@@ -18,8 +18,9 @@ import {
   newCardCapacity,
   SETTLING_STABILITY_DAYS,
 } from '@/lib/queue/session';
+import { PINNED_DIFFICULTY } from '@/lib/fsrs/restart';
 import { MASTERY_STABILITY_DAYS } from '@/lib/stats/analytics';
-import { isLeech, troubleScore } from '@/lib/stats/slips';
+import { HARD_LOOP_DIFFICULTY, isHardLoop, isLeech, troubleScore } from '@/lib/stats/slips';
 import {
   characterKnowledge,
   firstSightProfile,
@@ -47,7 +48,7 @@ export const MAX_CARD_HISTORY = 100;
 /** An answer faster than this was not a reading. */
 export const UNREADABLY_FAST_MS = 800;
 /** Difficulty at or above this is saturated: FSRS has no worse rating to give. */
-export const DIFFICULTY_SATURATED = 9.5;
+export const DIFFICULTY_SATURATED = PINNED_DIFFICULTY;
 /** Stability at or below this (days) means every interval is minutes. */
 export const STABILITY_FLOOR_DAYS = 0.05;
 /** Answers on one card in one session, above which the session was a loop. */
@@ -629,8 +630,12 @@ export interface CardReport {
   byEar?: { known: boolean; at: string };
   /** Study days the word was forgotten on after its first sight (see VocabCard.slipDays). */
   slipDays: number;
+  /** Study days the word was rated Hard on after its first sight (see VocabCard.hardDays). */
+  hardDays: number;
   /** When the word was shown face up before its first test, so it had no first sight. */
   introducedAt?: string;
+  /** When the learner started the word over; the history before it is the old word's. */
+  restartedAt?: string;
   /** How many of the card's lapses were charged by a drill rather than a reading. */
   lapsesFromDrills: number;
   /** Answers the export could not include, once the history cap was hit. */
@@ -678,6 +683,7 @@ export function buildCardReports(
       const kept = history.slice(-MAX_CARD_HISTORY);
       const flags: string[] = [];
       if (isLeech(card, settings.leechThreshold)) flags.push('leech');
+      if (isHardLoop(card, settings.leechThreshold)) flags.push('hard_loop');
       if (card.fsrs.difficulty >= DIFFICULTY_SATURATED) flags.push('difficulty_saturated');
       if (card.fsrs.state !== CardState.New && card.fsrs.stability <= STABILITY_FLOOR_DAYS) {
         flags.push('stability_floor');
@@ -713,7 +719,9 @@ export function buildCardReports(
         booked: bookedByCard.get(card.id) ?? 0,
         ...(card.byEar ? { byEar: { known: card.byEar.known, at: card.byEar.at } } : {}),
         slipDays: card.slipDays ?? 0,
+        hardDays: card.hardDays ?? 0,
         ...(card.introducedAt ? { introducedAt: card.introducedAt } : {}),
+        ...(card.restartedAt ? { restartedAt: card.restartedAt } : {}),
         lapsesFromDrills: history.filter(
           (l) =>
             l.rating === 1 &&
@@ -827,10 +835,10 @@ export function buildDiagnostics(
       title: 'Answers that never reached the scheduler',
       detail:
         `${activity.retries.total} answer(s) were retries on a word that already had its verdict ` +
-        `that day — knocked down, or read correctly in recognition: recorded, and the word came ` +
-        `back, but FSRS was not consulted again. A word is knocked down at most once a day, so a ` +
-        `second same-day miss cannot push its difficulty toward 10. These answers appear in ` +
-        `events only.`,
+        `that day — knocked down, rated Hard, or read correctly in recognition: recorded, and ` +
+        `the word came back, but FSRS was not consulted again. A word is knocked down at most ` +
+        `once a day and rated Hard at most once, so a second same-day miss or Hard cannot push ` +
+        `its difficulty toward 10. These answers appear in events only.`,
       count: activity.retries.total,
       examples: top.slice(0, 5).map(([id, n]) => `${label(id)} · ${n} retries`),
     });
@@ -885,8 +893,10 @@ export function buildDiagnostics(
       detail:
         `${saturated.length} card(s) sit at difficulty ≥ ${DIFFICULTY_SATURATED}. FSRS has no ` +
         `harsher verdict left, so further failures cannot change the schedule and the card ` +
-        `cannot climb out on its own. Each example says where its lapses came from: a lapse ` +
-        `charged by a drill is one the reading may never have confirmed.`,
+        `cannot climb out on its own; Stats offers to start such a word over, which keeps its ` +
+        `history and seeds the difficulty afresh from its next first sight. Each example says ` +
+        `where its lapses came from: a lapse charged by a drill is one the reading may never ` +
+        `have confirmed.`,
       count: saturated.length,
       examples: saturated.slice(0, 5).map((c) => `${label(c.id)}${source(c)}`),
     });
@@ -913,21 +923,33 @@ export function buildDiagnostics(
     .sort((a, b) => troubleScore(b) - troubleScore(a));
   if (leeches.length > 0) {
     const byDays = leeches.filter((c) => c.fsrs.lapses < settings.leechThreshold).length;
+    const hardLoops = leeches.filter((c) => isHardLoop(c, settings.leechThreshold)).length;
     found.push({
       code: 'leech',
       severity: 'warn',
       title: 'Words that keep slipping',
       detail:
-        `${leeches.length} card(s) have been forgotten on ${settings.leechThreshold}+ study days ` +
-        `or lapsed ${settings.leechThreshold}+ times, and are still scheduled like any other card` +
+        `${leeches.length} card(s) have been forgotten on ${settings.leechThreshold}+ study days, ` +
+        `lapsed ${settings.leechThreshold}+ times, or been rated Hard on ` +
+        `${settings.leechThreshold}+ days at difficulty ${HARD_LOOP_DIFFICULTY} or above, and are ` +
+        `still scheduled like any other card` +
         (byDays > 0
           ? `; ${byDays} of them never reached ${settings.leechThreshold} FSRS lapses, because a ` +
-            `word that fails before it graduates is not counted as lapsing.`
+            `word that fails before it graduates, or is read slowly at the ceiling, is not ` +
+            `counted as lapsing`
+          : '') +
+        (hardLoops > 0
+          ? `; ${hardLoops} of them are in a Hard loop, which no rating ends — Stats offers to ` +
+            `start such a word over.`
           : '.'),
       count: leeches.length,
       examples: leeches
         .slice(0, 5)
-        .map((c) => `${label(c.id)} · ${c.slipDays ?? 0} day(s) · ${c.fsrs.lapses} lapse(s)`),
+        .map(
+          (c) =>
+            `${label(c.id)} · ${c.slipDays ?? 0} day(s) · ${c.fsrs.lapses} lapse(s) · ` +
+            `${c.hardDays ?? 0} hard day(s)`,
+        ),
     });
   }
 

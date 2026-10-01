@@ -16,7 +16,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { recordStudyEvent } from '@/lib/analytics/recorder';
 import { createScheduler } from '@/lib/fsrs/scheduler';
-import { knockedDownToday } from '@/lib/queue/session';
+import { hardToday, knockedDownToday } from '@/lib/queue/session';
 import { StudyEngine, summarizeResults } from '@/lib/session/engine';
 import {
   clearPausedSession,
@@ -259,6 +259,7 @@ function StudySession({
           total={snapshot.total}
           keepsSlipping={isLeech(snapshot.card, settings.leechThreshold)}
           practice={knockedDownToday(snapshot.card, new Date())}
+          hardCounted={hardToday(snapshot.card, new Date())}
         />
       )}
 

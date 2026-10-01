@@ -177,6 +177,30 @@ describe('slip days', () => {
   });
 });
 
+describe('the day’s Hard, the hard days and a restart', () => {
+  it('round-trips them and drops a malformed one rather than the card', () => {
+    const card = makeCard({
+      lastHardAt: '2026-09-24T16:17:00.000Z',
+      hardDays: 4,
+      restartedAt: '2026-10-01T05:00:00.000Z',
+    });
+    const parsed = parseJsonDeck(serializeJsonDeck(toJsonDeck([card])));
+    expect(parsed.issues).toEqual([]);
+    expect(parsed.rows[0]).toMatchObject({
+      lastHardAt: card.lastHardAt,
+      hardDays: 4,
+      restartedAt: card.restartedAt,
+    });
+    const bad = parseJsonDeck(
+      '[{"traditional":"火鍋","pinyin":"huǒ guō","lastHardAt":"noon","hardDays":"many","restartedAt":7}]',
+    );
+    expect(bad.rows.map((r) => r.traditional)).toEqual(['火鍋']);
+    expect(bad.rows[0].lastHardAt).toBeUndefined();
+    expect(bad.rows[0].hardDays).toBeUndefined();
+    expect(bad.rows[0].restartedAt).toBeUndefined();
+  });
+});
+
 describe('how an as-heard reading is used', () => {
   it('round-trips the verdict, keeps it only beside a reading, and drops a bad one', () => {
     const card = makeCard({

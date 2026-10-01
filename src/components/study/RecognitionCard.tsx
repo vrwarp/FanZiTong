@@ -36,6 +36,8 @@ export interface RecognitionCardProps {
   keepsSlipping?: boolean;
   /** Already knocked down today: Again/Hard are one more look, not a new verdict. */
   practice?: boolean;
+  /** Already rated Hard today: a further Hard is one more look, not a verdict. */
+  hardCounted?: boolean;
   /**
    * A new word met face up: the answer is shown from the start, nothing is
    * rated, and the one control is "got it" — the word comes back for its
@@ -104,6 +106,7 @@ export function RecognitionCard({
   total,
   keepsSlipping = false,
   practice = false,
+  hardCounted = false,
   intro,
 }: RecognitionCardProps) {
   const [revealCount] = useState(readRevealCount);
@@ -374,6 +377,7 @@ export function RecognitionCard({
             latencyMs={revealLatencyMs}
             showCoach={revealCount < COACH_REVEALS || coachOpen}
             practice={practice}
+            hardCounted={hardCounted}
           />
           {revealed && revealCount >= COACH_REVEALS && (
             <button

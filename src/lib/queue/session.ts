@@ -40,6 +40,19 @@ export const MAX_SESSION_REQUEUES = 3;
  */
 export const MIN_RETRY_GAP_MS = MINUTE_MS;
 /**
+ * A shape drill — Spot the Character, Find It, the Order Slip, Sound
+ * Families — is not put on a card this soon after the card was last looked
+ * at in the session.
+ *
+ * The drills ask a different question from the reveal, which is why they
+ * were let through the minute between looks; but a four-tile pick seconds
+ * after the reading is answered from the screen, not from the characters.
+ * One export had a quarter of its Spot the Character drills inside two
+ * minutes of the same word's reading, at 96% correct, against 82% for the
+ * drills between two and ten minutes after it.
+ */
+export const DRILL_AFTER_LOOK_MS = 3 * MINUTE_MS;
+/**
  * Stability (days) below which a word is still "settling": the scheduler is
  * bringing it back within a day, so it has not yet shown a next-day recall.
  */
@@ -195,6 +208,15 @@ export function knockedDownToday(
   );
 }
 
+/** Whether the scheduler has already heard Hard for this card today (study day). */
+export function hardToday(
+  card: Pick<VocabCard, 'lastHardAt'>,
+  now: Date,
+  dayStartHour: number = DAY_START_HOUR,
+): boolean {
+  return Boolean(card.lastHardAt) && isSameLocalDay(new Date(card.lastHardAt!), now, dayStartHour);
+}
+
 /** Whether the scheduler has already heard a recognition pass for this card today. */
 export function readToday(
   card: Pick<VocabCard, 'lastPassAt'>,
@@ -205,7 +227,7 @@ export function readToday(
 }
 
 /**
- * A word is knocked down at most once a day.
+ * A word is knocked down at most once a day, and rated Hard at most once.
  *
  * The first Again tells the scheduler what it needs: stability falls,
  * difficulty rises, the word goes back to its first step. Failing it again
@@ -215,16 +237,28 @@ export function readToday(
  * pushing difficulty toward 10 each time. Three misses in three minutes on a
  * never-seen word left cards pinned at maximum difficulty for good. So after
  * the first Again of the day, further Again/Hard answers are retries: the
- * word comes back, but the scheduler is not consulted. A pass always counts,
- * because that is how the word climbs back out of its step.
+ * word comes back, but the scheduler is not consulted.
+ *
+ * Hard stacks the same way. A same-day Hard on a word still being learned
+ * leaves stability where it is and adds difficulty — more than a point at
+ * mid-scale — and a day that opens with Hard had no guard at all: one
+ * export held 88 Hards applied to words already rated Hard or Again that
+ * day, three of them on one word inside thirteen minutes, and fifteen of
+ * the twenty-three words pinned at the ceiling had been pushed there that
+ * way. So after the day's first Hard, a further Hard is a retry too. The
+ * first Again of the day is still heard after a Hard, because a word read
+ * slowly at noon and not at all at ten is a word forgotten. A pass always
+ * counts, because that is how the word climbs back out of its step.
  */
 export function isRetry(
-  card: Pick<VocabCard, 'lastAgainAt'>,
+  card: Pick<VocabCard, 'lastAgainAt' | 'lastHardAt'>,
   rating: RatingGrade,
   now: Date,
   dayStartHour: number = DAY_START_HOUR,
 ): boolean {
-  return rating <= 2 && knockedDownToday(card, now, dayStartHour);
+  if (rating >= 3) return false;
+  if (knockedDownToday(card, now, dayStartHour)) return true;
+  return rating === 2 && hardToday(card, now, dayStartHour);
 }
 
 /**

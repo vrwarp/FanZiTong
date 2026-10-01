@@ -68,13 +68,16 @@ export const importCardSchema = z.object({
   fsrs: fsrsStateSchema.optional(),
   /** Carried with the FSRS state: without it a restore forgets today's knock-down. */
   lastAgainAt: isoDate.optional(),
+  lastHardAt: isoDate.optional().catch(undefined),
   lastPassAt: isoDate.optional(),
   /** Rotation memory only: a malformed record is dropped, never the card. */
   sentencesShown: z.array(sentenceShownSchema).optional().catch(undefined),
   /** Whether the word was known by ear when last asked; malformed → dropped, never the card. */
   byEar: z.object({ at: isoDate, known: z.boolean() }).optional().catch(undefined),
   slipDays: z.number().int().nonnegative().optional().catch(undefined),
+  hardDays: z.number().int().nonnegative().optional().catch(undefined),
   introducedAt: isoDate.optional().catch(undefined),
+  restartedAt: isoDate.optional().catch(undefined),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
 });
@@ -195,11 +198,14 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       clozeDistractors: c.clozeDistractors,
       fsrs: c.fsrs as FsrsState | undefined,
       lastAgainAt: c.lastAgainAt,
+      lastHardAt: c.lastHardAt,
       lastPassAt: c.lastPassAt,
       sentencesShown: c.sentencesShown as SentenceShown[] | undefined,
       byEar: c.byEar,
       slipDays: c.slipDays,
+      hardDays: c.hardDays,
       introducedAt: c.introducedAt,
+      restartedAt: c.restartedAt,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       warnings,

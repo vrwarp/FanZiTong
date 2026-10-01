@@ -32,6 +32,8 @@ export interface ImportRow {
   fsrs?: FsrsState;
   /** When the scheduler last heard "Again" (backups only; see VocabCard). */
   lastAgainAt?: string;
+  /** When the scheduler last heard "Hard" in a reading (backups only). */
+  lastHardAt?: string;
   /** When the scheduler last heard a recognition pass (backups only). */
   lastPassAt?: string;
   /** Which sentences the word has been shown in lately (backups only). */
@@ -40,8 +42,12 @@ export interface ImportRow {
   byEar?: ByEar;
   /** Study days the word was forgotten on, after its first sight (backups only). */
   slipDays?: number;
+  /** Study days the word was rated Hard on, after its first sight (backups only). */
+  hardDays?: number;
   /** When the word was met face up before its first test (backups only). */
   introducedAt?: string;
+  /** When the learner started the word over (backups only). */
+  restartedAt?: string;
   createdAt?: string;
   updatedAt?: string;
   /** Non-fatal notes produced while parsing this row. */

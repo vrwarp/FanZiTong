@@ -110,6 +110,57 @@ describe('RatingButtons in practice mode', () => {
   });
 });
 
+describe('RatingButtons — Hard once a day, and the slow hint', () => {
+  const previews = {
+    1: { rating: 1, due: new Date(), intervalLabel: '1m', scheduledDays: 0, state: 1 },
+    2: { rating: 2, due: new Date(), intervalLabel: '6m', scheduledDays: 0, state: 1 },
+    3: { rating: 3, due: new Date(), intervalLabel: '10m', scheduledDays: 0, state: 1 },
+    4: { rating: 4, due: new Date(), intervalLabel: '4d', scheduledDays: 4, state: 2 },
+  } as const;
+
+  it('prints no interval on Hard alone for a word already rated Hard today', async () => {
+    const { RatingButtons } = await import('./RatingButtons');
+    render(<RatingButtons previews={previews} onRate={() => {}} visible hardCounted />);
+    expect(screen.getByTestId('rating-hard-counted')).toHaveTextContent(
+      /Again and a pass still count/,
+    );
+    expect(screen.queryByTestId('rating-practice')).not.toBeInTheDocument();
+    expect(screen.getByTestId('interval-1')).toHaveTextContent('1m');
+    expect(screen.getByTestId('interval-2')).toHaveTextContent('one more look');
+    expect(screen.getByTestId('interval-3')).toHaveTextContent('10m');
+    expect(screen.getByTestId('rate-2').getAttribute('aria-label')).toMatch(/one more look/);
+    expect(screen.getByTestId('rate-1').getAttribute('aria-label')).toMatch(/Next review 1m/);
+  });
+
+  it('says a slow reading is still Good, and never that it is Hard', async () => {
+    const { RatingButtons, SLOW_REVEAL_MS } = await import('./RatingButtons');
+    const { unmount } = render(
+      <RatingButtons
+        previews={previews}
+        onRate={() => {}}
+        visible
+        latencyMs={SLOW_REVEAL_MS + 2300}
+      />,
+    );
+    expect(screen.getByTestId('reveal-latency')).toHaveTextContent(
+      '7.3s to answer · slow, but if you read it, that is Good',
+    );
+    expect(screen.getByTestId('reveal-latency')).not.toHaveTextContent(/Hard/);
+    expect(screen.getByTestId('rating-reminder')).toHaveTextContent(
+      /Good = you read it, however slowly · Hard = part of it wrong/,
+    );
+    unmount();
+    render(
+      <RatingButtons previews={previews} onRate={() => {}} visible latencyMs={3800} showCoach />,
+    );
+    expect(screen.getByTestId('reveal-latency')).toHaveTextContent('3.8s to answer');
+    expect(screen.getByTestId('reveal-latency')).not.toHaveTextContent(/slow/);
+    expect(screen.getByTestId('rating-coach')).toHaveTextContent(
+      /Hard = part of it wrong, or the sentence gave it away · Good = sound and meaning came, however slowly/,
+    );
+  });
+});
+
 describe('RecognitionCard — a new word met face up', () => {
   it('shows the answer from the start, rates nothing, and hands back one "got it"', async () => {
     const onDone = vi.fn();

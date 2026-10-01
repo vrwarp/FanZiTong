@@ -652,7 +652,50 @@ describe('slip days in the export', () => {
     const found = report.diagnostics.find((d) => d.code === 'leech')!;
     expect(found.count).toBe(1);
     expect(found.detail).toContain('never reached 3 FSRS lapses');
-    expect(found.examples[0]).toContain('3 day(s) · 1 lapse(s)');
+    expect(found.examples[0]).toContain('3 day(s) · 1 lapse(s) · 0 hard day(s)');
+  });
+
+  it('calls a word rated Hard day after day at the ceiling a leech in a Hard loop', () => {
+    const looping = makeCard({
+      traditional: '抓耙仔',
+      domain: 'slang',
+      fsrs: reviewState({ reps: 25, lapses: 0, difficulty: 9.94, stability: 3.2 }),
+      hardDays: 7,
+      restartedAt: undefined,
+    });
+    const midway = makeCard({
+      traditional: '慣老闆',
+      domain: 'slang',
+      fsrs: reviewState({ reps: 6, lapses: 0, difficulty: 7.8 }),
+      hardDays: 3,
+    });
+    const restarted = makeCard({
+      traditional: '踹共',
+      domain: 'slang',
+      fsrs: reviewState({ reps: 1, difficulty: 2.1 }),
+      restartedAt: '2026-10-01T05:00:00.000Z',
+    });
+    const logs = [
+      makeLog({ cardId: looping.id, reviewTimestamp: at(0) }),
+      makeLog({ cardId: midway.id, reviewTimestamp: at(1) }),
+      makeLog({ cardId: restarted.id, reviewTimestamp: at(2) }),
+    ];
+    const report = buildReport([looping, midway, restarted], logs, settings);
+    const row = report.cards.find((c) => c.traditional === '抓耙仔')!;
+    expect(row.hardDays).toBe(7);
+    expect(row.flags).toEqual(
+      expect.arrayContaining(['leech', 'hard_loop', 'difficulty_saturated']),
+    );
+    expect(report.cards.find((c) => c.traditional === '慣老闆')?.flags).toEqual([]);
+    expect(report.cards.find((c) => c.traditional === '踹共')?.restartedAt).toBe(
+      '2026-10-01T05:00:00.000Z',
+    );
+    const found = report.diagnostics.find((d) => d.code === 'leech')!;
+    expect(found.count).toBe(1);
+    expect(found.detail).toContain('1 of them are in a Hard loop');
+    expect(found.examples[0]).toContain('0 day(s) · 0 lapse(s) · 7 hard day(s)');
+    const pinned = report.diagnostics.find((d) => d.code === 'difficulty_saturated')!;
+    expect(pinned.detail).toContain('start such a word over');
   });
 
   it('stops counting day mismatches once the scheduler counts study days', () => {

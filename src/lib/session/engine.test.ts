@@ -1,6 +1,7 @@
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import type { StudyEvent } from '@/lib/analytics/events';
-import { MAX_SESSION_REQUEUES, MIN_RETRY_GAP_MS } from '@/lib/queue/session';
+import { DRILL_AFTER_LOOK_MS, MAX_SESSION_REQUEUES, MIN_RETRY_GAP_MS } from '@/lib/queue/session';
+import { restartCard } from '@/lib/fsrs/restart';
 import { mulberry32 } from '@/lib/util/random';
 import { CardState, type VocabCard } from '@/types';
 import { makeCard, makePool, reviewState } from '@/test/factories';
@@ -38,9 +39,11 @@ function engineFor(
     scheduler,
     interleaveDrills: true,
     rng: mulberry32(1),
-    // The gap between two looks at one card has its own tests; everything
-    // else runs on a still clock and wants the card straight back.
+    // The gap between two looks at one card, and the rest before a drill,
+    // have their own tests; everything else runs on a still clock and wants
+    // the card straight back.
     retryGapMs: 0,
+    drillGapMs: 0,
     ...options,
   });
 }
@@ -814,6 +817,57 @@ describe('StudyEngine — a word is knocked down once a day', () => {
   });
 });
 
+describe('StudyEngine — a word is rated Hard once a day', () => {
+  it('hears the first Hard, treats a later Hard that day as a retry, and still hears an Again', () => {
+    const pool = makePool();
+    const events: StudyEvent[] = [];
+    const c = clock();
+    const engine = engineFor(pool, [pool[0].id], { now: c.now, onEvent: (e) => events.push(e) });
+    const first = engine.rate(2)!;
+    expect(first.log.rating).toBe(2);
+    expect(first.card.lastHardAt).toBe(c.now().toISOString());
+    const afterFirst = engine.getCard(pool[0].id)!.fsrs;
+
+    c.advance(90_000);
+    expect(engine.rate(2)).toBeNull(); // Hard again: a retry
+    expect(engine.getCard(pool[0].id)!.fsrs).toEqual(afterFirst);
+    // The card still comes back: a retry is practice, not a dismissal.
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[0].id });
+
+    c.advance(90_000);
+    const again = engine.rate(1)!; // the day's first Again is still heard
+    expect(again.log.rating).toBe(1);
+    expect(again.card.lastAgainAt).toBe(c.now().toISOString());
+
+    c.advance(90_000);
+    expect(engine.rate(2)).toBeNull(); // Hard after an Again: a retry, as before
+    const answers = events.filter((e) => e.kind === 'answer');
+    expect(answers.map((e) => e.retry ?? false)).toEqual([false, true, false, true]);
+    expect(answers.map((e) => e.applied)).toEqual([true, false, true, false]);
+  });
+
+  it('hears a Hard on a card last rated Hard on an earlier day, and counts the hard day', () => {
+    const pool = makePool();
+    const yesterday = makeCard({
+      id: 'yesterday',
+      fsrs: reviewState({ state: 1, stability: 0.2, due: '2026-09-04T09:00:00.000Z' }),
+      lastHardAt: '2026-09-04T09:00:00.000Z',
+      hardDays: 1,
+    });
+    const c = clock('2026-09-05T08:00:00.000Z');
+    const engine = engineFor([...pool, yesterday], ['yesterday', pool[0].id], { now: c.now });
+    const review = engine.rate(2)!;
+    expect(review.log.rating).toBe(2);
+    expect(review.card.lastHardAt).toBe(c.now().toISOString());
+    expect(review.card.hardDays).toBe(2);
+    // A first sight rated Hard is not a hard day: the word was never known.
+    c.advance(5_000);
+    const sight = engine.rate(2)!;
+    expect(sight.card.id).toBe(pool[0].id);
+    expect(sight.card.hardDays).toBeUndefined();
+  });
+});
+
 describe('StudyEngine — a card waits its turn', () => {
   it('serves another card first and holds when nothing is ready', () => {
     const pool = makePool();
@@ -887,19 +941,21 @@ describe('StudyEngine — a card waits its turn', () => {
     expect(s.step.exercise.cardId).toBe('learning');
   });
 
-  it('still drills a just-failed card on the fifth answer: a drill is not a second look', () => {
+  it('drills a just-failed card once it has rested: a drill is not a second look, but a pick seconds after the reveal is the screen', () => {
     const pool = makePool();
     const c = clock();
     const engine = engineFor(
       pool,
       pool.map((card) => card.id),
-      { now: c.now, retryGapMs: MIN_RETRY_GAP_MS },
+      { now: c.now, retryGapMs: MIN_RETRY_GAP_MS, drillGapMs: DRILL_AFTER_LOOK_MS },
     );
     engine.rate(1); // card 0 → learning, the only drill candidate
-    for (let i = 0; i < 4; i += 1) {
+    for (let i = 0; i < 3; i += 1) {
       c.advance(2_000);
       engine.rate(4);
     }
+    c.advance(DRILL_AFTER_LOOK_MS);
+    engine.rate(4); // the fifth answer, with card 0 three minutes behind it
     const s = engine.snapshot();
     if (s.step?.kind !== 'drill') throw new Error('expected a drill');
     const ids =
@@ -908,6 +964,32 @@ describe('StudyEngine — a card waits its turn', () => {
     // ...but its answer is practice: the word was knocked down minutes ago.
     expect(engine.answerDrill([{ cardId: pool[0].id, correct: true }])).toEqual([]);
     expect(engine.snapshot().results.at(-1)).toMatchObject({ retry: true, applied: false });
+  });
+
+  it('does not drill a card looked at seconds ago, and keeps the slot open until it has rested', () => {
+    const pool = makePool();
+    const c = clock();
+    const engine = engineFor(
+      pool,
+      pool.map((card) => card.id),
+      { now: c.now, retryGapMs: MIN_RETRY_GAP_MS, drillGapMs: DRILL_AFTER_LOOK_MS },
+    );
+    engine.rate(1); // card 0 → learning, the only drill candidate
+    for (let i = 0; i < 4; i += 1) {
+      c.advance(2_000);
+      engine.rate(4);
+    }
+    // Nothing has rested: the next card is served instead...
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: pool[5].id });
+    // ...and the slot stays open, so the drill comes once the word has rested.
+    c.advance(DRILL_AFTER_LOOK_MS);
+    engine.rate(4);
+    const s = engine.snapshot();
+    if (s.step?.kind !== 'drill') throw new Error(`expected a drill, got ${s.step?.kind}`);
+    const ids =
+      s.step.exercise.type === 'realia_menu' ? s.step.exercise.cardIds : [s.step.exercise.cardId];
+    expect(ids).toContain(pool[0].id);
+    expect(engine.snapshot().answered).toBe(6);
   });
 
   it('never fills the gap with a drill on a card that is waiting it out', () => {
@@ -1614,6 +1696,41 @@ describe('StudyEngine — a new word met face up', () => {
     c.advance(MIN_RETRY_GAP_MS);
     engine.tick();
     expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: slang.id });
+  });
+});
+
+describe('StudyEngine — Say It for a word in Review', () => {
+  it('gives a troubled word in Review the typed reading first among the fresh-card drills', () => {
+    const at = new Date('2026-09-05T08:00:00.000Z');
+    const pool = makePool();
+    const outside = pool.find((c) => c.traditional === '團契')!;
+    // In Review, lapsed once: a drill candidate, not part of today's session.
+    const troubled = { ...outside, fsrs: reviewState({ lapses: 1 }) };
+    const rest = pool.filter((c) => c.id !== outside.id);
+    const engine = engineFor(
+      [...rest, troubled],
+      rest.map((c) => c.id),
+      { now: () => at },
+    );
+    for (let i = 0; i < 5; i += 1) engine.rate(4);
+    const step = engine.snapshot().step;
+    expect(step?.kind).toBe('drill');
+    if (step?.kind !== 'drill') throw new Error('expected drill');
+    expect(step.exercise).toMatchObject({ type: 'typed_reading', cardId: troubled.id });
+  });
+});
+
+describe('StudyEngine — a word started over', () => {
+  it('tests it cold, even in a face-up domain', () => {
+    const pool = makePool();
+    const restarted = restartCard(
+      { ...pool[0], fsrs: reviewState({ difficulty: 9.9, reps: 20 }) },
+      new Date('2026-09-04T00:00:00.000Z'),
+    );
+    const engine = engineFor([restarted, ...pool.slice(1)], [restarted.id], {
+      faceUpDomains: ['food'],
+    });
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: restarted.id });
   });
 });
 

@@ -8,6 +8,7 @@ import { repository } from '@/db/repository';
 import { useAssistant } from '@/lib/assistant/assistantContext';
 import { buildDeckIndex, validateCard } from '@/lib/assistant/validateCard';
 import { useCard } from '@/hooks/useCards';
+import { restartCard } from '@/lib/fsrs/restart';
 import { newFsrsState } from '@/lib/fsrs/scheduler';
 import { splitList } from '@/lib/io/domain';
 import { formatExtraSentenceLines, parseExtraSentenceLines } from '@/lib/io/extraSentenceLines';
@@ -208,13 +209,10 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     navigate('/vocab');
   };
 
+  // Back to new with the history kept: a pinned word's way out (lib/fsrs/restart).
   const resetProgress = async () => {
     if (!existing) return;
-    await repository.putCard({
-      ...existing,
-      fsrs: newFsrsState(),
-      updatedAt: new Date().toISOString(),
-    });
+    await repository.putCard(restartCard(existing, new Date()));
   };
 
   return (
@@ -499,8 +497,14 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
                   {existing.fsrs.reps} / {existing.fsrs.lapses}
                 </dd>
               </dl>
-              <Button variant="outline" size="sm" className="mt-3" onClick={resetProgress}>
-                Reset progress
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={resetProgress}
+                data-testid="restart-card"
+              >
+                Start over
               </Button>
             </>
           )}

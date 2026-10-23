@@ -68,6 +68,8 @@ export interface HttpDeps {
  * exhaust the host from a browser tab.
  */
 class Throttle {
+  /** Past this many tracked addresses, ones with no recent hit are forgotten. */
+  private static readonly SWEEP_AT = 1000;
   private readonly hits = new Map<string, number[]>();
   constructor(
     private readonly limit: number,
@@ -75,6 +77,7 @@ class Throttle {
   ) {}
 
   allow(key: string, now = Date.now()): boolean {
+    if (this.hits.size >= Throttle.SWEEP_AT) this.sweep(now);
     const recent = (this.hits.get(key) ?? []).filter((at) => now - at < this.windowMs);
     if (recent.length >= this.limit) {
       this.hits.set(key, recent);
@@ -83,6 +86,12 @@ class Throttle {
     recent.push(now);
     this.hits.set(key, recent);
     return true;
+  }
+
+  private sweep(now: number): void {
+    for (const [key, times] of this.hits) {
+      if (times.every((at) => now - at >= this.windowMs)) this.hits.delete(key);
+    }
   }
 }
 

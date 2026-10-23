@@ -49,18 +49,22 @@ export function countDueWithin(cards: VocabCard[], now: Date, hours: number): nu
   }).length;
 }
 
+/** Started cards that fall due after `now` and strictly before `endMs`. */
+function countDueBefore(cards: VocabCard[], now: Date, endMs: number): number {
+  const start = now.getTime();
+  return cards.filter((c) => {
+    if (c.fsrs.state === CardState.New) return false;
+    const due = new Date(c.fsrs.due).getTime();
+    return due > start && due < endMs;
+  }).length;
+}
+
 /**
  * Reviews that fall due between now and the end of tomorrow's study day — the
  * "tomorrow" number every screen quotes (a study day, not a 24-hour window).
  */
 export function countDueByTomorrow(cards: VocabCard[], now: Date): number {
-  const start = now.getTime();
-  const end = startOfDay(addDays(now, 2)).getTime();
-  return cards.filter((c) => {
-    if (c.fsrs.state === CardState.New) return false;
-    const due = new Date(c.fsrs.due).getTime();
-    return due > start && due < end;
-  }).length;
+  return countDueBefore(cards, now, startOfDay(addDays(now, 2)).getTime());
 }
 
 /**
@@ -69,13 +73,7 @@ export function countDueByTomorrow(cards: VocabCard[], now: Date): number {
  * evening has something in it.
  */
 export function countDueLaterToday(cards: VocabCard[], now: Date): number {
-  const start = now.getTime();
-  const end = startOfDay(addDays(now, 1)).getTime();
-  return cards.filter((c) => {
-    if (c.fsrs.state === CardState.New) return false;
-    const due = new Date(c.fsrs.due).getTime();
-    return due > start && due < end;
-  }).length;
+  return countDueBefore(cards, now, startOfDay(addDays(now, 1)).getTime());
 }
 
 export const RECALL_MIN_STUDY_DAYS = 7;
@@ -192,7 +190,6 @@ export function domainMastery(cards: VocabCard[]): DomainMastery[] {
   });
 }
 
-/** Cards whose lapse count meets the leech threshold, worst first. */
 /** The words that keep slipping: by lapses or by days forgotten, whichever the history shows. */
 export function findLeeches(cards: VocabCard[], threshold: number): VocabCard[] {
   return cards

@@ -15,8 +15,11 @@ export function createSettingsStore(repo: Repository = repository) {
   let loaded = false;
   let subscription: Subscription | null = null;
   const listeners = new Set<() => void>();
-  // Writes are serialized and persist the merged snapshot, so two quick
-  // changes can never read-modify-write each other's value away.
+  // Writes are serialized and persist only the patch, which the repository
+  // merges into the stored row. Persisting the in-memory snapshot instead
+  // would write the defaults over the stored row when a change lands before
+  // the live query has loaded it, or write back a stale value for a field the
+  // patch never touched.
   let writeQueue: Promise<unknown> = Promise.resolve();
 
   const emit = () => {
@@ -52,8 +55,7 @@ export function createSettingsStore(repo: Repository = repository) {
     async update(patch: Partial<UserSettings>): Promise<UserSettings> {
       current = { ...current, ...patch };
       emit();
-      const snapshot = current;
-      const write = writeQueue.then(() => repo.saveSettings(snapshot));
+      const write = writeQueue.then(() => repo.saveSettings(patch));
       writeQueue = write.catch(() => undefined);
       return write;
     },

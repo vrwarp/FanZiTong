@@ -47,4 +47,19 @@ describe('settingsStore', () => {
     store.dispose();
     await repo.db.delete();
   });
+
+  it('does not write defaults over stored settings when a change lands before the first load', async () => {
+    const repo = createRepository(createDatabase('settings-store-3'));
+    await repo.saveSettings({ maxDailyNewCards: 7, leechThreshold: 5 });
+    const store = createSettingsStore(repo);
+    expect(store.isLoaded()).toBe(false);
+    await store.update({ theme: 'dark' });
+    expect(await repo.getSettings()).toMatchObject({
+      maxDailyNewCards: 7,
+      leechThreshold: 5,
+      theme: 'dark',
+    });
+    store.dispose();
+    await repo.db.delete();
+  });
 });

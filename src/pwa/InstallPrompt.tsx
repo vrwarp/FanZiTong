@@ -85,9 +85,15 @@ export function InstallPrompt() {
       <Button
         size="sm"
         onClick={async () => {
-          await event.prompt();
-          const choice = await event.userChoice;
-          if (choice.outcome === 'accepted') setEvent(null);
+          try {
+            await event.prompt();
+            await event.userChoice;
+          } catch {
+            /* the event was already used or the browser withdrew it */
+          }
+          // prompt() works once per event; the browser fires a fresh one if it
+          // offers the install again, so a spent event must not leave a dead button.
+          setEvent(null);
         }}
       >
         Install

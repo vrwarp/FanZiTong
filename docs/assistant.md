@@ -281,6 +281,7 @@ rather than guessed at.
 | `FZT_AGENT_DETACH_GRACE_MS` | `180000`           | How long a locked phone keeps its turn.                                   |
 | `FZT_AGENT_RPC_TIMEOUT_MS`  | `60000`            | How long a tool call waits for the app.                                   |
 | `FZT_AGENT_MAX_BUDGET_USD`  | none               | Optional per-turn spend cap.                                              |
+| `FZT_LOG_LEVEL`             | `info`             | `debug`, `info`, `warn` or `error`.                                       |
 | `CLAUDE_CODE_OAUTH_TOKEN`   | none               | Operator-supplied credential; needs `FZT_AGENT_TOKEN` too.                |
 | `CLAUDE_CONFIG_DIR`         | `/data/claude`     | Where credentials and transcripts live.                                   |
 | `FZT_AGENT_WORKSPACE`       | `/data/workspace`  | The directory a conversation runs in. Created at startup; holds nothing.  |

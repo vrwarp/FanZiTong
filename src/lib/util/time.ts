@@ -59,7 +59,8 @@ export function formatInterval(from: Date, to: Date): string {
   const days = hours / 24;
   if (days < 30) return `${Math.max(1, Math.round(days))}d`;
   const months = days / 30.437;
-  if (months < 12) return `${Math.round(months)}mo`;
+  // Same rule as above: 11.6 months reads "1y", never "12mo".
+  if (Math.round(months) < 12) return `${Math.round(months)}mo`;
   const years = days / 365.25;
   return `${years < 10 ? years.toFixed(1).replace(/\.0$/, '') : Math.round(years)}y`;
 }

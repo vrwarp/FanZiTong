@@ -150,7 +150,17 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const undo = useCallback(async (batchId: string) => {
-    const outcome = await repository.undoAssistantBatch(batchId);
+    let outcome: Awaited<ReturnType<typeof repository.undoAssistantBatch>>;
+    try {
+      outcome = await repository.undoAssistantBatch(batchId);
+    } catch (problem) {
+      // Callers fire this and forget; a storage failure must reach the learner
+      // as a notice, not vanish as an unhandled rejection.
+      outcome = {
+        restored: 0,
+        error: problem instanceof Error ? problem.message : 'The change could not be undone.',
+      };
+    }
     clientRef.current?.note(
       outcome.error
         ? `The learner tried to undo a change: ${outcome.error}`

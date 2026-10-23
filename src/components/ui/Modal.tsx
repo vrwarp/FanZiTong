@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { cn } from '@/lib/util/cn';
 
 export interface ModalProps {
@@ -14,6 +14,10 @@ export interface ModalProps {
 /** Accessible dialog built on the native <dialog> element. */
 export function Modal({ open, title, onClose, children, footer, className, testId }: ModalProps) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Without a testId every dialog would claim the same title id; a second one
+  // mounted on a page would then be labelled by the first one's heading.
+  const fallbackId = useId();
+  const titleId = `${testId ?? fallbackId}-title`;
 
   useEffect(() => {
     const dialog = ref.current;
@@ -33,7 +37,7 @@ export function Modal({ open, title, onClose, children, footer, className, testI
     <dialog
       ref={ref}
       data-testid={testId}
-      aria-labelledby={`${testId ?? 'modal'}-title`}
+      aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
         onClose?.();
@@ -49,7 +53,7 @@ export function Modal({ open, title, onClose, children, footer, className, testI
       {open && (
         <div className="flex max-h-[85dvh] flex-col">
           <header className="flex items-center justify-between border-b border-stone-200 px-5 py-4 dark:border-stone-700">
-            <h2 id={`${testId ?? 'modal'}-title`} className="text-lg font-bold">
+            <h2 id={titleId} className="text-lg font-bold">
               {title}
             </h2>
             {onClose && (

@@ -4,8 +4,7 @@
  * Written as a reducer over protocol frames so it can be tested without a
  * socket, and exposed as an external store like `settingsStore`.
  */
-import type { ServerFrame } from './protocol';
-import type { AssistantAccount } from './protocol';
+import type { AssistantAccount, ServerFrame } from './protocol';
 
 export type ConnectionState =
   'unconfigured' | 'connecting' | 'connected' | 'offline' | 'unauthorized' | 'error';
@@ -108,8 +107,6 @@ export function applyFrame(state: AssistantState, frame: ServerFrame): Assistant
         account: frame.sidecar.account,
         authState: frame.sidecar.authState,
         conversationId: frame.conversationId,
-        // A replay from an older point means the client already has the rest.
-        transcript: frame.replayedFrom === null ? next.transcript : next.transcript,
       };
 
     case 'turn_started':
@@ -204,9 +201,13 @@ export function addUserTurn(
   label?: string,
   images = 0,
 ): AssistantState {
-  const item: TranscriptItem = { kind: 'user', id: turnId, text };
-  if (label) (item as { label?: string }).label = label;
-  if (images) (item as { images?: number }).images = images;
+  const item: TranscriptItem = {
+    kind: 'user',
+    id: turnId,
+    text,
+    ...(label ? { label } : {}),
+    ...(images ? { images } : {}),
+  };
   return {
     ...state,
     transcript: trim([...state.transcript, item]),

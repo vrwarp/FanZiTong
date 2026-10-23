@@ -30,10 +30,15 @@ export interface AgentConfig {
   idleTimeoutMs: number;
   detachGraceMs: number;
   rpcTimeoutMs: number;
-  permissionTimeoutMs: number;
-  turnTimeoutMs: number;
   maxBudgetUsd: number | null;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
+}
+
+/** A positive dollar cap, or null (no cap) when unset or not a usable number. */
+function budget(value: string | undefined): number | null {
+  if (!value?.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 function int(value: string | undefined, fallback: number): number {
@@ -89,9 +94,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     idleTimeoutMs: int(env.FZT_AGENT_IDLE_TIMEOUT_MS, 10 * 60_000),
     detachGraceMs: int(env.FZT_AGENT_DETACH_GRACE_MS, 3 * 60_000),
     rpcTimeoutMs: int(env.FZT_AGENT_RPC_TIMEOUT_MS, 60_000),
-    permissionTimeoutMs: int(env.FZT_AGENT_PERMISSION_TIMEOUT_MS, 5 * 60_000),
-    turnTimeoutMs: int(env.FZT_AGENT_TURN_TIMEOUT_MS, 10 * 60_000),
-    maxBudgetUsd: env.FZT_AGENT_MAX_BUDGET_USD ? Number(env.FZT_AGENT_MAX_BUDGET_USD) : null,
+    maxBudgetUsd: budget(env.FZT_AGENT_MAX_BUDGET_USD),
     logLevel: (env.FZT_LOG_LEVEL as AgentConfig['logLevel']) || 'info',
   };
 }

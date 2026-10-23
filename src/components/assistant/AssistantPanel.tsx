@@ -144,11 +144,11 @@ export function AssistantPanel() {
     setImages([]);
   };
 
-  const attach = async (files: FileList | null) => {
-    if (!files?.length) return;
+  const attach = async (files: File[]) => {
+    if (!files.length) return;
     setImageError(null);
     try {
-      const prepared = await Promise.all(Array.from(files).slice(0, 3).map(prepareImage));
+      const prepared = await Promise.all(files.slice(0, 3).map(prepareImage));
       setImages(prepared.map((p) => ({ mediaType: p.mediaType, data: p.data })));
     } catch (error) {
       setImageError(error instanceof Error ? error.message : 'That image could not be used.');
@@ -176,6 +176,7 @@ export function AssistantPanel() {
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Ask for words, sentences, or help with a character"
             data-testid="assistant-composer"
+            aria-label="Message to the assistant"
             rows={2}
             className={cn(textareaClass, 'min-h-16')}
             onKeyDown={(event) => {
@@ -183,15 +184,21 @@ export function AssistantPanel() {
             }}
           />
           <div className="flex items-center gap-2">
-            <label className="tap-target flex cursor-pointer items-center rounded-xl px-2 text-xl">
+            <label className="tap-target flex cursor-pointer items-center rounded-xl px-2 text-xl has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand-500">
               <span aria-hidden="true">📷</span>
               <span className="sr-only">Add a photo</span>
               <input
                 type="file"
                 accept="image/*"
                 multiple
-                className="hidden"
-                onChange={(event) => void attach(event.target.files)}
+                className="sr-only"
+                onChange={(event) => {
+                  // Copy before clearing: the FileList is live. Clearing lets the
+                  // same photo be picked again after it was sent or removed.
+                  const picked = Array.from(event.target.files ?? []);
+                  event.target.value = '';
+                  void attach(picked);
+                }}
               />
             </label>
             {images.length > 0 && (

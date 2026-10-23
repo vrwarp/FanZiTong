@@ -1,4 +1,4 @@
-import { hanChars } from './pinyin';
+import { containsHan, hanChars } from './pinyin';
 
 const VOWELS = 'aeiouüvāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ';
 const SYLLABLE_RE = new RegExp(`^(?:[zcs]h|[bpmfdtnlgkhjqxzcsrywv])?[${VOWELS}]+(?:ng|n|r)?`, 'i');
@@ -27,9 +27,10 @@ export function countSyllables(token: string): number {
     .reduce((sum, part) => sum + countRun(part), 0);
 }
 
-function countRun(letters: string): number {
+/** Split a run of letters (no apostrophes) into its syllables, skipping stray consonants. */
+function splitRun(letters: string): string[] {
+  const syllables: string[] = [];
   let rest = letters;
-  let count = 0;
   while (rest.length > 0) {
     const m = SYLLABLE_RE.exec(rest);
     if (!m || m[0].length === 0) {
@@ -37,28 +38,20 @@ function countRun(letters: string): number {
       rest = rest.slice(1);
       continue;
     }
-    count += 1;
+    syllables.push(m[0]);
     rest = rest.slice(m[0].length);
   }
-  return count;
+  return syllables;
+}
+
+function countRun(letters: string): number {
+  return splitRun(letters).length;
 }
 
 /** "Lǎobǎn," → "lǎo bǎn": the house style of every headword, syllable by syllable. */
 export function displayReading(token: string): string {
   const letters = token.replace(NON_LETTER_RE, '').toLowerCase();
-  const syllables: string[] = [];
-  for (const part of letters.split("'")) {
-    let rest = part;
-    while (rest.length > 0) {
-      const m = SYLLABLE_RE.exec(rest);
-      if (!m || m[0].length === 0) {
-        rest = rest.slice(1);
-        continue;
-      }
-      syllables.push(m[0]);
-      rest = rest.slice(m[0].length);
-    }
-  }
+  const syllables = letters.split("'").flatMap(splitRun);
   return syllables.join(' ') || token;
 }
 
@@ -92,17 +85,13 @@ export function alignSentenceReadings(sentence: string, pinyin: string): WordRea
   for (let t = 0; t < tokens.length; t += 1) {
     let need = syllables[t];
     // Skip punctuation / non-Han characters before the word.
-    while (
-      charIndex < chars.length &&
-      !/[\p{Script=Han}\p{Script=Bopomofo}]/u.test(chars[charIndex])
-    )
-      charIndex += 1;
+    while (charIndex < chars.length && !containsHan(chars[charIndex])) charIndex += 1;
     const start = charIndex;
     let text = '';
     while (need > 0 && charIndex < chars.length) {
       const ch = chars[charIndex];
       charIndex += 1;
-      if (!/[\p{Script=Han}\p{Script=Bopomofo}]/u.test(ch)) {
+      if (!containsHan(ch)) {
         text += ch;
         continue;
       }

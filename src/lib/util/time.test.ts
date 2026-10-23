@@ -24,6 +24,12 @@ describe('formatInterval', () => {
     expect(formatInterval(now, addDays(now, 548))).toBe('1.5y');
     expect(formatInterval(now, addDays(now, 3650))).toBe('10y');
   });
+  it('rolls a value that rounds up to the next unit into that unit', () => {
+    expect(formatInterval(now, addDays(now, 330))).toBe('11mo');
+    // 358 days is 11.8 months: it reads "1y", never "12mo".
+    expect(formatInterval(now, addDays(now, 358))).toBe('1y');
+    expect(formatInterval(now, addDays(now, 365))).toBe('1y');
+  });
   it('never goes negative', () => {
     expect(formatInterval(now, new Date(now.getTime() - 1000))).toBe('<1m');
   });

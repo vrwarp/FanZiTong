@@ -181,7 +181,9 @@ export function useBootstrap(): BootstrapState {
         }
       })
       .catch((err: unknown) => {
-        if (!cancelled) setState({ status: 'error', error: (err as Error).message });
+        if (!cancelled) {
+          setState({ status: 'error', error: err instanceof Error ? err.message : String(err) });
+        }
       });
     return () => {
       cancelled = true;

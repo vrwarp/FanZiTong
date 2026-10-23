@@ -35,20 +35,22 @@ npm ci             # install (the repo's .npmrc pins legacy-peer-deps, see below
 npm run dev        # http://localhost:5173
 ```
 
-| Script                                      | Purpose                                                                             |
-| ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `npm run dev`                               | Vite dev server (service worker disabled in dev).                                   |
-| `npm run build`                             | Typecheck + production build with service worker and manifest into `dist/`.         |
-| `npm run preview`                           | Serve the production build on http://localhost:4173.                                |
-| `npm run lint` / `lint:fix`                 | ESLint (typescript-eslint, react-hooks incl. React Compiler rules, react-refresh).  |
-| `npm run format` / `format:check`           | Prettier.                                                                           |
-| `npm run typecheck`                         | `tsc -b` over app, config and e2e projects.                                         |
-| `npm test` / `test:watch` / `test:coverage` | Vitest unit + component tests (jsdom, fake IndexedDB).                              |
-| `npm run test:e2e` / `test:e2e:ui`          | Playwright end-to-end tests against the production build (Pixel 7 emulation).       |
-| `npm run icons`                             | Regenerate PWA icons from the brand mark with headless Chromium.                    |
-| `npm run etymology`                         | Rebuild `src/data/etymology.json`, the character-composition table.                 |
-| `npm run dictionary`                        | Rebuild `src/data/dictionary.json`, the character readings/glosses and word senses. |
-| `npm run validate`                          | lint + format check + typecheck + unit tests + build.                               |
+| Script                                             | Purpose                                                                             |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `npm run dev`                                      | Vite dev server (service worker disabled in dev).                                   |
+| `npm run build`                                    | Typecheck + production build with service worker and manifest into `dist/`.         |
+| `npm run preview`                                  | Serve the production build on http://localhost:4173.                                |
+| `npm run lint` / `lint:fix`                        | ESLint (typescript-eslint, react-hooks incl. React Compiler rules, react-refresh).  |
+| `npm run format` / `format:check`                  | Prettier.                                                                           |
+| `npm run typecheck`                                | `tsc -b` over app, config and e2e projects.                                         |
+| `npm test` / `test:watch` / `test:coverage`        | Vitest unit + component tests (jsdom, fake IndexedDB).                              |
+| `npm run test:e2e` / `test:e2e:ui`                 | Playwright end-to-end tests against the production build (Pixel 7 emulation).       |
+| `npm run icons`                                    | Regenerate PWA icons from the brand mark with headless Chromium.                    |
+| `npm run etymology`                                | Rebuild `src/data/etymology.json`, the character-composition table.                 |
+| `npm run dictionary`                               | Rebuild `src/data/dictionary.json`, the character readings/glosses and word senses. |
+| `npm run simplified`                               | Rebuild `src/data/simplifiedChars.ts`, the list of simplified-only characters.      |
+| `npm run agent` / `agent:build` / `agent:validate` | Run, bundle or validate the optional assistant sidecar (`agent/`).                  |
+| `npm run validate`                                 | lint + format check + typecheck + unit tests + build.                               |
 
 Install to a phone: open the deployed URL, then **Add to Home Screen** (Android prompts automatically; on iOS use Share → _Add to Home Screen_). After the first visit the app works with no network at all.
 
@@ -74,7 +76,8 @@ src/
   pages/            Learn · Study · Drills · DrillRunner · Vocab · CardEditor · Stats · Settings
   pwa/              Service-worker prompt, install prompt, online status
 e2e/                Playwright specs (dashboard, session, drills, vocab I/O, stats/settings, offline, a11y)
-scripts/            Icon generator
+agent/              Optional assistant sidecar (Claude Agent SDK), with its own package.json
+scripts/            Icons, deck/etymology/dictionary builders, deck harvesting, UX walkthrough
 .github/workflows/  CI (lint/typecheck, unit, build, e2e) and GitHub Pages deploy
 ```
 
@@ -173,8 +176,8 @@ is held to the pinyin rule: while a study card is unrevealed it is not shown
 the card at all.
 
 ```bash
-cd agent && npm install
-npm run agent      # http://127.0.0.1:8787, uses your Claude Code login
+npm install --prefix agent   # once
+npm run agent                # from the repo root: http://127.0.0.1:8787, uses your Claude Code login
 ```
 
 The sidecar borrows the login already on the machine, but the socket still

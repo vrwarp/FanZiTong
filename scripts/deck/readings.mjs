@@ -4,13 +4,13 @@
  *
  *   node scripts/deck/readings.mjs fetch    # MOE reading for every character
  *                                          # the pools and the deck use, cached
- *   node scripts/deck/readings.mjs check    # lint the shipped deck's readings
  *
- * The map is a lint, not an oracle. Mandarin is full of characters that read
- * two ways (了 le/liǎo, 不 bù/bú, 得 de/dé/děi), and MOE's first heteronym is
- * only one of them, so `check` reports a disagreement for a human to judge
- * instead of rewriting anything. What it catches reliably is the slip that
- * matters: a reading that belongs to no pronunciation of that character at all.
+ * The cache is read back with `charReadings()`. The map is a lint, not an
+ * oracle. Mandarin is full of characters that read two ways (了 le/liǎo,
+ * 不 bù/bú, 得 de/dé/děi), and MOE's first heteronym is only one of them, so a
+ * disagreement is for a human to judge, never to rewrite automatically. What it
+ * catches reliably is the slip that matters: a reading that belongs to no
+ * pronunciation of that character at all.
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';

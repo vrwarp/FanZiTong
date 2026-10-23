@@ -1,3 +1,4 @@
+import type { StudyEvent } from '@/lib/analytics/events';
 import { DEFAULT_SETTINGS } from '@/types';
 import { makeCard, makeLog } from '@/test/factories';
 import { createDatabase } from './database';
@@ -68,5 +69,24 @@ describe('repository (IndexedDB via Dexie)', () => {
     expect(await repo.countCards()).toBe(0);
     expect(await repo.getAllReviewLogs()).toEqual([]);
     expect(await repo.getMeta(META_KEYS.seededAt)).toBeUndefined();
+  });
+
+  it('trims the study event log to its budget, dropping the oldest events first', async () => {
+    const event = (n: number): StudyEvent => ({
+      id: `e${n}`,
+      sessionId: 's1',
+      seq: n,
+      at: `2025-01-0${n}T00:00:00.000Z`,
+      kind: 'answer',
+      mode: 'daily',
+    });
+    // Inserted out of order: the trim goes by time, not by insertion.
+    for (const n of [3, 1, 4, 2]) await repo.addStudyEvent(event(n));
+
+    expect(await repo.trimStudyEvents(10)).toBe(0);
+    expect(await repo.getAllStudyEvents()).toHaveLength(4);
+
+    expect(await repo.trimStudyEvents(2)).toBe(2);
+    expect((await repo.getAllStudyEvents()).map((e) => e.id)).toEqual(['e3', 'e4']);
   });
 });

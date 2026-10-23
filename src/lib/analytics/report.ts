@@ -125,6 +125,22 @@ export function quantiles(values: number[]): Quantiles {
   return { n: sorted.length, p50: at(0.5), p90: at(0.9), max: sorted[sorted.length - 1] };
 }
 
+/** The card answered most often (the first one, on a tie), from per-card answer counts. */
+function busiestCard(perCard: ReadonlyMap<string, number>): {
+  busiestCardId: string | null;
+  maxAnswers: number;
+} {
+  let busiestCardId: string | null = null;
+  let maxAnswers = 0;
+  for (const [cardId, count] of perCard) {
+    if (count > maxAnswers) {
+      maxAnswers = count;
+      busiestCardId = cardId;
+    }
+  }
+  return { busiestCardId, maxAnswers };
+}
+
 /** The most of these instants that fall inside one window of the given length. */
 function mostWithin(times: number[], windowMs: number): number {
   const sorted = [...times].sort((a, b) => a - b);
@@ -495,14 +511,7 @@ export function inferSessions(logs: ReviewLog[]): InferredSession[] {
       ratings[log.rating] += 1;
       exercises[log.exerciseType] += 1;
     }
-    let busiestCardId: string | null = null;
-    let maxAnswers = 0;
-    for (const [cardId, count] of perCard) {
-      if (count > maxAnswers) {
-        maxAnswers = count;
-        busiestCardId = cardId;
-      }
-    }
+    const { busiestCardId, maxAnswers } = busiestCard(perCard);
     const startedAt = bucket[0].reviewTimestamp;
     const endedAt = bucket[bucket.length - 1].reviewTimestamp;
     sessions.push({
@@ -553,14 +562,7 @@ export function summarizeRecordedSessions(events: StudyEvent[]): RecordedSession
       if (!answer.cardId) continue;
       perCard.set(answer.cardId, (perCard.get(answer.cardId) ?? 0) + 1);
     }
-    let busiestCardId: string | null = null;
-    let maxAnswers = 0;
-    for (const [cardId, count] of perCard) {
-      if (count > maxAnswers) {
-        maxAnswers = count;
-        busiestCardId = cardId;
-      }
-    }
+    const { busiestCardId, maxAnswers } = busiestCard(perCard);
     const end = list.find((e) => e.kind === 'session_end');
     const first = list[0];
     sessions.push({

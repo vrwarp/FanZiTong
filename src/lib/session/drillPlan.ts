@@ -10,6 +10,7 @@ import {
   type SoundFamilyIndex,
 } from '@/lib/exercises/soundFamily';
 import {
+  DRILL_ROTATION,
   hasAlignedSentence,
   hasClozeSentence,
   hasMeaningCue,
@@ -18,29 +19,17 @@ import {
   isDrillCandidate,
   knockedDownToday,
   readToday,
+  type DrillType,
 } from '@/lib/queue/session';
 import { troubleScore } from '@/lib/stats/slips';
 import { shuffle, type Rng } from '@/lib/util/random';
-import {
-  CardState,
-  type DomainCategory,
-  type ExerciseType,
-  type UserSettings,
-  type VocabCard,
-} from '@/types';
+import { CardState, type DomainCategory, type UserSettings, type VocabCard } from '@/types';
 import type { DrillExercise } from './engine';
 
-export type DrillType = Exclude<ExerciseType, 'rapid_recognition'>;
+export type { DrillType };
 
-export const DRILL_TYPES: DrillType[] = [
-  'cloze',
-  'realia_menu',
-  'foil_discrimination',
-  'meaning_to_form',
-  'typed_reading',
-  'find_in_text',
-  'sound_family',
-];
+/** Every drill modality, in rotation order (one list, owned by the queue module). */
+export const DRILL_TYPES: DrillType[] = [...DRILL_ROTATION];
 
 export function isDrillType(value: unknown): value is DrillType {
   return typeof value === 'string' && (DRILL_TYPES as string[]).includes(value);
@@ -95,7 +84,9 @@ export function selectDrillCards(
   const buckets = new Map<number, VocabCard[]>();
   for (const card of eligible) {
     const p = priority(card, options.now);
-    buckets.set(p, [...(buckets.get(p) ?? []), card]);
+    const bucket = buckets.get(p);
+    if (bucket) bucket.push(card);
+    else buckets.set(p, [card]);
   }
   // Which Word's ear check is honest only on a word not yet read today, and
   // Say It can only be a reading on one, so those runs take the words the

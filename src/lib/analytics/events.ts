@@ -30,7 +30,7 @@ export type SessionMode = 'daily' | 'drill';
 export interface StudyEvent {
   id: string;
   sessionId: string;
-  /** Order within the session. Events sort by this, never by the clock. */
+  /** Order within the session; breaks ties between events with the same timestamp. */
   seq: number;
   at: string;
   kind: StudyEventKind;
@@ -114,7 +114,7 @@ export interface StudyEvent {
 /** Where the engine sends its events; the caller decides whether to store them. */
 export type StudyEventSink = (event: StudyEvent) => void;
 
-/** Sort into session order: by session, then by sequence. */
+/** Sort into time order, with the sequence number breaking ties between equal timestamps. */
 export function sortEvents(events: StudyEvent[]): StudyEvent[] {
   return [...events].sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
 }

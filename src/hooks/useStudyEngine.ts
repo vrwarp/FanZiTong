@@ -41,7 +41,7 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
       for (const review of reviews) {
         repository.recordReview(review.card, review.log).catch((err: unknown) => {
           console.error('Failed to save review', err);
-          setSaveError((err as Error).message);
+          setSaveError(err instanceof Error ? err.message : String(err));
         });
       }
       // The record of which sentences a card has been shown in changes on a

@@ -44,7 +44,9 @@ async function readBody(req: IncomingMessage): Promise<unknown> {
     chunks.push(chunk as Buffer);
   }
   if (chunks.length === 0) return {};
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  const parsed: unknown = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  // `null` is valid JSON, but every handler reads fields off the result.
+  return parsed ?? {};
 }
 
 export interface HttpDeps {

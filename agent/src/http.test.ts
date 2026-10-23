@@ -166,6 +166,15 @@ describe('the sign-in endpoints', () => {
     await stop();
   });
 
+  it('treats a JSON null body as an empty one instead of crashing the handler', async () => {
+    const { call, stop } = await boot();
+    const cancel = await call('/auth/cancel', { method: 'POST', body: 'null' });
+    expect(cancel.status).toBe(200);
+    const start = await call('/auth/start', { method: 'POST', body: 'null' });
+    expect(start.status).toBe(200);
+    await stop();
+  });
+
   it('rate-limits sign-in attempts so the endpoint cannot be used to spawn processes', async () => {
     const { call, stop } = await boot();
     const codes: number[] = [];

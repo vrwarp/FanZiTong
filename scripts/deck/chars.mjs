@@ -1,7 +1,8 @@
 /**
  * Look-alike characters, and the entries the app needs to explain them.
  *
- *   node scripts/deck/chars.mjs pairs.json   # merge into src/data/charInfo.ts
+ *   node scripts/deck/chars.mjs merge pairs.json   # merge into src/data/charInfo.ts
+ *   node scripts/deck/chars.mjs seed               # seed lookAlikes.json from charInfo.ts
  *
  * Every card ships at least two look-alike foils, and the app can only explain
  * a wrong pick when it has a note for both characters involved. Writing a
@@ -17,7 +18,7 @@
  *
  * `like` names the characters this one is confusable with; each of those needs
  * an entry of its own in the same file or already in charInfo.ts. The pairing
- * is written to scripts/deck/out/lookAlikes.json, which the foil generator
+ * is written to scripts/deck/lookAlikes.json, which the foil generator
  * reads; the notes are written into the shipped table.
  */
 import { readFile, writeFile, mkdir } from 'node:fs/promises';

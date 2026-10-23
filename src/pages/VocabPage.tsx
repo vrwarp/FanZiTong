@@ -105,9 +105,13 @@ export default function VocabPage() {
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
-    const text = await file.text();
-    setImportSource({ fileName: file.name, text });
+    // Clear first so the same file can be picked again, even if reading fails.
     if (fileInput.current) fileInput.current.value = '';
+    try {
+      setImportSource({ fileName: file.name, text: await file.text() });
+    } catch {
+      setNotice(`Could not read ${file.name}.`);
+    }
   };
 
   const exportJson = () => {

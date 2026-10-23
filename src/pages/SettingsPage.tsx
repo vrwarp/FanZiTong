@@ -320,8 +320,13 @@ export default function SettingsPage() {
           onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
-            setImportSource({ fileName: file.name, text: await file.text() });
+            // Clear first so the same file can be picked again, even if reading fails.
             e.target.value = '';
+            try {
+              setImportSource({ fileName: file.name, text: await file.text() });
+            } catch {
+              setNotice(`Could not read ${file.name}.`);
+            }
           }}
         />
         <div className="flex flex-wrap gap-2">

@@ -36,6 +36,13 @@ export interface AgentConfig {
   logLevel: 'debug' | 'info' | 'warn' | 'error';
 }
 
+/** A positive dollar cap, or null (no cap) when unset or not a usable number. */
+function budget(value: string | undefined): number | null {
+  if (!value?.trim()) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
 function int(value: string | undefined, fallback: number): number {
   const parsed = Number.parseInt(value ?? '', 10);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -91,7 +98,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AgentConfig {
     rpcTimeoutMs: int(env.FZT_AGENT_RPC_TIMEOUT_MS, 60_000),
     permissionTimeoutMs: int(env.FZT_AGENT_PERMISSION_TIMEOUT_MS, 5 * 60_000),
     turnTimeoutMs: int(env.FZT_AGENT_TURN_TIMEOUT_MS, 10 * 60_000),
-    maxBudgetUsd: env.FZT_AGENT_MAX_BUDGET_USD ? Number(env.FZT_AGENT_MAX_BUDGET_USD) : null,
+    maxBudgetUsd: budget(env.FZT_AGENT_MAX_BUDGET_USD),
     logLevel: (env.FZT_LOG_LEVEL as AgentConfig['logLevel']) || 'info',
   };
 }

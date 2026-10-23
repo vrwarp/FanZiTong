@@ -197,15 +197,18 @@ export function shouldRequeue(nextDueIso: string, now: Date): boolean {
   return new Date(nextDueIso).getTime() <= now.getTime() + LEARN_AHEAD_MS;
 }
 
+/** Whether an optional ISO timestamp falls on the same study day as `now`. */
+function stampedToday(stamp: string | undefined, now: Date, dayStartHour: number): boolean {
+  return stamp ? isSameLocalDay(new Date(stamp), now, dayStartHour) : false;
+}
+
 /** Whether the scheduler has already heard "Again" for this card today (study day). */
 export function knockedDownToday(
   card: Pick<VocabCard, 'lastAgainAt'>,
   now: Date,
   dayStartHour: number = DAY_START_HOUR,
 ): boolean {
-  return (
-    Boolean(card.lastAgainAt) && isSameLocalDay(new Date(card.lastAgainAt!), now, dayStartHour)
-  );
+  return stampedToday(card.lastAgainAt, now, dayStartHour);
 }
 
 /** Whether the scheduler has already heard Hard for this card today (study day). */
@@ -214,7 +217,7 @@ export function hardToday(
   now: Date,
   dayStartHour: number = DAY_START_HOUR,
 ): boolean {
-  return Boolean(card.lastHardAt) && isSameLocalDay(new Date(card.lastHardAt!), now, dayStartHour);
+  return stampedToday(card.lastHardAt, now, dayStartHour);
 }
 
 /** Whether the scheduler has already heard a recognition pass for this card today. */
@@ -223,7 +226,7 @@ export function readToday(
   now: Date,
   dayStartHour: number = DAY_START_HOUR,
 ): boolean {
-  return Boolean(card.lastPassAt) && isSameLocalDay(new Date(card.lastPassAt!), now, dayStartHour);
+  return stampedToday(card.lastPassAt, now, dayStartHour);
 }
 
 /**

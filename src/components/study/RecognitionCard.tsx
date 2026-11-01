@@ -58,6 +58,16 @@ const VARIANT_DEFAULTS: Record<DomainCategory, string> = {
 };
 
 /**
+ * The rating rubric for a word read in Taiwanese. The characters of 總鋪師
+ * spell a Taiwanese word, and a heritage reader who hears tsóng-phòo-sai in
+ * them has read them; the pause before deciding that zǒng pù shī is also
+ * wanted is not a weak memory. One export rated the words usually said in
+ * Taiwanese Hard on 38% of their reviews, against 4% for the Mandarin food
+ * words, and eight of its twenty-one words stuck in a Hard loop were these.
+ */
+const EITHER_READING = '· Either reading is a read: Good. 唸台語或國語都算會';
+
+/**
  * Whether the word is only ever said the Taiwanese way, or the Mandarin
  * reading is in use too — the thing a heritage reader wants to know before
  * saying it out loud. A card that has an as-heard reading but no verdict on
@@ -66,11 +76,11 @@ const VARIANT_DEFAULTS: Record<DomainCategory, string> = {
 function describeSpokenUse(card: Pick<VocabCard, 'pinyin' | 'spoken' | 'spokenUse'>): string {
   switch (card.spokenUse) {
     case 'only':
-      return `Only ever said the Taiwanese way — nobody says ${card.pinyin}. 只有台語說法`;
+      return `Only ever said the Taiwanese way — nobody says ${card.pinyin}. 只有台語說法 ${EITHER_READING}`;
     case 'usual':
-      return `Usually said the Taiwanese way; ${card.pinyin} is heard too. 通常用台語說`;
+      return `Usually said the Taiwanese way; ${card.pinyin} is heard too. 通常用台語說 ${EITHER_READING}`;
     case 'either':
-      return `Said either way, about as often: ${card.spoken} or ${card.pinyin}. 台語國語都常說`;
+      return `Said either way, about as often: ${card.spoken} or ${card.pinyin}. 台語國語都常說 ${EITHER_READING}`;
     case 'also':
       return `Usually said in Mandarin; ${card.spoken} is how it sounds in Taiwanese. 通常用國語說`;
     default:

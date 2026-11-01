@@ -11,7 +11,7 @@ import { hanChars } from '@/lib/util/pinyin';
 import { alignSentenceReadings } from '@/lib/util/sentenceReadings';
 import { ownSentences } from '@/lib/exercises/cloze';
 import { hasSoundFamily, type SoundFamilyIndex } from '@/lib/exercises/soundFamily';
-import { troubleScore } from '@/lib/stats/slips';
+import { isLeech, troubleScore } from '@/lib/stats/slips';
 
 export { hasSoundFamily };
 
@@ -85,6 +85,18 @@ export interface SessionPlan {
   settlingCount: number;
   /** New cards the daily limit allowed but the settling hold kept back today. */
   newCardsHeldBack: number;
+  /**
+   * Active domains whose new cards are held back because the domain holds
+   * too many leeches (`maxLeechesPerDomain`), with the count; only domains
+   * that still have new cards to hold. Empty when the hold is off.
+   */
+  domainHolds: DomainHold[];
+}
+
+export interface DomainHold {
+  domain: DomainCategory;
+  leeches: number;
+  limit: number;
 }
 
 export function isActiveDomain(card: VocabCard, settings: UserSettings): boolean {
@@ -109,6 +121,42 @@ export function newCardCapacity(
 }
 
 /**
+ * The active domains whose new cards are on hold: each holds at least
+ * `maxLeechesPerDomain` leeches (by the learner's leech threshold) and still
+ * has new cards it would otherwise be dealt. Empty when the hold is off (0).
+ *
+ * The settling hold watches the words of the last day or two. A word that
+ * keeps slipping for weeks is in Review on a ten-day interval and passes it
+ * unseen, so a domain can go on being dealt its quarter of every day's new
+ * cards while its leech list grows — one export: 19 slang and 15 anime
+ * leeches against 4 each in food and church, new cards still shared four
+ * ways. A teacher stops handing out words of the kind that is not sticking
+ * until the pile is dealt with: started over in Stats, or drilled until it
+ * holds. The other domains keep flowing.
+ */
+export function domainLeechHolds(
+  cards: readonly VocabCard[],
+  settings: Pick<UserSettings, 'maxLeechesPerDomain' | 'leechThreshold' | 'activeDomains'>,
+): DomainHold[] {
+  if (settings.maxLeechesPerDomain <= 0) return [];
+  const leeches = new Map<DomainCategory, number>();
+  const fresh = new Set<DomainCategory>();
+  for (const card of cards) {
+    if (!settings.activeDomains.includes(card.domain)) continue;
+    if (card.fsrs.state === CardState.New) fresh.add(card.domain);
+    else if (isLeech(card, settings.leechThreshold))
+      leeches.set(card.domain, (leeches.get(card.domain) ?? 0) + 1);
+  }
+  return settings.activeDomains
+    .filter((d) => fresh.has(d) && (leeches.get(d) ?? 0) >= settings.maxLeechesPerDomain)
+    .map((domain) => ({
+      domain,
+      leeches: leeches.get(domain) ?? 0,
+      limit: settings.maxLeechesPerDomain,
+    }));
+}
+
+/**
  * Build the daily study queue (PRD Journey 1, step 3): due FSRS reviews first,
  * ordered by due date, then new cards in creation order but round-robined
  * across the active domains, both capped by the daily limits remaining today.
@@ -120,6 +168,10 @@ export function newCardCapacity(
  * doing everything asked of them. The hold is the app's version of the rule
  * every spaced-repetition community arrives at: no new material while the
  * pile of not-yet-learned material is high.
+ *
+ * And a domain whose leech list has grown past `maxLeechesPerDomain` is
+ * dealt no new cards at all until it shrinks (`domainLeechHolds`); the
+ * other domains take its turns.
  */
 export function buildSessionQueue(input: SessionPlanInput): SessionPlan {
   const { cards, settings, now } = input;
@@ -130,9 +182,11 @@ export function buildSessionQueue(input: SessionPlanInput): SessionPlan {
     .filter((c) => c.fsrs.state !== CardState.New && new Date(c.fsrs.due).getTime() <= nowMs)
     .sort((a, b) => new Date(a.fsrs.due).getTime() - new Date(b.fsrs.due).getTime());
 
+  const domainHolds = domainLeechHolds(active, settings);
+  const held = new Set(domainHolds.map((h) => h.domain));
   const fresh = interleaveByDomain(
     active
-      .filter((c) => c.fsrs.state === CardState.New)
+      .filter((c) => c.fsrs.state === CardState.New && !held.has(c.domain))
       .sort(
         (a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
@@ -160,6 +214,7 @@ export function buildSessionQueue(input: SessionPlanInput): SessionPlan {
     estimatedMinutes: Math.max(1, Math.round(estimatedSeconds / 60)),
     settlingCount,
     newCardsHeldBack: Math.max(0, Math.min(dailyNewBudget, fresh.length) - newSlice.length),
+    domainHolds,
   };
 }
 

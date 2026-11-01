@@ -20,6 +20,14 @@ import { readingOf } from './meaning';
  *
  * A word said the Taiwanese way (蚵仔煎 ô-á-tsian) may be typed that way, in
  * Tâi-lô or in POJ spelling, as well as in pinyin.
+ *
+ * And the pinyin may be spelled the way Taiwanese Mandarin sounds. One
+ * learner's export had 很瞎 typed "heng xia", 反派 "fang pai", 關卡 "guang ka"
+ * and 仔 "zhi": the -n/-ng merger and the retroflex merger (zh/z, ch/c, sh/s)
+ * that mark Mandarin as spoken in Taiwan, marked wrong, and one of them
+ * charged as a lapse. A heritage speaker who says hěng for 很 has read 很;
+ * the standard spelling is shown afterwards, not demanded first. See
+ * `accentKey`.
  */
 export interface TypedReadingExercise {
   type: 'typed_reading';
@@ -30,6 +38,12 @@ export interface TypedReadingExercise {
   syllables: string[];
   /** The pinyin readings a typed answer may match, normalized (see `normalizeReading`). */
   accepted: string[];
+  /**
+   * The same readings as accent keys (see `accentKey`): a typed answer that
+   * meets one of these but none of `accepted` is a reading in a Taiwanese
+   * accent, right, with the standard spelling to show.
+   */
+  acceptedAccent: string[];
   /** The as-heard reading, when the card has one that differs from the pinyin. */
   spoken?: string;
   /** The as-heard reading one syllable per entry, for marking a Taiwanese answer. */
@@ -92,6 +106,68 @@ export function taiwaneseKey(input: string): string {
     .join('');
 }
 
+/**
+ * A pinyin reading reduced to how it sounds in Taiwanese Mandarin, so that
+ * the spellings the accent produces meet the card's.
+ *
+ * Mandarin as spoken in Taiwan runs several standard distinctions together,
+ * and a heritage speaker spelling what they say writes the merged sound:
+ *
+ * - the retroflex initials with the alveolar ones: zh/z (仔 zǐ typed "zhi"),
+ *   ch/c, sh/s — not aspiration: 總 zǒng typed "cong" is a romanisation
+ *   slip the syllable marks already catch, and folding z onto c would take
+ *   自 for 次;
+ * - the nasal finals -n and -ng: 很 hěn "heng", 反 fǎn "fang", 關 guān
+ *   "guang", 心 xīn "xing";
+ * - f said as hu- after the Hokkien pattern: 飯 fàn "huan", 福 fú "hu",
+ *   飛 fēi "hui";
+ * - eng after a labial said as ong: 風 fēng "fong" (and so "hong"), 夢 mèng
+ *   "mong".
+ *
+ * Both sides are folded the same way, so "heng xia" and "hen xia" meet at
+ * one key, and neither tells a reading from a misreading of the same
+ * syllable pair (山 shān / 三 sān) — the cost accepted, because the drill
+ * asks whether the characters were read, not whether the learner can spell
+ * standard pinyin; the standard spelling is shown once they have.
+ * Pinyin never begins a syllable with ng, so folding ng → n across a
+ * run-together reading is safe.
+ */
+export function accentKey(input: string): string {
+  return normalizeReading(input)
+    .replace(/zh/g, 'z')
+    .replace(/ch/g, 'c')
+    .replace(/sh/g, 's')
+    .replace(/(?<=[bpmf])eng/g, 'ong')
+    .replace(/f(?=u|ong)/g, 'h')
+    .replace(/f/g, 'hu')
+    .replace(/huei/g, 'hui')
+    .replace(/huen/g, 'hun')
+    .replace(/ng/g, 'n');
+}
+
+/** How a typed reading met the card: standard pinyin, the Taiwanese reading, in a Taiwanese accent, or not. */
+export type ReadingMatch = 'pinyin' | 'spoken' | 'accent' | null;
+
+/**
+ * Which accepted reading a typed answer meets, the strict spellings first:
+ * the pinyin however it was typed, the as-heard reading in Tâi-lô or POJ, or
+ * the pinyin as a Taiwanese accent spells it. An accent match is a reading
+ * and is graded as one; it is told apart only so the standard spelling can
+ * be pointed out.
+ */
+export function matchReading(
+  typed: string,
+  exercise: Pick<TypedReadingExercise, 'accepted' | 'acceptedSpoken' | 'acceptedAccent'>,
+): ReadingMatch {
+  const value = normalizeReading(typed);
+  if (value.length > 0 && exercise.accepted.includes(value)) return 'pinyin';
+  const key = taiwaneseKey(typed);
+  if (key.length > 0 && exercise.acceptedSpoken.includes(key)) return 'spoken';
+  const accent = accentKey(typed);
+  if (accent.length > 0 && exercise.acceptedAccent.includes(accent)) return 'accent';
+  return null;
+}
+
 /** The as-heard reading cut into syllables: Tâi-lô joins them with hyphens. */
 export function spokenSyllablesOf(spoken: string): string[] {
   return spoken
@@ -101,8 +177,9 @@ export function spokenSyllablesOf(spoken: string): string[] {
 }
 
 /**
- * Whether a typed answer is one of the readings the exercise accepts: the
- * pinyin however it was typed, or the as-heard reading in Tâi-lô or POJ.
+ * Whether a typed answer is one of the readings the exercise accepts as
+ * spelled: the pinyin however it was typed, or the as-heard reading in
+ * Tâi-lô or POJ. `matchReading` adds the accent spellings.
  */
 export function readingMatches(
   typed: string,
@@ -193,6 +270,7 @@ export function buildTypedReadingExercise(
   const accepted = [normalizeReading(pinyin)].filter(Boolean);
   const syllables = readingSyllables(card);
   if (accepted.length === 0 || syllables.length === 0) return null;
+  const acceptedAccent = [accentKey(pinyin)].filter(Boolean);
   const spoken = card.spoken?.trim();
   const spokenKey = spoken ? taiwaneseKey(spoken) : '';
   const acceptedSpoken = spokenKey ? [spokenKey] : [];
@@ -204,6 +282,7 @@ export function buildTypedReadingExercise(
     definition: card.definition,
     syllables,
     accepted,
+    acceptedAccent,
     ...(spoken && spokenKey
       ? { spoken, spokenSyllables: spokenSyllablesOf(spoken), acceptedSpoken }
       : { acceptedSpoken }),

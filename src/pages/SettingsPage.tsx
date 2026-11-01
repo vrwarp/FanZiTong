@@ -195,6 +195,15 @@ export default function SettingsPage() {
           onChange={(v) => void update({ maxSettlingCards: v })}
           testId="setting-max-settling"
         />
+        <NumberField
+          key={`leech-hold-${settings.maxLeechesPerDomain}`}
+          id="maxLeechesPerDomain"
+          label="Hold a domain's new words while this many of its words keep slipping"
+          hint="A domain with this many words on the leech list is dealt no new words until the list shrinks — start them over or drill them in Stats. The other domains keep going. 0 turns the hold off."
+          value={settings.maxLeechesPerDomain}
+          onChange={(v) => void update({ maxLeechesPerDomain: v })}
+          testId="setting-max-leeches-per-domain"
+        />
       </section>
 
       <section className="card-surface flex flex-col gap-4 p-4">

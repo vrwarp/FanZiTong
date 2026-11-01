@@ -11,6 +11,7 @@ import {
 import {
   interleaveByDomain,
   isActiveDomain,
+  domainLeechHolds,
   isSettling,
   LEARN_AHEAD_MS,
   MAX_SESSION_REQUEUES,
@@ -843,6 +844,23 @@ export function buildDiagnostics(
         `its difficulty toward 10. These answers appear in events only.`,
       count: activity.retries.total,
       examples: top.slice(0, 5).map(([id, n]) => `${label(id)} · ${n} retries`),
+    });
+  }
+
+  const domainHolds = domainLeechHolds(cards, settings);
+  if (domainHolds.length > 0) {
+    found.push({
+      code: 'domain_leech_hold',
+      severity: 'info',
+      title: 'Domains dealt no new cards while their leeches pile up',
+      detail:
+        `${domainHolds.length} active domain(s) hold ${settings.maxLeechesPerDomain}+ leeches ` +
+        `(forgotten, slipped or Hard at the ceiling on ${settings.leechThreshold}+ days), so ` +
+        `the daily queue deals them no new cards; the other domains take their turns. The ` +
+        `hold lifts as the words are started over or drilled below the line; the learner can ` +
+        `change or switch it off in Settings.`,
+      count: domainHolds.length,
+      examples: domainHolds.map((h) => `${h.domain} · ${h.leeches} leech(es) of ${h.limit}`),
     });
   }
 

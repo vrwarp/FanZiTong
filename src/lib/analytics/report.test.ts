@@ -310,6 +310,44 @@ describe('retries and recorded sessions', () => {
   });
 });
 
+describe('the per-domain leech hold in the diagnostics', () => {
+  const leeches = Array.from({ length: 10 }, (_, i) =>
+    makeCard({
+      traditional: `俚${i}`,
+      domain: 'slang',
+      fsrs: reviewState({ stability: 12 }),
+      slipDays: 3,
+    }),
+  );
+  const freshSlang = makeCard({ traditional: '歸剛', domain: 'slang' });
+
+  it('names the domain dealt no new cards and the count behind it', () => {
+    const found = buildReport([...leeches, freshSlang], [], {
+      ...settings,
+      maxLeechesPerDomain: 10,
+    }).diagnostics;
+    const hold = found.find((d) => d.code === 'domain_leech_hold')!;
+    expect(hold.severity).toBe('info');
+    expect(hold.count).toBe(1);
+    expect(hold.examples).toEqual(['slang · 10 leech(es) of 10']);
+  });
+
+  it('says nothing under the line, with the hold off, or with nothing new to hold', () => {
+    const under = buildReport([...leeches.slice(0, 9), freshSlang], [], {
+      ...settings,
+      maxLeechesPerDomain: 10,
+    }).diagnostics;
+    expect(under.map((d) => d.code)).not.toContain('domain_leech_hold');
+    const off = buildReport([...leeches, freshSlang], [], {
+      ...settings,
+      maxLeechesPerDomain: 0,
+    }).diagnostics;
+    expect(off.map((d) => d.code)).not.toContain('domain_leech_hold');
+    const spent = buildReport(leeches, [], { ...settings, maxLeechesPerDomain: 10 }).diagnostics;
+    expect(spent.map((d) => d.code)).not.toContain('domain_leech_hold');
+  });
+});
+
 describe('the settling hold in the census and diagnostics', () => {
   const settling = Array.from({ length: 12 }, (_, i) =>
     makeCard({ traditional: `字${i}`, fsrs: reviewState({ stability: 0.3 }) }),

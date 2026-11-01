@@ -4,6 +4,7 @@ import { makeCard, reviewState } from '@/test/factories';
 import {
   buildSessionQueue,
   chooseDrillType,
+  domainLeechHolds,
   drillVerdict,
   hasAlignedSentence,
   hasClozeSentence,
@@ -158,6 +159,95 @@ describe('buildSessionQueue', () => {
     });
     expect(off.newCardCount).toBe(5);
     expect(off.newCardsHeldBack).toBe(0);
+  });
+
+  it('deals no new cards to a domain whose leech list is past the hold', () => {
+    // Slang: twelve words that have slipped on three or more days; food: two.
+    // None due today, so the queue below is new cards alone.
+    const leech = (id: string, domain: 'slang' | 'food') =>
+      makeCard({
+        id,
+        domain,
+        fsrs: reviewState({ stability: 12, due: '2026-09-09T00:00:00.000Z' }),
+        slipDays: 3,
+      });
+    const slangLeeches = Array.from({ length: 12 }, (_, i) => leech(`sl${i}`, 'slang'));
+    const foodLeeches = [leech('fl0', 'food'), leech('fl1', 'food')];
+    const fresh = [
+      makeCard({ id: 'f0', createdAt: '2026-09-01T00:00:00.000Z' }),
+      makeCard({ id: 's0', domain: 'slang', createdAt: '2026-09-01T00:00:01.000Z' }),
+      makeCard({ id: 'f1', createdAt: '2026-09-01T00:00:02.000Z' }),
+      makeCard({ id: 's1', domain: 'slang', createdAt: '2026-09-01T00:00:03.000Z' }),
+    ];
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      maxDailyNewCards: 10,
+      maxSettlingCards: 0,
+      maxLeechesPerDomain: 10,
+    };
+    const plan = buildSessionQueue({
+      cards: [...slangLeeches, ...foodLeeches, ...fresh],
+      settings,
+      now,
+      reviewsDoneToday: 0,
+      newCardsIntroducedToday: 0,
+    });
+    expect(plan.domainHolds).toEqual([{ domain: 'slang', leeches: 12, limit: 10 }]);
+    expect(plan.queue).toEqual(['f0', 'f1']);
+    expect(plan.newCardCount).toBe(2);
+    // Food's two leeches are under the line, and the settling hold is a separate matter.
+    expect(plan.newCardsHeldBack).toBe(0);
+
+    // Just under the line, the domain is dealt its turn again…
+    const under = buildSessionQueue({
+      cards: [...slangLeeches.slice(0, 9), ...foodLeeches, ...fresh],
+      settings,
+      now,
+      reviewsDoneToday: 0,
+      newCardsIntroducedToday: 0,
+    });
+    expect(under.domainHolds).toEqual([]);
+    expect(under.queue).toEqual(['f0', 's0', 'f1', 's1']);
+
+    // …0 turns the hold off…
+    const off = buildSessionQueue({
+      cards: [...slangLeeches, ...foodLeeches, ...fresh],
+      settings: { ...settings, maxLeechesPerDomain: 0 },
+      now,
+      reviewsDoneToday: 0,
+      newCardsIntroducedToday: 0,
+    });
+    expect(off.domainHolds).toEqual([]);
+    expect(off.newCardCount).toBe(4);
+
+    // …and a domain with nothing new left to hold is not reported.
+    const spent = buildSessionQueue({
+      cards: [...slangLeeches, ...foodLeeches, ...fresh.filter((c) => c.domain === 'food')],
+      settings,
+      now,
+      reviewsDoneToday: 0,
+      newCardsIntroducedToday: 0,
+    });
+    expect(spent.domainHolds).toEqual([]);
+  });
+
+  it('counts a domain’s leeches by the learner’s threshold and only in active domains', () => {
+    const cards = [
+      makeCard({ id: 'a', domain: 'slang', fsrs: reviewState({ lapses: 2 }) }),
+      makeCard({ id: 'b', domain: 'slang', fsrs: reviewState({ lapses: 2 }) }),
+      makeCard({ id: 'c', domain: 'anime', fsrs: reviewState({ lapses: 5 }) }),
+      makeCard({ id: 'n', domain: 'slang' }),
+      makeCard({ id: 'm', domain: 'anime' }),
+    ];
+    const base = { ...DEFAULT_SETTINGS, maxLeechesPerDomain: 2 };
+    // At a threshold of 3 only the anime word is a leech: one, under the hold of two.
+    expect(domainLeechHolds(cards, { ...base, leechThreshold: 3 })).toEqual([]);
+    expect(domainLeechHolds(cards, { ...base, leechThreshold: 2 })).toEqual([
+      { domain: 'slang', leeches: 2, limit: 2 },
+    ]);
+    expect(
+      domainLeechHolds(cards, { ...base, leechThreshold: 2, activeDomains: ['anime'] }),
+    ).toEqual([]);
   });
 
   it('counts settling words only among the active domains', () => {

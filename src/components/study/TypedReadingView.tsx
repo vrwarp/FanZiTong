@@ -4,7 +4,7 @@ import { inputClass } from '@/components/ui/Field';
 import { Hanzi } from '@/components/ui/Hanzi';
 import {
   markReading,
-  readingMatches,
+  matchReading,
   type MarkedReading,
   type SyllableMark,
   type TypedReadingExercise,
@@ -33,6 +33,10 @@ type Phase = 'type' | 'wrong' | 'done';
  * be — and gets one more go; right on the second try is recorded and
  * changes nothing; a second wrong try, or "I can't read it", shows the
  * reading and is a miss.
+ *
+ * The pinyin spelled as Taiwanese Mandarin sounds it (很瞎 "heng xia", 仔
+ * "zhi") is a hit: the characters were read. The standard spelling is
+ * pointed out under the answer, once, rather than demanded before it.
  */
 export function TypedReadingView({ exercise, card, onComplete }: TypedReadingViewProps) {
   const [phase, setPhase] = useState<Phase>('type');
@@ -41,6 +45,8 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
   const [marks, setMarks] = useState<SyllableMark[] | null>(null);
   const [against, setAgainst] = useState<MarkedReading>('pinyin');
   const [gaveUp, setGaveUp] = useState(false);
+  /** The try that hit was spelled in a Taiwanese accent rather than standard pinyin. */
+  const [accent, setAccent] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -59,8 +65,10 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
     if (done) return;
     const value = typed.trim();
     if (!value) return;
-    if (readingMatches(value, exercise.accepted, exercise.acceptedSpoken)) {
+    const match = matchReading(value, exercise);
+    if (match) {
       setMarks(null);
+      setAccent(match === 'accent' ? value : null);
       setPhase('done');
       return;
     }
@@ -189,6 +197,13 @@ export function TypedReadingView({ exercise, card, onComplete }: TypedReadingVie
               )}
             </p>
             {marks && !correct && <Syllables marks={marks} />}
+            {accent && (
+              <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="typed-accent">
+                That is the reading, spelled the way it sounds in Taiwan (“{accent}”). Standard
+                pinyin writes it <span className="font-semibold">{exercise.pinyin}</span>.{' '}
+                <span lang="zh-Hant-TW">唸對了，標準拼音寫法不同</span>
+              </p>
+            )}
             <p className="text-lg" data-testid="typed-definition">
               {exercise.definition}
             </p>

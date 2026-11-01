@@ -421,6 +421,23 @@ describe('TypedReadingView', () => {
     ]);
   });
 
+  it('takes the pinyin spelled in a Taiwanese accent as a reading, and names the standard spelling', async () => {
+    const { buildTypedReadingExercise } = await import('@/lib/exercises/reading');
+    const accented = makeCard({ traditional: '很瞎', pinyin: 'hěn xiā', definition: 'absurd' });
+    const exercise = buildTypedReadingExercise(accented)!;
+    const onComplete = vi.fn();
+    render(<TypedReadingView exercise={exercise} card={accented} onComplete={onComplete} />);
+    await userEvent.type(screen.getByTestId('typed-input'), 'heng xia{Enter}');
+    expect(screen.getByTestId('typed-feedback')).toHaveTextContent(/Read it/);
+    expect(screen.getByTestId('typed-accent')).toHaveTextContent('“heng xia”');
+    expect(screen.getByTestId('typed-accent')).toHaveTextContent('hěn xiā');
+    expect(screen.getByTestId('drill-outcome')).toHaveTextContent(/Good/);
+    await userEvent.click(screen.getByTestId('drill-continue'));
+    expect(onComplete).toHaveBeenCalledWith([
+      { cardId: accented.id, correct: true, applyRating: true, misses: 0 },
+    ]);
+  });
+
   it('shows the reading after two wrong tries, or on giving up, and counts a miss', async () => {
     const { buildTypedReadingExercise } = await import('@/lib/exercises/reading');
     const exercise = buildTypedReadingExercise(card)!;

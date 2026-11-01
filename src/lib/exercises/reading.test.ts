@@ -117,6 +117,57 @@ describe('buildTypedReadingExercise', () => {
   }, 30_000);
 });
 
+describe('the pinyin as a Taiwanese accent spells it', () => {
+  it('folds the mergers of Taiwanese Mandarin onto one key', async () => {
+    const { accentKey } = await import('./reading');
+    // -n / -ng
+    expect(accentKey('hěn xiā')).toBe(accentKey('heng xia'));
+    expect(accentKey('fǎn pài')).toBe(accentKey('fang pai'));
+    expect(accentKey('guān kǎ')).toBe(accentKey('guang ka'));
+    expect(accentKey('xīn')).toBe(accentKey('xing'));
+    // retroflex / alveolar
+    expect(accentKey('zhuā pá zǐ')).toBe(accentKey('zhua pa zhi'));
+    expect(accentKey('shān')).toBe(accentKey('san'));
+    expect(accentKey('zhì yù xì')).toBe(accentKey('zi yu xi'));
+    // f said as hu-, and eng after a labial said as ong
+    expect(accentKey('fàn')).toBe(accentKey('huan'));
+    expect(accentKey('fú')).toBe(accentKey('hu'));
+    expect(accentKey('fēi')).toBe(accentKey('hui'));
+    expect(accentKey('fēng')).toBe(accentKey('fong'));
+    expect(accentKey('fēng')).toBe(accentKey('hong'));
+    expect(accentKey('mèng')).toBe(accentKey('mong'));
+    // What it does not fold: a different vowel, a different initial class, or
+    // aspiration (總 zǒng typed "cong" is a romanisation slip, not an accent).
+    expect(accentKey('lǔ ròu fàn')).not.toBe(accentKey('lu ruo fan'));
+    expect(accentKey('shǎ yǎn')).not.toBe(accentKey('xia yan'));
+    expect(accentKey('zhì yù xì')).not.toBe(accentKey('shi yu xi'));
+    expect(accentKey('zǒng pù shī')).not.toBe(accentKey('cong pu shi'));
+  });
+
+  it('is a reading, told apart from the standard spelling only to name it', async () => {
+    const { buildTypedReadingExercise, matchReading, readingMatches } = await import('./reading');
+    const ex = buildTypedReadingExercise(
+      makeCard({ traditional: '很瞎', pinyin: 'hěn xiā', definition: 'absurd' }),
+    )!;
+    expect(ex.acceptedAccent).toEqual(['henxia']);
+    expect(matchReading('hen xia', ex)).toBe('pinyin');
+    expect(matchReading('heng xia', ex)).toBe('accent');
+    expect(matchReading('hengxia', ex)).toBe('accent');
+    expect(matchReading('he xia', ex)).toBeNull();
+    // The strict check is unchanged: the accent spelling is not the standard one.
+    expect(readingMatches('heng xia', ex.accepted, ex.acceptedSpoken)).toBe(false);
+
+    const taiwanese = buildTypedReadingExercise(
+      makeCard({ traditional: '總鋪師', pinyin: 'zǒng pù shī', spoken: 'tsóng-phòo-sai' }),
+    )!;
+    expect(matchReading('tsong phoo sai', taiwanese)).toBe('spoken');
+    expect(matchReading('zong pu si', taiwanese)).toBe('accent');
+    // An aspiration slip, or half Mandarin and half Taiwanese, is neither reading.
+    expect(matchReading('cong pu shi', taiwanese)).toBeNull();
+    expect(matchReading('cong pu sai', taiwanese)).toBeNull();
+  });
+});
+
 describe('a Taiwanese reading, however it is spelled', () => {
   it('takes Tâi-lô and POJ to one key', async () => {
     const { taiwaneseKey } = await import('./reading');

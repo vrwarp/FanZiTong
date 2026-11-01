@@ -117,6 +117,7 @@ export const settingsSchema = z.object({
   leechThreshold: z.number().int().min(1).optional(),
   pinyinRevealDelayMs: z.number().int().min(0).optional(),
   maxSettlingCards: z.number().int().min(0).optional(),
+  maxLeechesPerDomain: z.number().int().min(0).optional(),
   activeDomains: z.array(z.enum(DOMAIN_CATEGORIES)).optional(),
   theme: z.enum(['light', 'dark', 'system']).optional(),
 });

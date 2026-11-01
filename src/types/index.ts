@@ -330,6 +330,18 @@ export interface UserSettings {
    * but not yet stable for a day). 0 turns the hold off.
    */
   maxSettlingCards: number;
+  /**
+   * New cards from a domain are held back while that domain holds this many
+   * leeches (`isLeech` in lib/stats: forgotten, slipped or Hard at the
+   * ceiling on `leechThreshold` days). The settling hold sees only the words
+   * of the last day or two; the words that keep slipping for weeks are in
+   * Review with intervals of ten days and pass it unseen. One export held 34
+   * of its 42 leeches in two of four domains, which were still being dealt
+   * a quarter of the new cards each. A teacher stops handing out new words
+   * of a kind until the pile of that kind is cleared — started over, or
+   * drilled until it sticks. 0 turns the hold off.
+   */
+  maxLeechesPerDomain: number;
   activeDomains: DomainCategory[];
   theme: ThemePreference;
 }
@@ -341,6 +353,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   leechThreshold: 3,
   pinyinRevealDelayMs: 0,
   maxSettlingCards: 20,
+  maxLeechesPerDomain: 10,
   activeDomains: ['food', 'church', 'slang', 'anime', 'custom'],
   theme: 'system',
 };

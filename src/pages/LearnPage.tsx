@@ -2,7 +2,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { META_KEYS, repository } from '@/db/repository';
-import { SECONDS_PER_NEW_CARD, SECONDS_PER_REVIEW, newCardCapacity } from '@/lib/queue/session';
+import {
+  SECONDS_PER_NEW_CARD,
+  SECONDS_PER_REVIEW,
+  newCardCapacity,
+  type DomainHold,
+} from '@/lib/queue/session';
 import { countStudyDays } from '@/lib/stats/analytics';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { RetentionGauge } from '@/components/stats/RetentionGauge';
@@ -73,8 +78,11 @@ export default function LearnPage() {
   const wordsStudiedToday = new Set(
     logs.filter((l) => dayKey(new Date(l.reviewTimestamp)) === today).map((l) => l.cardId),
   ).size;
+  // New cards of a held domain are not coming tomorrow either.
+  const heldDomains = new Set(plan.domainHolds.map((h) => h.domain));
   const freshCount = cards.filter(
-    (c) => c.fsrs.state === 0 && settings.activeDomains.includes(c.domain),
+    (c) =>
+      c.fsrs.state === 0 && settings.activeDomains.includes(c.domain) && !heldDomains.has(c.domain),
   ).length;
   // Tomorrow's new cards are bounded by the same settling hold as today's.
   const newTomorrow = Math.min(
@@ -227,6 +235,7 @@ export default function LearnPage() {
             {settlingHold && (
               <SettlingHoldNote settling={plan.settlingCount} limit={settings.maxSettlingCards} />
             )}
+            {plan.domainHolds.length > 0 && <DomainHoldNote holds={plan.domainHolds} />}
             {canStudy ? (
               <Button
                 block
@@ -271,6 +280,7 @@ export default function LearnPage() {
             {settlingHold && (
               <SettlingHoldNote settling={plan.settlingCount} limit={settings.maxSettlingCards} />
             )}
+            {plan.domainHolds.length > 0 && <DomainHoldNote holds={plan.domainHolds} />}
             <Button
               block
               size="lg"
@@ -458,6 +468,32 @@ export default function LearnPage() {
  * Why there are fewer new words than the daily limit allows: the words already
  * met have not stuck yet. Said in the learner's terms, with the way out.
  */
+/**
+ * Which domains are dealt no new words today, and why: their leech list is
+ * past the hold. The way out is named — the words are in Stats, to start
+ * over or to drill — because a hold with no exit is a wall.
+ */
+function DomainHoldNote({ holds }: { holds: DomainHold[] }) {
+  const names = holds.map(
+    (h) =>
+      `${DOMAIN_LABELS[h.domain].en.toLowerCase()} (${h.leeches} ${h.leeches === 1 ? 'word' : 'words'} keep slipping)`,
+  );
+  return (
+    <p className="mt-2 text-sm text-stone-600 dark:text-stone-300" data-testid="domain-hold">
+      No new {names.join(' or ')} words until that list is under {holds[0].limit}{' '}
+      <span lang="zh-Hant-TW">先處理常忘的字</span>. Start them over or practise them in{' '}
+      <Link to="/stats" className="font-semibold text-brand-600 underline dark:text-brand-300">
+        Stats
+      </Link>
+      , or change the hold in{' '}
+      <Link to="/settings" className="font-semibold text-brand-600 underline dark:text-brand-300">
+        Settings
+      </Link>
+      .
+    </p>
+  );
+}
+
 function SettlingHoldNote({ settling, limit }: { settling: number; limit: number }) {
   return (
     <p className="mt-2 text-sm text-stone-600 dark:text-stone-300" data-testid="settling-hold">

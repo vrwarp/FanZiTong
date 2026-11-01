@@ -240,12 +240,13 @@ export const TOOLS = {
   },
   settings_update: {
     description:
-      'Change a study setting (target retention, daily limits, leech threshold, reveal delay, active domains). Only when the learner asks; it is journaled and undoable.',
+      'Change a study setting (target retention, daily limits, the settling hold, the per-domain leech hold, leech threshold, reveal delay, active domains). Only when the learner asks; it is journaled and undoable.',
     input: z.object({
       targetRetention: z.number().min(0.7).max(0.99).optional(),
       maxDailyReviews: z.number().int().min(0).max(999).optional(),
       maxDailyNewCards: z.number().int().min(0).max(999).optional(),
       maxSettlingCards: z.number().int().min(0).max(999).optional(),
+      maxLeechesPerDomain: z.number().int().min(0).max(999).optional(),
       leechThreshold: z.number().int().min(1).max(20).optional(),
       pinyinRevealDelayMs: z.number().int().min(0).max(60000).optional(),
       activeDomains: z.array(z.enum(DOMAIN_CATEGORIES)).min(1).optional(),

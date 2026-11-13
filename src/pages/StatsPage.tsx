@@ -9,8 +9,13 @@ import { Hanzi } from '@/components/ui/Hanzi';
 import { Modal } from '@/components/ui/Modal';
 import { charInfo } from '@/data/charInfo';
 import { repository } from '@/db/repository';
-import { isPinned, restartCard } from '@/lib/fsrs/restart';
-import { troubleLabel } from '@/lib/stats/slips';
+import { isPinned, isRecoveredPin, restartCard } from '@/lib/fsrs/restart';
+import { TROUBLE_WINDOW_DAYS, troubleLabel } from '@/lib/stats/slips';
+import { weeklyReadingSpeed } from '@/lib/stats/fluency';
+import { hasRecentMixup } from '@/lib/queue/session';
+import { useReadingState } from '@/hooks/useReadingState';
+import { mostTapped } from '@/lib/reading/state';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { breakdown, describeBreakdown } from '@/lib/etymology';
 import { useEtymology } from '@/hooks/useEtymology';
 import { diffCharacters, expandFoil } from '@/lib/exercises/foil';
@@ -28,6 +33,7 @@ import {
   domainMastery,
   findLeeches,
   hasEnoughRecallData,
+  readableNow,
   retentionRate,
   stateDistribution,
   totalLapses,
@@ -47,6 +53,8 @@ export default function StatsPage() {
   const logs = useReviewLogsOrEmpty();
   const { settings } = useSettings();
   const now = useNow();
+  const events = useLiveQuery(() => repository.getAllStudyEvents(), []);
+  const { state: reading } = useReadingState();
 
   const model = useMemo(() => {
     const scheduler = createScheduler(settings, { enableFuzz: false });
@@ -58,6 +66,17 @@ export default function StatsPage() {
       recallDataReady: ready,
       studyDays: countStudyDays(logs),
       retrievability: ready ? averageRetrievability(scheduler, cards, now) : null,
+      readable: readableNow(scheduler, cards, now),
+      studied: cards.filter((c) => c.fsrs.state !== 0).length,
+      byEar: {
+        asked: cards.filter((c) => c.byEar).length,
+        known: cards.filter((c) => c.byEar?.known).length,
+      },
+      setAside: cards.filter((c) => c.setAsideAt),
+      mixups: cards
+        .filter((c) => hasRecentMixup(c, now))
+        .sort((a, b) => (b.mixups?.length ?? 0) - (a.mixups?.length ?? 0)),
+      recovered: cards.filter((c) => !c.setAsideAt && isRecoveredPin(c, now)),
       answers30: logs30.length,
       retention30: retentionRate(logs30),
       series: dailySeries(logs, 30, now),
@@ -76,12 +95,28 @@ export default function StatsPage() {
     };
   }, [cards, logs, settings, now]);
 
+  const fluency = useMemo(() => weeklyReadingSpeed(events ?? [], now), [events, now]);
+  const tappedChars = useMemo(() => mostTapped(reading), [reading]);
+
   const total = Math.max(1, cards.length);
   const [restarting, setRestarting] = useState<VocabCard | null>(null);
+  const [restartingAll, setRestartingAll] = useState(false);
   const restart = async () => {
     if (!restarting) return;
     await repository.putCard(restartCard(restarting, new Date()));
     setRestarting(null);
+  };
+  const restartRecovered = async () => {
+    const at = new Date();
+    await repository.putCards(model.recovered.map((card) => restartCard(card, at)));
+    setRestartingAll(false);
+  };
+  const setAside = async (card: VocabCard, aside: boolean) => {
+    const nowIso = new Date().toISOString();
+    const next: VocabCard = { ...card, updatedAt: nowIso };
+    if (aside) next.setAsideAt = nowIso;
+    else delete next.setAsideAt;
+    await repository.putCard(next);
   };
 
   return (
@@ -121,6 +156,80 @@ export default function StatsPage() {
           testId="stat-leeches"
           tone={model.leeches.length > 0 ? 'red' : undefined}
         />
+      </section>
+
+      <section className="grid grid-cols-3 gap-3 text-center">
+        <Tile label="Can read now" value={model.readable} testId="stat-readable" />
+        <Tile label="Known by ear" value={model.byEar.known} testId="stat-by-ear" />
+        <Tile label="Set aside" value={model.setAside.length} testId="stat-set-aside" />
+      </section>
+      <p className="-mt-2 text-xs text-stone-500 dark:text-stone-400" data-testid="readable-note">
+        &ldquo;Can read now&rdquo; is the {model.studied} words you have studied, each weighed by
+        the chance you would read it today. By ear: {model.byEar.known} of the {model.byEar.asked}{' '}
+        words asked so far.
+      </p>
+
+      <section className="card-surface p-4" data-testid="fluency">
+        <h2 className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400">
+          Reading speed <span lang="zh-Hant-TW">閱讀速度</span>
+        </h2>
+        <p className="mb-2 text-xs text-stone-500 dark:text-stone-400">
+          Median time to read a word you got right, first look of a session, week by week. Under
+          three seconds is reading; over five is working it out.
+        </p>
+        {fluency.every((w) => w.medianSeconds === null) ? (
+          <p className="text-sm text-stone-500 dark:text-stone-400" data-testid="fluency-empty">
+            Shows once a week has ten correct reviews in it.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1 text-sm" data-testid="fluency-weeks">
+            {fluency
+              .filter((w) => w.medianSeconds !== null)
+              .map((w) => (
+                <li key={w.start} className="flex items-center gap-2">
+                  <span className="w-16 shrink-0 text-xs text-stone-500 dark:text-stone-400">
+                    {w.start.slice(5)}
+                  </span>
+                  <span
+                    className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700"
+                    aria-hidden
+                  >
+                    <span
+                      className="block h-2 rounded-full bg-brand-600"
+                      style={{ width: `${Math.min(100, (w.medianSeconds ?? 0) * 10)}%` }}
+                    />
+                  </span>
+                  <span className="shrink-0 font-semibold">{w.medianSeconds} s</span>
+                  <span className="shrink-0 text-xs text-stone-500 dark:text-stone-400">
+                    {Math.round((w.fastShare ?? 0) * 100)}% under 3 s
+                  </span>
+                </li>
+              ))}
+          </ul>
+        )}
+        {(tappedChars.length > 0 || reading.unknown.length > 0) && (
+          <p className="mt-2 text-sm text-stone-600 dark:text-stone-300" data-testid="reading-gaps">
+            {tappedChars.length > 0 && (
+              <>
+                Tapped while reading:{' '}
+                <Hanzi className="font-semibold">{tappedChars.map((t) => t.char).join(' ')}</Hanzi>
+                .{' '}
+              </>
+            )}
+            {reading.unknown.length > 0 && (
+              <>
+                Common characters not readable yet:{' '}
+                <Hanzi className="font-semibold">{reading.unknown.slice(0, 40).join(' ')}</Hanzi>.
+              </>
+            )}
+          </p>
+        )}
+        <Link
+          to="/read"
+          className="mt-2 inline-block text-xs font-semibold text-brand-600 underline dark:text-brand-300"
+        >
+          Read sentences
+        </Link>
       </section>
 
       <section className="card-surface p-4">
@@ -266,10 +375,11 @@ export default function StatsPage() {
           >
             Words that keep slipping <span lang="zh-Hant-TW">常忘的字</span>
           </h2>
-          <span className="shrink-0 text-xs text-stone-500">
-            forgotten, or Hard at the ceiling, on ≥ {settings.leechThreshold} days
-          </span>
         </div>
+        <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+          Forgotten, or Hard at the ceiling, on {settings.leechThreshold} or more of the last{' '}
+          {TROUBLE_WINDOW_DAYS} days. A word leaves the list on its own once it stops slipping.
+        </p>
         {model.leeches.length === 0 ? (
           <p className="mt-2 text-sm text-stone-500 dark:text-stone-400" data-testid="no-leeches">
             Nothing keeps slipping. Keep it up!
@@ -281,7 +391,7 @@ export default function StatsPage() {
               data-testid="leech-list"
             >
               {model.leeches.map((card) => (
-                <LeechRow key={card.id} card={card} />
+                <LeechRow key={card.id} card={card} onSetAside={() => void setAside(card, true)} />
               ))}
             </ul>
             <Button
@@ -313,6 +423,17 @@ export default function StatsPage() {
             no rating brings them down. Starting a word over keeps its history and tests it fresh:
             read it right the first time and it is scheduled like a word you know.
           </p>
+          {model.recovered.length > 1 && (
+            <Button
+              className="mt-2"
+              variant="outline"
+              block
+              onClick={() => setRestartingAll(true)}
+              data-testid="restart-recovered"
+            >
+              Start over the {model.recovered.length} not missed in two weeks
+            </Button>
+          )}
           <ul
             className="mt-2 divide-y divide-stone-200 dark:divide-stone-700"
             data-testid="pinned-list"
@@ -343,6 +464,86 @@ export default function StatsPage() {
           </ul>
         </section>
       )}
+
+      {model.mixups.length > 0 && (
+        <section className="card-surface p-4" data-testid="mixups">
+          <h2 className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400">
+            Mix-ups <span lang="zh-Hant-TW">搞混的字</span>
+          </h2>
+          <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            Wrong shapes you took for a word in a drill this month. The drills ask these words
+            first.
+          </p>
+          <ul className="mt-2 flex flex-col gap-1 text-sm">
+            {model.mixups.map((card) => {
+              const picks = new Map<string, number>();
+              for (const m of card.mixups ?? [])
+                picks.set(m.picked, (picks.get(m.picked) ?? 0) + 1);
+              return (
+                <li key={card.id} data-testid="mixup-row">
+                  <Link to={`/vocab/${card.id}`}>
+                    <Hanzi className="text-lg font-bold">{card.traditional}</Hanzi>
+                  </Link>{' '}
+                  taken for{' '}
+                  {Array.from(picks, ([picked, n]) => (
+                    <span key={picked} className="mr-2">
+                      <Hanzi className="font-semibold text-red-600">{picked}</Hanzi>
+                      {n > 1 && ` ×${n}`}
+                    </span>
+                  ))}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {model.setAside.length > 0 && (
+        <section className="card-surface p-4" data-testid="set-aside-list">
+          <h2 className="text-sm font-bold text-stone-500 uppercase dark:text-stone-400">
+            Set aside <span lang="zh-Hant-TW">先放著</span>
+          </h2>
+          <ul className="mt-2 divide-y divide-stone-200 dark:divide-stone-700">
+            {model.setAside.map((card) => (
+              <li key={card.id} className="flex items-center gap-3 py-2">
+                <Hanzi className="text-xl font-bold">{card.traditional}</Hanzi>
+                <span className="min-w-0 flex-1 truncate text-sm">{card.definition}</span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void setAside(card, false)}
+                  data-testid="bring-back"
+                >
+                  Bring back
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <Modal
+        open={restartingAll}
+        title={`Start ${model.recovered.length} words over?`}
+        onClose={() => setRestartingAll(false)}
+        testId="restart-all-dialog"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRestartingAll(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void restartRecovered()} data-testid="confirm-restart-all">
+              Start them over
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm">
+          These are pinned at maximum difficulty but have not been forgotten in two weeks. Each
+          comes up once more as a fresh word, and reading it right schedules it like a word you
+          know. Their history stays. Words you are still missing are left as they are.
+        </p>
+      </Modal>
 
       <Modal
         open={restarting !== null}
@@ -375,7 +576,7 @@ export default function StatsPage() {
  * accepted spellings (so a variant is never counted as a miss), and the
  * look-alikes it is confused with.
  */
-function LeechRow({ card }: { card: VocabCard }) {
+function LeechRow({ card, onSetAside }: { card: VocabCard; onSetAside: () => void }) {
   const [showReading, setShowReading] = useState(false);
   useEtymology();
   const chars = hanChars(card.traditional);
@@ -466,6 +667,14 @@ function LeechRow({ card }: { card: VocabCard }) {
       >
         Practice this word
       </Link>
+      <button
+        type="button"
+        onClick={onSetAside}
+        className="self-start text-xs font-semibold text-stone-500 underline dark:text-stone-400"
+        data-testid="leech-set-aside"
+      >
+        Set aside for now
+      </button>
     </li>
   );
 }

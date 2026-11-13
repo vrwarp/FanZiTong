@@ -11,7 +11,9 @@ import {
   findLeeches,
   hasEnoughRecallData,
   logsOnDay,
+  paceSecondsPerCard,
   retentionRate,
+  usualDailyReviews,
 } from '@/lib/stats/analytics';
 import type { ReviewLog, UserSettings, VocabCard } from '@/types';
 
@@ -33,6 +35,8 @@ export interface DashboardModel {
   totalCards: number;
   /** True when today's plan has been cleared. */
   doneForToday: boolean;
+  /** The learner's own pace in seconds per queued card, once there is history (else null). */
+  secondsPerCard: number | null;
 }
 
 export function computeDashboard(
@@ -42,13 +46,16 @@ export function computeDashboard(
   now: Date,
 ): DashboardModel {
   const reviewsToday = countReviewsToday(logs, now);
-  const newCardsToday = countNewCardsIntroducedToday(logs, now);
+  const newCardsToday = countNewCardsIntroducedToday(logs, now, cards);
+  const pace = paceSecondsPerCard(logs, now);
   const plan = buildSessionQueue({
     cards,
     settings,
     now,
     reviewsDoneToday: reviewsToday,
     newCardsIntroducedToday: newCardsToday,
+    usualDailyReviews: usualDailyReviews(logs, now) ?? undefined,
+    secondsPerCard: pace ?? undefined,
   });
   const scheduler = createScheduler(settings, { enableFuzz: false });
   const answersToday = countAnswersToday(logs, now);
@@ -66,6 +73,7 @@ export function computeDashboard(
     leechCount: findLeeches(cards, settings.leechThreshold).length,
     totalCards: cards.length,
     doneForToday: plan.queue.length === 0 && answersToday > 0,
+    secondsPerCard: pace,
   };
 }
 

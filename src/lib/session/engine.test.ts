@@ -1,6 +1,12 @@
 import { createScheduler } from '@/lib/fsrs/scheduler';
 import type { StudyEvent } from '@/lib/analytics/events';
-import { DRILL_AFTER_LOOK_MS, MAX_SESSION_REQUEUES, MIN_RETRY_GAP_MS } from '@/lib/queue/session';
+import {
+  DRILL_AFTER_LOOK_MS,
+  MAX_SESSION_REQUEUES,
+  MIN_RETRY_GAP_MS,
+  restedForSayIt,
+} from '@/lib/queue/session';
+import { buildFoilExercise } from '@/lib/exercises/foil';
 import { restartCard } from '@/lib/fsrs/restart';
 import { mulberry32 } from '@/lib/util/random';
 import { CardState, type VocabCard } from '@/types';
@@ -9,6 +15,8 @@ import { buildDrillExercises, selectDrillCards } from './drillPlan';
 import type { DrillExercise } from './engine';
 import {
   MAX_COUNTED_ANSWER_MS,
+  SLOW_PASS_MS,
+  SLOW_PASS_RETENTION_BONUS,
   StudyEngine,
   describeDrillOutcome,
   drillRatingFor,
@@ -288,6 +296,7 @@ describe('StudyEngine — one word, one drill', () => {
       traditional,
       domain: 'food',
       fsrs: reviewState({ lapses: 1, due: '2026-09-05T07:00:00.000Z' }),
+      slipDays: 1,
       exampleSentenceTraditional: `我要一碗${traditional}。`,
       ...extra,
     });
@@ -560,6 +569,7 @@ describe('drillPlan', () => {
       traditional: '藉口',
       domain: 'slang',
       fsrs: reviewState({ lapses: 4 }),
+      slipDays: 4,
       exampleSentenceTraditional: '他有藉口。',
       visualFoils: ['籍口'],
     });
@@ -1646,11 +1656,38 @@ describe('StudyEngine — a new word met face up', () => {
     expect(engine.snapshot().total).toBe(2);
     expect(engine.serialize().introduced).toEqual([slang.id]);
     engine.rate(4);
-    // …and the slang word comes back as a test, not another look.
+    // …and the slang word comes back for a look that is practice: it was met
+    // minutes ago, so nothing it is rated reaches the scheduler.
     expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: slang.id });
-    const first = engine.rate(3)!;
+    expect(engine.snapshot().lesson).toBe(true);
+    c.advance(61_000);
+    expect(engine.rate(1)).toBeNull();
+    expect(events.at(-1)).toMatchObject({
+      kind: 'answer',
+      applied: false,
+      lesson: true,
+      rating: 1,
+    });
+    expect(engine.getCard(slang.id)!.fsrs.state).toBe(CardState.New);
+    expect(engine.getCard(slang.id)!.lastAgainAt).toBeUndefined();
+    // A miss earns one more look; a pass ends the word's day.
+    c.advance(61_000);
+    engine.tick();
+    expect(engine.snapshot().step).toEqual({ kind: 'card', cardId: slang.id });
+    expect(engine.rate(4)).toBeNull();
+    expect(engine.snapshot().status).toBe('complete');
+    expect(engine.getCard(slang.id)!.fsrs.state).toBe(CardState.New);
+    expect(engine.snapshot().results.filter((r) => r.cardId === slang.id)).toHaveLength(2);
+
+    // The next study day the word is tested cold, and that rating is the first heard.
+    const met = engine.getCard(slang.id)!;
+    const next = clock('2026-09-06T08:00:00.000Z');
+    const tomorrow = engineFor([met, food], [met.id], { faceUpDomains: ['slang'], now: next.now });
+    expect(tomorrow.snapshot().step).toEqual({ kind: 'card', cardId: slang.id });
+    expect(tomorrow.snapshot().lesson).toBe(false);
+    const first = tomorrow.rate(3)!;
     expect(first.log).toMatchObject({ rating: 3, stateBefore: CardState.New });
-    expect(first.card.introducedAt).toBe(engine.getCard(slang.id)!.introducedAt);
+    expect(first.card.introducedAt).toBe(met.introducedAt);
   });
 
   it('tests cold a word of another domain, one already introduced, and one introduced before', () => {
@@ -1705,7 +1742,7 @@ describe('StudyEngine — Say It for a word in Review', () => {
     const pool = makePool();
     const outside = pool.find((c) => c.traditional === '團契')!;
     // In Review, lapsed once: a drill candidate, not part of today's session.
-    const troubled = { ...outside, fsrs: reviewState({ lapses: 1 }) };
+    const troubled = { ...outside, fsrs: reviewState({ lapses: 1 }), slipDays: 1 };
     const rest = pool.filter((c) => c.id !== outside.id);
     const engine = engineFor(
       [...rest, troubled],
@@ -1717,6 +1754,33 @@ describe('StudyEngine — Say It for a word in Review', () => {
     expect(step?.kind).toBe('drill');
     if (step?.kind !== 'drill') throw new Error('expected drill');
     expect(step.exercise).toMatchObject({ type: 'typed_reading', cardId: troubled.id });
+  });
+
+  it('lets a word read correctly in the last week rest, however troubled', () => {
+    const at = new Date('2026-09-05T08:00:00.000Z');
+    const pool = makePool();
+    const outside = pool.find((c) => c.traditional === '團契')!;
+    // Typed right last night: asking again tonight is a ritual, not a retrieval.
+    const lastNight = {
+      ...outside,
+      fsrs: reviewState({ lapses: 3 }),
+      slipDays: 4,
+      lastPassAt: '2026-09-04T08:00:00.000Z',
+    };
+    const rest = pool.filter((c) => c.id !== outside.id);
+    const engine = engineFor(
+      [...rest, lastNight],
+      rest.map((c) => c.id),
+      { now: () => at },
+    );
+    for (let i = 0; i < 5; i += 1) engine.rate(4);
+    const step = engine.snapshot().step;
+    if (step?.kind === 'drill') {
+      expect(step.exercise.type).not.toBe('typed_reading');
+    }
+    expect(restedForSayIt(lastNight, at)).toBe(false);
+    expect(restedForSayIt({ lastPassAt: '2026-08-28T08:00:00.000Z' }, at)).toBe(true);
+    expect(restedForSayIt({}, at)).toBe(true);
   });
 });
 
@@ -1806,5 +1870,81 @@ describe('StudyEngine — Find It', () => {
       correct: true,
       sentence: card.exampleSentenceTraditional,
     });
+  });
+});
+
+describe('StudyEngine — a slow Good comes back sooner', () => {
+  it('schedules a slow Good with the higher-retention scheduler, and nothing else', () => {
+    const pool = makePool();
+    const card = {
+      ...pool[0],
+      fsrs: reviewState({ stability: 20, due: '2026-09-05T07:00:00.000Z' }),
+    };
+    const other = {
+      ...pool[1],
+      fsrs: reviewState({ stability: 20, due: '2026-09-05T07:00:00.000Z' }),
+    };
+    const scheduler = createScheduler({ targetRetention: 0.9 }, { enableFuzz: false });
+    const slowScheduler = createScheduler({ targetRetention: 0.93 }, { enableFuzz: false });
+    const run = (waitMs: number, rating: 3 | 4) => {
+      const c = clock('2026-09-06T08:00:00.000Z');
+      const engine = new StudyEngine({
+        pool: [card, other],
+        queue: [card.id],
+        scheduler,
+        slowScheduler,
+        interleaveDrills: false,
+        now: c.now,
+      });
+      c.advance(waitMs);
+      engine.reveal();
+      const snapshot = engine.snapshot();
+      const review = engine.rate(rating)!;
+      return { snapshot, days: review.card.fsrs.scheduled_days };
+    };
+    const quick = run(2_000, 3);
+    const slow = run(SLOW_PASS_MS, 3);
+    expect(quick.snapshot.slowRead).toBe(false);
+    expect(slow.snapshot.slowRead).toBe(true);
+    expect(slow.days).toBeLessThan(quick.days);
+    expect(slow.days).toBeGreaterThan(quick.days * 0.4);
+    // The button shows the interval that will be applied.
+    expect(slow.snapshot.previews?.[3].scheduledDays).toBe(slow.days);
+    // Easy is the learner's own claim of an instant read and is left alone.
+    expect(run(SLOW_PASS_MS, 4).days).toBe(run(2_000, 4).days);
+    expect(SLOW_PASS_RETENTION_BONUS).toBeGreaterThan(0);
+  });
+});
+
+describe('StudyEngine — what the learner tells it', () => {
+  it('records a by-ear answer on the current card, to be saved', () => {
+    const pool = makePool();
+    const engine = engineFor(pool, [pool[0].id]);
+    engine.reveal();
+    engine.markByEar(false);
+    expect(engine.getCard(pool[0].id)!.byEar).toMatchObject({ known: false });
+    expect(engine.drainTouchedCards().map((c) => c.id)).toContain(pool[0].id);
+    engine.rate(4);
+    expect(engine.snapshot().status).toBe('complete');
+    // No card on screen: nothing to mark.
+    engine.markByEar(true);
+    expect(engine.getCard(pool[0].id)!.byEar).toMatchObject({ known: false });
+  });
+
+  it('remembers the wrong shape taken for a word in a drill', () => {
+    const pool = makePool();
+    const card = { ...pool[0], fsrs: reviewState() };
+    const exercise = buildFoilExercise(card, pool, mulberry32(1))!;
+    const engine = new StudyEngine({
+      pool: [card, ...pool.slice(1)],
+      queue: [],
+      drills: [exercise],
+      scheduler: createScheduler({ targetRetention: 0.9 }, { enableFuzz: false }),
+      interleaveDrills: false,
+    });
+    engine.answerDrill([{ cardId: card.id, correct: false, picked: '魯內飯' }]);
+    expect(engine.getCard(card.id)!.mixups).toEqual([
+      expect.objectContaining({ picked: '魯內飯' }),
+    ]);
   });
 });

@@ -98,6 +98,28 @@ export default function DrillsPage() {
         </label>
       </div>
 
+      <div className="card-surface flex gap-4 p-4">
+        <span className="text-3xl" aria-hidden>
+          📖
+        </span>
+        <div className="flex flex-1 flex-col gap-2">
+          <h2 className="text-lg font-bold">
+            Read{' '}
+            <span lang="zh-Hant-TW" className="hanzi text-brand-600 dark:text-brand-300">
+              讀句子
+            </span>
+          </h2>
+          <p className="text-sm text-stone-600 dark:text-stone-300">
+            Whole sentences made mostly of words you know, with no reading shown: read, then tap
+            what you could not. Also checks the common characters no word card ever asks about — 的,
+            這, 了.
+          </p>
+          <Button className="self-start" onClick={() => navigate('/read')} data-testid="open-read">
+            Open
+          </Button>
+        </div>
+      </div>
+
       <ul className="flex flex-col gap-3">
         {DRILLS.map((drill) => {
           const label = EXERCISE_LABELS[drill.type];

@@ -9,7 +9,7 @@ import {
   type VocabCard,
 } from '@/types';
 import {
-  interleaveByDomain,
+  interleaveByLane,
   isActiveDomain,
   domainLeechHolds,
   isSettling,
@@ -21,7 +21,13 @@ import {
 } from '@/lib/queue/session';
 import { PINNED_DIFFICULTY } from '@/lib/fsrs/restart';
 import { MASTERY_STABILITY_DAYS } from '@/lib/stats/analytics';
-import { HARD_LOOP_DIFFICULTY, isHardLoop, isLeech, troubleScore } from '@/lib/stats/slips';
+import {
+  HARD_LOOP_DIFFICULTY,
+  TROUBLE_WINDOW_DAYS,
+  isHardLoop,
+  isLeech,
+  troubleScore,
+} from '@/lib/stats/slips';
 import {
   characterKnowledge,
   firstSightProfile,
@@ -234,7 +240,7 @@ export function buildDeckCensus(cards: VocabCard[], settings: UserSettings): Dec
   });
 
   // Mirror the real queue order so the preview shows what will actually happen.
-  const upcoming = interleaveByDomain(
+  const upcoming = interleaveByLane(
     cards
       .filter((c) => c.fsrs.state === CardState.New && isActiveDomain(c, settings))
       .sort(
@@ -942,22 +948,17 @@ export function buildDiagnostics(
     .filter((c) => isLeech(c, settings.leechThreshold))
     .sort((a, b) => troubleScore(b) - troubleScore(a));
   if (leeches.length > 0) {
-    const byDays = leeches.filter((c) => c.fsrs.lapses < settings.leechThreshold).length;
     const hardLoops = leeches.filter((c) => isHardLoop(c, settings.leechThreshold)).length;
     found.push({
       code: 'leech',
       severity: 'warn',
       title: 'Words that keep slipping',
       detail:
-        `${leeches.length} card(s) have been forgotten on ${settings.leechThreshold}+ study days, ` +
-        `lapsed ${settings.leechThreshold}+ times, or been rated Hard on ` +
-        `${settings.leechThreshold}+ days at difficulty ${HARD_LOOP_DIFFICULTY} or above, and are ` +
-        `still scheduled like any other card` +
-        (byDays > 0
-          ? `; ${byDays} of them never reached ${settings.leechThreshold} FSRS lapses, because a ` +
-            `word that fails before it graduates, or is read slowly at the ceiling, is not ` +
-            `counted as lapsing`
-          : '') +
+        `${leeches.length} card(s) have, in the last ${TROUBLE_WINDOW_DAYS} days, been forgotten on ` +
+        `${settings.leechThreshold}+ study days or been rated Hard on ` +
+        `${settings.leechThreshold}+ days at difficulty ${HARD_LOOP_DIFFICULTY} or above. The ` +
+        `counts are over that window, not all time, so a word that stops slipping leaves the ` +
+        `list on its own` +
         (hardLoops > 0
           ? `; ${hardLoops} of them are in a Hard loop, which no rating ends — Stats offers to ` +
             `start such a word over.`
@@ -967,7 +968,7 @@ export function buildDiagnostics(
         .slice(0, 5)
         .map(
           (c) =>
-            `${label(c.id)} · ${c.slipDays ?? 0} day(s) · ${c.fsrs.lapses} lapse(s) · ` +
+            `${label(c.id)} · ${c.slipDays ?? 0} day(s) · ${c.fsrs.lapses} lifetime lapse(s) · ` +
             `${c.hardDays ?? 0} hard day(s)`,
         ),
     });

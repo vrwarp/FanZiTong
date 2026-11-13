@@ -4,6 +4,7 @@ import { createScheduler, previewRatings } from '@/lib/fsrs/scheduler';
 import { containsPinyin } from '@/lib/util/pinyin';
 import { loadEtymologyTable } from '@/lib/etymology';
 import { makeCard } from '@/test/factories';
+import { RatingButtons } from './RatingButtons';
 import { RecognitionCard } from './RecognitionCard';
 
 // The dictionary line on the reveal comes from the composition chunk.
@@ -282,5 +283,53 @@ describe('RecognitionCard — is the Mandarin reading used too?', () => {
     show();
     expect(screen.getByTestId('spoken-use')).toHaveAttribute('data-use', 'unknown');
     expect(screen.getByTestId('spoken-use')).toHaveTextContent(/Said the Taiwanese way/);
+  });
+});
+
+describe('RatingButtons on the day a word was met face up', () => {
+  it('quotes no interval and says the look is practice', () => {
+    const card = makeCard();
+    const previews = previewRatings(scheduler, card.fsrs, new Date());
+    render(<RatingButtons previews={previews} onRate={() => {}} visible lesson practice />);
+    expect(screen.getByTestId('rating-lesson')).toHaveTextContent(/Tomorrow.s cold try/);
+    expect(screen.queryByTestId('rating-practice')).not.toBeInTheDocument();
+    expect(screen.getByTestId('interval-1')).toHaveTextContent('one more look');
+    expect(screen.getByTestId('interval-3')).toHaveTextContent('tomorrow');
+    expect(screen.getByTestId('rate-4')).toHaveAccessibleName(/Practice/);
+  });
+
+  it('says a slow read just comes back sooner', () => {
+    const card = makeCard();
+    const previews = previewRatings(scheduler, card.fsrs, new Date());
+    render(
+      <RatingButtons previews={previews} onRate={() => {}} visible latencyMs={9000} slowRead />,
+    );
+    expect(screen.getByTestId('reveal-latency')).toHaveTextContent(/comes back a little sooner/);
+  });
+});
+
+describe('RecognitionCard — did you know it by ear?', () => {
+  it('asks once on the reveal, and not of a word already answered', async () => {
+    const onByEar = vi.fn();
+    const { previews, unmount } = renderCard();
+    unmount();
+    const first = renderCard({ revealed: true, previews, onByEar });
+    await userEvent.click(screen.getByTestId('by-ear-no'));
+    expect(onByEar).toHaveBeenCalledWith(false);
+    await userEvent.click(screen.getByTestId('by-ear-yes'));
+    expect(onByEar).toHaveBeenLastCalledWith(true);
+    first.unmount();
+    const answered = makeCard({ byEar: { at: '2026-09-05T00:00:00.000Z', known: true } });
+    renderCard({ card: answered, pool: [answered], revealed: true, previews, onByEar });
+    expect(screen.queryByTestId('by-ear-ask')).not.toBeInTheDocument();
+    expect(screen.getByTestId('by-ear')).toBeInTheDocument();
+  });
+
+  it('never asks before the reveal, and tells a lesson look from a test', () => {
+    const { previews, unmount } = renderCard({ onByEar: vi.fn() });
+    expect(screen.queryByTestId('by-ear-ask')).not.toBeInTheDocument();
+    unmount();
+    renderCard({ revealed: true, previews, lesson: true });
+    expect(screen.getByTestId('rating-lesson')).toBeInTheDocument();
   });
 });

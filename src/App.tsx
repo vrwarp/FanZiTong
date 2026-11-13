@@ -17,6 +17,8 @@ const VocabPage = lazy(() => import('@/pages/VocabPage'));
 const CardEditorPage = lazy(() => import('@/pages/CardEditorPage'));
 const StatsPage = lazy(() => import('@/pages/StatsPage'));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'));
+const ReadPage = lazy(() => import('@/pages/ReadPage'));
+const PasteTextPage = lazy(() => import('@/pages/PasteTextPage'));
 
 export default function App() {
   const bootstrap = useBootstrap();
@@ -46,7 +48,9 @@ export default function App() {
             <Route element={<AppShell />}>
               <Route index element={<LearnPage />} />
               <Route path="drills" element={<DrillsPage />} />
+              <Route path="read" element={<ReadPage />} />
               <Route path="vocab" element={<VocabPage />} />
+              <Route path="vocab/paste" element={<PasteTextPage />} />
               <Route path="vocab/new" element={<CardEditorPage />} />
               <Route path="vocab/:cardId" element={<CardEditorPage />} />
               <Route path="stats" element={<StatsPage />} />

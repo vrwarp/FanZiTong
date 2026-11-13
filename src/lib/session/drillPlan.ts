@@ -13,6 +13,7 @@ import {
   DRILL_ROTATION,
   hasAlignedSentence,
   hasClozeSentence,
+  hasRecentMixup,
   hasMeaningCue,
   hasReading,
   isActiveDomain,
@@ -50,7 +51,7 @@ export interface DrillSelectionOptions {
 function priority(card: VocabCard, now: Date): number {
   // Words in trouble first (forgotten on some day, or lapsed), then
   // (re)learning, then due reviews, then the rest.
-  if (troubleScore(card) > 0) return 0;
+  if (troubleScore(card) > 0 || hasRecentMixup(card, now)) return 0;
   if (card.fsrs.state === CardState.Learning || card.fsrs.state === CardState.Relearning) return 1;
   if (card.fsrs.state === CardState.Review && new Date(card.fsrs.due).getTime() <= now.getTime())
     return 2;

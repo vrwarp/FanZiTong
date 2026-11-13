@@ -186,6 +186,8 @@ export function leechBackup(now: Date) {
         tags: ['colloquial'],
         exampleSentenceTraditional: '他每次遲到都有一堆藉口。',
         visualFoils: ['籍口', '耤口'],
+        // Forgotten on four of the last thirty days: what the leech list counts.
+        slipDays: 4,
         fsrs: {
           due: new Date(now.getTime() - 3_600_000).toISOString(),
           stability: 2.5,

@@ -15,9 +15,9 @@ import { useEtymology } from '@/hooks/useEtymology';
 import { useSettings } from '@/hooks/useSettings';
 import { useStudyEngine } from '@/hooks/useStudyEngine';
 import { recordStudyEvent } from '@/lib/analytics/recorder';
-import { createScheduler } from '@/lib/fsrs/scheduler';
+import { clampRetention, createScheduler } from '@/lib/fsrs/scheduler';
 import { hardToday, knockedDownToday } from '@/lib/queue/session';
-import { StudyEngine, summarizeResults } from '@/lib/session/engine';
+import { SLOW_PASS_RETENTION_BONUS, StudyEngine, summarizeResults } from '@/lib/session/engine';
 import {
   clearPausedSession,
   readPausedSession,
@@ -64,6 +64,9 @@ function StudySession({
         pool: initialCards,
         queue,
         scheduler: createScheduler(settings),
+        slowScheduler: createScheduler({
+          targetRetention: clampRetention(settings.targetRetention + SLOW_PASS_RETENTION_BONUS),
+        }),
         interleaveDrills: true,
         onEvent: recordStudyEvent,
         restore: saved.length > 0 ? paused?.progress : undefined,
@@ -260,6 +263,9 @@ function StudySession({
           keepsSlipping={isLeech(snapshot.card, settings.leechThreshold)}
           practice={knockedDownToday(snapshot.card, new Date())}
           hardCounted={hardToday(snapshot.card, new Date())}
+          lesson={snapshot.lesson}
+          slowRead={snapshot.slowRead}
+          onByEar={api.markByEar}
         />
       )}
 
@@ -279,6 +285,7 @@ function StudySession({
             position={snapshot.answered + 1}
             total={snapshot.total}
             intro={{ onDone: api.acknowledgeIntro }}
+            onByEar={api.markByEar}
           />
         </div>
       )}

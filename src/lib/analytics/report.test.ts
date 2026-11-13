@@ -397,7 +397,11 @@ describe('the settling hold in the census and diagnostics', () => {
 
 describe('buildCardReports', () => {
   it('reports only the cards that have been studied, worst first', () => {
-    const studied = makeCard({ traditional: '貢丸湯', fsrs: reviewState({ reps: 4, lapses: 3 }) });
+    const studied = makeCard({
+      traditional: '貢丸湯',
+      fsrs: reviewState({ reps: 4, lapses: 3 }),
+      slipDays: 3,
+    });
     const untouched = makeCard({ traditional: '蛋餅' });
     const logs = [
       makeLog({ cardId: studied.id, rating: 1, reviewTimestamp: at(0) }),
@@ -669,7 +673,7 @@ describe('known by ear', () => {
 });
 
 describe('slip days in the export', () => {
-  it('calls a word that keeps slipping a leech, by days forgotten as well as by lapses', () => {
+  it('calls a word that keeps slipping a leech by its days forgotten in the window', () => {
     const slipping = makeCard({
       traditional: '傲嬌',
       domain: 'anime',
@@ -689,8 +693,8 @@ describe('slip days in the export', () => {
     expect(report.cards.find((c) => c.traditional === '滷肉飯')?.flags).not.toContain('leech');
     const found = report.diagnostics.find((d) => d.code === 'leech')!;
     expect(found.count).toBe(1);
-    expect(found.detail).toContain('never reached 3 FSRS lapses');
-    expect(found.examples[0]).toContain('3 day(s) · 1 lapse(s) · 0 hard day(s)');
+    expect(found.detail).toContain('in the last 30 days');
+    expect(found.examples[0]).toContain('3 day(s) · 1 lifetime lapse(s) · 0 hard day(s)');
   });
 
   it('calls a word rated Hard day after day at the ceiling a leech in a Hard loop', () => {
@@ -731,7 +735,7 @@ describe('slip days in the export', () => {
     const found = report.diagnostics.find((d) => d.code === 'leech')!;
     expect(found.count).toBe(1);
     expect(found.detail).toContain('1 of them are in a Hard loop');
-    expect(found.examples[0]).toContain('0 day(s) · 0 lapse(s) · 7 hard day(s)');
+    expect(found.examples[0]).toContain('0 day(s) · 0 lifetime lapse(s) · 7 hard day(s)');
     const pinned = report.diagnostics.find((d) => d.code === 'difficulty_saturated')!;
     expect(pinned.detail).toContain('start such a word over');
   });

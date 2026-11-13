@@ -11,7 +11,11 @@ import {
   domainMastery,
   dueCount,
   findLeeches,
+  HABIT_MIN_DAYS,
+  paceSecondsPerCard,
+  readableNow,
   retentionRate,
+  usualDailyReviews,
   stateDistribution,
   totalLapses,
 } from './analytics';
@@ -97,9 +101,13 @@ describe('computeStreak', () => {
 
 describe('card-level diagnostics', () => {
   const cards = [
-    makeCard({ domain: 'food', fsrs: reviewState({ stability: 45, lapses: 3 }) }),
+    makeCard({ domain: 'food', fsrs: reviewState({ stability: 45, lapses: 3 }), slipDays: 3 }),
     makeCard({ domain: 'food', fsrs: reviewState({ stability: 12, lapses: 1 }) }),
-    makeCard({ domain: 'church', fsrs: reviewState({ stability: 31, lapses: 5, state: 3 }) }),
+    makeCard({
+      domain: 'church',
+      fsrs: reviewState({ stability: 31, lapses: 5, state: 3 }),
+      slipDays: 5,
+    }),
     makeCard({ domain: 'church' }),
     makeCard({ domain: 'anime', fsrs: reviewState({ state: 1, due: '2020-01-01T00:00:00.000Z' }) }),
   ];
@@ -115,6 +123,13 @@ describe('card-level diagnostics', () => {
     const leeches = findLeeches(cards, 3);
     expect(leeches.map((c) => c.fsrs.lapses)).toEqual([5, 3]);
     expect(findLeeches(cards, 6)).toEqual([]);
+    // A word set aside is off the list until it is brought back.
+    expect(
+      findLeeches(
+        cards.map((c) => ({ ...c, setAsideAt: '2026-09-01T00:00:00.000Z' })),
+        3,
+      ),
+    ).toEqual([]);
     expect(totalLapses(cards)).toBe(9);
   });
 
@@ -164,5 +179,74 @@ describe('countDueLaterToday', () => {
       makeCard({}), // new: excluded
     ];
     expect(countDueLaterToday(cards, now)).toBe(2);
+  });
+});
+
+describe('the learner’s own habits', () => {
+  const today = new Date(2026, 8, 20, 12, 0, 0);
+  const on = (daysAgo: number, hour = 10) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(hour, 0, 0, 0);
+    return d.toISOString();
+  };
+
+  it('counts a word met face up as new the day it was met, not the day of its first review', () => {
+    const cards = [
+      { id: 'met-today', introducedAt: on(0) },
+      { id: 'met-yesterday', introducedAt: on(1) },
+      { id: 'cold' },
+    ];
+    const logs = [
+      // Yesterday's face-up word gets its first review today: not a new word today.
+      makeLog({ cardId: 'met-yesterday', reviewTimestamp: on(0) }),
+      makeLog({ cardId: 'cold', reviewTimestamp: on(0) }),
+      makeLog({ cardId: 'old', reviewTimestamp: on(3) }),
+    ];
+    expect(countNewCardsIntroducedToday(logs, today, cards)).toBe(2);
+    // Without the cards, only first reviews can be counted.
+    expect(countNewCardsIntroducedToday(logs, today)).toBe(2);
+    expect(countNewCardsIntroducedToday([], today, cards)).toBe(1);
+  });
+
+  it('works out the usual day’s reviews and the pace per card from the last fortnight', () => {
+    const logs = [1, 2, 3, 4, 5].flatMap((day) =>
+      Array.from({ length: 10 + day }, (_, i) => [
+        makeLog({ cardId: `c${i}`, stateBefore: 2, reviewTimestamp: on(day), timeSpentMs: 6000 }),
+        // A second look the same day: same card-day, more time.
+        makeLog({
+          cardId: `c${i}`,
+          stateBefore: 3,
+          reviewTimestamp: on(day, 11),
+          timeSpentMs: 4000,
+        }),
+        // A new word is not a review.
+        makeLog({
+          cardId: `n${day}-${i}`,
+          stateBefore: 0,
+          reviewTimestamp: on(day),
+          timeSpentMs: 10000,
+        }),
+      ]).flat(),
+    );
+    // Today is not over, and a month ago is not "usual".
+    logs.push(makeLog({ cardId: 'today', stateBefore: 2, reviewTimestamp: on(0) }));
+    logs.push(makeLog({ cardId: 'ancient', stateBefore: 2, reviewTimestamp: on(40) }));
+    expect(usualDailyReviews(logs, today)).toBe(13);
+    expect(usualDailyReviews(logs.slice(0, 30), today)).toBeNull();
+    expect(HABIT_MIN_DAYS).toBe(5);
+    // 130 card-days, 20 s each across both kinds.
+    expect(paceSecondsPerCard(logs, today)).toBe(10);
+    expect(paceSecondsPerCard(logs.slice(0, 30), today)).toBeNull();
+  });
+
+  it('counts the words the learner could read right now', () => {
+    const scheduler = createScheduler({ targetRetention: 0.9 }, { enableFuzz: false });
+    const fresh = makeCard();
+    expect(readableNow(scheduler, [fresh], today)).toBe(0);
+    const known = Array.from({ length: 10 }, () =>
+      makeCard({ fsrs: reviewState({ stability: 100, last_review: on(1), due: on(-90) }) }),
+    );
+    expect(readableNow(scheduler, [...known, fresh], today)).toBe(10);
   });
 });

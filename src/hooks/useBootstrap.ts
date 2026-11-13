@@ -3,7 +3,7 @@ import { buildStarterDeck } from '@/data/starterDeck';
 import { META_KEYS, repository, type Repository } from '@/db/repository';
 import { sortEvents, type StudyEvent } from '@/lib/analytics/events';
 import { CURRENT_RULE, repairSchedules } from '@/lib/fsrs/repair';
-import { countHardDays, countSlipDays, restartsOf } from '@/lib/stats/slips';
+import { countHardDays, countSlipDays, restartsOf, troubleWindowStart } from '@/lib/stats/slips';
 import type { VocabCard } from '@/types';
 
 export type BootstrapState =
@@ -87,13 +87,21 @@ export async function repairSchedulesOnce(
  * with the counts gone (the starter-deck restore did that to forty-six words
  * on one device, and the leech list went quiet), and it is cheap: the log is
  * read for the dashboard anyway. A word that was started over is counted
- * from its restart.
+ * from its restart, and only the last thirty days are counted at all
+ * (`TROUBLE_WINDOW_DAYS`), so a word that has stopped slipping leaves the
+ * leech list on its own.
  */
-export async function reconcileStudyCounts(repo: Repository): Promise<number> {
+export async function reconcileStudyCounts(
+  repo: Repository,
+  now: Date = new Date(),
+): Promise<number> {
   const [cards, logs] = await Promise.all([repo.getAllCards(), repo.getAllReviewLogs()]);
   const restarts = restartsOf(cards);
-  const slips = countSlipDays(logs, undefined, restarts);
-  const hards = countHardDays(logs, undefined, restarts);
+  // Trouble is counted over the last thirty days, so this is also where a
+  // slip that has aged out of the window comes off the card.
+  const since = troubleWindowStart(now);
+  const slips = countSlipDays(logs, undefined, restarts, since);
+  const hards = countHardDays(logs, undefined, restarts, since);
   const writes = cards
     .filter(
       (c) =>

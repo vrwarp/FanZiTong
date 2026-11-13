@@ -111,6 +111,8 @@ describe('the one-time schedule repair', () => {
 });
 
 describe('reconcileStudyCounts', () => {
+  /** A week after the logs below: all of them inside the trouble window. */
+  const soon = new Date('2026-09-20T15:00:00.000Z');
   const logsFor = (cardId: string) =>
     (
       [
@@ -131,19 +133,23 @@ describe('reconcileStudyCounts', () => {
       const card = makeCard({ fsrs: reviewState({ reps: 6, lapses: 0 }) });
       await repo.putCard(card);
       for (const log of logsFor(card.id)) await repo.addReviewLog(log);
-      expect(await reconcileStudyCounts(repo)).toBe(1);
+      expect(await reconcileStudyCounts(repo, soon)).toBe(1);
       expect(await repo.getCard(card.id)).toMatchObject({ slipDays: 2, hardDays: 2 });
       // Nothing to do while the counts agree with the log.
-      expect(await reconcileStudyCounts(repo)).toBe(0);
+      expect(await reconcileStudyCounts(repo, soon)).toBe(0);
       // A count rolled back by a restore is put right on the next launch.
       await repo.putCard({ ...card, slipDays: 0, hardDays: undefined });
-      expect(await reconcileStudyCounts(repo)).toBe(1);
+      expect(await reconcileStudyCounts(repo, soon)).toBe(1);
       expect(await repo.getCard(card.id)).toMatchObject({ slipDays: 2, hardDays: 2 });
       // A word never studied stays untouched.
       const fresh = makeCard({ traditional: '蛋餅' });
       await repo.putCard(fresh);
-      expect(await reconcileStudyCounts(repo)).toBe(0);
+      expect(await reconcileStudyCounts(repo, soon)).toBe(0);
       expect((await repo.getCard(fresh.id))?.slipDays).toBeUndefined();
+      // Thirty days on, the slips have aged out of the window: the word is no
+      // longer counted as slipping, without anything having been done to it.
+      expect(await reconcileStudyCounts(repo, new Date('2026-10-20T15:00:00.000Z'))).toBe(1);
+      expect(await repo.getCard(card.id)).toMatchObject({ slipDays: 0, hardDays: 0 });
     } finally {
       await repo.db.delete();
     }
@@ -159,7 +165,7 @@ describe('reconcileStudyCounts', () => {
       });
       await repo.putCard(card);
       for (const log of logsFor(card.id)) await repo.addReviewLog(log);
-      expect(await reconcileStudyCounts(repo)).toBe(1);
+      expect(await reconcileStudyCounts(repo, soon)).toBe(1);
       expect(await repo.getCard(card.id)).toMatchObject({ slipDays: 0, hardDays: 2 });
     } finally {
       await repo.db.delete();

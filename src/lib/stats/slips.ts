@@ -5,7 +5,24 @@ import {
   type ReviewLog,
   type VocabCard,
 } from '@/types';
-import { DAY_START_HOUR, dayKey } from '@/lib/util/time';
+import { DAY_MS, DAY_START_HOUR, dayKey } from '@/lib/util/time';
+
+/**
+ * How far back trouble is counted. Slip days and hard days are the study
+ * days of the last thirty on which a word was forgotten or read with
+ * difficulty, not every such day there has ever been: a lifetime count can
+ * only rise, so a word that slipped three times in September was a leech in
+ * November with forty passes behind it, a domain's hold on new words (which
+ * counts leeches) could not lift by study, and in time every domain froze.
+ * One export had 51 words on the list, 40 of them not missed in two weeks,
+ * and two domains held for eleven days on their strength.
+ */
+export const TROUBLE_WINDOW_DAYS = 30;
+
+/** The instant before which a slip or a hard day no longer counts. */
+export function troubleWindowStart(now: Date, days: number = TROUBLE_WINDOW_DAYS): string {
+  return new Date(now.getTime() - days * DAY_MS).toISOString();
+}
 
 /**
  * Difficulty at or above which a word rated Hard day after day is in a Hard
@@ -20,19 +37,14 @@ export const HARD_LOOP_DIFFICULTY = 9;
 export type TroubleCard = Pick<VocabCard, 'fsrs' | 'slipDays' | 'hardDays'>;
 
 /**
- * A word keeps slipping when it has been forgotten on this many study days
- * (`slipDays`), has this many FSRS lapses, or has been rated Hard on this
- * many days at the top of the difficulty scale — whichever the history
- * shows. FSRS counts a lapse only when a word in Review is forgotten; the
- * words that fail day after day before they ever graduate never reach that
- * count, and the words read slowly every few days at the ceiling never fail.
+ * A word keeps slipping when, inside the trouble window, it has been
+ * forgotten on this many study days (`slipDays`) or rated Hard on this many
+ * days at the top of the difficulty scale. FSRS's own lapse counter is not
+ * consulted: it is a lifetime count, and every lapse inside the window is a
+ * slip day already.
  */
 export function isLeech(card: TroubleCard, threshold: number): boolean {
-  return (
-    card.fsrs.lapses >= threshold ||
-    (card.slipDays ?? 0) >= threshold ||
-    isHardLoop(card, threshold)
-  );
+  return (card.slipDays ?? 0) >= threshold || isHardLoop(card, threshold);
 }
 
 /** Rated Hard on the threshold number of days, at a difficulty that cannot rise further. */
@@ -40,22 +52,18 @@ export function isHardLoop(card: TroubleCard, threshold: number): boolean {
   return card.fsrs.difficulty >= HARD_LOOP_DIFFICULTY && (card.hardDays ?? 0) >= threshold;
 }
 
-/** How much trouble a word has been: days forgotten, lapses, or days hard at the ceiling, whichever is most. */
+/** How much trouble a word is in now: days forgotten or days hard at the ceiling in the window, whichever is more. */
 export function troubleScore(card: TroubleCard): number {
   const hard = card.fsrs.difficulty >= HARD_LOOP_DIFFICULTY ? (card.hardDays ?? 0) : 0;
-  return Math.max(card.fsrs.lapses, card.slipDays ?? 0, hard);
+  return Math.max(card.slipDays ?? 0, hard);
 }
 
-/** The count that put the word on the list, in words: "forgotten 3×", "slipped 4 days", "Hard on 5 days". */
+/** The count that put the word on the list, in words: "slipped 4 days", "Hard on 5 days". */
 export function troubleLabel(card: TroubleCard): string {
   const slips = card.slipDays ?? 0;
   const hard = card.fsrs.difficulty >= HARD_LOOP_DIFFICULTY ? (card.hardDays ?? 0) : 0;
-  if (hard > 0 && hard >= slips && hard >= card.fsrs.lapses) {
-    return `Hard on ${hard} day${hard === 1 ? '' : 's'}`;
-  }
-  if (slips > 0 && slips >= card.fsrs.lapses)
-    return `slipped ${slips} day${slips === 1 ? '' : 's'}`;
-  return `forgotten ${card.fsrs.lapses}×`;
+  if (hard > 0 && hard >= slips) return `Hard on ${hard} day${hard === 1 ? '' : 's'}`;
+  return `slipped ${slips} day${slips === 1 ? '' : 's'}`;
 }
 
 /**
@@ -70,11 +78,13 @@ function countRatingDays(
   rating: RatingGrade,
   dayStartHour: number,
   restartedAt?: ReadonlyMap<string, string>,
+  windowStart?: string,
 ): Map<string, number> {
   const days = new Map<string, Set<string>>();
   for (const log of logs) {
     if (log.rating !== rating || !isReadingExercise(log.exerciseType)) continue;
     if (log.stateBefore === CardState.New) continue;
+    if (windowStart && log.reviewTimestamp < windowStart) continue;
     const since = restartedAt?.get(log.cardId);
     if (since && log.reviewTimestamp < since) continue;
     let set = days.get(log.cardId);
@@ -99,8 +109,9 @@ export function countSlipDays(
   logs: readonly ReviewLog[],
   dayStartHour: number = DAY_START_HOUR,
   restartedAt?: ReadonlyMap<string, string>,
+  since?: string,
 ): Map<string, number> {
-  return countRatingDays(logs, 1, dayStartHour, restartedAt);
+  return countRatingDays(logs, 1, dayStartHour, restartedAt, since);
 }
 
 /** Count each card's hard days from its review log, the same way. */
@@ -108,8 +119,9 @@ export function countHardDays(
   logs: readonly ReviewLog[],
   dayStartHour: number = DAY_START_HOUR,
   restartedAt?: ReadonlyMap<string, string>,
+  since?: string,
 ): Map<string, number> {
-  return countRatingDays(logs, 2, dayStartHour, restartedAt);
+  return countRatingDays(logs, 2, dayStartHour, restartedAt, since);
 }
 
 /** When each card was started over, for the counts that read the log from there. */

@@ -6,8 +6,10 @@ import {
   isHardLoop,
   isLeech,
   restartsOf,
+  TROUBLE_WINDOW_DAYS,
   troubleLabel,
   troubleScore,
+  troubleWindowStart,
 } from './slips';
 
 describe('slip days', () => {
@@ -100,21 +102,41 @@ describe('slip days', () => {
     const midway = makeCard({ fsrs: reviewState({ difficulty: 7, lapses: 1 }), hardDays: 5 });
     expect(isHardLoop(midway, 3)).toBe(false);
     expect(isLeech(midway, 3)).toBe(false);
-    expect(troubleScore(midway)).toBe(1);
-    expect(troubleLabel(midway)).toBe('forgotten 1×');
+    expect(troubleScore(midway)).toBe(0);
+    expect(troubleLabel(midway)).toBe('slipped 0 days');
     expect(troubleLabel(makeCard({ fsrs: reviewState({ lapses: 1 }), slipDays: 4 }))).toBe(
       'slipped 4 days',
     );
     expect(troubleLabel(makeCard({ fsrs: reviewState({ lapses: 3 }), slipDays: 1 }))).toBe(
-      'forgotten 3×',
+      'slipped 1 day',
     );
     expect(troubleLabel(makeCard({ fsrs: reviewState({ difficulty: 9.5 }), hardDays: 1 }))).toBe(
       'Hard on 1 day',
     );
   });
 
-  it('calls a word a leech by lapses or by slip days, whichever the history shows', () => {
-    expect(isLeech(makeCard({ fsrs: reviewState({ lapses: 3 }) }), 3)).toBe(true);
+  it('counts only what falls inside the window it is given', () => {
+    const card = makeCard();
+    const again = (reviewTimestamp: string) =>
+      makeLog({ cardId: card.id, rating: 1, stateBefore: CardState.Review, reviewTimestamp });
+    const logs = [
+      again('2026-09-10T15:00:00.000Z'),
+      again('2026-09-12T15:00:00.000Z'),
+      again('2026-10-20T15:00:00.000Z'),
+    ];
+    const now = new Date('2026-11-01T15:00:00.000Z');
+    expect(troubleWindowStart(now)).toBe('2026-10-02T15:00:00.000Z');
+    expect(TROUBLE_WINDOW_DAYS).toBe(30);
+    expect(countSlipDays(logs).get(card.id)).toBe(3);
+    expect(countSlipDays(logs, undefined, undefined, troubleWindowStart(now)).get(card.id)).toBe(1);
+    expect(
+      countHardDays(logs, undefined, undefined, troubleWindowStart(now)).get(card.id),
+    ).toBeUndefined();
+  });
+
+  it('calls a word a leech by its slip days, not by its lifetime lapses', () => {
+    // Three lapses long ago and nothing since: the count that only rises is not consulted.
+    expect(isLeech(makeCard({ fsrs: reviewState({ lapses: 3 }) }), 3)).toBe(false);
     expect(isLeech(makeCard({ fsrs: reviewState({ lapses: 1 }), slipDays: 3 }), 3)).toBe(true);
     expect(isLeech(makeCard({ fsrs: reviewState({ lapses: 1 }), slipDays: 2 }), 3)).toBe(false);
     expect(troubleScore(makeCard({ fsrs: reviewState({ lapses: 1 }), slipDays: 4 }))).toBe(4);

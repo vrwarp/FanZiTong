@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import { Hanzi } from '@/components/ui/Hanzi';
+import { isLeech as keepsSlipping } from '@/lib/stats/slips';
 import { formatRelativeDue } from '@/lib/util/time';
 import {
   CARD_STATE_LABELS,
@@ -30,7 +31,7 @@ export function CardListItem({
   leechThreshold: number;
 }) {
   const state = CARD_STATE_LABELS[card.fsrs.state as CardStateValue] ?? 'New';
-  const isLeech = card.fsrs.lapses >= leechThreshold;
+  const isLeech = keepsSlipping(card, leechThreshold);
   return (
     <li>
       <Link
@@ -61,6 +62,14 @@ export function CardListItem({
             <span lang="zh-Hant-TW">{CARD_STATE_ZH[card.fsrs.state as CardStateValue]}</span>
             {card.fsrs.state !== 0 && ` · ${formatRelativeDue(new Date(card.fsrs.due), now)}`}
             {card.fsrs.lapses > 0 && ` · forgotten ${card.fsrs.lapses}×`}
+            {card.setAsideAt && (
+              <span
+                className="ml-1 rounded-full bg-stone-200 px-1.5 font-bold text-stone-700 dark:bg-stone-700 dark:text-stone-200"
+                data-testid="set-aside-badge"
+              >
+                SET ASIDE
+              </span>
+            )}
             {isLeech && (
               <span className="ml-1 rounded-full bg-red-100 px-1.5 font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200">
                 LEECH

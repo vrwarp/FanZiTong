@@ -92,11 +92,21 @@ export function hasEnoughRecallData(logs: ReviewLog[], minDays = RECALL_MIN_STUD
 }
 
 /**
- * Cards whose very first review happened today. This is what the daily
- * "new cards" limit counts against.
+ * Words first met today: a word whose very first review happened today, or
+ * that was shown face up today. This is what the daily "new cards" limit
+ * counts against. A word met face up has no review that day — its looks are
+ * practice — and its first review, on a later day, is not a new word then.
  */
-export function countNewCardsIntroducedToday(logs: ReviewLog[], now: Date): number {
+export function countNewCardsIntroducedToday(
+  logs: ReviewLog[],
+  now: Date,
+  cards: readonly Pick<VocabCard, 'id' | 'introducedAt'>[] = [],
+): number {
   const todayKey = dayKey(now);
+  const introducedOn = new Map<string, string>();
+  for (const card of cards) {
+    if (card.introducedAt) introducedOn.set(card.id, dayKey(new Date(card.introducedAt)));
+  }
   const firstReviewByCard = new Map<string, string>();
   for (const log of logs) {
     const existing = firstReviewByCard.get(log.cardId);
@@ -105,10 +115,75 @@ export function countNewCardsIntroducedToday(logs: ReviewLog[], now: Date): numb
     }
   }
   let count = 0;
-  for (const ts of firstReviewByCard.values()) {
+  for (const day of introducedOn.values()) if (day === todayKey) count += 1;
+  for (const [cardId, ts] of firstReviewByCard) {
+    if (introducedOn.has(cardId)) continue;
     if (dayKey(new Date(ts)) === todayKey) count += 1;
   }
   return count;
+}
+
+/** How far back the learner's usual day and pace are read. */
+export const HABIT_WINDOW_DAYS = 14;
+/** Fewer study days than this in the window and there is no "usual" to speak of. */
+export const HABIT_MIN_DAYS = 5;
+
+/** The logs of the last `HABIT_WINDOW_DAYS` days, today left out (it is not over). */
+function habitLogs(logs: ReviewLog[], now: Date): ReviewLog[] {
+  const today = dayKey(now);
+  const since = startOfDay(addDays(now, -HABIT_WINDOW_DAYS)).getTime();
+  return logs.filter((l) => {
+    const at = new Date(l.reviewTimestamp);
+    return at.getTime() >= since && dayKey(at) !== today;
+  });
+}
+
+/**
+ * The reviews the learner usually does in a day: the median, over the study
+ * days of the last fortnight, of the words answered that were already in
+ * Review or Relearning. Null until there are enough days. It is what a pile
+ * of due reviews is measured against before it is called a backlog.
+ */
+export function usualDailyReviews(logs: ReviewLog[], now: Date): number | null {
+  const byDay = new Map<string, Set<string>>();
+  for (const log of habitLogs(logs, now)) {
+    if (
+      log.stateBefore !== undefined &&
+      log.stateBefore !== CardState.Review &&
+      log.stateBefore !== CardState.Relearning
+    ) {
+      continue;
+    }
+    const key = dayKey(new Date(log.reviewTimestamp));
+    let set = byDay.get(key);
+    if (!set) byDay.set(key, (set = new Set()));
+    set.add(log.cardId);
+  }
+  if (byDay.size < HABIT_MIN_DAYS) return null;
+  const counts = Array.from(byDay.values(), (set) => set.size).sort((a, b) => a - b);
+  return counts[Math.floor(counts.length / 2)];
+}
+
+/** The fewest card-days of history a pace is worked out from. */
+export const PACE_MIN_CARD_DAYS = 50;
+
+/**
+ * The learner's own pace: seconds of answering per card per day, over the
+ * last fortnight. Every look a card got in a day is in its total, so this is
+ * what one queued card costs, repeats included. The fixed guesses (30 s a
+ * review, 45 s a new word) ran at about twice one learner's real pace, and a
+ * 135-card catch-up was announced as over an hour. Null until there is
+ * enough history.
+ */
+export function paceSecondsPerCard(logs: ReviewLog[], now: Date): number | null {
+  const cardDays = new Set<string>();
+  let totalMs = 0;
+  for (const log of habitLogs(logs, now)) {
+    cardDays.add(`${log.cardId}|${dayKey(new Date(log.reviewTimestamp))}`);
+    totalMs += log.timeSpentMs;
+  }
+  if (cardDays.size < PACE_MIN_CARD_DAYS) return null;
+  return Math.min(60, Math.max(5, totalMs / 1000 / cardDays.size));
 }
 
 /** Proportion of reviews not rated "Again" (null if there were no reviews). */
@@ -190,10 +265,10 @@ export function domainMastery(cards: VocabCard[]): DomainMastery[] {
   });
 }
 
-/** The words that keep slipping: by lapses or by days forgotten, whichever the history shows. */
+/** The words that keep slipping now (see `isLeech`), most trouble first; words set aside are left out. */
 export function findLeeches(cards: VocabCard[], threshold: number): VocabCard[] {
   return cards
-    .filter((c) => isLeech(c, threshold))
+    .filter((c) => !c.setAsideAt && isLeech(c, threshold))
     .sort(
       (a, b) => troubleScore(b) - troubleScore(a) || a.traditional.localeCompare(b.traditional),
     );
@@ -216,6 +291,17 @@ export function averageRetrievability(
   }
   if (values.length === 0) return null;
   return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+/**
+ * How many of the studied words the learner could read right now: the sum of
+ * each word's chance of recall. A number that grows as the deck is learned,
+ * which a percentage does not.
+ */
+export function readableNow(scheduler: FSRS, cards: VocabCard[], now: Date): number {
+  let sum = 0;
+  for (const card of cards) sum += retrievability(scheduler, card.fsrs, now) ?? 0;
+  return Math.round(sum);
 }
 
 export interface StateDistribution {

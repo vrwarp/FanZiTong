@@ -69,13 +69,36 @@ export interface SessionPlanInput {
   reviewsDoneToday: number;
   /** Number of cards first introduced today (counts against maxDailyNewCards). */
   newCardsIntroducedToday: number;
+  /**
+   * How many reviews the learner usually does in a day (see
+   * `usualDailyReviews` in lib/stats), for telling a backlog from a busy
+   * day. Absent until there is a fortnight to judge by: no backlog is called.
+   */
+  usualDailyReviews?: number;
+  /**
+   * The learner's own pace, in seconds per queued card (see `paceSecondsPerCard`
+   * in lib/stats). Absent until there is history; the fixed guesses stand in.
+   */
+  secondsPerCard?: number;
+}
+
+/** A pile of due reviews too big for one sitting, and how it is being spread. */
+export interface Backlog {
+  /** Everything that is due. */
+  total: number;
+  /** How much of it today's session takes. */
+  today: number;
+  /** Sittings it will take at this rate, today's included. */
+  days: number;
 }
 
 export interface SessionPlan {
-  /** Ordered card ids: due reviews first, then new cards. */
+  /** Ordered card ids: due reviews first, then first tests owed, then new cards. */
   queue: string[];
   dueReviewCount: number;
   newCardCount: number;
+  /** Words met face up on an earlier day whose first test is owed (see `isAwaitingFirstTest`). */
+  firstTestCount: number;
   /** Total due reviews regardless of the daily cap. */
   totalDueCount: number;
   /** Total new cards available regardless of the daily cap. */
@@ -91,6 +114,8 @@ export interface SessionPlan {
    * that still have new cards to hold. Empty when the hold is off.
    */
   domainHolds: DomainHold[];
+  /** Set when the due pile is being spread over several days rather than served whole. */
+  backlog: Backlog | null;
 }
 
 export interface DomainHold {
@@ -99,8 +124,128 @@ export interface DomainHold {
   limit: number;
 }
 
+/** A word the learner has set aside: dealt by no session, asked by no drill. */
+export function isSetAside(card: Pick<VocabCard, 'setAsideAt'>): boolean {
+  return Boolean(card.setAsideAt);
+}
+
 export function isActiveDomain(card: VocabCard, settings: UserSettings): boolean {
-  return settings.activeDomains.includes(card.domain);
+  return settings.activeDomains.includes(card.domain) && !isSetAside(card);
+}
+
+/** The tag that marks an everyday word filed under a themed domain. */
+export const GENERAL_TAG = 'general';
+
+/**
+ * Which queue a new word waits in: its domain's, or the everyday one.
+ *
+ * Nearly half of what was left of one learner's "anime" deck was tagged
+ * `general` — 公司, 孩子, 生日, 請問 — and the same in "slang": 糟糕, 差不多,
+ * 怎麼辦. Those are the words a heritage speaker binds fastest, and filed
+ * under their domain they waited behind its order and its leech hold. They
+ * take turns as a lane of their own, and no domain's hold reaches them.
+ */
+export type NewCardLane = DomainCategory | typeof GENERAL_TAG;
+export function laneOf(card: Pick<VocabCard, 'domain' | 'tags'>): NewCardLane {
+  return card.tags.includes(GENERAL_TAG) ? GENERAL_TAG : card.domain;
+}
+
+/** How a switched-off topic is written in `mutedTopics`. */
+export function topicKey(domain: DomainCategory, tag: string): string {
+  return `${domain}:${tag}`;
+}
+
+/** Whether a card carries a tag the learner has switched off for its domain. */
+export function isMutedTopic(
+  card: Pick<VocabCard, 'domain' | 'tags'>,
+  settings: Pick<UserSettings, 'mutedTopics'>,
+): boolean {
+  const muted = settings.mutedTopics ?? [];
+  if (muted.length === 0) return false;
+  return card.tags.some((tag) => muted.includes(topicKey(card.domain, tag)));
+}
+
+/** A tag of a domain's unmet words, for the topic switches in Settings. */
+export interface Topic {
+  domain: DomainCategory;
+  tag: string;
+  /** New words in the domain carrying the tag. */
+  newCards: number;
+  muted: boolean;
+}
+
+/** A tag is offered as a topic once this many unmet words carry it. */
+export const TOPIC_MIN_CARDS = 5;
+
+/**
+ * The topics a domain's unmet words fall into, biggest first: its tags, each
+ * with how many new words carry it. The everyday tag is left out — those
+ * words have a lane of their own — and so is a tag too small to be a topic.
+ */
+export function topicsOf(
+  cards: readonly VocabCard[],
+  domain: DomainCategory,
+  settings: Pick<UserSettings, 'mutedTopics'>,
+): Topic[] {
+  const counts = new Map<string, number>();
+  for (const card of cards) {
+    if (card.domain !== domain || card.fsrs.state !== CardState.New || card.introducedAt) continue;
+    for (const tag of card.tags) {
+      if (tag !== GENERAL_TAG) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+    }
+  }
+  const muted = settings.mutedTopics ?? [];
+  return Array.from(counts, ([tag, newCards]) => ({
+    domain,
+    tag,
+    newCards,
+    muted: muted.includes(topicKey(domain, tag)),
+  }))
+    .filter((t) => t.newCards >= TOPIC_MIN_CARDS || t.muted)
+    .sort((a, b) => b.newCards - a.newCards || a.tag.localeCompare(b.tag));
+}
+
+/**
+ * A word met face up on an earlier study day and not yet tested. The day it
+ * is met, its looks are practice (see `isLessonLook`); the first rating the
+ * scheduler hears is a cold one on a later day, and it is owed — it does not
+ * wait for the new-card budget. A word started over is owed the same.
+ */
+export function isAwaitingFirstTest(
+  card: Pick<VocabCard, 'fsrs' | 'introducedAt'>,
+  now: Date,
+  dayStartHour: number = DAY_START_HOUR,
+): boolean {
+  return (
+    card.fsrs.state === CardState.New &&
+    Boolean(card.introducedAt) &&
+    !isSameLocalDay(new Date(card.introducedAt!), now, dayStartHour)
+  );
+}
+
+/**
+ * A look at a word on the day it was met face up. The word has never been
+ * tested: minutes after the reading was on screen, a pass is a memory of the
+ * screen and a miss is a lesson that has not taken yet, and neither is what
+ * FSRS's first rating means. One export, 425 such words: the 101 rated Good
+ * then Easy in the same sitting were recalled 75% at their first review
+ * against 89% predicted; the 91 that failed were seeded at difficulty 6.4,
+ * failed again the next day half the time, and 25 of them made up nearly
+ * half of the words pinned at maximum difficulty. Words met cold ran above
+ * prediction. So these looks are practice, and the first rating the
+ * scheduler hears is the next day's cold one.
+ */
+export function isLessonLook(
+  card: Pick<VocabCard, 'fsrs' | 'introducedAt' | 'restartedAt'>,
+  now: Date,
+  dayStartHour: number = DAY_START_HOUR,
+): boolean {
+  return (
+    card.fsrs.state === CardState.New &&
+    !card.restartedAt &&
+    Boolean(card.introducedAt) &&
+    isSameLocalDay(new Date(card.introducedAt!), now, dayStartHour)
+  );
 }
 
 /** A studied word the scheduler is still bringing back within a day. */
@@ -128,11 +273,9 @@ export function newCardCapacity(
  * The settling hold watches the words of the last day or two. A word that
  * keeps slipping for weeks is in Review on a ten-day interval and passes it
  * unseen, so a domain can go on being dealt its quarter of every day's new
- * cards while its leech list grows — one export: 19 slang and 15 anime
- * leeches against 4 each in food and church, new cards still shared four
- * ways. A teacher stops handing out words of the kind that is not sticking
- * until the pile is dealt with: started over in Stats, or drilled until it
- * holds. The other domains keep flowing.
+ * cards while its leech list grows. A leech is counted over the last thirty
+ * days (`TROUBLE_WINDOW_DAYS`), so the hold lifts as the words stop slipping;
+ * words set aside are not counted, and the everyday lane is not held.
  */
 export function domainLeechHolds(
   cards: readonly VocabCard[],
@@ -142,9 +285,10 @@ export function domainLeechHolds(
   const leeches = new Map<DomainCategory, number>();
   const fresh = new Set<DomainCategory>();
   for (const card of cards) {
-    if (!settings.activeDomains.includes(card.domain)) continue;
-    if (card.fsrs.state === CardState.New) fresh.add(card.domain);
-    else if (isLeech(card, settings.leechThreshold))
+    if (!settings.activeDomains.includes(card.domain) || isSetAside(card)) continue;
+    if (card.fsrs.state === CardState.New) {
+      if (laneOf(card) !== GENERAL_TAG) fresh.add(card.domain);
+    } else if (isLeech(card, settings.leechThreshold))
       leeches.set(card.domain, (leeches.get(card.domain) ?? 0) + 1);
   }
   return settings.activeDomains
@@ -156,87 +300,139 @@ export function domainLeechHolds(
     }));
 }
 
+/** A due pile is a backlog once it is this many times the usual day's reviews… */
+export const BACKLOG_FACTOR = 1.6;
+/** …and at least this big. */
+export const BACKLOG_MIN_DUE = 40;
+/** A catch-up sitting takes this many times the usual day, or a third of the pile if that is more. */
+export const BACKLOG_DAILY_FACTOR = 1.25;
+
+/**
+ * How much of a due pile today's sitting takes. One missed day put 135 cards
+ * in front of one learner at ten to two in the morning; they stopped at 48,
+ * and it took three sittings anyway. A pile well past the usual day is
+ * spread over a few days instead, the least stable words first, and no new
+ * words are dealt until it is gone.
+ */
+export function planBacklog(totalDue: number, usualDailyReviews?: number): Backlog | null {
+  if (!usualDailyReviews || usualDailyReviews <= 0) return null;
+  if (totalDue < BACKLOG_MIN_DUE || totalDue <= usualDailyReviews * BACKLOG_FACTOR) return null;
+  const today = Math.min(
+    totalDue,
+    Math.max(Math.ceil(usualDailyReviews * BACKLOG_DAILY_FACTOR), Math.ceil(totalDue / 3)),
+  );
+  return { total: totalDue, today, days: Math.ceil(totalDue / today) };
+}
+
 /**
  * Build the daily study queue (PRD Journey 1, step 3): due FSRS reviews first,
- * ordered by due date, then new cards in creation order but round-robined
- * across the active domains, both capped by the daily limits remaining today.
+ * ordered by due date, then the first tests owed to words met face up on an
+ * earlier day, then new cards, capped by the daily limits remaining today.
  *
- * New cards are also held back while too many studied words are still
- * settling. A heritage reader meets a never-seen word by failing it, so
- * every new word is a day or three of retries before it sticks; twenty a day
- * on top of yesterday's twenty is how retention slides while the learner is
- * doing everything asked of them. The hold is the app's version of the rule
- * every spaced-repetition community arrives at: no new material while the
- * pile of not-yet-learned material is high.
- *
- * And a domain whose leech list has grown past `maxLeechesPerDomain` is
- * dealt no new cards at all until it shrinks (`domainLeechHolds`); the
- * other domains take its turns.
+ * New cards are held back while too many studied words are still settling,
+ * a domain whose leech list has grown past `maxLeechesPerDomain` is dealt
+ * none until it shrinks (`domainLeechHolds`), and a word carrying a topic
+ * the learner switched off is not dealt. The words the learner asked for
+ * (`queuedAt`) come first; the rest take turns by lane (`laneOf`).
  */
 export function buildSessionQueue(input: SessionPlanInput): SessionPlan {
   const { cards, settings, now } = input;
   const nowMs = now.getTime();
   const active = cards.filter((c) => isActiveDomain(c, settings));
 
-  const due = active
+  const allDue = active
     .filter((c) => c.fsrs.state !== CardState.New && new Date(c.fsrs.due).getTime() <= nowMs)
     .sort((a, b) => new Date(a.fsrs.due).getTime() - new Date(b.fsrs.due).getTime());
+  const backlog = planBacklog(allDue.length, input.usualDailyReviews);
+  // A backlog is taken least stable first: those are the words a further
+  // day's wait costs most. The sitting itself still runs in due order.
+  const due = backlog
+    ? [...allDue]
+        .sort((a, b) => a.fsrs.stability - b.fsrs.stability)
+        .slice(0, backlog.today)
+        .sort((a, b) => new Date(a.fsrs.due).getTime() - new Date(b.fsrs.due).getTime())
+    : allDue;
+
+  const firstTests = active
+    .filter((c) => isAwaitingFirstTest(c, now))
+    .sort((a, b) => (a.introducedAt ?? '').localeCompare(b.introducedAt ?? ''));
 
   const domainHolds = domainLeechHolds(active, settings);
   const held = new Set(domainHolds.map((h) => h.domain));
-  const fresh = interleaveByDomain(
-    active
-      .filter((c) => c.fsrs.state === CardState.New && !held.has(c.domain))
-      .sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
-          a.traditional.localeCompare(b.traditional, 'zh-Hant-TW'),
-      ),
-  );
+  const untouched = active.filter((c) => c.fsrs.state === CardState.New && !c.introducedAt);
+  const inDeckOrder = (a: VocabCard, b: VocabCard) =>
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
+    a.traditional.localeCompare(b.traditional, 'zh-Hant-TW');
+  const asked = untouched
+    .filter((c) => c.queuedAt)
+    .sort((a, b) => (a.queuedAt ?? '').localeCompare(b.queuedAt ?? '') || inDeckOrder(a, b));
+  const fresh = [
+    ...asked,
+    ...interleaveByLane(
+      untouched
+        .filter(
+          (c) =>
+            !c.queuedAt &&
+            !isMutedTopic(c, settings) &&
+            (laneOf(c) === GENERAL_TAG || !held.has(c.domain)),
+        )
+        .sort(inDeckOrder),
+    ),
+  ];
 
   const reviewBudget = Math.max(0, settings.maxDailyReviews - input.reviewsDoneToday);
   const dailyNewBudget = Math.max(0, settings.maxDailyNewCards - input.newCardsIntroducedToday);
   const settlingCount = active.filter(isSettling).length;
-  const newBudget = Math.min(dailyNewBudget, newCardCapacity(settings, settlingCount));
+  const newBudget = backlog
+    ? 0
+    : Math.min(dailyNewBudget, newCardCapacity(settings, settlingCount));
 
   const dueSlice = due.slice(0, reviewBudget);
   const newSlice = fresh.slice(0, newBudget);
+  if (backlog) backlog.today = dueSlice.length;
 
-  const estimatedSeconds =
-    dueSlice.length * SECONDS_PER_REVIEW + newSlice.length * SECONDS_PER_NEW_CARD;
+  const estimatedSeconds = input.secondsPerCard
+    ? (dueSlice.length + firstTests.length + newSlice.length) * input.secondsPerCard
+    : (dueSlice.length + firstTests.length) * SECONDS_PER_REVIEW +
+      newSlice.length * SECONDS_PER_NEW_CARD;
 
   return {
-    queue: [...dueSlice.map((c) => c.id), ...newSlice.map((c) => c.id)],
+    queue: [...dueSlice, ...firstTests, ...newSlice].map((c) => c.id),
     dueReviewCount: dueSlice.length,
     newCardCount: newSlice.length,
-    totalDueCount: due.length,
+    firstTestCount: firstTests.length,
+    totalDueCount: allDue.length,
     totalNewCount: fresh.length,
     estimatedMinutes: Math.max(1, Math.round(estimatedSeconds / 60)),
     settlingCount,
-    newCardsHeldBack: Math.max(0, Math.min(dailyNewBudget, fresh.length) - newSlice.length),
+    newCardsHeldBack: backlog
+      ? 0
+      : Math.max(0, Math.min(dailyNewBudget, fresh.length) - newSlice.length),
     domainHolds,
+    backlog: backlog && backlog.today > 0 ? backlog : null,
   };
 }
 
 /**
- * Round-robin new cards across the domains that still have them, keeping each
- * domain's own order.
+ * Round-robin new cards across the lanes that still have them, keeping each
+ * lane's own order.
  *
  * The deck is authored in blocks — the current starter deck runs 554 food
  * cards before the first church card — so introducing new cards in creation
  * order alone means a learner with four domains switched on can study for
  * weeks and never be shown three of them.
  */
-export function interleaveByDomain(cards: VocabCard[]): VocabCard[] {
-  const byDomain = new Map<DomainCategory, VocabCard[]>();
+export function interleaveByLane(cards: VocabCard[]): VocabCard[] {
+  const byLane = new Map<NewCardLane, VocabCard[]>();
   for (const card of cards) {
-    const bucket = byDomain.get(card.domain);
+    const lane = laneOf(card);
+    const bucket = byLane.get(lane);
     if (bucket) bucket.push(card);
-    else byDomain.set(card.domain, [card]);
+    else byLane.set(lane, [card]);
   }
-  if (byDomain.size < 2) return cards;
-  // Domains take their turn in the order the deck first offers them.
-  const queues = Array.from(byDomain.values());
+  if (byLane.size < 2) return cards;
+  // Lanes take their turn in the order the deck first offers them.
+  const queues = Array.from(byLane.values());
   const out: VocabCard[] = [];
   for (let round = 0; out.length < cards.length; round += 1) {
     for (const queue of queues) {
@@ -371,10 +567,42 @@ export function drillVerdict(
 
 /** Cards eligible for a contextual drill: in Learning/Relearning, or in trouble (lapsed, or forgotten on some day). */
 export function isDrillCandidate(card: VocabCard): boolean {
+  if (isSetAside(card)) return false;
   return (
     card.fsrs.state === CardState.Learning ||
     card.fsrs.state === CardState.Relearning ||
-    troubleScore(card) > 0
+    troubleScore(card) > 0 ||
+    hasRecentMixup(card)
+  );
+}
+
+/** A wrong shape taken for the word in a drill is remembered this long. */
+export const MIXUP_WINDOW_DAYS = 30;
+
+/** Whether a wrong shape was taken for this word lately (`VocabCard.mixups`). */
+export function hasRecentMixup(card: Pick<VocabCard, 'mixups'>, now: Date = new Date()): boolean {
+  const since = now.getTime() - MIXUP_WINDOW_DAYS * 24 * 60 * MINUTE_MS;
+  return (card.mixups ?? []).some((m) => new Date(m.at).getTime() >= since);
+}
+
+/**
+ * How long a word in Review rests after it was last read correctly before
+ * Say It asks it again.
+ *
+ * A typed reading on a word in Review is a review: it reaches the scheduler
+ * and pushes the word's due date out. With no rest, the words at the top of
+ * the trouble list were asked every night — one export: 227 Say It answers,
+ * two thirds of them on five words, one typed 45 times — and their cards had
+ * not come up as cards, or been tested at more than a day's gap, in six
+ * weeks. A week is long enough for the next reading to be a retrieval.
+ */
+export const SAY_IT_REST_DAYS = 7;
+
+/** Whether a word in Review has rested since its last correct reading. */
+export function restedForSayIt(card: Pick<VocabCard, 'lastPassAt'>, now: Date): boolean {
+  if (!card.lastPassAt) return true;
+  return (
+    now.getTime() - new Date(card.lastPassAt).getTime() >= SAY_IT_REST_DAYS * 24 * 60 * MINUTE_MS
   );
 }
 

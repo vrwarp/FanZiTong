@@ -136,6 +136,9 @@ export function materializeImport(
         hardDays: row.hardDays ?? current.hardDays,
         introducedAt: row.introducedAt ?? current.introducedAt,
         restartedAt: row.restartedAt ?? current.restartedAt,
+        setAsideAt: row.setAsideAt ?? current.setAsideAt,
+        queuedAt: row.queuedAt ?? current.queuedAt,
+        mixups: row.mixups ?? current.mixups,
         updatedAt: nowIso,
       });
       continue;
@@ -163,6 +166,9 @@ export function materializeImport(
     if (row.hardDays) card.hardDays = row.hardDays;
     if (row.introducedAt) card.introducedAt = row.introducedAt;
     if (row.restartedAt) card.restartedAt = row.restartedAt;
+    if (row.setAsideAt) card.setAsideAt = row.setAsideAt;
+    if (row.queuedAt) card.queuedAt = row.queuedAt;
+    if (row.mixups) card.mixups = row.mixups;
     if (row.extraSentences?.length) card.extraSentences = row.extraSentences;
     if (row.exampleSentenceTraditional)
       card.exampleSentenceTraditional = row.exampleSentenceTraditional;

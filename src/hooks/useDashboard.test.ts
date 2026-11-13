@@ -8,6 +8,7 @@ describe('computeDashboard', () => {
     const due = makeCard({
       id: 'due',
       fsrs: reviewState({ due: '2026-09-01T00:00:00.000Z', lapses: 3 }),
+      slipDays: 3,
     });
     const fresh = makeCard({ id: 'fresh' });
     const logs = [
@@ -30,5 +31,8 @@ describe('computeDashboard', () => {
     expect(model.recallDataReady).toBe(false);
     expect(model.averageRetrievability).toBeNull();
     expect(model.doneForToday).toBe(false);
+    // No fortnight of history yet: no pace of the learner's own, and no backlog called.
+    expect(model.secondsPerCard).toBeNull();
+    expect(model.plan.backlog).toBeNull();
   });
 });

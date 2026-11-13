@@ -215,6 +215,16 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
     await repository.putCard(restartCard(existing, new Date()));
   };
 
+  // Set aside: no session deals it and no drill asks it until it is brought back.
+  const toggleSetAside = async () => {
+    if (!existing) return;
+    const nowIso = new Date().toISOString();
+    const next = { ...existing, updatedAt: nowIso };
+    if (existing.setAsideAt) delete next.setAsideAt;
+    else next.setAsideAt = nowIso;
+    await repository.putCard(next);
+  };
+
   return (
     <form onSubmit={save} className="flex flex-col gap-4" data-testid="card-editor">
       <PageHeader
@@ -507,6 +517,23 @@ function CardEditorForm({ existing }: { existing: VocabCard | null }) {
                 Start over
               </Button>
             </>
+          )}
+          {existing && (
+            <div className="mt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void toggleSetAside()}
+                data-testid="set-aside-card"
+              >
+                {existing.setAsideAt ? 'Bring back' : 'Set aside'}
+              </Button>
+              <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+                {existing.setAsideAt
+                  ? 'Set aside: no session or drill shows this word. Its schedule and history are kept.'
+                  : 'A word set aside is left out of sessions and drills until you bring it back.'}
+              </p>
+            </div>
           )}
         </section>
       )}

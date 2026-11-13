@@ -14,6 +14,8 @@ export interface StudyEngineApi {
   rate: (rating: RatingGrade) => void;
   /** The learner has looked at a word met face up; it goes back for its first test. */
   acknowledgeIntro: () => void;
+  /** The learner says whether they already knew the current word by ear. */
+  markByEar: (known: boolean) => void;
   answerDrill: (outcomes: DrillOutcome[]) => void;
   skipDrill: () => void;
   /** Re-check a waiting session once its gap has passed. */
@@ -72,6 +74,13 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
     // No review is written for a look, but the card remembers it.
     persist([]);
   }, [engine, persist]);
+  const markByEar = useCallback(
+    (known: boolean) => {
+      engine?.markByEar(known);
+      persist([]);
+    },
+    [engine, persist],
+  );
   const answerDrill = useCallback(
     (outcomes: DrillOutcome[]) => {
       if (engine) persist(engine.answerDrill(outcomes));
@@ -93,6 +102,7 @@ export function useStudyEngine(engine: StudyEngine | null): StudyEngineApi {
     reveal,
     rate,
     acknowledgeIntro,
+    markByEar,
     answerDrill,
     skipDrill,
     tick,

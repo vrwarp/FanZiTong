@@ -78,6 +78,12 @@ export const importCardSchema = z.object({
   hardDays: z.number().int().nonnegative().optional().catch(undefined),
   introducedAt: isoDate.optional().catch(undefined),
   restartedAt: isoDate.optional().catch(undefined),
+  setAsideAt: isoDate.optional().catch(undefined),
+  queuedAt: isoDate.optional().catch(undefined),
+  mixups: z
+    .array(z.object({ picked: z.string(), at: isoDate }))
+    .optional()
+    .catch(undefined),
   createdAt: isoDate.optional(),
   updatedAt: isoDate.optional(),
 });
@@ -119,6 +125,7 @@ export const settingsSchema = z.object({
   maxSettlingCards: z.number().int().min(0).optional(),
   maxLeechesPerDomain: z.number().int().min(0).optional(),
   activeDomains: z.array(z.enum(DOMAIN_CATEGORIES)).optional(),
+  mutedTopics: z.array(z.string()).optional(),
   theme: z.enum(['light', 'dark', 'system']).optional(),
 });
 
@@ -207,6 +214,9 @@ export function parseJsonDeck(text: string): ParsedJsonDeck {
       hardDays: c.hardDays,
       introducedAt: c.introducedAt,
       restartedAt: c.restartedAt,
+      setAsideAt: c.setAsideAt,
+      queuedAt: c.queuedAt,
+      mixups: c.mixups,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
       warnings,

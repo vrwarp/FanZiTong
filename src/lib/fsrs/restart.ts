@@ -16,6 +16,25 @@ export function isPinned(card: Pick<VocabCard, 'fsrs'>): boolean {
   return card.fsrs.reps > 0 && card.fsrs.difficulty >= PINNED_DIFFICULTY;
 }
 
+/** A pinned word not missed for this long has recovered, whatever its difficulty says. */
+export const RECOVERED_AFTER_DAYS = 14;
+
+/**
+ * Pinned, and not forgotten lately: the difficulty is a record of an old
+ * struggle, and starting over is the cure — unlike for a pinned word still
+ * being missed, where it would only reset a real problem. One export had 54
+ * pinned words, 35 of them not missed in a fortnight, and Start over offered
+ * one word and one confirmation at a time: it had never been used.
+ */
+export function isRecoveredPin(
+  card: Pick<VocabCard, 'fsrs' | 'lastAgainAt'>,
+  now: Date = new Date(),
+): boolean {
+  if (!isPinned(card)) return false;
+  if (!card.lastAgainAt) return true;
+  return now.getTime() - new Date(card.lastAgainAt).getTime() >= RECOVERED_AFTER_DAYS * 86_400_000;
+}
+
 /**
  * Start a word over: the schedule goes back to new, so its next look is a
  * first sight that seeds stability and difficulty from what the learner knows

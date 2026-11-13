@@ -1,6 +1,6 @@
 import { makeCard, reviewState } from '@/test/factories';
 import { CardState } from '@/types';
-import { isPinned, restartCard } from './restart';
+import { RECOVERED_AFTER_DAYS, isPinned, isRecoveredPin, restartCard } from './restart';
 
 describe('a word started over', () => {
   it('goes back to new with its verdicts and counts cleared, and keeps its introduction', () => {
@@ -37,5 +37,22 @@ describe('a word started over', () => {
     expect(isPinned(makeCard({ fsrs: reviewState({ difficulty: 9.5, reps: 9 }) }))).toBe(true);
     expect(isPinned(makeCard({ fsrs: reviewState({ difficulty: 9.4, reps: 9 }) }))).toBe(false);
     expect(isPinned(makeCard())).toBe(false);
+  });
+});
+
+describe('a pinned word that has recovered', () => {
+  const now = new Date('2026-11-12T08:00:00.000Z');
+  const pinned = (lastAgainAt?: string) =>
+    makeCard({ fsrs: reviewState({ difficulty: 9.7, reps: 20 }), lastAgainAt });
+
+  it('is one not forgotten in a fortnight, and never one still being missed', () => {
+    expect(RECOVERED_AFTER_DAYS).toBe(14);
+    expect(isRecoveredPin(pinned('2026-10-01T08:00:00.000Z'), now)).toBe(true);
+    expect(isRecoveredPin(pinned(), now)).toBe(true);
+    expect(isRecoveredPin(pinned('2026-11-08T08:00:00.000Z'), now)).toBe(false);
+    // Not pinned at all: nothing to recover from.
+    expect(isRecoveredPin(makeCard({ fsrs: reviewState({ difficulty: 6, reps: 20 }) }), now)).toBe(
+      false,
+    );
   });
 });

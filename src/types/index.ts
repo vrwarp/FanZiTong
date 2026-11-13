@@ -196,6 +196,25 @@ export interface VocabCard {
    * knows now.
    */
   restartedAt?: string;
+  /**
+   * When the learner set the word aside. A word set aside is dealt by no
+   * session and asked by no drill until it is brought back; its schedule and
+   * history stay as they were. For the word that costs thirty looks and is
+   * not worth them yet.
+   */
+  setAsideAt?: string;
+  /**
+   * When the learner asked for this word next — it was in a text they pasted.
+   * A new word with this set is dealt before the deck's own order.
+   */
+  queuedAt?: string;
+  /**
+   * The wrong shapes the learner has taken for this word in a drill, newest
+   * last (see `MIXUPS_LIMIT`): 繞恕 for 饒恕, three times in five weeks, was
+   * nowhere in the app's memory. Stats lists them and the drills ask about
+   * these words first.
+   */
+  mixups?: Mixup[];
   createdAt: string;
   updatedAt: string;
 }
@@ -222,6 +241,9 @@ export const LEARNER_STATE_KEYS = [
   'hardDays',
   'introducedAt',
   'restartedAt',
+  'setAsideAt',
+  'queuedAt',
+  'mixups',
   'createdAt',
 ] as const satisfies readonly (keyof VocabCard)[];
 
@@ -251,6 +273,14 @@ export const SPOKEN_USE_LABELS: Record<SpokenUse, { en: string; zh: string }> = 
   either: { en: 'Said either way, about as often', zh: '台語國語都常說' },
   also: { en: 'Usually said in Mandarin; the Taiwanese reading is heard too', zh: '通常用國語說' },
 };
+
+/** One wrong shape taken for a word in a drill (see `VocabCard.mixups`). */
+export interface Mixup {
+  picked: string;
+  at: string;
+}
+/** How many mix-ups a card remembers. */
+export const MIXUPS_LIMIT = 8;
 
 /** One check of whether a word is known by ear (see `VocabCard.byEar`). */
 export interface ByEar {
@@ -343,6 +373,14 @@ export interface UserSettings {
    */
   maxLeechesPerDomain: number;
   activeDomains: DomainCategory[];
+  /**
+   * Topics switched off, as `domain:tag` (`church:buddhist`). A new word
+   * carrying a switched-off tag is not dealt; a word already studied keeps
+   * its reviews. The deck's domains are broader than their names — a third of
+   * one learner's "church" words were temple and Buddhist vocabulary — and
+   * the tags that tell them apart were already on every card.
+   */
+  mutedTopics: string[];
   theme: ThemePreference;
 }
 
@@ -355,6 +393,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   maxSettlingCards: 20,
   maxLeechesPerDomain: 10,
   activeDomains: ['food', 'church', 'slang', 'anime', 'custom'],
+  mutedTopics: [],
   theme: 'system',
 };
 

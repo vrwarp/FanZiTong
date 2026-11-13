@@ -69,6 +69,12 @@ export interface StudyEvent {
    * lapse. The look, when it comes, is an ordinary answer event on the card.
    */
   booked?: boolean;
+  /**
+   * True for a look at a word on the day it was met face up: practice, with
+   * no rating sent to the scheduler. The first rating it hears is the next
+   * study day's cold look.
+   */
+  lesson?: boolean;
   correct?: boolean;
   /** Time from the step appearing to the answer. */
   latencyMs?: number;

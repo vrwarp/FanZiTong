@@ -3,6 +3,7 @@ import type {
   DomainCategory,
   ExampleSentence,
   FsrsState,
+  Mixup,
   SentenceShown,
   SpokenUse,
 } from '@/types';
@@ -48,6 +49,12 @@ export interface ImportRow {
   introducedAt?: string;
   /** When the learner started the word over (backups only). */
   restartedAt?: string;
+  /** When the learner set the word aside (backups only). */
+  setAsideAt?: string;
+  /** When the learner asked for the word next (backups only). */
+  queuedAt?: string;
+  /** Wrong shapes taken for the word in drills (backups only). */
+  mixups?: Mixup[];
   createdAt?: string;
   updatedAt?: string;
   /** Non-fatal notes produced while parsing this row. */

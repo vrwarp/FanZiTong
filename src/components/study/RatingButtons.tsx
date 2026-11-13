@@ -21,6 +21,13 @@ export interface RatingButtonsProps {
    * without reaching the scheduler, while Again and a pass still count.
    */
   hardCounted?: boolean;
+  /**
+   * The word was met face up today: every button is practice, and tomorrow's
+   * cold look is the first the scheduler hears.
+   */
+  lesson?: boolean;
+  /** The reveal was slow, and Good is scheduled a little sooner for it. */
+  slowRead?: boolean;
 }
 
 // Backgrounds are chosen for ≥ 4.5:1 contrast with white text (WCAG AA).
@@ -55,17 +62,23 @@ export function RatingButtons({
   showCoach,
   practice = false,
   hardCounted = false,
+  lesson = false,
+  slowRead = false,
 }: RatingButtonsProps) {
   const slow = latencyMs !== null && latencyMs !== undefined && latencyMs >= SLOW_REVEAL_MS;
-  const retry = (rating: RatingGrade) => (practice && rating <= 2) || (hardCounted && rating === 2);
+  const retry = (rating: RatingGrade) =>
+    !lesson && ((practice && rating <= 2) || (hardCounted && rating === 2));
   const labelFor = (rating: RatingGrade): string => {
+    if (lesson) return rating <= 2 ? 'one more look' : 'tomorrow';
     if (retry(rating)) return 'one more look';
     return previews?.[rating]?.intervalLabel ?? '';
   };
   const describe = (rating: RatingGrade): string =>
-    retry(rating)
-      ? `${RATING_LABELS[rating]}: ${RATING_RUBRIC[rating]}. Already counted today; it comes back for one more look`
-      : `${RATING_LABELS[rating]}: ${RATING_RUBRIC[rating]}. Next review ${labelFor(rating)}`;
+    lesson
+      ? `${RATING_LABELS[rating]}: ${RATING_RUBRIC[rating]}. Practice; tomorrow's try is the first that counts`
+      : retry(rating)
+        ? `${RATING_LABELS[rating]}: ${RATING_RUBRIC[rating]}. Already counted today; it comes back for one more look`
+        : `${RATING_LABELS[rating]}: ${RATING_RUBRIC[rating]}. Next review ${labelFor(rating)}`;
   return (
     <div
       className={cn('flex flex-col gap-2', !visible && 'pointer-events-none invisible')}
@@ -89,10 +102,19 @@ export function RatingButtons({
           <span data-testid="reveal-latency">
             {(latencyMs / 1000).toFixed(1)}s to answer
             {slow ? ' · slow, but if you read it, that is Good' : ''}
+            {slowRead && !lesson ? ' — it just comes back a little sooner' : ''}
           </span>
         )}
       </p>
-      {practice ? (
+      {lesson ? (
+        <p
+          className="text-[11px] leading-snug text-stone-600 dark:text-stone-300"
+          data-testid="rating-lesson"
+        >
+          Practice look <span lang="zh-Hant-TW">今天只是練習</span> — you met this word today, so
+          nothing is scheduled from it. Tomorrow&rsquo;s cold try is the one that counts.
+        </p>
+      ) : practice ? (
         <p
           className="text-[11px] leading-snug text-stone-600 dark:text-stone-300"
           data-testid="rating-practice"

@@ -12,6 +12,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { buildAnalyticsExport, serializeAnalyticsExport } from '@/lib/analytics/export';
 import { downloadBlob, downloadTextFile, gzipText, timestampForFilename } from '@/lib/io/download';
 import { serializeJsonDeck, toJsonDeck } from '@/lib/io/json';
+import { topicKey, topicsOf } from '@/lib/queue/session';
 import { cn } from '@/lib/util/cn';
 import { resetIntro } from '@/lib/util/intro';
 import { describeLastChecked, formatBuildStamp } from '@/lib/pwa/updatePolicy';
@@ -128,6 +129,13 @@ export default function SettingsPage() {
       ? settings.activeDomains.filter((d) => d !== domain)
       : [...settings.activeDomains, domain];
     void update({ activeDomains: next });
+  };
+  const toggleTopic = (domain: DomainCategory, tag: string) => {
+    const key = topicKey(domain, tag);
+    const muted = settings.mutedTopics ?? [];
+    void update({
+      mutedTopics: muted.includes(key) ? muted.filter((k) => k !== key) : [...muted, key],
+    });
   };
 
   return (
@@ -258,6 +266,49 @@ export default function SettingsPage() {
               );
             })}
           </div>
+        </fieldset>
+        <fieldset data-testid="topics">
+          <legend className="text-sm font-semibold text-stone-700 dark:text-stone-200">
+            Topics <span lang="zh-Hant-TW">主題</span>
+          </legend>
+          <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+            What each domain&rsquo;s unmet words are about, with how many. Switch a topic off and
+            its new words are not dealt; words you already study keep their reviews. Everyday words
+            tagged general take turns as a lane of their own.
+          </p>
+          {DOMAIN_CATEGORIES.filter((d) => settings.activeDomains.includes(d)).map((domain) => {
+            const topics = topicsOf(cards, domain, settings);
+            if (topics.length === 0) return null;
+            return (
+              <div key={domain} className="mt-2">
+                <p className="text-xs font-semibold text-stone-600 dark:text-stone-300">
+                  <span aria-hidden>{DOMAIN_LABELS[domain].emoji}</span> {DOMAIN_LABELS[domain].en}
+                </p>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {topics.map((topic) => (
+                    <label
+                      key={topic.tag}
+                      className={cn(
+                        'flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold',
+                        topic.muted
+                          ? 'border-stone-300 text-stone-400 line-through dark:border-stone-600'
+                          : 'border-brand-600 bg-brand-50 text-brand-800 dark:bg-brand-900/30 dark:text-brand-200',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        className="accent-brand-600"
+                        checked={!topic.muted}
+                        onChange={() => toggleTopic(domain, topic.tag)}
+                        data-testid={`topic-${domain}-${topic.tag}`}
+                      />
+                      {topic.tag} · {topic.newCards}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </fieldset>
       </section>
 

@@ -31,8 +31,10 @@ import {
   chooseDrillType,
   drillVerdict,
   isDrillCandidate,
+  isLessonLook,
   isRetry,
   knockedDownToday,
+  restedForSayIt,
   shouldRequeue,
   supportsDrill,
   type DrillContext,
@@ -46,6 +48,7 @@ import { type Rng } from '@/lib/util/random';
 import { formatInterval, MINUTE_MS } from '@/lib/util/time';
 import {
   CardState,
+  MIXUPS_LIMIT,
   isReadingExercise,
   type DomainCategory,
   type ExerciseType,
@@ -71,6 +74,19 @@ export type DrillExercise =
  */
 export const MAX_COUNTED_ANSWER_MS = 2 * MINUTE_MS;
 
+/**
+ * A reading that took this long before the reveal was slow. Slow reads are
+ * forgotten more, whatever button follows: among one learner's reads rated
+ * Good, the next look failed 8% of the time after a read under five seconds,
+ * 17% after one of eight to twenty, 23% beyond that — the Hard button's 19%,
+ * without the Hard button's cost in difficulty. So a slow Good is scheduled
+ * by a scheduler with a higher retention target (`slowScheduler`): FSRS still
+ * computes the interval, and it comes out about 0.6 of the usual.
+ */
+export const SLOW_PASS_MS = 8000;
+/** How much the retention target is raised for a slow Good. */
+export const SLOW_PASS_RETENTION_BONUS = 0.03;
+
 /** The fields of an event that only the exercise that produced it can fill in. */
 type AnswerDetail = Pick<
   StudyEvent,
@@ -83,6 +99,9 @@ type AnswerDetail = Pick<
   | 'sentence'
   | 'heard'
 >;
+
+/** What each rating would do, as computed at the reveal. */
+type PreviewLog = Record<Grade, IPreview[Grade]>;
 
 /** How long a step took: what is counted, and what actually elapsed. */
 interface StepTiming {
@@ -240,6 +259,12 @@ export interface EngineOptions {
    */
   faceUpDomains?: readonly DomainCategory[];
   /**
+   * The scheduler a slow Good is given to (see `SLOW_PASS_MS`): the same
+   * parameters with a higher retention target. Absent: every Good is
+   * scheduled alike.
+   */
+  slowScheduler?: FSRS;
+  /**
    * The deck's sound families for the Sound Families drill. Built from the
    * pool when absent, once the composition table's chunk has loaded.
    */
@@ -291,6 +316,13 @@ export interface EngineSnapshot {
   revealLatencyMs: number | null;
   /** The sentence the reveal (or the face-up intro) shows for the current card: rotated, so the frame changes. */
   sentence: SentenceCandidate | null;
+  /**
+   * The current card was met face up today: this look is practice, and no
+   * rating reaches the scheduler (see `isLessonLook` in lib/queue).
+   */
+  lesson: boolean;
+  /** The current card's reveal was slow, so Good is scheduled a little sooner. */
+  slowRead: boolean;
 }
 
 /**
@@ -318,6 +350,7 @@ export class StudyEngine {
   /** The deck's sound families, once known (see `familyIndex`). */
   private families: SoundFamilyIndex | null;
   private readonly scheduler: FSRS;
+  private readonly slowScheduler: FSRS | null;
   private readonly clock: SchedulerClock;
   private readonly interleave: boolean;
   private readonly requeueLearning: boolean;
@@ -342,7 +375,7 @@ export class StudyEngine {
   private revealSentence: SentenceCandidate | null = null;
   /** Cards whose sentence record changed and have not been handed to the caller to save. */
   private readonly touched = new Set<string>();
-  private preview: { at: number; log: IPreview } | null = null;
+  private preview: { at: number; log: PreviewLog; slowGood: boolean } | null = null;
   private answered = 0;
   private nextDrillAt = DRILL_EVERY_N_CARDS;
   private lastDrillType: ExerciseType | undefined;
@@ -370,6 +403,7 @@ export class StudyEngine {
     this.drillQueue = [...(options.drills ?? [])];
     this.drillTotal = this.drillQueue.length;
     this.scheduler = options.scheduler;
+    this.slowScheduler = options.slowScheduler ?? null;
     this.clock = options.clock ?? STUDY_DAY_CLOCK;
     this.interleave = options.interleaveDrills;
     this.requeueLearning = options.requeueLearning ?? options.interleaveDrills;
@@ -463,6 +497,8 @@ export class StudyEngine {
       elapsedMs: (this.completedAt ?? this.now().getTime()) - this.startedAt,
       revealLatencyMs: this.revealLatencyMs,
       sentence: this.revealed || this.step?.kind === 'intro' ? this.revealSentence : null,
+      lesson: step?.kind === 'card' && card !== null && isLessonLook(card, this.now()),
+      slowRead: this.revealed && this.preview !== null && this.preview.slowGood,
     };
     return this.cached;
   };
@@ -529,12 +565,15 @@ export class StudyEngine {
     if (this.step?.kind !== 'card' || this.revealed) return;
     const card = this.cards.get(this.step.cardId)!;
     const now = this.now();
-    this.preview = {
-      at: now.getTime(),
-      log: this.scheduler.repeat(toFsrsCard(card.fsrs, this.clock), this.clock.toScheduler(now)),
-    };
-    this.revealed = true;
     this.revealLatencyMs = Math.max(0, now.getTime() - this.stepStartedAt);
+    const fsrsCard = toFsrsCard(card.fsrs, this.clock);
+    const at = this.clock.toScheduler(now);
+    const usual = this.scheduler.repeat(fsrsCard, at);
+    const log: PreviewLog = { 1: usual[1], 2: usual[2], 3: usual[3], 4: usual[4] };
+    const slowGood = this.isSlowRead();
+    if (slowGood) log[3] = this.slowScheduler!.repeat(fsrsCard, at)[3];
+    this.preview = { at: now.getTime(), log, slowGood };
+    this.revealed = true;
     this.revealSentence = chooseSentence(card, Array.from(this.cards.values()), now, 'reveal');
     if (this.revealSentence) {
       this.noteShown(card.id, this.revealSentence.traditional, now, 'reveal');
@@ -557,7 +596,12 @@ export class StudyEngine {
     const detail: Pick<StudyEvent, 'correct' | 'revealLatencyMs'> = { correct: rating !== 1 };
     if (this.revealLatencyMs !== null) detail.revealLatencyMs = this.revealLatencyMs;
     let persisted: PersistedReview | null = null;
-    if (isRetry(card, rating, now)) {
+    if (isLessonLook(card, now)) {
+      // Met face up today: this look is practice. A miss brings the word back
+      // for another look; a pass ends its day, and tomorrow's cold look is
+      // the first the scheduler hears.
+      this.recordPractice(card, rating, 'rapid_recognition', now, timing, detail, 'lesson');
+    } else if (isRetry(card, rating, now)) {
       this.recordPractice(card, rating, 'rapid_recognition', now, timing, detail, 'retry');
     } else {
       const cached =
@@ -572,6 +616,7 @@ export class StudyEngine {
         timing,
         cached?.card,
         detail,
+        rating === 3 && this.isSlowRead() ? this.slowScheduler! : this.scheduler,
       );
     }
     this.answered += 1;
@@ -582,6 +627,18 @@ export class StudyEngine {
     this.advance();
     this.touch();
     return persisted;
+  }
+
+  /**
+   * The learner says whether they already knew the current word by ear. Asked
+   * once per word, on its reveal or its face-up look, with one tap: it is
+   * what tells a new spelling of a known word from a new word, and Which
+   * Word's ear check had reached 32 of one learner's 755 words.
+   */
+  markByEar(known: boolean): void {
+    if (this.step?.kind !== 'card' && this.step?.kind !== 'intro') return;
+    this.noteByEar(this.step.cardId, known, this.now());
+    this.touch();
   }
 
   /**
@@ -601,6 +658,9 @@ export class StudyEngine {
     const persisted: PersistedReview[] = [];
     for (const outcome of outcomes) {
       if (outcome.heard !== undefined) this.noteByEar(outcome.cardId, outcome.heard, now);
+      if (!outcome.correct && outcome.picked && !isReadingExercise(exerciseType)) {
+        this.noteMixup(outcome.cardId, outcome.picked, now);
+      }
       const card = this.cards.get(outcome.cardId);
       if (!card) continue;
       // A companion dish the learner has never studied is only there to fill the
@@ -848,7 +908,7 @@ export class StudyEngine {
     now: Date,
     timing: StepTiming,
     detail: AnswerDetail,
-    reason: 'retry' | 'booked',
+    reason: 'retry' | 'booked' | 'lesson',
   ): void {
     this.results.push({
       cardId: card.id,
@@ -866,7 +926,11 @@ export class StudyEngine {
       exerciseType,
       rating,
       applied: false,
-      ...(reason === 'retry' ? { retry: true } : { booked: true }),
+      ...(reason === 'retry'
+        ? { retry: true }
+        : reason === 'booked'
+          ? { booked: true }
+          : { lesson: true }),
       latencyMs: timing.rawMs,
       repeatIndex: this.bumpAnswerCount(card.id),
       stateBefore: card.fsrs.state,
@@ -879,7 +943,22 @@ export class StudyEngine {
       elapsedDaysBefore: card.fsrs.elapsed_days,
       ...detail,
     });
+    if (reason === 'lesson') {
+      // A new card is always "due", so the learn-ahead rule would bring a
+      // passed word back three more times; only a miss earns another look.
+      if (rating <= 2) this.requeue(card, now);
+      return;
+    }
     this.requeue(card, now);
+  }
+
+  /** Whether the current reveal was slow enough for Good to be scheduled sooner. */
+  private isSlowRead(): boolean {
+    return (
+      this.slowScheduler !== null &&
+      this.revealLatencyMs !== null &&
+      this.revealLatencyMs >= SLOW_PASS_MS
+    );
   }
 
   private applyRating(
@@ -890,11 +969,12 @@ export class StudyEngine {
     timing: StepTiming,
     precomputed?: Card,
     detail?: AnswerDetail,
+    scheduler: FSRS = this.scheduler,
   ): PersistedReview {
     const card = this.cards.get(cardId)!;
     const nextCard =
       precomputed ??
-      this.scheduler.next(
+      scheduler.next(
         toFsrsCard(card.fsrs, this.clock),
         this.clock.toScheduler(now),
         rating as Grade,
@@ -1031,7 +1111,9 @@ export class StudyEngine {
     const ctx: DrillContext = { families: this.familyIndex(pool) };
     // The words in most trouble first: forgotten on the most days, or lapsed the most.
     const byTrouble = (a: VocabCard, b: VocabCard) =>
-      troubleScore(b) - troubleScore(a) || b.fsrs.lapses - a.fsrs.lapses;
+      troubleScore(b) - troubleScore(a) ||
+      // Among equals, the word read longest ago: no word is asked every night.
+      (a.lastPassAt ?? '').localeCompare(b.lastPassAt ?? '');
 
     // Fill the Blank, Which Word and Say It start from what the reveal has
     // just shown beside the word, so they are kept for cards not seen this
@@ -1040,12 +1122,16 @@ export class StudyEngine {
       const fresh = pool
         .filter((c) => usable(c) && !seenIds.has(c.id) && !queued.has(c.id))
         .sort((a, b) => byTrouble(a, b) || a.fsrs.stability - b.fsrs.stability);
+      const now = new Date(nowMs);
       // Say It is the one drill whose answer carries information about a word
       // in Review — a typed reading has no guess floor, and moves the word —
       // so a troubled Review word takes it every other fresh turn.
       if (this.lastFreshType !== 'typed_reading') {
         const reviewing = fresh.find(
-          (c) => c.fsrs.state === CardState.Review && supportsDrill(c, 'typed_reading', ctx),
+          (c) =>
+            c.fsrs.state === CardState.Review &&
+            restedForSayIt(c, now) &&
+            supportsDrill(c, 'typed_reading', ctx),
         );
         const exercise = reviewing ? this.buildExercise('typed_reading', reviewing, pool) : null;
         if (reviewing && exercise) {
@@ -1060,6 +1146,9 @@ export class StudyEngine {
       for (const type of order) {
         for (const card of fresh) {
           if (!supportsDrill(card, type, ctx)) continue;
+          if (type === 'typed_reading' && card.fsrs.state === CardState.Review) {
+            if (!restedForSayIt(card, now)) continue;
+          }
           const exercise = this.buildExercise(type, card, pool);
           if (!exercise) continue;
           this.drilled.add(card.id);
@@ -1165,6 +1254,15 @@ export class StudyEngine {
     this.touched.add(cardId);
   }
 
+  /** Remember a wrong shape taken for the word, and mark the card to be saved. */
+  private noteMixup(cardId: string, picked: string, at: Date): void {
+    const card = this.cards.get(cardId);
+    if (!card || picked === card.traditional) return;
+    const mixups = [...(card.mixups ?? []), { picked, at: at.toISOString() }].slice(-MIXUPS_LIMIT);
+    this.cards.set(cardId, { ...card, mixups });
+    this.touched.add(cardId);
+  }
+
   /** Remember that a sentence was shown for a card, and mark the card to be saved. */
   private noteShown(cardId: string, text: string, at: Date, via: 'reveal' | 'cloze'): void {
     const card = this.cards.get(cardId);
@@ -1234,7 +1332,7 @@ export class StudyEngine {
     }
   }
 
-  private toPreviews(preview: { at: number; log: IPreview }): Record<RatingGrade, RatingPreview> {
+  private toPreviews(preview: { at: number; log: PreviewLog }): Record<RatingGrade, RatingPreview> {
     const at = new Date(preview.at);
     const out = {} as Record<RatingGrade, RatingPreview>;
     for (const rating of [1, 2, 3, 4] as const) {

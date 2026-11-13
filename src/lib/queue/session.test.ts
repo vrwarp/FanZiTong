@@ -10,8 +10,19 @@ import {
   hasClozeSentence,
   hasFoils,
   hasReading,
-  interleaveByDomain,
+  hasRecentMixup,
+  interleaveByLane,
+  isAwaitingFirstTest,
   isDrillCandidate,
+  isLessonLook,
+  isMutedTopic,
+  isSetAside,
+  laneOf,
+  MIXUP_WINDOW_DAYS,
+  planBacklog,
+  SAY_IT_REST_DAYS,
+  topicKey,
+  topicsOf,
   hardToday,
   isRetry,
   isSettling,
@@ -87,7 +98,7 @@ describe('buildSessionQueue', () => {
       makeCard({ id: 'b', createdAt: '2026-09-02T00:00:00.000Z' }),
       makeCard({ id: 'a', createdAt: '2026-09-01T00:00:00.000Z' }),
     ];
-    expect(interleaveByDomain(cards).map((c) => c.id)).toEqual(['b', 'a']);
+    expect(interleaveByLane(cards).map((c) => c.id)).toEqual(['b', 'a']);
     const plan = buildSessionQueue({
       cards,
       settings: DEFAULT_SETTINGS,
@@ -233,9 +244,9 @@ describe('buildSessionQueue', () => {
 
   it('counts a domain’s leeches by the learner’s threshold and only in active domains', () => {
     const cards = [
-      makeCard({ id: 'a', domain: 'slang', fsrs: reviewState({ lapses: 2 }) }),
-      makeCard({ id: 'b', domain: 'slang', fsrs: reviewState({ lapses: 2 }) }),
-      makeCard({ id: 'c', domain: 'anime', fsrs: reviewState({ lapses: 5 }) }),
+      makeCard({ id: 'a', domain: 'slang', fsrs: reviewState(), slipDays: 2 }),
+      makeCard({ id: 'b', domain: 'slang', fsrs: reviewState(), slipDays: 2 }),
+      makeCard({ id: 'c', domain: 'anime', fsrs: reviewState(), slipDays: 5 }),
       makeCard({ id: 'n', domain: 'slang' }),
       makeCard({ id: 'm', domain: 'anime' }),
     ];
@@ -293,7 +304,23 @@ describe('requeue and drill helpers', () => {
     expect(isDrillCandidate(makeCard())).toBe(false);
     expect(isDrillCandidate(makeCard({ fsrs: reviewState({ state: 1 }) }))).toBe(true);
     expect(isDrillCandidate(makeCard({ fsrs: reviewState({ state: 3 }) }))).toBe(true);
-    expect(isDrillCandidate(makeCard({ fsrs: reviewState({ lapses: 2 }) }))).toBe(true);
+    expect(isDrillCandidate(makeCard({ fsrs: reviewState(), slipDays: 2 }))).toBe(true);
+    // Lifetime lapses alone are history, not trouble.
+    expect(isDrillCandidate(makeCard({ fsrs: reviewState({ lapses: 2 }) }))).toBe(false);
+    // A word set aside is asked by no drill; a recent mix-up earns one.
+    expect(
+      isDrillCandidate(
+        makeCard({ fsrs: reviewState({ state: 1 }), setAsideAt: '2026-09-01T00:00:00.000Z' }),
+      ),
+    ).toBe(false);
+    expect(
+      isDrillCandidate(
+        makeCard({
+          fsrs: reviewState(),
+          mixups: [{ picked: '繞恕', at: new Date().toISOString() }],
+        }),
+      ),
+    ).toBe(true);
   });
 
   it('checks cloze and foil availability', () => {
@@ -475,5 +502,153 @@ describe('what a drill may do to a word', () => {
     );
     const learning = makeCard({ fsrs: reviewState({ state: 1 }) });
     expect(drillVerdict(learning, true, now, undefined, reading)).toBe('good');
+  });
+});
+
+describe('what the daily queue is made of', () => {
+  const now = new Date('2026-09-05T08:00:00.000Z');
+  const plan = (cards: VocabCard[], over: Partial<Parameters<typeof buildSessionQueue>[0]> = {}) =>
+    buildSessionQueue({
+      cards,
+      settings: { ...DEFAULT_SETTINGS, maxDailyReviews: 200 },
+      now,
+      reviewsDoneToday: 0,
+      newCardsIntroducedToday: 0,
+      ...over,
+    });
+  let order = 0;
+  /** A never-seen card; each one is authored a second after the last. */
+  const fresh = (id: string, extra: Partial<VocabCard> = {}) =>
+    makeCard({
+      id,
+      createdAt: new Date(Date.UTC(2026, 8, 1, 0, 0, (order += 1))).toISOString(),
+      ...extra,
+    });
+
+  it('owes a first test to a word met face up on an earlier day, ahead of new words', () => {
+    const yesterday = fresh('n01', { introducedAt: '2026-09-04T08:00:00.000Z' });
+    const today = fresh('n02', { introducedAt: '2026-09-05T07:30:00.000Z' });
+    const untouched = fresh('n03');
+    expect(isAwaitingFirstTest(yesterday, now)).toBe(true);
+    expect(isAwaitingFirstTest(today, now)).toBe(false);
+    expect(isAwaitingFirstTest(untouched, now)).toBe(false);
+    expect(isLessonLook(today, now)).toBe(true);
+    expect(isLessonLook(yesterday, now)).toBe(false);
+    // A word started over is tested cold the day it is restarted.
+    expect(isLessonLook({ ...today, restartedAt: '2026-09-05T07:40:00.000Z' }, now)).toBe(false);
+    const p = plan([untouched, today, yesterday], { newCardsIntroducedToday: 10 });
+    // Owed even with the day's new-card budget spent; today's lesson is over.
+    expect(p.queue).toEqual(['n01']);
+    expect(p.firstTestCount).toBe(1);
+    expect(p.newCardCount).toBe(0);
+  });
+
+  it('gives everyday words a lane of their own that no domain hold reaches', () => {
+    const slangLeeches = Array.from({ length: 10 }, (_, i) =>
+      makeCard({
+        id: `l${i}`,
+        domain: 'slang',
+        fsrs: reviewState({ due: '2027-01-01T00:00:00.000Z' }),
+        slipDays: 3,
+      }),
+    );
+    const cards = [
+      ...slangLeeches,
+      fresh('s01', { domain: 'slang', tags: ['colloquial'] }),
+      fresh('s02', { domain: 'slang', tags: ['general'] }),
+      fresh('f03', { domain: 'food', tags: ['dish'] }),
+      fresh('f04', { domain: 'food', tags: ['dish'] }),
+    ];
+    expect(laneOf(cards[11])).toBe('general');
+    expect(laneOf(cards[10])).toBe('slang');
+    const p = plan(cards);
+    expect(p.domainHolds).toEqual([{ domain: 'slang', leeches: 10, limit: 10 }]);
+    // The held slang word is not dealt; the everyday one takes its turn with food.
+    expect(p.queue).toEqual(['s02', 'f03', 'f04']);
+    expect(interleaveByLane([cards[12]])).toEqual([cards[12]]);
+  });
+
+  it('leaves out switched-off topics and words set aside, and deals asked-for words first', () => {
+    const cards = [
+      fresh('c01', { domain: 'church', tags: ['buddhist'] }),
+      fresh('c02', { domain: 'church', tags: ['christian'] }),
+      fresh('c03', {
+        domain: 'church',
+        tags: ['christian'],
+        setAsideAt: '2026-09-01T00:00:00.000Z',
+      }),
+      fresh('c04', { domain: 'church', tags: ['buddhist'], queuedAt: '2026-09-05T00:00:00.000Z' }),
+      makeCard({
+        id: 'due-aside',
+        fsrs: reviewState({ due: '2026-09-01T00:00:00.000Z' }),
+        setAsideAt: '2026-09-01T00:00:00.000Z',
+      }),
+    ];
+    const settings = { ...DEFAULT_SETTINGS, mutedTopics: [topicKey('church', 'buddhist')] };
+    expect(isMutedTopic(cards[0], settings)).toBe(true);
+    expect(isMutedTopic(cards[1], settings)).toBe(false);
+    expect(isMutedTopic(cards[0], DEFAULT_SETTINGS)).toBe(false);
+    expect(isSetAside(cards[2])).toBe(true);
+    // The word the learner asked for comes first, though its topic is off.
+    expect(plan(cards, { settings }).queue).toEqual(['c04', 'c02']);
+    const topics = topicsOf(
+      [
+        ...cards,
+        ...Array.from({ length: 5 }, (_, i) =>
+          fresh(`x${i}`, { domain: 'church', tags: ['bible', 'general'] }),
+        ),
+      ],
+      'church',
+      settings,
+    );
+    // Small topics are not offered, except one already switched off; general is a lane, not a topic.
+    expect(topics).toEqual([
+      { domain: 'church', tag: 'bible', newCards: 5, muted: false },
+      { domain: 'church', tag: 'buddhist', newCards: 2, muted: true },
+    ]);
+  });
+
+  it('spreads a backlog over several days, least stable first, and holds new words', () => {
+    expect(planBacklog(135, 50)).toEqual({ total: 135, today: 63, days: 3 });
+    expect(planBacklog(70, 50)).toBeNull(); // a busy day, not a backlog
+    expect(planBacklog(39, 10)).toBeNull(); // too small to be worth spreading
+    expect(planBacklog(500, undefined)).toBeNull(); // no usual day to measure against
+    expect(planBacklog(300, 50)).toEqual({ total: 300, today: 100, days: 3 });
+    const due = Array.from({ length: 90 }, (_, i) =>
+      makeCard({
+        id: `d${String(i).padStart(2, '0')}`,
+        fsrs: reviewState({ due: `2026-09-0${1 + (i % 4)}T00:00:00.000Z`, stability: 1 + i }),
+      }),
+    );
+    const p = plan([...due, fresh('n01')], { usualDailyReviews: 30 });
+    expect(p.backlog).toEqual({ total: 90, today: 38, days: 3 });
+    expect(p.dueReviewCount).toBe(38);
+    expect(p.newCardCount).toBe(0);
+    expect(p.newCardsHeldBack).toBe(0);
+    // The 38 least stable words, whatever their due date.
+    expect([...p.queue].sort()).toEqual(due.slice(0, 38).map((c) => c.id));
+    // Without a usual day there is no backlog: everything due is served.
+    expect(plan([...due, fresh('n01')]).dueReviewCount).toBe(90);
+  });
+
+  it('estimates the time from the learner’s own pace when there is one', () => {
+    const due = Array.from({ length: 20 }, (_, i) =>
+      makeCard({ id: `d${i}`, fsrs: reviewState({ due: '2026-09-01T00:00:00.000Z' }) }),
+    );
+    expect(plan(due).estimatedMinutes).toBe(10);
+    expect(plan(due, { secondsPerCard: 15 }).estimatedMinutes).toBe(5);
+  });
+
+  it('remembers a mix-up for a month', () => {
+    const at = new Date('2026-09-05T08:00:00.000Z');
+    expect(
+      hasRecentMixup({ mixups: [{ picked: '繞恕', at: '2026-08-20T08:00:00.000Z' }] }, at),
+    ).toBe(true);
+    expect(
+      hasRecentMixup({ mixups: [{ picked: '繞恕', at: '2026-07-01T08:00:00.000Z' }] }, at),
+    ).toBe(false);
+    expect(hasRecentMixup({}, at)).toBe(false);
+    expect(MIXUP_WINDOW_DAYS).toBe(30);
+    expect(SAY_IT_REST_DAYS).toBe(7);
   });
 });

@@ -5,10 +5,15 @@ import { META_KEYS, repository } from '@/db/repository';
 import {
   SECONDS_PER_NEW_CARD,
   SECONDS_PER_REVIEW,
+  GENERAL_TAG,
+  isMutedTopic,
+  laneOf,
   newCardCapacity,
+  type Backlog,
   type DomainHold,
 } from '@/lib/queue/session';
 import { countStudyDays } from '@/lib/stats/analytics';
+import { TROUBLE_WINDOW_DAYS } from '@/lib/stats/slips';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { RetentionGauge } from '@/components/stats/RetentionGauge';
 import { Button } from '@/components/ui/Button';
@@ -82,7 +87,12 @@ export default function LearnPage() {
   const heldDomains = new Set(plan.domainHolds.map((h) => h.domain));
   const freshCount = cards.filter(
     (c) =>
-      c.fsrs.state === 0 && settings.activeDomains.includes(c.domain) && !heldDomains.has(c.domain),
+      c.fsrs.state === 0 &&
+      !c.introducedAt &&
+      !c.setAsideAt &&
+      settings.activeDomains.includes(c.domain) &&
+      (Boolean(c.queuedAt) ||
+        (!isMutedTopic(c, settings) && (laneOf(c) === GENERAL_TAG || !heldDomains.has(c.domain)))),
   ).length;
   // Tomorrow's new cards are bounded by the same settling hold as today's.
   const newTomorrow = Math.min(
@@ -94,10 +104,12 @@ export default function LearnPage() {
   const settlingHold =
     plan.newCardsHeldBack > 0 ||
     (freshCount > 0 && newCardCapacity(settings, plan.settlingCount) === 0);
-  const tomorrowMinutes = Math.max(
-    1,
-    Math.round((model.dueTomorrow * SECONDS_PER_REVIEW + newTomorrow * SECONDS_PER_NEW_CARD) / 60),
-  );
+  // In the learner's own pace once there is one; the fixed guesses until then.
+  const tomorrowSeconds = model.secondsPerCard
+    ? (model.dueTomorrow + newTomorrow) * model.secondsPerCard
+    : model.dueTomorrow * SECONDS_PER_REVIEW + newTomorrow * SECONDS_PER_NEW_CARD;
+  const tomorrowMinutes = Math.max(1, Math.round(tomorrowSeconds / 60));
+  const reviewsNow = plan.dueReviewCount + plan.firstTestCount;
   const tomorrowLine =
     model.dueTomorrow + newTomorrow > 0
       ? `Tomorrow 明天: ${plural(model.dueTomorrow, 'review')}${newTomorrow > 0 ? ` · up to ${newTomorrow} new` : ''} · ≈ ${tomorrowMinutes} min${model.dueTomorrow > 0 ? ` — do ${model.dueTomorrow === 1 ? 'it' : 'them'} to keep the streak.` : '.'}`
@@ -264,7 +276,7 @@ export default function LearnPage() {
         {todayState === 'due' && (
           <>
             <p className="mt-1 text-3xl font-extrabold" data-testid="due-summary">
-              {plural(plan.dueReviewCount, 'review')}, {plural(plan.newCardCount, 'new card')}
+              {plural(reviewsNow, 'review')}, {plural(plan.newCardCount, 'new card')}
             </p>
             <p
               className="mt-1 text-sm text-stone-500 dark:text-stone-400"
@@ -274,9 +286,21 @@ export default function LearnPage() {
               {!canStudy &&
                 model.dueTomorrow > 0 &&
                 ` · ${model.dueTomorrow} more due by tomorrow.`}
-              {plan.totalDueCount > plan.dueReviewCount &&
+              {!plan.backlog &&
+                plan.totalDueCount > plan.dueReviewCount &&
                 ` · ${plan.totalDueCount - plan.dueReviewCount} more waiting beyond today's limit`}
             </p>
+            {plan.backlog && <BacklogNote backlog={plan.backlog} />}
+            {plan.firstTestCount > 0 && (
+              <p
+                className="mt-2 text-sm text-stone-600 dark:text-stone-300"
+                data-testid="first-tests"
+              >
+                {plural(plan.firstTestCount, 'word')} you met face up{' '}
+                {plan.firstTestCount === 1 ? 'gets its' : 'get their'} first real try today{' '}
+                <span lang="zh-Hant-TW">昨天看過的字，今天第一次考</span>.
+              </p>
+            )}
             {settlingHold && (
               <SettlingHoldNote settling={plan.settlingCount} limit={settings.maxSettlingCards} />
             )}
@@ -480,16 +504,28 @@ function DomainHoldNote({ holds }: { holds: DomainHold[] }) {
   );
   return (
     <p className="mt-2 text-sm text-stone-600 dark:text-stone-300" data-testid="domain-hold">
-      No new {names.join(' or ')} words until that list is under {holds[0].limit}{' '}
-      <span lang="zh-Hant-TW">先處理常忘的字</span>. Start them over or practise them in{' '}
+      No new {names.join(' or ')} words until fewer than {holds[0].limit} have slipped in the last{' '}
+      {TROUBLE_WINDOW_DAYS} days <span lang="zh-Hant-TW">先處理常忘的字</span>. The list is in{' '}
       <Link to="/stats" className="font-semibold text-brand-600 underline dark:text-brand-300">
         Stats
-      </Link>
-      , or change the hold in{' '}
+      </Link>{' '}
+      and shrinks as they are read right; everyday words still come. Or change the hold in{' '}
       <Link to="/settings" className="font-semibold text-brand-600 underline dark:text-brand-300">
         Settings
       </Link>
       .
+    </p>
+  );
+}
+
+/** A due pile spread over several days: how much is today's, and how long it will take. */
+function BacklogNote({ backlog }: { backlog: Backlog }) {
+  return (
+    <p className="mt-2 text-sm text-stone-600 dark:text-stone-300" data-testid="backlog-note">
+      Catching up <span lang="zh-Hant-TW">慢慢補</span>: {backlog.total} are due, and today takes
+      the {backlog.today} that can least wait. The rest follow over{' '}
+      {backlog.days <= 2 ? 'the next day or two' : `about ${backlog.days} days`}; new words wait
+      until then.
     </p>
   );
 }

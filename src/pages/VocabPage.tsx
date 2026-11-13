@@ -244,6 +244,14 @@ export default function VocabPage() {
           >
             ⬆️ Import CSV / JSON
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/vocab/paste')}
+            data-testid="paste-text-open"
+          >
+            📋 Paste a text
+          </Button>
           <Button variant="outline" size="sm" onClick={exportJson} data-testid="export-json">
             ⬇️ Export JSON
           </Button>

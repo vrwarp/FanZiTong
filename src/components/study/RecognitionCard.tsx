@@ -14,6 +14,7 @@ import { CharacterChips } from './CharacterChips';
 import { ExampleSentence } from './ExampleSentence';
 import { RatingButtons } from './RatingButtons';
 import { REVEAL_COUNT_KEY as COACH_KEY } from '@/lib/util/intro';
+import { troubleLabel } from '@/lib/stats/slips';
 
 export interface RecognitionCardProps {
   card: VocabCard;
@@ -44,6 +45,18 @@ export interface RecognitionCardProps {
    * first test later in the sitting.
    */
   intro?: { onDone: () => void };
+  /**
+   * Met face up today: this look is practice and no rating reaches the
+   * scheduler; the buttons say so instead of quoting intervals.
+   */
+  lesson?: boolean;
+  /** The reveal was slow, so Good comes back a little sooner (see `SLOW_PASS_MS`). */
+  slowRead?: boolean;
+  /**
+   * Record whether the learner already knew the word by ear. When given, a
+   * word with no answer yet shows the one-tap question on its answer panel.
+   */
+  onByEar?: (known: boolean) => void;
 }
 
 const COACH_REVEALS = 3;
@@ -118,6 +131,9 @@ export function RecognitionCard({
   practice = false,
   hardCounted = false,
   intro,
+  lesson = false,
+  slowRead = false,
+  onByEar,
 }: RecognitionCardProps) {
   const [revealCount] = useState(readRevealCount);
   const [coachOpen, setCoachOpen] = useState(false);
@@ -294,6 +310,32 @@ export function RecognitionCard({
                   : 'New to your ear too — learn the word, not only its shape. 連音也是新的'}
               </p>
             )}
+            {!card.byEar && onByEar && (
+              <div
+                className="flex flex-wrap items-center gap-2 text-xs text-stone-600 dark:text-stone-300"
+                data-testid="by-ear-ask"
+              >
+                <span>
+                  Did you already know this word by ear? <span lang="zh-Hant-TW">聽過嗎？</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onByEar(true)}
+                  className="rounded-full border border-stone-300 px-2.5 py-1 font-semibold dark:border-stone-600"
+                  data-testid="by-ear-yes"
+                >
+                  Knew it 聽過
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onByEar(false)}
+                  className="rounded-full border border-stone-300 px-2.5 py-1 font-semibold dark:border-stone-600"
+                  data-testid="by-ear-no"
+                >
+                  New to me 沒聽過
+                </button>
+              </div>
+            )}
             {card.notes && (
               <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="card-note">
                 💡 {card.notes}
@@ -306,7 +348,7 @@ export function RecognitionCard({
                   className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-900/40 dark:text-red-200"
                   data-testid="keeps-slipping"
                 >
-                  <span lang="zh-Hant-TW">常忘</span> keeps slipping · forgotten {card.fsrs.lapses}×
+                  <span lang="zh-Hant-TW">常忘</span> keeps slipping · {troubleLabel(card)}
                 </span>
               )}
             </div>
@@ -365,8 +407,8 @@ export function RecognitionCard({
         >
           <p className="text-sm text-stone-600 dark:text-stone-300" data-testid="intro-note">
             New in a domain you rarely read on sight, so here it is face up: read it, say it, look
-            at the parts. It comes back for a real try later in this session.{' '}
-            <span lang="zh-Hant-TW">先看一眼，等一下再考</span>
+            at the parts. It comes back for a practice try later in this session; the first try that
+            counts is tomorrow&rsquo;s. <span lang="zh-Hant-TW">先看一眼，明天才算</span>
           </p>
           <Button block size="lg" onClick={intro.onDone} data-testid="intro-done">
             Got it 記住了
@@ -388,6 +430,8 @@ export function RecognitionCard({
             showCoach={revealCount < COACH_REVEALS || coachOpen}
             practice={practice}
             hardCounted={hardCounted}
+            lesson={lesson}
+            slowRead={slowRead}
           />
           {revealed && revealCount >= COACH_REVEALS && (
             <button
